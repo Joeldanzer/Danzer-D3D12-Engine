@@ -1,3 +1,13 @@
+# Files to ignore#
 .vs
-Dump
+.lib
+.exe
+.pdb
+.dll
+.idb
+.cso
+##
 
+#Folders to ignore#
+Dump
+##
