@@ -1,0 +1,57 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Default">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="UI">
+      <UniqueIdentifier>{6148dff1-b28c-400c-96a0-bc43d5508815}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="default\defaultStruct.hlsli">
+      <Filter>Default</Filter>
+    </FxCompile>
+    <FxCompile Include="default\pixelShader.hlsl">
+      <Filter>Default</Filter>
+    </FxCompile>
+    <FxCompile Include="default\vertexShader.hlsl">
+      <Filter>Default</Filter>
+    </FxCompile>
+    <FxCompile Include="UI\uiPixelShader.hlsl">
+      <Filter>UI</Filter>
+    </FxCompile>
+    <FxCompile Include="UI\uiVertexShader.hlsl">
+      <Filter>UI</Filter>
+    </FxCompile>
+    <FxCompile Include="Font\FontGeometryShader.hlsl" />
+    <FxCompile Include="Font\FontPixelShader.hlsl" />
+    <FxCompile Include="Font\FontVertexShader.hlsl" />
+    <FxCompile Include="default\skyboxPS.hlsl" />
+    <FxCompile Include="default\skyboxVS.hlsl" />
+    <FxCompile Include="Colliders\AABB\AABBVS.hlsl" />
+    <FxCompile Include="Colliders\AABB\AABBGS.hlsl" />
+    <FxCompile Include="Colliders\ColliderPS.hlsl" />
+    <FxCompile Include="Colliders\Ray\RayVS.hlsl" />
+    <FxCompile Include="Colliders\Ray\RayGS.hlsl" />
+    <FxCompile Include="Gbuffer\GbufferPS.hlsl" />
+    <FxCompile Include="Gbuffer\GbufferVS.hlsl" />
+    <FxCompile Include="Fullscreen\FullscreenVS.hlsl" />
+    <FxCompile Include="Light\DirectionalLightPS.hlsl" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="UI\UIstructs.hlsli">
+      <Filter>UI</Filter>
+    </None>
+    <None Include="Font\FontStructs.hlsli" />
+    <None Include="Colliders\AABB\AABBStructs.hlsli" />
+    <None Include="Colliders\ColliderStructs.hlsli" />
+    <None Include="Colliders\Ray\RayStructs.hlsli" />
+    <None Include="Gbuffer\GbufferHeader.hlsli" />
+    <None Include="Gbuffer\GbufferFunctions.hlsli" />
+    <None Include="Light\LightHeader.hlsli" />
+    <None Include="Fullscreen\FullscreenHeader.hlsli" />
+    <None Include="Light\LightFunctionsHeader.hlsli" />
+  </ItemGroup>
+</Project>

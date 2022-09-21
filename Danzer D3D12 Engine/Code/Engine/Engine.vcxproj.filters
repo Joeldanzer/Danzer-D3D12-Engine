@@ -1,0 +1,146 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Main">
+      <UniqueIdentifier>{88c2cbdc-7680-4b6e-950f-887339790ff6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Objects">
+      <UniqueIdentifier>{20182fcb-1274-465c-bd3c-7781b469ae73}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Buffers">
+      <UniqueIdentifier>{d47d95a0-1ac9-4f31-aa89-27bce6b9a2e4}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Core\DirectX12Framework.cpp">
+      <Filter>Main</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\WindowHandler.cpp">
+      <Filter>Main</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\Engine.cpp">
+      <Filter>Main</Filter>
+    </ClCompile>
+    <ClCompile Include="Rendering\Camera.cpp">
+      <Filter>Objects</Filter>
+    </ClCompile>
+    <ClCompile Include="Rendering\PipelineStateHandler.cpp" />
+    <ClCompile Include="Rendering\Renderer.cpp">
+      <Filter>Main</Filter>
+    </ClCompile>
+    <ClCompile Include="Rendering\RenderManager.cpp" />
+    <ClCompile Include="Core\FrameTimer.cpp" />
+    <ClCompile Include="stdafx.cpp" />
+    <ClCompile Include="Rendering\2D\SpriteHandler.cpp" />
+    <ClCompile Include="Rendering\Models\ModelHandler.cpp">
+      <Filter>Objects</Filter>
+    </ClCompile>
+    <ClCompile Include="Rendering\Models\TransformBuffer.cpp">
+      <Filter>Buffers</Filter>
+    </ClCompile>
+    <ClCompile Include="Rendering\Models\ModelData.cpp" />
+    <ClCompile Include="Rendering\Models\ModelLoaderCustom.cpp" />
+    <ClCompile Include="Rendering\2D\2DRenderer.cpp" />
+    <ClCompile Include="Rendering\2D\SpriteInstanceBuffer.cpp" />
+    <ClCompile Include="Rendering\2D\Fonts\FontBuffer.cpp" />
+    <ClCompile Include="Rendering\Buffers\CameraBuffer.cpp">
+      <Filter>Buffers</Filter>
+    </ClCompile>
+    <ClCompile Include="Rendering\Buffers\SpriteSheetBuffer.cpp" />
+    <ClCompile Include="Rendering\Buffers\WindowSizeBuffer.cpp" />
+    <ClCompile Include="Rendering\Buffers\VertexBuffer.cpp" />
+    <ClCompile Include="Level Loader\LevelLoaderCustom.cpp" />
+    <ClCompile Include="Level Loader\LevelLoader.cpp" />
+    <ClCompile Include="Rendering\TextureHandler.cpp" />
+    <ClCompile Include="Rendering\SkyBox.cpp" />
+    <ClCompile Include="CollisionManager.cpp" />
+    <ClCompile Include="Rendering\Buffers\AABBBuffer.cpp" />
+    <ClCompile Include="Rendering\Buffers\RayBuffer.cpp" />
+    <ClCompile Include="Scene.cpp" />
+    <ClCompile Include="SceneManager.cpp" />
+    <ClCompile Include="Core\input.cpp" />
+    <ClCompile Include="Rendering\ScreenTextures\GBuffer.cpp" />
+    <ClCompile Include="Rendering\ScreenTextures\ScreenTexture.cpp" />
+    <ClCompile Include="Rendering\Buffers\LightBuffer.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Core\DirectX12Framework.h">
+      <Filter>Main</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\WindowHandler.h">
+      <Filter>Main</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Engine.h">
+      <Filter>Main</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\MathDefinitions.h">
+      <Filter>Main</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\D3D12Header.h">
+      <Filter>Main</Filter>
+    </ClInclude>
+    <ClInclude Include="Rendering\Camera.h">
+      <Filter>Objects</Filter>
+    </ClInclude>
+    <ClInclude Include="Rendering\PipelineStateHandler.h" />
+    <ClInclude Include="Rendering\Renderer.h">
+      <Filter>Main</Filter>
+    </ClInclude>
+    <ClInclude Include="Rendering\RenderManager.h">
+      <Filter>Main</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\FrameTimer.h" />
+    <ClInclude Include="stdafx.h" />
+    <ClInclude Include="Rendering\VertexAndTextures.h" />
+    <ClInclude Include="Rendering\RenderUtility.h" />
+    <ClInclude Include="Rendering\2D\SpriteData.h" />
+    <ClInclude Include="Rendering\2D\SpriteHandler.h" />
+    <ClInclude Include="Rendering\Models\ModelHandler.h">
+      <Filter>Objects</Filter>
+    </ClInclude>
+    <ClInclude Include="Rendering\Models\ModelData.h">
+      <Filter>Objects</Filter>
+    </ClInclude>
+    <ClInclude Include="Rendering\Models\TransformBuffer.h">
+      <Filter>Buffers</Filter>
+    </ClInclude>
+    <ClInclude Include="Rendering\Models\ModelLoaderCustom.h" />
+    <ClInclude Include="Rendering\2D\2DRenderer.h" />
+    <ClInclude Include="Rendering\2D\SpriteInstanceBuffer.h" />
+    <ClInclude Include="Rendering\2D\Fonts\FontBuffer.h" />
+    <ClInclude Include="Rendering\2D\Fonts\Font.h" />
+    <ClInclude Include="Rendering\Buffers\CameraBuffer.h">
+      <Filter>Buffers</Filter>
+    </ClInclude>
+    <ClInclude Include="Rendering\Buffers\CBVBuffer.h">
+      <Filter>Buffers</Filter>
+    </ClInclude>
+    <ClInclude Include="Rendering\Buffers\SpriteSheetBuffer.h" />
+    <ClInclude Include="Rendering\Buffers\WindowSizeBuffer.h" />
+    <ClInclude Include="Rendering\Buffers\VertexBuffer.h" />
+    <ClInclude Include="Components\Text.h" />
+    <ClInclude Include="Components\Sprite.h" />
+    <ClInclude Include="Level Loader\LevelLoaderCustom.h" />
+    <ClInclude Include="Level Loader\LevelLoader.h" />
+    <ClInclude Include="Rendering\TextureHandler.h" />
+    <ClInclude Include="Rendering\SkyBox.h" />
+    <ClInclude Include="Components\Collision\AABBCollider.h" />
+    <ClInclude Include="Components\Collision\RayCollider.h" />
+    <ClInclude Include="CollisionManager.h" />
+    <ClInclude Include="Rendering\Buffers\AABBBuffer.h" />
+    <ClInclude Include="Rendering\Buffers\RayBuffer.h" />
+    <ClInclude Include="Scene.h" />
+    <ClInclude Include="SceneManager.h" />
+    <ClInclude Include="Components\Collision\SphereCollider.h" />
+    <ClInclude Include="Components\Transform.h" />
+    <ClInclude Include="Components\Object.h" />
+    <ClInclude Include="Components\Model.h" />
+    <ClInclude Include="Components\Transform2D.h" />
+    <ClInclude Include="Components\Collision\Collider.h" />
+    <ClInclude Include="Core\input.hpp" />
+    <ClInclude Include="Rendering\ScreenTextures\GBuffer.h" />
+    <ClInclude Include="Rendering\ScreenTextures\ScreenTexture.h" />
+    <ClInclude Include="Components\DirectionalLight.h" />
+    <ClInclude Include="Rendering\Buffers\LightBuffer.h" />
+  </ItemGroup>
+</Project>
