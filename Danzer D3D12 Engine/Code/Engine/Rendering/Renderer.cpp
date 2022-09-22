@@ -45,7 +45,7 @@ void Renderer::UpdateDefaultBuffers(Camera& camera, Transform& transform, UINT f
 	CameraBuffer::Data bufferData;
 	bufferData.m_transform  = transform.GetWorld().Invert();
 	bufferData.m_projection = camera.GetProjection();
-	bufferData.m_position = { transform.m_position.x, transform.m_position.y, transform.m_position.z, /*Enter render pass here*/1.f };
+	bufferData.m_position = { transform.m_position.x, transform.m_position.y, transform.m_position.z, float(camera.m_renderTarget)};
 	Vect4f eye = { bufferData.m_transform.Forward() };
 	eye.w = 1.f;
 	bufferData.m_direction = eye;

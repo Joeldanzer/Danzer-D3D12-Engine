@@ -224,6 +224,7 @@ void ModelHandler::SetMaterialForModel(UINT model, std::vector<std::string> text
 {
 	ModelData& data = m_models[model - 1];
 	data.m_materialTextures = m_textureHandler.CreateMultipleTextures(&textures[0], data.m_meshes.size());
+	data.m_hasMaterialTexture = true;
 }
 
 UINT ModelHandler::GetNewlyCreatedModelID(ModelData model)

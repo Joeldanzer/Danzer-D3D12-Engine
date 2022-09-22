@@ -17,6 +17,12 @@ class ModelData
 public:
 	static CustomModel GetCube();
 	static CustomModel GetPlane();
+	
+	struct Material {
+		float m_roughnes = 0.1f;
+		float m_metallic = 0.1f;
+		float m_emissive = 0.0f;
+	};
 
 	struct Mesh {
 		UINT m_numVerticies;
@@ -104,6 +110,9 @@ private:
 	UINT m_ID;	
 
 	std::string m_name;
+
+	Material m_material;
+	bool m_hasMaterialTexture = false;
 
 	bool m_renderModel;
 	bool m_transparent;

@@ -273,7 +273,7 @@ void RenderManager::Impl::RenderScene(TextureHandler& textureHandler, ModelHandl
 		Vect4f directionaLightdir = {0.f, 0.f, 0.f, 1.f};
 		for (auto entity : list) {
 			directionalLight = reg.get<DirectionalLight>(entity);
-			Vect3f dir = reg.get<Transform>(entity).GetWorld().Forward();
+			Vect3f dir = reg.get<Transform>(entity).GetWorld().Down();
 			directionaLightdir = { dir.x, dir.y, dir.z, 1.f };
 			break;
 		}

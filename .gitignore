@@ -11,3 +11,12 @@
 #Folders to ignore#
 Dump
 ##
+*.idb
+*.lib
+*.pdb
+*.exe
+*.exe
+*.cso
+*.cso
+*.pdb
+*.exe

@@ -41,6 +41,7 @@ void Editor::CameraControlls(const float dt)
 {
 	entt::registry& reg = m_engine.GetSceneManager().GetCurrentScene().Registry();
 	Transform& transform = reg.get<Transform>(m_engine.GetSceneManager().GetCurrentScene().GetMainCamera());
+	Camera& camera = reg.get<Camera>(m_engine.GetSceneManager().GetCurrentScene().GetMainCamera());
 
 	if (Input::GetInstance().IsMouseDown(Input::MouseButton::Left) && Input::GetInstance().MouseDeltaX() > 0 || 
 		Input::GetInstance().IsMouseDown(Input::MouseButton::Left) && Input::GetInstance().MouseDeltaX() < 0) {
@@ -62,5 +63,13 @@ void Editor::CameraControlls(const float dt)
 	{
 		transform.m_position -= (forward * m_moveSpeed) * dt;
 	}
-	 
+	
+	if (Input::GetInstance().IsKeyPressed('Z')) {
+		camera.m_renderTarget++;
+		
+		if (camera.m_renderTarget > 5) {
+			camera.m_renderTarget = 0;
+		}
+	}
+
 }
