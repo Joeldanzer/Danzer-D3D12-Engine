@@ -11,3 +11,6 @@
 #Folders to ignore#
 Dump
 ##
+*.pdb
+*.lib
+*.idb
