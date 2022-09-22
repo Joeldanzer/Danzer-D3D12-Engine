@@ -190,8 +190,10 @@ float3 EvaluateAmbience(TextureCube cubeMap, SamplerState defaultSampler, float3
     
     float l = BurleyToMip(perceptualRoughness, numMips, RdotNsat);
     
-    float3 specRad = cubeMap.SampleLevel(defaultSampler, vR, l).rgb * ambientStr.w;
-    float3 diffRad = cubeMap.SampleLevel(defaultSampler, vN, (float) (nrBrdfMips - 1)).rgb * ambientStr.w;
+    float3 specRad = cubeMap.SampleLevel(defaultSampler, vR, l).rgb;
+    float3 diffRad = cubeMap.SampleLevel(defaultSampler, vN, (float) (nrBrdfMips - 1)).rgb;
+    
+    ambientStr.rgb *= ambientStr.w;
     
     specRad *= ambientStr.rgb;
     diffRad *= ambientStr.rgb;

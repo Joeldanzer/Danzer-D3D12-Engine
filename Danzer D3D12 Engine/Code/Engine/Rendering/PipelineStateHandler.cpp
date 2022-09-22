@@ -81,23 +81,26 @@ void PipelineStateHandler::CreateLightRootSignature(ID3D12Device* device)
 //* GBuffer Root signature
 void PipelineStateHandler::CreateGBufferRootSingature(ID3D12Device* device)
 {
-	CD3DX12_ROOT_PARAMETER rootParameter[4] = {};
+	CD3DX12_ROOT_PARAMETER rootParameter[5] = {};
 
 	//* Camera Buffer
-	CD3DX12_DESCRIPTOR_RANGE cbvDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
-	rootParameter[0].InitAsDescriptorTable(1, &cbvDescriptorRange);
+	CD3DX12_DESCRIPTOR_RANGE cbvCamera(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
+	rootParameter[0].InitAsDescriptorTable(1, &cbvCamera);
+
+	CD3DX12_DESCRIPTOR_RANGE cbvMaterial(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);
+	rootParameter[1].InitAsDescriptorTable(1, &cbvMaterial, D3D12_SHADER_VISIBILITY_PIXEL);
 
 	//* Albedo texture
 	CD3DX12_DESCRIPTOR_RANGE albedoDescRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
-	rootParameter[1].InitAsDescriptorTable(1, &albedoDescRange, D3D12_SHADER_VISIBILITY_PIXEL);
+	rootParameter[2].InitAsDescriptorTable(1, &albedoDescRange, D3D12_SHADER_VISIBILITY_PIXEL);
 
 	//* Normal texture
 	CD3DX12_DESCRIPTOR_RANGE normalDescRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1);
-	rootParameter[2].InitAsDescriptorTable(1, &normalDescRange, D3D12_SHADER_VISIBILITY_PIXEL);
+	rootParameter[3].InitAsDescriptorTable(1, &normalDescRange, D3D12_SHADER_VISIBILITY_PIXEL);
 	
 	//* Material texture
 	CD3DX12_DESCRIPTOR_RANGE materialDescRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 2);
-	rootParameter[3].InitAsDescriptorTable(1, &materialDescRange, D3D12_SHADER_VISIBILITY_PIXEL);
+	rootParameter[4].InitAsDescriptorTable(1, &materialDescRange, D3D12_SHADER_VISIBILITY_PIXEL);
 
 	CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc;
 	rootSignatureDesc.Init(_countof(rootParameter), &rootParameter[0], 1, &m_samplerDescs[SAMPLER_DESC_WRAP],

@@ -21,6 +21,7 @@ std::unique_ptr<LoaderModel> ModelLoaderCustom::LoadModelFromAssimp(std::string 
     auto flags = 0
         | aiProcessPreset_TargetRealtime_MaxQuality
         | aiProcess_ConvertToLeftHanded
+        | aiProcess_GenUVCoords
         | aiProcess_CalcTangentSpace
         | aiProcess_GlobalScale
         | aiProcess_GenBoundingBoxes
@@ -121,7 +122,7 @@ void ModelLoaderCustom::GetAllModelProperties(LoaderModel* out, aiNode* currentN
     }
 }
 
-// Loads all the useful vertex information that we need from aiMesh 
+// *Loads all the useful vertex information that we need from aiMesh 
 void ModelLoaderCustom::LoadVerticies(std::vector<Vect3f>& v3Verts, aiMesh* mesh, LoaderMesh* loaderMesh, bool uvFlipped)
 {
     bool position  = mesh->HasPositions();
@@ -188,6 +189,7 @@ void ModelLoaderCustom::LoadVerticies(std::vector<Vect3f>& v3Verts, aiMesh* mesh
     memcpy(loaderMesh->m_verticies, &verticies.m_vertexInfo[0], vertexBufferSize * mesh->mNumVertices);
 }
 
+// *Load all verticies and vertex information with the meshes transform in mind.
 void ModelLoaderCustom::LoadVerticiesWithTransform(std::vector<Vect3f>& v3Verts, aiMesh* mesh, LoaderMesh* loaderMesh, Mat4f transform, bool uvFlipped)
 {
   

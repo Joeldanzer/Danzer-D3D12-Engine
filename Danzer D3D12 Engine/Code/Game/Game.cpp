@@ -24,13 +24,28 @@ Game::Impl::Impl(Engine& engine) :
 {
 	entt::registry& reg = engine.GetSceneManager().GetCurrentScene().Registry();
 
-	entt::entity chest = engine.GetSceneManager().GetCurrentScene().CreateBasicEntity("PBRChest");
-	Model model = engine.GetModelHandler().LoadModel(L"Models/Milk_Churn.fbx");
-	reg.emplace<Model>(chest, model);
+	entt::entity crate = engine.GetSceneManager().GetCurrentScene().CreateBasicEntity("Crate");
+	entt::entity containerBlue  = engine.GetSceneManager().GetCurrentScene().CreateBasicEntity("ContainerBlue");
+	//entt::entity containerRed   = engine.GetSceneManager().GetCurrentScene().CreateBasicEntity("ContainerRed");
+	//entt::entity containerGreen = engine.GetSceneManager().GetCurrentScene().CreateBasicEntity("ContainerGreen");
 
-	engine.GetModelHandler().SetAlbedoForModel(model.m_modelID, { "Sprites/Milk_Churn_A.dds" });
-	engine.GetModelHandler().SetNormalForModel(model.m_modelID, { "Sprites/Milk_Churn_N.dds" });
-	engine.GetModelHandler().SetMaterialForModel(model.m_modelID, { "Sprites/Milk_Churn_M.dds" });
+	Model crateModel = engine.GetModelHandler().LoadModel(L"Models/WoodenCrate.fbx");
+	reg.emplace<Model>(crate, crateModel);
+
+	Model container = engine.GetModelHandler().LoadModel(L"Models/VertexPaintPlane.fbx");
+	reg.emplace<Model>(containerBlue, container);
+
+	engine.GetModelHandler().SetAlbedoForModel(crateModel.m_modelID, { "Sprites/WoodenCrate_A.dds" });
+	engine.GetModelHandler().SetNormalForModel(crateModel.m_modelID, { "Sprites/WoodenCrate_N.dds" });
+	engine.GetModelHandler().SetMaterialValues(crateModel.m_modelID, 0.0f, 0.25f, 10.f);
+
+	engine.GetModelHandler().SetAlbedoForModel(container.m_modelID,  { "Sprites/Copper_01_a.dds" });
+	engine.GetModelHandler().SetNormalForModel(container.m_modelID,  { "Sprites/Copper_01_n.dds" });
+	engine.GetModelHandler().SetMaterialForModel(container.m_modelID,{ "Sprites/Copper_01_m.dds" });
+	//engine.GetModelHandler().SetMaterialValues(container.m_modelID, 1.0f, 0.25f, 0.f);
+
+	reg.get<Transform>(containerBlue).m_position = { 5.f, 0.f, 0.f };
+	//engine.GetModelHandler().SetMaterialForModel(model.m_modelID, { "Sprites/Milk_Churn_M.dds" });
 
 }
 Game::Impl::~Impl(){}

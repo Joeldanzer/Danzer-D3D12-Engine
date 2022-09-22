@@ -7,7 +7,7 @@ float GetAmbientOcclusion(VertexToPixel input)
 
 float GetEmissive(VertexToPixel input)
 {
-    return matrerialTexture.Sample(defaultSampler, input.m_uv).g;
+    return matrerialTexture.Sample(defaultSampler, input.m_uv).b;
 }
 
 float GetMetallic(VertexToPixel input)
@@ -17,7 +17,7 @@ float GetMetallic(VertexToPixel input)
 
 float GetRoughness(VertexToPixel input)
 {
-    return matrerialTexture.Sample(defaultSampler, input.m_uv).b;
+    return matrerialTexture.Sample(defaultSampler, input.m_uv).g;
 }
 
 float4 GetNormal(VertexToPixel input)

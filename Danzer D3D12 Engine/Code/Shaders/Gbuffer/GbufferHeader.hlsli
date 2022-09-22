@@ -31,6 +31,17 @@ cbuffer MainCamera : register(b0)
     float4 trash[6];
 }
 
+cbuffer Material : register(b1)
+{
+    float Metallic;
+    float Roughness;
+    float Emissive;
+    uint  HasMaterialTexture;
+    
+    //256-byte alligned
+    float4 trashMaterial[15];
+}
+
 SamplerState defaultSampler   : register(s0);
 Texture2D    albedoTexture    : register(t0);
 Texture2D    normalTexture    : register(t1);

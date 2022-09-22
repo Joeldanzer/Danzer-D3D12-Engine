@@ -19,9 +19,9 @@ float4 main(VertexToPixel input) : SV_TARGET
     float3 material      = materialTexture.Sample(defaultSample, input.m_uv).rgb; 
     float3 vertexNormal  = vertexNormalTexture.Sample(defaultSample, input.m_uv).xyz; 
     
-    float metallic      = material.r + 0.5;
-    float emissiveData  = material.b + 0.5;
-    float roughness     = material.g + 0.5;
+    float metallic      = material.r;
+    float emissiveData  = material.b;
+    float roughness     = material.g;
     float ao = normalTexture.Sample(defaultSample, input.m_uv).a;
     
     float3 toEye = normalize(CameraPosition.xyz - worldPosition);
@@ -31,7 +31,7 @@ float4 main(VertexToPixel input) : SV_TARGET
     //float3 r = reflect(toEye, normalize(normal));
     
     float3 specualrcolor = lerp((float3) 0.04, albedo, metallic);
-    float3 diffusecolor  = lerp((float3) 0.00, albedo, 1 + metallic);
+    float3 diffusecolor  = lerp((float3) 0.00, albedo, 1 - metallic);
    
      //diffusecolor *= ao;
     
