@@ -23,10 +23,11 @@ float GetRoughness(VertexToPixel input)
 float4 GetNormal(VertexToPixel input)
 {
     float4 normal = normalTexture.Sample(defaultSampler, input.m_uv);
-    float3 normalAO = float3(normal.xyz);
-    normalAO = normalize((normalAO * 2.f) - 1.f);
-    //normalAO.z = sqrt(1 - saturate(normalAO.x * normalAO.x + normalAO.y * normalAO.y));
-    //normalAO = normalize(normalAO);
+    float3 normalAO = float3(normal.wy, 0.f);
+   
+    normalAO = (normalAO * 2.f) - 1.f;
+    normalAO.z = sqrt(1 - saturate(normalAO.x * normalAO.x + normalAO.y * normalAO.y));
+    normalAO = normalize(normalAO);
     
     float3x3 tangentspacematrix = float3x3(normalize(input.m_tangent.xyz), normalize(input.m_biNormal.xyz), normalize(input.m_normal.xyz));
     normalAO = mul(normalAO.xyz, tangentspacematrix);

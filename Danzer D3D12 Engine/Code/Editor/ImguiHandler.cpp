@@ -9,10 +9,12 @@
 #include "Rendering/Models/ModelData.h"
 #include "Core/DirectX12Framework.h"
 #include "Rendering/Models/ModelHandler.h"
+#include "Components/DirectionalLight.h"
 
 #include "Components/Text.h"
 #include "Components/Object.h"
 #include "Components/Sprite.h"
+#include "Components/Transform.h"
 
 #include "../3rdParty/imgui-master/imgui.h"
 
@@ -36,118 +38,160 @@ void ImguiHandler::Update(const float dt)
 {
 	//Scene& scene = m_engine->GetSceneManager().GetCurrentScene();
 	DirectX12Framework& framework = m_engine->GetFramework();
+	Scene& scene = m_engine->GetSceneManager().GetCurrentScene();
+	entt::registry& reg = scene.Registry();
 
-	if (ImGui::BeginMainMenuBar()) {
 
-		if (ImGui::BeginMenu("File")) {
-			if(ImGui::MenuItem("File Stuff")){
-			}
+	if (ImGui::Begin("Directional Lighting")) {
 
-			ImGui::EndMenu();
+		auto list = reg.view<DirectionalLight>();
+		DirectionalLight* light = nullptr;
+		Transform*	  transform = nullptr;
+		for (auto ent : list) {
+			// Only exist one in every scene
+			light = &reg.get<DirectionalLight>(ent);
+			transform = &reg.get<Transform>(ent);
+			break;
 		}
 
-		ImGui::EndMainMenuBar();
-	}
-
-	bool show = true;
-
-
-	ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize;
-
-	unsigned int w = WindowHandler::GetWindowData().m_width;
-	unsigned int h = WindowHandler::GetWindowData().m_height;
-
-	static bool selected3DItem = false;
-	static bool selected2DItem = false;
-	
-	
-	ImGui::SetNextWindowPos({ 0, 19 });
-	ImGui::SetNextWindowSize({(float)w/4, (float)h/2});
-
-	if (ImGui::Begin("##", &show, window_flags)) {
-		
-		if(ImGui::BeginTabBar("##tabbar1", ImGuiTabBarFlags_None)) {
-			if (ImGui::BeginTabItem("Scene")) {
-				
-				m_selectedScene = 1;
-
-				if (ImGui::ListBoxHeader("##Scene Window", { (float)(w/4) - 15, (float)(h/2) - 55 })) {
-					
+		if (light && transform) {
+			static float lightColor[3] = {light->m_lightColor.x, light->m_lightColor.y, light->m_lightColor.z};
+			ImGui::ColorEdit3("Light Color", lightColor);
 			
-					//for (UINT i = 0; i < scene->GetObjects().size(); i++)
-					//{
-					//	// WHY WARNING??
-					//	Object& obj = *scene->GetObjects()[i];
-					//	if (ImGui::Selectable(obj.GetName().c_str(), selected3DItem)) {
-					//		obj.Select(true);
-					//		m_object = &obj;
-					//	}
-					//	else {
-					//		obj.Select(false);
-					//	}
-					//}
-				
-					ImGui::ListBoxFooter();
-				}
-				ImGui::EndTabItem();
-			}
+			static float lightStr = light->m_lightColor.w;
+			ImGui::DragFloat("Light Strength", &lightStr, 0.1f, 0.f, 1000.f);
+			light->m_lightColor.w = lightStr;
+			
+			light->m_lightColor = { lightColor[0], lightColor[1], lightColor[2], lightStr };
 
-			if (ImGui::BeginTabItem("UI")) {
+			static float ambientColor[4] = { light->m_ambientColor.x, light->m_ambientColor.y, light->m_ambientColor.z, light->m_ambientColor.w};
+			ImGui::ColorEdit3("Ambient Color", ambientColor);
+			
+			static float ambientStr = light->m_ambientColor.w;
+			ImGui::DragFloat("AAmbient Strength", &ambientStr, 0.1f, 0.f, 1000.f);
+			light->m_ambientColor.w = ambientStr;
 
-				m_selectedScene = -1;
+			light->m_ambientColor = {ambientColor[0], ambientColor[1], ambientColor[2], ambientStr};
 
-				if (ImGui::ListBoxHeader("##UI Window", { (float)(w / 4) - 15, (float)(h / 2) - 55 })) {
-
-
-					//for (UINT i = 0; i < scene->GetSprites().size(); i++)
-					//{
-					//	// WHY WARNING??
-					//	//Object2D* obj = scene->GetSprites()[i];
-					//	//if (ImGui::Selectable(obj->GetName().c_str(), selected2DItem)) {
-					//	//	obj->Select(true);
-					//	//	m_object2D = obj;
-					//	//}
-					//	//else {
-					//	//	obj->Select(false);
-					//	//}
-					//}
-
-					ImGui::ListBoxFooter();
-				}
-				ImGui::EndTabItem();
-			}
-			ImGui::EndTabBar();
+			static float rotation[3] = { transform->m_rotation.x, transform->m_rotation.y, transform->m_rotation.z };
+			ImGui::DragFloat3("Rotation", rotation, 0.1f, -1000.f, 1000.f);
+			transform->m_rotation = Quat4f::CreateFromYawPitchRoll({ rotation[0], rotation[1], rotation[2] });
 		}
 
-
-		//ImGui::PopStyleColor();
 		ImGui::End();
 	}
 
-	ImGui::SetNextWindowPos({float(w - (w/4)), 19.f});
-	ImGui::SetNextWindowSize({ (float)w / 4, (float)h - 40.f });
-
-	if (ImGui::Begin("##info", &show, window_flags)) {
-
-		if (ImGui::BeginTabBar("##tabs", ImGuiTabBarFlags_None)) {
-			if (ImGui::BeginTabItem("Object")) {
-
-				if(m_selectedScene == 1)
-					Object3DImgui();
-
-				if(m_selectedScene == -1)
-					Object2DImgui();
-
-
-				ImGui::EndTabItem();
-			}
-
-			ImGui::EndTabBar();
-		}
-		ImGui::End();
-	}
-	
-	//ImGui::ShowDemoWindow(&show);
+	//if (ImGui::BeginMainMenuBar()) {
+	//
+	//	if (ImGui::BeginMenu("File")) {
+	//		if(ImGui::MenuItem("File Stuff")){
+	//		}
+	//
+	//		ImGui::EndMenu();
+	//	}
+	//
+	//	ImGui::EndMainMenuBar();
+	//}
+	//
+	//bool show = true;
+	//
+	//
+	//ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize;
+	//
+	//unsigned int w = WindowHandler::GetWindowData().m_width;
+	//unsigned int h = WindowHandler::GetWindowData().m_height;
+	//
+	//static bool selected3DItem = false;
+	//static bool selected2DItem = false;
+	//
+	//
+	//ImGui::SetNextWindowPos({ 0, 19 });
+	//ImGui::SetNextWindowSize({(float)w/4, (float)h/2});
+	//
+	//if (ImGui::Begin("##", &show, window_flags)) {
+	//	
+	//	if(ImGui::BeginTabBar("##tabbar1", ImGuiTabBarFlags_None)) {
+	//		if (ImGui::BeginTabItem("Scene")) {
+	//			
+	//			m_selectedScene = 1;
+	//
+	//			if (ImGui::ListBoxHeader("##Scene Window", { (float)(w/4) - 15, (float)(h/2) - 55 })) {
+	//				
+	//		
+	//				//for (UINT i = 0; i < scene->GetObjects().size(); i++)
+	//				//{
+	//				//	// WHY WARNING??
+	//				//	Object& obj = *scene->GetObjects()[i];
+	//				//	if (ImGui::Selectable(obj.GetName().c_str(), selected3DItem)) {
+	//				//		obj.Select(true);
+	//				//		m_object = &obj;
+	//				//	}
+	//				//	else {
+	//				//		obj.Select(false);
+	//				//	}
+	//				//}
+	//			
+	//				ImGui::ListBoxFooter();
+	//			}
+	//			ImGui::EndTabItem();
+	//		}
+	//
+	//		if (ImGui::BeginTabItem("UI")) {
+	//
+	//			m_selectedScene = -1;
+	//
+	//			if (ImGui::ListBoxHeader("##UI Window", { (float)(w / 4) - 15, (float)(h / 2) - 55 })) {
+	//
+	//
+	//				//for (UINT i = 0; i < scene->GetSprites().size(); i++)
+	//				//{
+	//				//	// WHY WARNING??
+	//				//	//Object2D* obj = scene->GetSprites()[i];
+	//				//	//if (ImGui::Selectable(obj->GetName().c_str(), selected2DItem)) {
+	//				//	//	obj->Select(true);
+	//				//	//	m_object2D = obj;
+	//				//	//}
+	//				//	//else {
+	//				//	//	obj->Select(false);
+	//				//	//}
+	//				//}
+	//
+	//				ImGui::ListBoxFooter();
+	//			}
+	//			ImGui::EndTabItem();
+	//		}
+	//		ImGui::EndTabBar();
+	//	}
+	//
+	//
+	//	//ImGui::PopStyleColor();
+	//	ImGui::End();
+	//}
+	//
+	//ImGui::SetNextWindowPos({float(w - (w/4)), 19.f});
+	//ImGui::SetNextWindowSize({ (float)w / 4, (float)h - 40.f });
+	//
+	//if (ImGui::Begin("##info", &show, window_flags)) {
+	//
+	//	if (ImGui::BeginTabBar("##tabs", ImGuiTabBarFlags_None)) {
+	//		if (ImGui::BeginTabItem("Object")) {
+	//
+	//			if(m_selectedScene == 1)
+	//				Object3DImgui();
+	//
+	//			if(m_selectedScene == -1)
+	//				Object2DImgui();
+	//
+	//
+	//			ImGui::EndTabItem();
+	//		}
+	//
+	//		ImGui::EndTabBar();
+	//	}
+	//	ImGui::End();
+	//}
+	//
+	////ImGui::ShowDemoWindow(&show);
 }
 
 CD3DX12_GPU_DESCRIPTOR_HANDLE ImguiHandler::AddImguiImage(std::wstring path)

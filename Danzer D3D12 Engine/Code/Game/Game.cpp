@@ -60,7 +60,7 @@ void Game::Impl::Update(const float dt)
 	{
 		Transform& transform = reg.get<Transform>(i);
 
-		transform.m_rotation *= Quat4f::CreateFromAxisAngle({ 0.f, 1.f, 0.f }, dt);
+		//transform.m_rotation *= Quat4f::CreateFromAxisAngle({ 0.f, 1.f, 0.f }, dt);
 	}
 }
 

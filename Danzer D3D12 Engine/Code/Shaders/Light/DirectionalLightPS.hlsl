@@ -9,10 +9,9 @@ float4 main(VertexToPixel input) : SV_TARGET
     float PI = PI_MACRO;
     
     float3 worldPosition = worldPositionTexture.Sample(defaultSample, input.m_uv).xyz;
-    if (!length(worldPosition) > 0)
-    {
+    if (!(length(worldPosition) > 0))
         discard;
-    }
+    
         
     float3 albedo        = albedoTexture.Sample(defaultSample, input.m_uv).rgb;
     float3 normal        = normalTexture.Sample(defaultSample, input.m_uv).rgb; 

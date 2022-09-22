@@ -197,7 +197,7 @@ void RenderManager::Impl::Impl::RenderFrame(TextureHandler& textureHandler, Mode
 	//
 	//m_framework.TransitionRenderTarget(D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
 	
-	RenderImgui();
+	//RenderImgui();
 	m_framework.ExecuteCommandList();
 	ClearAllInstances(modelHandler, spriteHandler);
 }
@@ -290,7 +290,9 @@ void RenderManager::Impl::RenderScene(TextureHandler& textureHandler, ModelHandl
 			&m_gBuffer.GetGbufferResources()[0], GBUFFER_COUNT,
 			D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_PRESENT
 		);
-	
+
+		RenderImgui();
+
 		m_framework.TransitionRenderTarget(D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
 	}
 	//* Render scene Ligthing end
