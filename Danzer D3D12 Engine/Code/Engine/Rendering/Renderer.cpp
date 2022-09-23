@@ -32,6 +32,7 @@ void Renderer::Init(DirectX12Framework& framework)
 	m_aabbBuffer.Init(framework.GetDevice());
 	m_rayBuffer.Init(framework.GetDevice());
 	m_lightBuffer.Init(framework.GetDevice());
+	m_materialBuffer.Init(framework.GetDevice());
 
 	m_framework = &framework;
 }
@@ -45,7 +46,7 @@ void Renderer::UpdateDefaultBuffers(Camera& camera, Transform& transform, UINT f
 	CameraBuffer::Data bufferData;
 	bufferData.m_transform  = transform.GetWorld().Invert();
 	bufferData.m_projection = camera.GetProjection();
-	bufferData.m_position = { transform.m_position.x, transform.m_position.y, transform.m_position.z, /*Enter render pass here*/1.f };
+	bufferData.m_position = { transform.m_position.x, transform.m_position.y, transform.m_position.z, float(camera.m_renderTarget)};
 	Vect4f eye = { bufferData.m_transform.Forward() };
 	eye.w = 1.f;
 	bufferData.m_direction = eye;
@@ -169,9 +170,14 @@ void Renderer::RenderToGbuffer(std::vector<ModelData>& models, UINT frameIndex, 
 		if (!models[i].IsTransparent()) {
 
 			ModelData& model = models[i];
-			std::vector<UINT> albedo = model.GetAlbedoTextures();
-			std::vector<UINT> normal = model.GetNormalTextures();
+			std::vector<UINT> albedo   = model.GetAlbedoTextures();
+			std::vector<UINT> normal   = model.GetNormalTextures();
 			std::vector<UINT> material = model.GetMaterialTextures();
+
+			model.UpdatedMaterialBuffer(frameIndex);
+			ID3D12DescriptorHeap* cbvDescHeap = model.GetMaterialBuffer().GetDescriptorHeap(frameIndex);
+			m_commandList->SetDescriptorHeaps(1, &cbvDescHeap);
+			m_commandList->SetGraphicsRootDescriptorTable(1, cbvDescHeap->GetGPUDescriptorHandleForHeapStart()); 
 
 			UINT numberOfTransforms = ((UINT)model.GetInstanceTransforms().size() < MAX_INSTANCES_PER_MODEL) ? (UINT)model.GetInstanceTransforms().size() : MAX_INSTANCES_PER_MODEL;
 
@@ -204,11 +210,11 @@ void Renderer::RenderToGbuffer(std::vector<ModelData>& models, UINT frameIndex, 
 							materialHeap = textures[material[j] - 1].m_textureDescriptorHeap.Get();
 
 						m_commandList->SetDescriptorHeaps(1, &albedoHeap);
-						m_commandList->SetGraphicsRootDescriptorTable(1, albedoHeap->GetGPUDescriptorHandleForHeapStart());
+						m_commandList->SetGraphicsRootDescriptorTable(2, albedoHeap->GetGPUDescriptorHandleForHeapStart());
 						m_commandList->SetDescriptorHeaps(1, &normalHeap);
-						m_commandList->SetGraphicsRootDescriptorTable(2, normalHeap->GetGPUDescriptorHandleForHeapStart());
+						m_commandList->SetGraphicsRootDescriptorTable(3, normalHeap->GetGPUDescriptorHandleForHeapStart());
 						m_commandList->SetDescriptorHeaps(1, &materialHeap);
-						m_commandList->SetGraphicsRootDescriptorTable(3, materialHeap->GetGPUDescriptorHandleForHeapStart());
+						m_commandList->SetGraphicsRootDescriptorTable(4, materialHeap->GetGPUDescriptorHandleForHeapStart());
 						
 						D3D12_VERTEX_BUFFER_VIEW vBufferViews[2] = {
 							mesh.m_vertexBufferView, model.GetTransformInstanceBuffer().GetBufferView(frameIndex)

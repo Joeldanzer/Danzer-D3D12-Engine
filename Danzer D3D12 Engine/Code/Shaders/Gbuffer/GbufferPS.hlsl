@@ -14,10 +14,15 @@ GBufferOutput main(VertexToPixel input)
 	GBufferOutput output;
     output.m_Albedo		   = albedoTexture.Sample(defaultSampler, input.m_uv);	
     clip(output.m_Albedo.a < 0.1f ? -1 : 1);
-    output.m_Normal        = normalTexture.Sample(defaultSampler, input.m_uv); //GetNormal(input);
+    output.m_Normal.rgb    = GetNormal(input).rgb;
     output.m_Normal.w	   = GetAmbientOcclusion(input);
-    output.m_Material	   = float4(GetMetallic(input), GetEmissive(input), GetRoughness(input), 1.f);
-    output.m_VertexNormal  = float4(input.m_normal.xyz, 1.f);
+    
+    if(HasMaterialTexture == 1)
+        output.m_Material = float4(GetMetallic(input), GetRoughness(input), GetEmissive(input), 1.f);
+    else
+        output.m_Material = float4(Metallic, Roughness, Emissive, 1.f);
+    
+    output.m_VertexNormal  = float4(abs(input.m_normal.xyz), 1.f);
     output.m_VertexColor   = input.m_color;
     output.m_WorldPosition = input.m_worldPosition;
 

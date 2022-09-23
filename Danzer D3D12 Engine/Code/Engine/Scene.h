@@ -27,7 +27,6 @@ public:
 private:
 	friend class SceneManager;
 	
-
 	void SetMainCamera(entt::entity camera) {
 		m_mainCamera = camera;
 	}

@@ -4,6 +4,7 @@
 
 #include "Rendering/TextureHandler.h"
 
+#include "Buffers/MaterialBuffer.h"
 #include "Buffers/AABBBuffer.h"
 #include "Buffers/RayBuffer.h"
 #include "Buffers/CameraBuffer.h"
@@ -56,6 +57,7 @@ private:
 	CameraBuffer m_cameraBuffer;
 	TransformBuffer m_transformBuffer;
 	LightBuffer m_lightBuffer;
+	MaterialBuffer  m_materialBuffer;
 
 	ID3D12GraphicsCommandList* m_commandList;
 	ID3D12RootSignature*       m_rootSignature;

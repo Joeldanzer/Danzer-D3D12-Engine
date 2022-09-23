@@ -43,7 +43,7 @@ public:
 	void SetAlbedoForModel(UINT model,   std::vector<std::string> textures);
 	void SetNormalForModel(UINT model,   std::vector<std::string> textures);
 	void SetMaterialForModel(UINT model, std::vector<std::string> textures);
-
+	void SetMaterialValues(UINT model, float metallic, float roughness, float emissive);
 
 	std::vector<ModelData>& GetAllModels() {
 		return m_models;

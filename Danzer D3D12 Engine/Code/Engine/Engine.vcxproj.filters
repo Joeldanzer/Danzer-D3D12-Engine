@@ -62,6 +62,7 @@
     <ClCompile Include="Rendering\ScreenTextures\GBuffer.cpp" />
     <ClCompile Include="Rendering\ScreenTextures\ScreenTexture.cpp" />
     <ClCompile Include="Rendering\Buffers\LightBuffer.cpp" />
+    <ClCompile Include="Rendering\Buffers\MaterialBuffer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Core\DirectX12Framework.h">
@@ -142,5 +143,6 @@
     <ClInclude Include="Rendering\ScreenTextures\ScreenTexture.h" />
     <ClInclude Include="Components\DirectionalLight.h" />
     <ClInclude Include="Rendering\Buffers\LightBuffer.h" />
+    <ClInclude Include="Rendering\Buffers\MaterialBuffer.h" />
   </ItemGroup>
 </Project>

@@ -158,6 +158,7 @@
     <ClInclude Include="Components\Transform2D.h" />
     <ClInclude Include="Core\input.hpp" />
     <ClInclude Include="Components\DirectionalLight.h" />
+    <ClInclude Include="Rendering\Buffers\MaterialBuffer.h" />
     <ClInclude Include="Rendering\Buffers\LightBuffer.h" />
     <ClInclude Include="Rendering\ScreenTextures\GBuffer.h" />
     <ClInclude Include="Rendering\Buffers\RayBuffer.h" />
@@ -206,6 +207,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Core\input.cpp" />
+    <ClCompile Include="Rendering\Buffers\MaterialBuffer.cpp" />
     <ClCompile Include="Rendering\Buffers\LightBuffer.cpp" />
     <ClCompile Include="Rendering\ScreenTextures\GBuffer.cpp" />
     <ClCompile Include="Rendering\Buffers\RayBuffer.cpp" />

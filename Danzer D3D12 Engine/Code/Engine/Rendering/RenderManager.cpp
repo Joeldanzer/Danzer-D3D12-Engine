@@ -197,7 +197,7 @@ void RenderManager::Impl::Impl::RenderFrame(TextureHandler& textureHandler, Mode
 	//
 	//m_framework.TransitionRenderTarget(D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
 	
-	RenderImgui();
+	//RenderImgui();
 	m_framework.ExecuteCommandList();
 	ClearAllInstances(modelHandler, spriteHandler);
 }
@@ -273,7 +273,7 @@ void RenderManager::Impl::RenderScene(TextureHandler& textureHandler, ModelHandl
 		Vect4f directionaLightdir = {0.f, 0.f, 0.f, 1.f};
 		for (auto entity : list) {
 			directionalLight = reg.get<DirectionalLight>(entity);
-			Vect3f dir = reg.get<Transform>(entity).GetWorld().Forward();
+			Vect3f dir = reg.get<Transform>(entity).GetWorld().Down();
 			directionaLightdir = { dir.x, dir.y, dir.z, 1.f };
 			break;
 		}
@@ -290,7 +290,9 @@ void RenderManager::Impl::RenderScene(TextureHandler& textureHandler, ModelHandl
 			&m_gBuffer.GetGbufferResources()[0], GBUFFER_COUNT,
 			D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_PRESENT
 		);
-	
+
+		RenderImgui();
+
 		m_framework.TransitionRenderTarget(D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
 	}
 	//* Render scene Ligthing end

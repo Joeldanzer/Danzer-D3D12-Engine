@@ -8,60 +8,94 @@ float4 main(VertexToPixel input) : SV_TARGET
     float4 color;
     float PI = PI_MACRO;
     
-    float4 albedo       = albedoTexture.Sample(defaultSample, input.m_uv);
-    float4 normal       = normalTexture.Sample(defaultSample, input.m_uv); 
-    float4 material     = materialTexture.Sample(defaultSample, input.m_uv); 
+    float3 worldPosition = worldPositionTexture.Sample(defaultSample, input.m_uv).xyz;
+    if (!(length(worldPosition) > 0))
+        discard;
     
-    float metallic  = material.r;
-    float emissive  = material.g;
-    float roughness = material.b;
+        
+    float3 albedo        = albedoTexture.Sample(defaultSample, input.m_uv).rgb;
+    float3 normal        = normalTexture.Sample(defaultSample, input.m_uv).rgb; 
+    float3 material      = materialTexture.Sample(defaultSample, input.m_uv).rgb; 
+    float3 vertexNormal  = vertexNormalTexture.Sample(defaultSample, input.m_uv).xyz; 
+    
+    float metallic      = material.r;
+    float emissiveData  = material.b;
+    float roughness     = material.g;
+    float ao = normalTexture.Sample(defaultSample, input.m_uv).a;
+    
+    float3 toEye = normalize(CameraPosition.xyz - worldPosition);
   
-    float3 F0 = 0.04f;
-    //F0 = lerp(F0, albedo.rgb, metallic);
+    //float shadowData = PixelShader_Shadow(float4(worldposition, 1.0f));
     
-    float4 worldPosition = worldPositionTexture.Sample(defaultSample, input.m_uv);
-	
-    float3 lightDir = normalize(LightDirection);
-    float diff = max(dot(normal.rgb, lightDir), 0.f);
-    float3 diffuse = (LightColor.rgb * LightColor.w) * diff * albedo.rgb;
+    //float3 r = reflect(toEye, normalize(normal));
     
-    float3 V = normalize(CameraPosition.xyz - input.m_position.xyz);
-    float3 reflectDir = reflect(lightDir, V);
-    float spec = pow(max(dot(V, reflectDir), 0.f), roughness);
-    float3 specular = spec * material.rgb;
-    //float3 viewDir = normalize(CameraPosition - )
+    float3 specualrcolor = lerp((float3) 0.04, albedo, metallic);
+    float3 diffusecolor  = lerp((float3) 0.00, albedo, 1 - metallic);
+   
+     //diffusecolor *= ao;
     
-    float3 result = (AmbientColor.rgb * AmbientColor.w) + diffuse * spec;
-    color.rgb = result;
-    //
-    //float3 L = LightDirection;
-    //float3 H = normalize(V - lightDir);
+    float3 ambience = EvaluateAmbience(skyboxTexture, defaultSample, vertexNormal, normal, toEye, roughness, metallic, albedo, ao, albedo, specualrcolor, AmbientColor);
+    float3 directionalLight = EvaluateDirectionalLight(diffusecolor, specualrcolor, normal, roughness, LightColor.rgb * LightColor.w, LightDirection.xyz, toEye.xyz);
+    //if (shadowData > 0.0f)
+    //{
+    //}
+    //else
+    //{
+    //    directionalLight = shadowColor.rgb * shadowColor.w;
+    //}
+    //float3 directionallight = EvaluateDirectionalLight(diffusecolor, specualrcolor, normal, perceptualroughness, myLightColor.rgb * myLightColor.w, myLightDirection.xyz, toEye.xyz);
+
+    float3 emissive = albedo * emissiveData;
+    float3 radiance = ambience + directionalLight + emissive;
     
-    //float distance = length(CameraPosition);
-    //float attenuation = 1.0f / (distance * distance);
-    //float3 radiance = (LightColor.rgb * LightColor.w) * attenuation;
+    // Fog that i want to get in!
+    //float4 oldWorldPos = worldPositionTexture.Sample(defaultSample, input.m_uv).xyzw - CameraPosition.xyzw;
+    //float fogDistance = length(oldWorldPos.xyz) / fogDistanceMultiplier;
     //
-    //float NDF = DistributionGGX(normal.rgb, H, roughness);
-    //float   G = GeometrySmith(normal.rgb, V, -lightDir, roughness);
-    //float3  F = FresnelSchlick(max(dot(H, V), 0.f), F0);
+    //float fogAmount = 1. - exp2(-fogDensity * fogDensity * fogDistance * fogDistance * LOG2);
+    //fogAmount = clamp(fogAmount, 0.f, 1.f);
     //
-    //float3 kS = F;
-    //float3 kD = 1.0 - kS;
-    //kD *= 1.0f - metallic;
+    //float3 newFogColor = enviromentTexture.Sample(defaultSampler, oldWorldPos.xyz).rgb;
+    //newFogColor = GammaToLinear(newFogColor);
     //
-    //float3 numerator = NDF * G * F;
-    //float  denominator = 4.0f * max(dot(normal.rgb, V), 0.f) * max(dot(normal.rgb, -lightDir), 0.f) + 0.0001f;
-    //float3 specular = spec * (numerator / denominator);
-    //
-    //float NdotL = max(dot(normal.rgb, L), 0.f);
-    //float3 Lo = (kD * albedo.rgb / PI + specular) * radiance * NdotL;
-	//
-    //float3 ambient = (AmbientColor.rgb * AmbientColor.w) * albedo.rgb * normal.a;
-    //color.rgb = ambient + diffuse + spec;
+    //if (fogAmount < fogClip)
+    //{
+    //    newFogColor = fogColor.rgb;
+    //}
+    //else
+    //{
+    //    newFogColor = lerp(fogColor.rgb, newFogColor, fogAmount);
+    //}
+
+    //radiance = lerp(radiance.rgb, newFogColor.rgb, fogAmount.rrr);
+   
+    switch (CameraPosition.w)
+    {
+        case 0:
+            color.rgb = radiance;    
+            break;
+        case 1:
+            color.rgb = albedo;
+            break;
+        case 2:
+            color.rgb = 0.5f + 0.5f * normal;
+            break;
+        case 3:
+            color.rgb = material;
+            break;
+        case 4:
+            color.rgb = vertexNormal;
+            break;
+        case 5:
+            color.rgb = worldPosition;
+        break;
+        
+        default:
+            color.rgb = radiance;
+            break;
+    }
+    
     color.a = 1.f;
-    
-    //color.rgb = color.rgb / (color.rgb + 1.0f);
-    //color.rgb = pow(color.rgb, 1.0f / 2.2f);
    
 	return color;
 }
