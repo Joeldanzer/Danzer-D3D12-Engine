@@ -231,7 +231,7 @@ void RenderManager::Impl::RenderScene(TextureHandler& textureHandler, ModelHandl
 			D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET
 		);
 		
-		m_gBuffer.ClearRenderTargets(cmdList, {0.5f, 0.5f, 1.f, 1.f}, 1, &m_framework.m_scissorRect);
+		m_gBuffer.ClearRenderTargets(cmdList, {0.0f, 0.0f, 0.f, 0.f}, 1, &m_framework.m_scissorRect);
 		
 		CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(m_framework.m_depthDescriptor->GetCPUDescriptorHandleForHeapStart());
 		std::array<CD3DX12_CPU_DESCRIPTOR_HANDLE, GBUFFER_COUNT> rtvHandle = m_gBuffer.GetRTVDescriptorHandles();

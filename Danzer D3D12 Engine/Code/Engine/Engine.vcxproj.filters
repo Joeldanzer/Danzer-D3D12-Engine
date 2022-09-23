@@ -144,5 +144,6 @@
     <ClInclude Include="Components\DirectionalLight.h" />
     <ClInclude Include="Rendering\Buffers\LightBuffer.h" />
     <ClInclude Include="Rendering\Buffers\MaterialBuffer.h" />
+    <ClInclude Include="Components\Material.h" />
   </ItemGroup>
 </Project>

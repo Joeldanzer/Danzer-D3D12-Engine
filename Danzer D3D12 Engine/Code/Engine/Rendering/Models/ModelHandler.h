@@ -23,7 +23,7 @@ public:
 	~ModelHandler();
 
 	Model CreateCustomModel(CustomModel model, std::wstring texturePath = L"Sprites/defaultTexture.dds", bool transparent = false);
-	Model LoadModel(std::wstring fileName, bool transparent = false, bool uvFlipped = false);
+	Model LoadModel(std::wstring fileName, std::string name = "", bool transparent = false, bool uvFlipped = false);
 	Model LoadModel(LoaderModel* loadedModel, bool transparent = false, bool uvFlipped = false);
 	UINT GetExistingModel(std::string modelName);
 

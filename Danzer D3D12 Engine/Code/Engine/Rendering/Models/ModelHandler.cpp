@@ -92,11 +92,11 @@ Model ModelHandler::CreateCustomModel(CustomModel customModel, std::wstring text
 
 // Load model from Assimp, if you need to get a model ID 
 // Use GetExistingModel(srtring name) instead. 
-Model ModelHandler::LoadModel(std::wstring fileName, bool transparent, bool uvFlipped)
+Model ModelHandler::LoadModel(std::wstring fileName, std::string name, bool transparent, bool uvFlipped)
 {
-	std::string nameStr(fileName.begin(), fileName.end());
+	//std::string nameStr(fileName.begin(), fileName.end());
 	
-	UINT exists = GetExistingModel(nameStr);
+	UINT exists = GetExistingModel(name);
 	if (exists != 0) {
 		return exists;
 	}
@@ -104,11 +104,10 @@ Model ModelHandler::LoadModel(std::wstring fileName, bool transparent, bool uvFl
 	// Always restet CommandLists as executing them requires them to be close
 	m_framework.ResetCommandListAndAllocator(nullptr);
 
-	//Model model;
-	std::unique_ptr<LoaderModel> loadedModel = m_modelLoader.LoadModelFromAssimp(nameStr, uvFlipped);
-	nameStr = SetModelName(fileName);
+	std::string modelStr = { fileName.begin(), fileName.end() };
+	std::unique_ptr<LoaderModel> loadedModel = m_modelLoader.LoadModelFromAssimp(modelStr, uvFlipped);
 
-	std::vector<ModelData::Mesh> meshes = LoadMeshFromLoaderModel(loadedModel.get(), nameStr);
+	std::vector<ModelData::Mesh> meshes = LoadMeshFromLoaderModel(loadedModel.get(), modelStr);
 	std::vector<Vect3f> verticies = loadedModel->m_verticies;
 
 	// Now we set the buffer infromation into our BUFFER_VIEWS as well as 
@@ -126,7 +125,13 @@ Model ModelHandler::LoadModel(std::wstring fileName, bool transparent, bool uvFl
 	
 	m_textureHandler.LoadAllCreatedTexuresToGPU();
 
-	UINT id = GetNewlyCreatedModelID(ModelData(meshes, m_framework.GetDevice(), verticies, SetModelName(fileName), transparent));
+	std::string modelName = "";
+	if (name.empty())
+		modelName = SetModelName(fileName);
+	else
+		modelName = name;
+
+	UINT id = GetNewlyCreatedModelID(ModelData(meshes, m_framework.GetDevice(), verticies, modelName, transparent));
 	return Model(id);
 }
 
@@ -163,7 +168,9 @@ Model ModelHandler::LoadModel(LoaderModel* loadedModel, bool transparent, bool u
 
 UINT ModelHandler::GetExistingModel(std::string modelName)
 {
-	modelName = SetModelName({ modelName.begin(), modelName.end() }); 
+	if(modelName.empty())
+		modelName = SetModelName({ modelName.begin(), modelName.end() }); 
+
 	for (UINT i = 0; i < m_models.size(); i++)
 	{
 		if (modelName == m_models[i].Name()) {

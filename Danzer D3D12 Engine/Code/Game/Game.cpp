@@ -25,26 +25,25 @@ Game::Impl::Impl(Engine& engine) :
 	entt::registry& reg = engine.GetSceneManager().GetCurrentScene().Registry();
 
 	entt::entity crate = engine.GetSceneManager().GetCurrentScene().CreateBasicEntity("Crate");
-	entt::entity containerBlue  = engine.GetSceneManager().GetCurrentScene().CreateBasicEntity("ContainerBlue");
+	entt::entity copper  = engine.GetSceneManager().GetCurrentScene().CreateBasicEntity("ContainerBlue");
 	//entt::entity containerRed   = engine.GetSceneManager().GetCurrentScene().CreateBasicEntity("ContainerRed");
 	//entt::entity containerGreen = engine.GetSceneManager().GetCurrentScene().CreateBasicEntity("ContainerGreen");
 
-	Model crateModel = engine.GetModelHandler().LoadModel(L"Models/WoodenCrate.fbx");
-	reg.emplace<Model>(crate, crateModel);
+	//Model crateModel = engine.GetModelHandler().LoadModel(L"Models/WoodenCrate.fbx");
+	//reg.emplace<Model>(crate, crateModel);
 
-	Model container = engine.GetModelHandler().LoadModel(L"Models/VertexPaintPlane.fbx");
-	reg.emplace<Model>(containerBlue, container);
+	Model copperSphere = engine.GetModelHandler().LoadModel(L"Models/SphereTest.fbx", "CopperSphere");
+	reg.emplace<Model>(copper, copperSphere);
+	//engine.GetModelHandler().SetAlbedoForModel(crateModel.m_modelID, { "Sprites/WoodenCrate_A.dds" });
+	//engine.GetModelHandler().SetNormalForModel(crateModel.m_modelID, { "Sprites/WoodenCrate_N.dds" });
+	//engine.GetModelHandler().SetMaterialValues(crateModel.m_modelID, 0.0f, 0.25f, 10.f);
 
-	engine.GetModelHandler().SetAlbedoForModel(crateModel.m_modelID, { "Sprites/WoodenCrate_A.dds" });
-	engine.GetModelHandler().SetNormalForModel(crateModel.m_modelID, { "Sprites/WoodenCrate_N.dds" });
-	engine.GetModelHandler().SetMaterialValues(crateModel.m_modelID, 0.0f, 0.25f, 10.f);
-
-	engine.GetModelHandler().SetAlbedoForModel(container.m_modelID,  { "Sprites/Copper_01_a.dds" });
-	engine.GetModelHandler().SetNormalForModel(container.m_modelID,  { "Sprites/Copper_01_n.dds" });
-	engine.GetModelHandler().SetMaterialForModel(container.m_modelID,{ "Sprites/Copper_01_m.dds" });
+	engine.GetModelHandler().SetAlbedoForModel(copperSphere.m_modelID,  { "Sprites/BlueRoof_A.dds" });
+	engine.GetModelHandler().SetNormalForModel(copperSphere.m_modelID,  { "Sprites/BlueRoof_N.dds" });
+	engine.GetModelHandler().SetMaterialForModel(copperSphere.m_modelID,{ "Sprites/BlueRoof_M.dds" });
 	//engine.GetModelHandler().SetMaterialValues(container.m_modelID, 1.0f, 0.25f, 0.f);
 
-	reg.get<Transform>(containerBlue).m_position = { 5.f, 0.f, 0.f };
+	//reg.get<Transform>(sphere).m_position = { 0.f, 0.f, 0.f };
 	//engine.GetModelHandler().SetMaterialForModel(model.m_modelID, { "Sprites/Milk_Churn_M.dds" });
 
 }
