@@ -3,10 +3,12 @@
 
 #include "SceneManager.h"
 #include "Rendering/Models/ModelHandler.h"
+#include "Rendering/TextureHandler.h"
 
 #include "Components/Model.h"
 #include "Components/Transform.h"
 #include "Components/DirectionalLight.h"
+
 
 class Game::Impl {
 public:
@@ -24,43 +26,24 @@ Game::Impl::Impl(Engine& engine) :
 {
 	entt::registry& reg = engine.GetSceneManager().GetCurrentScene().Registry();
 
-	entt::entity crate = engine.GetSceneManager().GetCurrentScene().CreateBasicEntity("Crate");
 	entt::entity copper  = engine.GetSceneManager().GetCurrentScene().CreateBasicEntity("ContainerBlue");
-	//entt::entity containerRed   = engine.GetSceneManager().GetCurrentScene().CreateBasicEntity("ContainerRed");
-	//entt::entity containerGreen = engine.GetSceneManager().GetCurrentScene().CreateBasicEntity("ContainerGreen");
-
-	//Model crateModel = engine.GetModelHandler().LoadModel(L"Models/WoodenCrate.fbx");
-	//reg.emplace<Model>(crate, crateModel);
 
 	Model copperSphere = engine.GetModelHandler().LoadModel(L"Models/SphereTest.fbx", "CopperSphere");
 	reg.emplace<Model>(copper, copperSphere);
-	//engine.GetModelHandler().SetAlbedoForModel(crateModel.m_modelID, { "Sprites/WoodenCrate_A.dds" });
-	//engine.GetModelHandler().SetNormalForModel(crateModel.m_modelID, { "Sprites/WoodenCrate_N.dds" });
-	//engine.GetModelHandler().SetMaterialValues(crateModel.m_modelID, 0.0f, 0.25f, 10.f);
-
-	engine.GetModelHandler().SetAlbedoForModel(copperSphere.m_modelID,  { "Sprites/BlueRoof_A.dds" });
-	engine.GetModelHandler().SetNormalForModel(copperSphere.m_modelID,  { "Sprites/BlueRoof_N.dds" });
-	engine.GetModelHandler().SetMaterialForModel(copperSphere.m_modelID,{ "Sprites/BlueRoof_M.dds" });
-	//engine.GetModelHandler().SetMaterialValues(container.m_modelID, 1.0f, 0.25f, 0.f);
-
-	//reg.get<Transform>(sphere).m_position = { 0.f, 0.f, 0.f };
-	//engine.GetModelHandler().SetMaterialForModel(model.m_modelID, { "Sprites/Milk_Churn_M.dds" });
-
+	
+	std::array<std::string, 3> textures;
+	textures[0] = "Sprites/BlueRoof_A.dds";
+	textures[1] = "Sprites/BlueRoof_N.dds";
+	textures[2] = "Sprites/BlueRoof_M.dds";
+	float color[4] = { 1.f, 1.f, 1.f, 1.f };
+	Material material = m_engine.GetTextureHandler().CreateMaterial(textures.data(), 1.f, 1.f, 0.f, color);
+	m_engine.GetModelHandler().SetMaterialForModel(copperSphere.m_modelID, material);
 }
 Game::Impl::~Impl(){}
 
 void Game::Impl::Update(const float dt)
 {
 	entt::registry& reg = m_engine.GetSceneManager().GetCurrentScene().Registry();
-
-	auto view = reg.view<Transform, DirectionalLight>();
-
-	for (auto i : view )
-	{
-		Transform& transform = reg.get<Transform>(i);
-
-		//transform.m_rotation *= Quat4f::CreateFromAxisAngle({ 0.f, 1.f, 0.f }, dt);
-	}
 }
 
 

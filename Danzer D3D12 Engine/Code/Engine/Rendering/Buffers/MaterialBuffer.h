@@ -16,8 +16,9 @@ public:
 		float m_metallic = 0.0f;
 		float m_roughness = 0.0f;
 		float m_emissive = 0.0f;
-		// 0 = false, 1 = true
 		UINT m_hasMaterialTexture = 0;
+		
+		float m_color[4] = { 1.f, 1.f, 1.f, 1.f };
 	};
 
 private:

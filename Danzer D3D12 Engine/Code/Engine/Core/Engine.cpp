@@ -68,7 +68,6 @@ Engine::Impl::Impl(unsigned int width, unsigned int height) :
 	m_textureHandler(m_framework),
 	m_modelHandler(m_framework, m_textureHandler),
 	m_spriteHandler(m_framework, m_textureHandler),
-	//m_levelLoader(m_modelHandler, m_textureHandler),
 	m_skybox(m_textureHandler),
 	m_deltaTime(0.f)
 {
@@ -101,7 +100,6 @@ Engine::Impl::~Impl()
 	m_windowHandler.~WindowHandler();
 	m_modelHandler.~ModelHandler();
 	m_spriteHandler.~SpriteHandler();
-	//m_levelLoader.~LevelLoaderCustom();
 	m_collisionManager.~CollisionManager();
 	m_skybox.~Skybox();
 }

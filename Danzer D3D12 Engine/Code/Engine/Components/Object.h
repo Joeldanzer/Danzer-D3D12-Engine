@@ -16,4 +16,7 @@ struct Object{
 
 	STATE m_state  = STATE::ACTIVE;
 	bool  m_static = false;
+
+	// Used for edito
+	bool  m_selected = false;
 }; 

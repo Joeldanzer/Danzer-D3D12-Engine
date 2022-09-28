@@ -10,76 +10,60 @@
 #include "Core/DirectX12Framework.h"
 #include "Rendering/Models/ModelHandler.h"
 #include "Components/DirectionalLight.h"
+#include "Rendering/TextureHandler.h"
 
 #include "Components/Text.h"
 #include "Components/Object.h"
 #include "Components/Sprite.h"
 #include "Components/Transform.h"
 
+#include <shtypes.h>
+#include <ShlObj_core.h>
+#include <tchar.h>
+
 #include "../3rdParty/imgui-master/imgui.h"
 
 ImguiHandler::ImguiHandler() : 
-	m_engine(nullptr),
-	m_object(nullptr),
-	m_object2D(nullptr)
+	m_engine(nullptr)
 {}
 ImguiHandler::~ImguiHandler()
 {
-	m_object = nullptr;
+    m_name = nullptr;
+    m_tag  = nullptr;
 	m_engine = nullptr;
 }
 
 void ImguiHandler::Init(Engine& engine)
 {
 	m_engine = &engine;
+	
+	m_rightWindow.m_height = WindowHandler::GetWindowData().m_height;
+	m_rightWindow.m_width = 400;
+	m_rightWindow.m_positon.x = WindowHandler::GetWindowData().m_width - (m_rightWindow.m_width/2);
+	m_rightWindow.m_positon.y = m_rightWindow.m_height / 2;
+
+	m_leftWindow.m_height = WindowHandler::GetWindowData().m_height / 2;
+	m_leftWindow.m_width = 400;
+	m_leftWindow.m_positon.x = m_leftWindow.m_width / 2;
+	m_leftWindow.m_positon.y = m_leftWindow.m_height / 2;
+
+	m_tag = new char;
+	m_name = new char;
 }
 
 void ImguiHandler::Update(const float dt)
 {
-	//Scene& scene = m_engine->GetSceneManager().GetCurrentScene();
 	DirectX12Framework& framework = m_engine->GetFramework();
 	Scene& scene = m_engine->GetSceneManager().GetCurrentScene();
 	entt::registry& reg = scene.Registry();
 
-
-	if (ImGui::Begin("Directional Lighting")) {
-
-		auto list = reg.view<DirectionalLight>();
-		DirectionalLight* light = nullptr;
-		Transform*	  transform = nullptr;
-		for (auto ent : list) {
-			// Only exist one in every scene
-			light = &reg.get<DirectionalLight>(ent);
-			transform = &reg.get<Transform>(ent);
-			break;
-		}
-
-		if (light && transform) {
-			static float lightColor[3] = {light->m_lightColor.x, light->m_lightColor.y, light->m_lightColor.z};
-			ImGui::ColorEdit3("Light Color", lightColor);
-			
-			static float lightStr = light->m_lightColor.w;
-			ImGui::DragFloat("Light Strength", &lightStr, 0.1f, 0.f, 1000.f);
-			light->m_lightColor.w = lightStr;
-			
-			light->m_lightColor = { lightColor[0], lightColor[1], lightColor[2], lightStr };
-
-			static float ambientColor[4] = { light->m_ambientColor.x, light->m_ambientColor.y, light->m_ambientColor.z, light->m_ambientColor.w};
-			ImGui::ColorEdit3("Ambient Color", ambientColor);
-			
-			static float ambientStr = light->m_ambientColor.w;
-			ImGui::DragFloat("AAmbient Strength", &ambientStr, 0.1f, 0.f, 1000.f);
-			light->m_ambientColor.w = ambientStr;
-
-			light->m_ambientColor = {ambientColor[0], ambientColor[1], ambientColor[2], ambientStr};
-
-			static float rotation[3] = { transform->m_rotation.x, transform->m_rotation.y, transform->m_rotation.z };
-			ImGui::DragFloat3("Rotation", rotation, 0.1f, -1000.f, 1000.f);
-			transform->m_rotation = Quat4f::CreateFromYawPitchRoll({ rotation[0], rotation[1], rotation[2] });
-		}
-
-		ImGui::End();
-	}
+	StaticWindows();
+	
+	//if (ImGui::ListBoxHeader("Scene View")) {
+	//	
+	//
+	//	ImGui::ListBoxFooter();
+	//+}
 
 	//if (ImGui::BeginMainMenuBar()) {
 	//
@@ -194,6 +178,281 @@ void ImguiHandler::Update(const float dt)
 	////ImGui::ShowDemoWindow(&show);
 }
 
+
+void ImguiHandler::StaticWindows()
+{
+	ImGuiWindowFlags staticWindowFlags =
+		ImGuiWindowFlags_NoMove |
+		ImGuiWindowFlags_NoResize |
+		ImGuiWindowFlags_NoCollapse;
+
+	entt::registry& reg = m_engine->GetSceneManager().GetCurrentScene().Registry();
+	//* Left Side window Begin
+	{
+		ImGui::SetNextWindowSize({ (float)m_leftWindow.m_width, (float)m_leftWindow.m_height });
+		ImGui::SetNextWindowPos({ m_leftWindow.m_positon.x, m_leftWindow.m_positon.y }, 0, { 0.5f, 0.5f });
+		ImGui::SetNextWindowBgAlpha(1.f);
+		bool isOpen = true;
+
+		//static bool selectedEntity = false;
+
+		if (ImGui::Begin("Scene View", &isOpen, staticWindowFlags)) {
+			if (ImGui::ListBoxHeader("##", {(float)m_leftWindow.m_width, (float)m_leftWindow.m_width})) {
+				auto scene = reg.view<Transform, Object>();
+				for (auto entity : scene) {
+					Object& obj = reg.get<Object>(entity);
+					bool isSelected = (entity == m_currentEntity);
+					if (ImGui::Selectable(obj.m_name.c_str(), isSelected)) {
+						m_currentEntity = entity;
+						m_currentMesh = 0;
+						Transform& transform = reg.get<Transform>(entity);
+						//memcpy(m_currentRotation, &transform.m_rotation.x, sizeof(float) * 3);
+
+						if (!m_itemsHasBeenSelected)
+							m_itemsHasBeenSelected = true;
+					}
+
+
+				}
+				
+				ImGui::ListBoxFooter();
+			}
+
+			ImGui::End();
+		}
+	}
+	//* Left Side window End
+
+	//* Right side window begin
+	{
+		ImGui::SetNextWindowSize({ (float)m_rightWindow.m_width, (float)m_rightWindow.m_height });
+		ImGui::SetNextWindowPos({ m_rightWindow.m_positon.x, m_rightWindow.m_positon.y }, 0, { 0.5f, 0.5f });
+		ImGui::SetNextWindowBgAlpha(1.f);
+		bool isOpen = true;
+		if (ImGui::Begin("Component Window", &isOpen, staticWindowFlags)) {
+
+			if (m_itemsHasBeenSelected) {
+				if(ObjectSettings(reg))
+					ImGui::Separator();
+				if(TransformSettings(reg))
+					ImGui::Separator();
+				if (DirectionalLightSettings(reg))
+					ImGui::Separator();
+				if (ModelDataSettings(reg))
+					ImGui::Separator();
+			}
+				//Transform& transform = reg.get<Transform>(m_currentEntity);
+			ImGui::End();
+		}
+	}
+	//* Right side window en
+}
+bool ImguiHandler::ModelDataSettings(entt::registry& reg)
+{
+	Model* model = reg.try_get<Model>(m_currentEntity);
+	if (model) {
+		if (ImGui::CollapsingHeader("ModelData")) {
+			ModelData& data = m_engine->GetModelHandler().GetLoadedModelInformation(model->m_modelID);
+			
+			ImGui::Text("Model Name: ");
+			ImGui::SameLine();
+			ImGui::Text(data.Name().c_str());
+
+			if (m_currentMesh > data.GetMeshes().size() - 1)
+				m_currentMesh = 0;
+			
+			ImGui::SliderInt("Mesh", &m_currentMesh, 0, data.GetMeshes().size() - 1);
+			ModelData::Mesh& currentMesh = data.GetMeshes()[m_currentMesh];
+
+			Material& material = currentMesh.m_material;
+			static float roughness = material.m_roughness;
+			static float shininess = material.m_shininess;
+			static float emissive = material.m_emissvie;
+			static float color[3] = { material.m_color[0], material.m_color[1], material.m_color[2] };
+
+			ImGui::ColorEdit3("Albedo Color", color);
+			ImGui::DragFloat("Roughness", &roughness, 0.01f, 0.01f, 2.f);
+			ImGui::DragFloat("Shininess", &shininess, 0.01f, 0.0f, 2.f);
+			ImGui::DragFloat("Emissive", &emissive, 0.01f, 0.f, 5.f);
+
+			material.m_roughness = roughness;
+			material.m_shininess = shininess;
+			material.m_emissvie = emissive;
+			memcpy(material.m_color, color, sizeof(float) * 3);
+			
+			ImGui::Separator();
+			ImGui::Text("Textures");
+
+			//Abedo start
+			{
+				std::wstring albedo;
+				if (ImGui::Button("Albedo")) {
+					albedo = OpenFileExplorer();
+					material.m_albedo = m_engine->GetTextureHandler().GetTexture(albedo);
+					if (material.m_albedo == 0){
+						material.m_albedo = m_engine->GetTextureHandler().CreateTexture(albedo);
+					}
+				}
+				else
+					albedo = m_engine->GetTextureHandler().GetTextureData(material.m_albedo).m_texturePath;
+
+				ImGui::SameLine();
+				CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle = AddImguiImage(albedo);
+				ImGui::Image((ImTextureID)srvHandle.ptr, { 50.f, 50.f });
+			}
+			//Albedo end
+
+			ImGui::SameLine();
+			{
+				std::wstring normal;
+				if (ImGui::Button("Normal")) {
+					normal = OpenFileExplorer();
+					material.m_normal = m_engine->GetTextureHandler().GetTexture(normal);
+					if (material.m_normal  == 0) {
+						material.m_normal = m_engine->GetTextureHandler().CreateTexture(normal);
+					}
+				}
+				else
+					normal = m_engine->GetTextureHandler().GetTextureData(material.m_normal).m_texturePath;
+
+				ImGui::SameLine();
+				CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle = AddImguiImage(normal);
+				ImGui::Image((ImTextureID)srvHandle.ptr, { 50.f, 50.f });
+			}
+
+			ImGui::SameLine();
+			{
+				std::wstring metallic;
+				if (ImGui::Button("Metallic")) {
+					metallic = OpenFileExplorer();
+					material.m_metallic = m_engine->GetTextureHandler().GetTexture(metallic);
+					if (material.m_metallic == 0) {
+						material.m_metallic = m_engine->GetTextureHandler().CreateTexture(metallic);
+					}
+				}
+				else
+					metallic = m_engine->GetTextureHandler().GetTextureData(material.m_metallic).m_texturePath;
+
+
+				ImGui::SameLine();
+				CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle = AddImguiImage(metallic);
+				ImGui::Image((ImTextureID)srvHandle.ptr, { 50.f, 50.f });
+			}
+
+		}
+			return true;
+	}
+
+	return false;
+}
+
+bool ImguiHandler::ObjectSettings(entt::registry& reg)
+{	
+	Object& obj = reg.get<Object>(m_currentEntity);
+	ImGui::Text(obj.m_name.c_str());
+	ImGui::Separator();
+	if (ImGui::CollapsingHeader("Object")) {
+
+		int len = strlen(obj.m_tag.c_str());
+		memcpy(m_tag, obj.m_tag.c_str(), len + 1);
+		ImGui::InputText("Tag", m_tag, 30);
+		obj.m_tag = m_tag;
+
+		bool isStatic = obj.m_static;
+		ImGui::Checkbox("Static", &isStatic);
+		obj.m_static = isStatic;
+
+		//const char* stateCombo[] = { "ACTIVE", "NOT_ACTIVE" };
+		const char* currentState = nullptr;
+		if (ImGui::BeginCombo("State", currentState)) {
+			for (UINT i = 0; i < m_stateNames.size(); i++)
+			{
+				bool isSelected = (currentState == m_stateNames[i].c_str());
+
+				if (ImGui::Selectable(m_stateNames[i].c_str(), isSelected))
+					currentState = m_stateNames[i].c_str();
+
+				if (isSelected) {
+					ImGui::SetItemDefaultFocus();
+
+					if (currentState == m_stateNames[0]) {
+						obj.m_state = Object::STATE::ACTIVE;
+					}
+
+					if (currentState == m_stateNames[1]) {
+						obj.m_state = Object::STATE::NOT_ACTIVE;
+					}
+
+					if (currentState == m_stateNames[2]) {
+						obj.m_state = Object::STATE::DESTROY;
+					}
+				}
+
+			}
+			ImGui::EndCombo();
+		}
+
+		return true;
+
+	}
+
+	return false;
+}
+bool ImguiHandler::TransformSettings(entt::registry& reg)
+{
+	Transform& transform = reg.get<Transform>(m_currentEntity);
+	if (ImGui::CollapsingHeader("Transform")) {
+		
+		float position[3] = {transform.m_position.x, transform.m_position.y, transform.m_position.z };
+		float scale[3]	  = {transform.m_scale.x,    transform.m_scale.y,    transform.m_scale.z	};
+		
+		Vect3f euler = transform.m_rotation.ToEuler();
+		float rotation[3] = { euler.y, euler.x, euler.z };
+
+		ImGui::DragFloat3("Position", position, 0.01f, -FLT_MAX, FLT_MAX);
+		ImGui::DragFloat3("Rotation", rotation, 0.01f, -FLT_MAX, FLT_MAX);
+		ImGui::DragFloat3("Scale",    scale,    0.01f, -FLT_MAX, FLT_MAX);
+
+		transform.m_position = { position[0], position[1], position[2], 1.f };
+		transform.m_rotation = Quat4f::CreateFromYawPitchRoll(rotation[0], rotation[1], rotation[2]);
+		transform.m_scale	 = { scale[0], scale[1], scale[2], 1.f};
+
+		return true;
+	}
+
+	return false;
+}
+
+bool ImguiHandler::DirectionalLightSettings(entt::registry& reg)
+{
+	DirectionalLight* light = reg.try_get<DirectionalLight>(m_currentEntity);
+	if (light) {
+		if (ImGui::CollapsingHeader("Directional Light")) {
+			float lightColor[3] = { light->m_lightColor.x, light->m_lightColor.y, light->m_lightColor.z };
+			ImGui::ColorEdit3("Light Color", lightColor);
+
+			float lightStr = light->m_lightColor.w;
+			ImGui::DragFloat("Light Strength", &lightStr, 0.1f, 0.f, 1000.f);
+			light->m_lightColor.w = lightStr;
+
+			light->m_lightColor = { lightColor[0], lightColor[1], lightColor[2], lightStr };
+
+			float ambientColor[4] = { light->m_ambientColor.x, light->m_ambientColor.y, light->m_ambientColor.z, light->m_ambientColor.w };
+			ImGui::ColorEdit3("Ambient Color", ambientColor);
+
+			float ambientStr = light->m_ambientColor.w;
+			ImGui::DragFloat("AAmbient Strength", &ambientStr, 0.1f, 0.f, 1000.f);
+			light->m_ambientColor.w = ambientStr;
+
+			light->m_ambientColor = { ambientColor[0], ambientColor[1], ambientColor[2], ambientStr };
+
+			return true;
+		}
+	}
+
+	return false;
+}
+
 CD3DX12_GPU_DESCRIPTOR_HANDLE ImguiHandler::AddImguiImage(std::wstring path)
 {
 	
@@ -242,132 +501,34 @@ CD3DX12_GPU_DESCRIPTOR_HANDLE ImguiHandler::AddImguiImage(std::wstring path)
 
 	return m_imguiTextures[m_imguiTextures.size() - 1].m_srvGpuHandle;
 }
-
-void ImguiHandler::Object3DImgui()
+std::wstring ImguiHandler::OpenFileExplorer()
 {
-	TextureHandler& textureHandler = m_engine->GetTextureHandler();
-	ModelHandler& modelHandler = m_engine->GetModelHandler();
+	//LPOPENFILE
+	WCHAR fileName[MAX_PATH];//[MAX_PATH];
+	OPENFILENAME ofn;
+	ZeroMemory(&ofn, sizeof(ofn));
+	ZeroMemory(&fileName, sizeof(fileName)); 
+	ofn.lStructSize = sizeof(ofn);
+	ofn.hwndOwner = NULL;
+	ofn.lpstrFilter = _T(".dds");
+	ofn.lpstrFile = fileName;
+	ofn.lpstrInitialDir = _T("Sprites\\");
+	ofn.nMaxFile = MAX_PATH;
+	ofn.lpstrTitle = _T("Select Texture");
+	ofn.Flags = OFN_DONTADDTORECENT | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR;
 
-	//if (m_object) {
-	//	ImGui::Text(m_object->GetName().c_str());
-	//	ImGui::Separator();
-	//	if (ImGui::CollapsingHeader("Transform")) {
-	//		m_pos[0] = m_object->GetPosition().x; m_pos[1] = m_object->GetPosition().y; m_pos[2] = m_object->GetPosition().z;
-	//		ImGui::DragFloat3("Position", m_pos);
-	//		m_object->SetPosition({ m_pos[0], m_pos[1], m_pos[2] });
-	//
-	//		m_sca[0] = m_object->GetScale().x; m_sca[1] = m_object->GetScale().y; m_sca[2] = m_object->GetScale().z;
-	//		ImGui::DragFloat3("Scale", m_sca);
-	//		m_object->SetScale({ m_sca[0], m_sca[1], m_sca[2] });
-	//
-	//		m_rot[0] = m_object->GetRotation().x; m_rot[1] = m_object->GetRotation().y; m_rot[2] = m_object->GetRotation().z;
-	//		ImGui::DragFloat3("Rotation", m_rot);
-	//		//m_object->SetRotation({ m_rot[0], m_rot[1], m_rot[2] });
-	//	}
-	//
-	//	if (ImGui::CollapsingHeader("Model")) {
-	//		if (m_object->GetModel() != 0) {
-	//			ModelData& model = modelHandler.GetLoadedModelInformation(m_object->GetModel());
-	//
-	//			std::string modelNameInfo("Name: " + model.Name());
-	//			std::string modelId("ID: " + std::to_string(model.GetID()));
-	//			ImGui::Text(modelId.c_str());
-	//
-	//			ImGui::Text(modelNameInfo.c_str());
-	//			ImGui::SliderInt("Mesh", &m_currentMesh, 0, static_cast<int>(model.GetMeshes().size()) - 1);
-	//			if (m_currentMesh > model.GetMeshes().size() - 1)
-	//				m_currentMesh = 0;
-	//
-	//			ModelData::Mesh& mesh = model.GetSingleMesh(m_currentMesh);
-	//			ImGui::Checkbox("Render mesh", &mesh.m_renderMesh);
-	//			ImGui::Separator();
-	//			ImGui::Text("Mesh Textures:");
-	//			for (UINT i = 0; i < model.GetMeshes().size(); i++)
-	//			{
-	//				CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle = AddImguiImage(textureHandler.GetTextures()[mesh.m_texture - 1].m_texturePath);
-	//				ImGui::Image(
-	//					(ImTextureID)srvHandle.ptr,
-	//					{ 100, 100 }
-	//				);
-	//				ImGui::SameLine();
-	//			}
-	//
-	//			// Just to use up the SameLine function after the for loop
-	//			ImGui::Text("");
-	//			ImGui::Separator();
-	//		}
-	//	}
-	//}
-}
+	if (GetOpenFileName(&ofn)) {
+		
+		std::wstring texture(fileName);
+		if (!texture.empty() || texture.find_last_of(L".dds") != std::wstring::npos) {
+			size_t pos = texture.find(L"Sprites\\");
+			texture = texture.erase(0, pos);
+			
+			pos = texture.find(L"\\");
+			texture.replace(pos, 1, L"/");
 
-void ImguiHandler::Object2DImgui()
-{
-	TextureHandler& textureHandler = m_engine->GetTextureHandler();
-
-	//if (m_object2D) {
-	//	ImGui::Text(m_object2D->GetName().c_str());
-	//	ImGui::Separator();
-	//	if (ImGui::CollapsingHeader("Transform")) {
-	//		m_pos2D[0] = m_object2D->GetPosition().x; m_pos2D[1] = m_object2D->GetPosition().y; 
-	//		ImGui::DragFloat3("Position", m_pos2D);
-	//		m_object2D->SetPosition({ m_pos2D[0], m_pos2D[1] });
-	//
-	//		m_rot2D[0] = m_object2D->GetRotation().x; m_rot2D[1] = m_object2D->GetRotation().y; 
-	//		ImGui::DragFloat3("Rotation", m_rot2D);
-	//		m_object2D->SetRotation({ m_rot2D[0], m_rot2D[1] });
-	//	}
-	//
-	//	for (UINT i = 0; i < m_object2D->GetComponents().size(); i++)
-	//	{
-	//		Component* comp = m_object2D->GetComponents()[i];
-	//
-	//		SpriteData* sprite = dynamic_cast<SpriteData*>(comp);
-	//		if (sprite) {
-	//			if (ImGui::CollapsingHeader("Sprite")) {
-	//				Sprite& const spriteSheet = m_engine->GetSpriteFactory().GetSprite(sprite->m_spriteSheet);
-	//
-	//				std::string spriteName("Name: " + spriteSheet.Name());
-	//				std::string spriteID("ID:" + std::to_string(spriteSheet.GetID()));
-	//
-	//				ImGui::Text(spriteID.c_str());
-	//				ImGui::Text(spriteName.c_str());
-	//
-	//				m_currentFrame = sprite->m_frame;
-	//
-	//				ImGui::SliderInt("Frame", &m_currentFrame, 0, static_cast<int>(spriteSheet.GetSheet().m_frames.size()) - 1);
-	//				sprite->m_frame = m_currentFrame;
-	//
-	//				ImGui::Separator();
-	//				ImGui::Text("Sprite Sheet Texture");
-	//				CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle = AddImguiImage(textureHandler.GetTextures()[spriteSheet.GetSheet().m_texture].m_texturePath);
-	//				ImGui::Image((ImTextureID)srvHandle.ptr, { 100, 100 });
-	//				ImGui::Separator();
-	//			}
-	//		}
-	//		
-	//		TextData* text = dynamic_cast<TextData*>(comp);
-	//		if (text) {
-	//			if (ImGui::CollapsingHeader("Text")) {
-	//				Font& const font = m_engine->GetSpriteFactory().GetFont(text->m_font);
-	//
-	//				std::string fontName("Name: " + font.Name());
-	//				std::string fontID("ID:" + std::to_string(font.GetID()));
-	//
-	//				ImGui::Text(fontID.c_str());
-	//				ImGui::Text(fontName.c_str());
-	//
-	//				strncpy_s(m_text, text->m_text.c_str(), sizeof(char) * _countof(m_text));
-	//
-	//				ImGui::InputText("Text", m_text, sizeof(char) * _countof(m_text));
-	//				text->m_text = std::string(m_text);
-	//
-	//				ImGui::Separator();
-	//				ImGui::Text("Sprite Sheet Texture");
-	//				CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle = AddImguiImage(textureHandler.GetTextures()[font.GetData().m_texture].m_texturePath);
-	//				ImGui::Image((ImTextureID)srvHandle.ptr, { 100, 100 });
-	//				ImGui::Separator();
-	//			}
-	//		}
-	//	}
-	//}
+			return texture;
+		}
+	}
+	return L"";
 }

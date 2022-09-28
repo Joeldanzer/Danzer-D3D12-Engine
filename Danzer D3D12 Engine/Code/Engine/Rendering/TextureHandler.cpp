@@ -8,7 +8,16 @@
 #include <filesystem>
 #include <fstream>
 
-
+TextureHandler::TextureHandler(DirectX12Framework& framework) :
+	m_framework(framework)
+{
+	//*The 2 Default Textures
+	//std::array<std::string, 2> defaultTextures = { "Sprites/greyEmptyTexture.dds" ,"Sprites/defaultTexture.dds" };
+	//CreateTexture(L"Sprites/greyEmptyTexture.dds");
+	//CreateTexture(L"Sprites/defaultTexture.dds");
+	//LoadAllCreatedTexuresToGPU();
+	LoadAllExistingTextures();
+}
 TextureHandler::~TextureHandler()
 {
 	for (UINT i = 0; i < m_textures.size(); i++)
@@ -105,9 +114,28 @@ std::vector<UINT> TextureHandler::CreateMultipleTextures(std::string* textures, 
 //	return newTextures;
 //}
 
+Material TextureHandler::CreateMaterial(std::string textures[3], float metallic, float roughness, float emissive, float color[4])
+{
+	std::vector<UINT> IDs = CreateMultipleTextures(&textures[0], 3);
+
+	Material material;
+	material.m_albedo =   IDs[0];
+	material.m_normal =   IDs[1];
+	material.m_metallic = IDs[2];
+
+	material.m_shininess = metallic;
+	material.m_roughness = roughness;
+	material.m_emissvie = emissive;
+
+	for (UINT i = 0; i < 4; i++)
+		material.m_color[i] = color[i];
+	
+	return material;
+}
+
 //* Create Texture expects CommandList to have already been resetted
 //* before use. LoadAllCreatedTexuresToGPU also needs to be called directly after this,
-//* CreateMultipleTextures loads all to GPU automatically.
+//* CreateMultipleTextures loads all created textures to the GPU automatically.
 UINT TextureHandler::CreateTexture(std::wstring file, bool isCubeMap)
 {	
 	file = GetCorrectPathAndName(file);
@@ -128,13 +156,15 @@ UINT TextureHandler::CreateTexture(std::wstring file, bool isCubeMap)
 	m_resourceBarriers.emplace_back(resource);
 	m_tempTextures.emplace_back(texture);
 
+	LoadAllCreatedTexuresToGPU();
+
 	return m_textures.size() + m_tempTextures.size();
 }
 
 
 UINT TextureHandler::GetTexture(std::wstring texturePath)
 {
-	texturePath = GetCorrectPathAndName(texturePath);
+	//texturePath = GetCorrectPathAndName(texturePath);
 	for (UINT i = 0; i < m_textures.size(); i++)
 	{
 		if (texturePath == m_textures[i].m_texturePath)

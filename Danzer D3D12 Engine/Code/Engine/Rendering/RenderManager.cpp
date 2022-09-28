@@ -80,18 +80,6 @@ RenderManager::Impl::Impl::~Impl(){
 
 void RenderManager::Impl::Impl::RenderImgui()
 {
-	D3D12_RECT rect;
-	rect = m_framework.m_scissorRect;
-	rect.bottom = WindowHandler::GetWindowData().m_height;
-	rect.right  = WindowHandler::GetWindowData().m_width;
-
-	D3D12_VIEWPORT view = m_framework.m_viewport;
-	view.Height = (float)WindowHandler::GetWindowData().m_height;
-	view.Width  = (float)WindowHandler::GetWindowData().m_width;
-
-	m_framework.m_commandList->RSSetViewports(1, &view);
-	m_framework.m_commandList->RSSetScissorRects(1, &rect);
-
 	ID3D12DescriptorHeap* descHeaps[] = { m_framework.GetImguiHeap() };
 	m_framework.GetCommandList()->SetDescriptorHeaps(
 		_countof(descHeaps),

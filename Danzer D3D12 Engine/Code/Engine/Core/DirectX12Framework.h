@@ -25,7 +25,7 @@ public:
 	void TransitionMultipleRTV(ID3D12Resource** resources, UINT numberOfresources, D3D12_RESOURCE_STATES present, D3D12_RESOURCE_STATES newState);
 
 	void QeueuRTVTransitions(ID3D12Resource** resources, UINT numberOfresources, D3D12_RESOURCE_STATES present, D3D12_RESOURCE_STATES newState);
-	void TransitionRTVS()
+	void TransitionRTVS(); 
 
 	void SetViewport(UINT w, UINT h);
 

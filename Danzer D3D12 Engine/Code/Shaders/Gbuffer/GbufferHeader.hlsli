@@ -37,9 +37,10 @@ cbuffer Material : register(b1)
     float Roughness;
     float Emissive;
     uint  HasMaterialTexture;
+    float4 MaterialColor;
     
     //256-byte alligned
-    float4 trashMaterial[15];
+    float4 trashMaterial[14];
 }
 
 SamplerState defaultSampler   : register(s0);

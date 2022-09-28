@@ -215,31 +215,12 @@ UINT ModelHandler::LoadModelFromLevel(LoaderModel* loadedModel, std::vector<UINT
 
 
 
-void ModelHandler::SetAlbedoForModel(UINT model, std::vector<std::string> textures)
+void ModelHandler::SetMaterialForModel(UINT model, Material material, UINT meshIndex)
 {
-	ModelData& data = m_models[model - 1];
-	data.m_albedoTextures = m_textureHandler.CreateMultipleTextures(&textures[0], data.m_meshes.size());
-}
+	ModelData& modelData = m_models[model - 1]; 
+	ModelData::Mesh& mesh = modelData.m_meshes[meshIndex];
 
-void ModelHandler::SetNormalForModel(UINT model, std::vector<std::string> textures)
-{
-	ModelData& data = m_models[model - 1];
-	data.m_normalTextures = m_textureHandler.CreateMultipleTextures(&textures[0], data.m_meshes.size());
-}
-
-void ModelHandler::SetMaterialForModel(UINT model, std::vector<std::string> textures)
-{
-	ModelData& data = m_models[model - 1];
-	data.m_materialTextures = m_textureHandler.CreateMultipleTextures(&textures[0], data.m_meshes.size());
-	data.m_hasMaterialTextures = true;
-}
-
-void ModelHandler::SetMaterialValues(UINT model, float metallic, float roughness, float emissive)
-{
-	ModelData& data = m_models[model - 1];
-	data.m_material.m_emissive = emissive;
-	data.m_material.m_metallic = metallic;
-	data.m_material.m_roughnes = roughness;
+	mesh.m_material = material;
 }
 
 UINT ModelHandler::GetNewlyCreatedModelID(ModelData model)

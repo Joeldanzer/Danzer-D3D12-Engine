@@ -1,5 +1,7 @@
 #pragma once
 
+
+#include "Material.h"
 #include "ModelData.h"
 #include "Components/Model.h"
 #include "ModelLoaderCustom.h"
@@ -18,8 +20,6 @@ public:
 		m_textureHandler(textureHandler),
 		m_modelLoader()
 	{}
-
-	//void Init(DirectX12Framework& framework, RenderManager& renderManager);
 	~ModelHandler();
 
 	Model CreateCustomModel(CustomModel model, std::wstring texturePath = L"Sprites/defaultTexture.dds", bool transparent = false);
@@ -39,19 +39,13 @@ public:
 
 	ModelLoaderCustom& GetModelLoader() { return m_modelLoader; }
 
-	//void SetTexturesForModel(UINT model, std::vector<std::string> textures);
-	void SetAlbedoForModel(UINT model,   std::vector<std::string> textures);
-	void SetNormalForModel(UINT model,   std::vector<std::string> textures);
-	void SetMaterialForModel(UINT model, std::vector<std::string> textures);
-	void SetMaterialValues(UINT model, float metallic, float roughness, float emissive);
+	void SetMaterialForModel(UINT model, Material material, UINT mesh = 0);
 
 	std::vector<ModelData>& GetAllModels() {
 		return m_models;
 	}
 
 private:	
-	
-
 	UINT GetNewlyCreatedModelID(ModelData model);
 
 	std::vector<ModelData::Mesh> LoadMeshFromLoaderModel(LoaderModel* loadedModel, std::string name);

@@ -152,7 +152,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Components\Collision\Collider.h" />
-    <ClInclude Include="Components\Material.h" />
+    <ClInclude Include="Rendering\Models\Material.h" />
     <ClInclude Include="Components\Model.h" />
     <ClInclude Include="Components\Object.h" />
     <ClInclude Include="Components\Transform.h" />
