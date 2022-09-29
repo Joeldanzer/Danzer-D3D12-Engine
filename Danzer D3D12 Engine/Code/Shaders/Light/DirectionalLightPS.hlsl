@@ -33,7 +33,7 @@ float4 main(VertexToPixel input) : SV_TARGET
    
      //diffusecolor *= ao;
     
-    float3 ambience = EvaluateAmbience(skyboxTexture, defaultSample, vertexNormal, normal, toEye, roughness, metallic, albedo, ao, albedo, specualrcolor, AmbientColor);
+    float3 ambience = EvaluateAmbience(skyboxTexture, defaultSample, normal, vertexNormal, toEye, roughness, metallic, albedo, ao, albedo, specualrcolor, AmbientColor);
     float3 directionalLight = EvaluateDirectionalLight(diffusecolor, specualrcolor, normal, roughness, LightColor.rgb * LightColor.w, LightDirection.xyz, toEye.xyz);
     //if (shadowData > 0.0f)
     //{

@@ -190,13 +190,22 @@ float3 EvaluateAmbience(TextureCube cubeMap, SamplerState defaultSampler, float3
     
     float l = BurleyToMip(perceptualRoughness, numMips, RdotNsat);
     
+    float3 cubeMapColor = cubeMap.Sample(defaultSampler, vR).rgb;
+    
     float3 specRad = cubeMap.SampleLevel(defaultSampler, vR, l).rgb;
     float3 diffRad = cubeMap.SampleLevel(defaultSampler, vN, (float) (nrBrdfMips - 1)).rgb;
     
     ambientStr.rgb *= ambientStr.w;
-    
-    specRad *= ambientStr.rgb;
-    diffRad *= ambientStr.rgb;
+    if (length(specRad) == 0.f && length(diffRad) == 0.f)
+    {
+        diffRad = ambientStr.rgb;
+        specRad = ambientStr.rgb; 
+    }
+    else
+    {
+        diffRad *= ambientStr.rgb;
+        specRad *= ambientStr.rgb;
+    }
     
     float fT = 1.0 - RdotNsat;
     float fT5 = fT * fT;
@@ -207,7 +216,10 @@ float3 EvaluateAmbience(TextureCube cubeMap, SamplerState defaultSampler, float3
     fFade *= EmpiricalSpecularAO(ao, perceptualRoughness);
     fFade *= ApproximateSpecularSelfOcclusion(vR, org_normal);
     
-    float3 ambientdiffuse = ao * dfcol * diffRad;
+    float3 col = float3(1.f, 1.f, 1.f);
+    col *= cubeMapColor;
+    
+    float3 ambientdiffuse = ao * dfcol * diffRad + (col * 0);
     float3 ambientspecular = fFade * spccol * specRad;
     return ambientdiffuse + ambientspecular;
 }

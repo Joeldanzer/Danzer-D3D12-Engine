@@ -18,11 +18,11 @@ Editor::Editor(Engine& engine) :
 {
 	m_imguiHandler.Init(engine);
 	
-	entt::registry& reg = m_engine.GetSceneManager().GetCurrentScene().Registry();
-	Scene& scene = engine.GetSceneManager().GetCurrentScene();
+	entt::registry& reg = m_engine.SceneManager().GetCurrentScene().Registry();
+	Scene& scene = engine.SceneManager().GetCurrentScene();
 
 	entt::entity entity = scene.CreateBasicEntity("cube");
-	Model model(engine.GetModelHandler().CreateCustomModel(ModelData::GetCube()));
+	Model model(engine.ModelHandler().CreateCustomModel(ModelData::GetCube()));
 	reg.emplace<Model>(entity, model);
 
 	Transform& transform = reg.get<Transform>(entity);
@@ -39,9 +39,9 @@ void Editor::Update(const float deltaTime)
 
 void Editor::CameraControlls(const float dt)
 {
-	entt::registry& reg = m_engine.GetSceneManager().GetCurrentScene().Registry();
-	Transform& transform = reg.get<Transform>(m_engine.GetSceneManager().GetCurrentScene().GetMainCamera());
-	Camera& camera = reg.get<Camera>(m_engine.GetSceneManager().GetCurrentScene().GetMainCamera());
+	entt::registry& reg = m_engine.SceneManager().GetCurrentScene().Registry();
+	Transform& transform = reg.get<Transform>(m_engine.SceneManager().GetCurrentScene().GetMainCamera());
+	Camera& camera = reg.get<Camera>(m_engine.SceneManager().GetCurrentScene().GetMainCamera());
 
 	if (Input::GetInstance().IsKeyDown(VK_SHIFT)) {
 		if (Input::GetInstance().IsMouseDown(Input::MouseButton::Left) && Input::GetInstance().MouseDeltaX() > 0 || 
