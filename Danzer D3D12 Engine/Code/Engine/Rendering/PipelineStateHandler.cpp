@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "PipelineStateHandler.h"
 #include "Core/DirectX12Framework.h"
-#include "ScreenTextures\GBuffer.h"
+#include "Screen Rendering/GBuffer.h"
 
 #pragma comment(lib, "dxguid.lib")
 #pragma comment(lib, "d3dcompiler.lib")

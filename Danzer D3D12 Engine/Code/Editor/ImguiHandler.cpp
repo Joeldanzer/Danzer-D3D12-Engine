@@ -53,8 +53,8 @@ void ImguiHandler::Init(Engine& engine)
 
 void ImguiHandler::Update(const float dt)
 {
-	DirectX12Framework& framework = m_engine->Framework();
-	Scene& scene = m_engine->SceneManager().GetCurrentScene();
+	DirectX12Framework& framework = m_engine->GetFramework();
+	Scene& scene = m_engine->GetSceneManager().GetCurrentScene();
 	entt::registry& reg = scene.Registry();
 
 	StaticWindows();
@@ -186,7 +186,7 @@ void ImguiHandler::StaticWindows()
 		ImGuiWindowFlags_NoResize |
 		ImGuiWindowFlags_NoCollapse;
 
-	entt::registry& reg = m_engine->SceneManager().GetCurrentScene().Registry();
+	entt::registry& reg = m_engine->GetSceneManager().GetCurrentScene().Registry();
 	//* Left Side window Begin
 	{
 		ImGui::SetNextWindowSize({ (float)m_leftWindow.m_width, (float)m_leftWindow.m_height });
@@ -252,7 +252,7 @@ bool ImguiHandler::ModelDataSettings(entt::registry& reg)
 	Model* model = reg.try_get<Model>(m_currentEntity);
 	if (model) {
 		if (ImGui::CollapsingHeader("ModelData")) {
-			ModelData& data = m_engine->ModelHandler().GetLoadedModelInformation(model->m_modelID);
+			ModelData& data = m_engine->GetModelHandler().GetLoadedModelInformation(model->m_modelID);
 			
 			ImGui::Text("Model Name: ");
 			ImGui::SameLine();
@@ -288,13 +288,13 @@ bool ImguiHandler::ModelDataSettings(entt::registry& reg)
 				std::wstring albedo;
 				if (ImGui::Button("Albedo")) {
 					albedo = OpenFileExplorer();
-					material.m_albedo = m_engine->TextureHandler().GetTexture(albedo);
+					material.m_albedo = m_engine->GetTextureHandler().GetTexture(albedo);
 					if (material.m_albedo == 0){
-						material.m_albedo = m_engine->TextureHandler().CreateTexture(albedo);
+						material.m_albedo = m_engine->GetTextureHandler().CreateTexture(albedo);
 					}
 				}
 				else
-					albedo = m_engine->TextureHandler().GetTextureData(material.m_albedo).m_texturePath;
+					albedo = m_engine->GetTextureHandler().GetTextureData(material.m_albedo).m_texturePath;
 
 				ImGui::SameLine();
 				CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle = AddImguiImage(albedo);
@@ -307,13 +307,13 @@ bool ImguiHandler::ModelDataSettings(entt::registry& reg)
 				std::wstring normal;
 				if (ImGui::Button("Normal")) {
 					normal = OpenFileExplorer();
-					material.m_normal = m_engine->TextureHandler().GetTexture(normal);
+					material.m_normal = m_engine->GetTextureHandler().GetTexture(normal);
 					if (material.m_normal  == 0) {
-						material.m_normal = m_engine->TextureHandler().CreateTexture(normal);
+						material.m_normal = m_engine->GetTextureHandler().CreateTexture(normal);
 					}
 				}
 				else
-					normal = m_engine->TextureHandler().GetTextureData(material.m_normal).m_texturePath;
+					normal = m_engine->GetTextureHandler().GetTextureData(material.m_normal).m_texturePath;
 
 				ImGui::SameLine();
 				CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle = AddImguiImage(normal);
@@ -325,13 +325,13 @@ bool ImguiHandler::ModelDataSettings(entt::registry& reg)
 				std::wstring metallic;
 				if (ImGui::Button("Metallic")) {
 					metallic = OpenFileExplorer();
-					material.m_metallic = m_engine->TextureHandler().GetTexture(metallic);
+					material.m_metallic = m_engine->GetTextureHandler().GetTexture(metallic);
 					if (material.m_metallic == 0) {
-						material.m_metallic = m_engine->TextureHandler().CreateTexture(metallic);
+						material.m_metallic = m_engine->GetTextureHandler().CreateTexture(metallic);
 					}
 				}
 				else
-					metallic = m_engine->TextureHandler().GetTextureData(material.m_metallic).m_texturePath;
+					metallic = m_engine->GetTextureHandler().GetTextureData(material.m_metallic).m_texturePath;
 
 
 				ImGui::SameLine();
@@ -461,11 +461,11 @@ CD3DX12_GPU_DESCRIPTOR_HANDLE ImguiHandler::AddImguiImage(std::wstring path)
 			return m_imguiTextures[i].m_srvGpuHandle;
 	}
 
-	m_engine->Framework().ResetCommandListAndAllocator(nullptr);
+	m_engine->GetFramework().ResetCommandListAndAllocator(nullptr);
 	ImguiTexture texture;
 
-	ID3D12Device* device = m_engine->Framework().GetDevice();
-	ID3D12GraphicsCommandList* cmdList = m_engine->Framework().GetCommandList();
+	ID3D12Device* device = m_engine->GetFramework().GetDevice();
+	ID3D12GraphicsCommandList* cmdList = m_engine->GetFramework().GetCommandList();
 
 	CD3DX12_RESOURCE_BARRIER barrier = LoadATextures(
 		path,
@@ -475,10 +475,10 @@ CD3DX12_GPU_DESCRIPTOR_HANDLE ImguiHandler::AddImguiImage(std::wstring path)
 	);
 
 	cmdList->ResourceBarrier(1, &barrier);
-	m_engine->Framework().ExecuteCommandList();
-	m_engine->Framework().WaitForPreviousFrame();
+	m_engine->GetFramework().ExecuteCommandList();
+	m_engine->GetFramework().WaitForPreviousFrame();
 
-	ID3D12DescriptorHeap* imguiDesc = m_engine->Framework().GetImguiHeap();
+	ID3D12DescriptorHeap* imguiDesc = m_engine->GetFramework().GetImguiHeap();
 
 	CD3DX12_GPU_DESCRIPTOR_HANDLE srvGpuHandle;
 	CD3DX12_CPU_DESCRIPTOR_HANDLE srvCpuHandle;

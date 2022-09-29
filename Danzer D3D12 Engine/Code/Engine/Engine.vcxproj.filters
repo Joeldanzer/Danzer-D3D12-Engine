@@ -59,10 +59,12 @@
     <ClCompile Include="Scene.cpp" />
     <ClCompile Include="SceneManager.cpp" />
     <ClCompile Include="Core\input.cpp" />
-    <ClCompile Include="Rendering\ScreenTextures\GBuffer.cpp" />
-    <ClCompile Include="Rendering\ScreenTextures\ScreenTexture.cpp" />
+    <ClCompile Include="Rendering\Screen Rendering\GBuffer.cpp" />
+    <ClCompile Include="Rendering\Screen Rendering\ScreenTexture.cpp" />
     <ClCompile Include="Rendering\Buffers\LightBuffer.cpp" />
     <ClCompile Include="Rendering\Buffers\MaterialBuffer.cpp" />
+    <ClCompile Include="Rendering\Screen Rendering\FullscreenShader.cpp" />
+    <ClCompile Include="Rendering\Screen Rendering\FullScreenShaderHandler.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Core\DirectX12Framework.h">
@@ -139,11 +141,13 @@
     <ClInclude Include="Components\Transform2D.h" />
     <ClInclude Include="Components\Collision\Collider.h" />
     <ClInclude Include="Core\input.hpp" />
-    <ClInclude Include="Rendering\ScreenTextures\GBuffer.h" />
-    <ClInclude Include="Rendering\ScreenTextures\ScreenTexture.h" />
+    <ClInclude Include="Rendering\Screen Rendering\GBuffer.h" />
+    <ClInclude Include="Rendering\Screen Rendering\ScreenTexture.h" />
     <ClInclude Include="Components\DirectionalLight.h" />
     <ClInclude Include="Rendering\Buffers\LightBuffer.h" />
     <ClInclude Include="Rendering\Buffers\MaterialBuffer.h" />
     <ClInclude Include="Rendering\Models\Material.h" />
+    <ClInclude Include="Rendering\Screen Rendering\FullscreenShader.h" />
+    <ClInclude Include="Rendering\Screen Rendering\FullScreenShaderHandler.h" />
   </ItemGroup>
 </Project>

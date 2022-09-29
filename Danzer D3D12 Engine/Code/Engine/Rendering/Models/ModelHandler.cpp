@@ -80,9 +80,6 @@ Model ModelHandler::CreateCustomModel(CustomModel customModel, std::wstring text
 		Vect3f pos = { customModel.m_verticies[i].m_position.x, customModel.m_verticies[i].m_position.y, customModel.m_verticies[i].m_position.z };
 		verticies.emplace_back(pos);
 	}
-	
-	UINT texture = m_textureHandler.CreateTexture(texturePath);
-	m_textureHandler.LoadAllCreatedTexuresToGPU();
 
 	std::vector<ModelData::Mesh> meshes = { mesh };
 	UINT id = GetNewlyCreatedModelID(ModelData(meshes, m_framework.GetDevice(), verticies, customModel.m_customModelName, transparent));

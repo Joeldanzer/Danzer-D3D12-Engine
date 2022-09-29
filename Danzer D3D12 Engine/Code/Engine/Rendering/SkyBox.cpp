@@ -19,7 +19,7 @@ void Skybox::Init(UINT cubeModel, std::wstring skyBoxTexture, bool spin, std::st
 void Skybox::Update(const float dt)
 {
 	if (m_spin) {
-		m_rotation *= Quat4f::CreateFromAxisAngle({ 0.f, 1.f, 0.f }, dt * 0.05f);
+		m_rotation *= Quat4f::CreateFromAxisAngle({ 0.f, 1.f, 0.f }, dt * 0.01f);
 	}
 }
 

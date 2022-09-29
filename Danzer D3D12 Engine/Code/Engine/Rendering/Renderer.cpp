@@ -58,7 +58,7 @@ void Renderer::UpdateDefaultBuffers(Camera& camera, Transform& transform, UINT f
 	m_commandList->SetGraphicsRootDescriptorTable(0, descHeaps[0]->GetGPUDescriptorHandleForHeapStart());
 }
 
-void Renderer::RenderSkybox(Transform& cameraTransform, TextureHandler::Texture& textures, TextureHandler::Texture& textures1, ModelData& model, Skybox& skybox, UINT frameIndex)
+void Renderer::RenderSkybox(Transform& cameraTransform, TextureHandler::Texture& textures, ModelData& model, Skybox& skybox, UINT frameIndex)
 {
 	UINT oldDescripterIndex = m_descriptorIndex;
 	

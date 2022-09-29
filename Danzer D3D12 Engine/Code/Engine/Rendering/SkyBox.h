@@ -38,6 +38,13 @@ public:
 		
 	}
 
+	UINT GetSkyboxCube() {
+		return m_cube;
+	}
+	UINT GetCurrentSkyboxTexture() {
+		return m_currentSkyBox;
+	}
+
 	std::array<UINT, 2> GetCurrentActiveSkybox() const { return {m_cube, m_currentSkyBox}; }
 	Quat4f& GetRotation() {
 		return m_rotation;

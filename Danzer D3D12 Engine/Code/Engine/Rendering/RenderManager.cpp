@@ -17,7 +17,7 @@
 #include "Components/Transform2D.h"
 #include "Components/DirectionalLight.h"
 
-#include "ScreenTextures/GBuffer.h"
+#include "Screen Rendering/GBuffer.h"
 #include "Camera.h"
 
 #include "SkyBox.h"
@@ -110,82 +110,7 @@ void RenderManager::Impl::Impl::RenderFrame(TextureHandler& textureHandler, Mode
 		D3D12_CLEAR_FLAG_DEPTH, 1.f, 0, 1, &m_framework.m_scissorRect);
 
 	RenderScene(textureHandler, modelHandler, scene, skybox);
-	
-	// Transisition resource barrier from present to render target
-	//CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(
-	//	m_framework.m_rtvHeap->GetCPUDescriptorHandleForHeapStart(),
-	//	m_framework.m_frameIndex, 
-	//	m_framework.m_rtvDescripterSize);
-	//CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(m_framework.m_depthDescriptor->GetCPUDescriptorHandleForHeapStart());
-	//m_framework.TransitionRenderTarget(D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
-	//m_framework.m_commandList->OMSetRenderTargets(1, &rtvHandle, false, &dsvHandle);
-	////m_framework.m_commandList-()
-	//
-	//Vect4f clearColor = { 0.5f, 0.5f, 1.f, 1.f };
-	//
-	//// Start Model Rendering
-	//{
-	//	std::vector<ModelData>& models = modelHandler.GetAllModels();
-	//	m_framework.m_commandList->SetGraphicsRootSignature(m_pipeLineHandler.GetRootSignature(ROOTSIGNATURE_STATE_DEFAULT));
-	//	m_mainRenderer.UpdateDefaultBuffers(cam, camTransform, m_framework.GetFrameIndex());
-	//	
-	//	m_framework.m_commandList->SetPipelineState(m_pipeLineHandler.GetPSO(PIPELINE_STATE_SKYBOX));
-	//	m_mainRenderer.RenderSkybox(camTransform, 
-	//		textureHandler.GetTextures()[skybox.GetCurrentActiveSkybox()[1] - 1], 
-	//		textureHandler.GetTextures()[0],
-	//		models[skybox.GetCurrentActiveSkybox()[0] - 1], 
-	//		skybox,
-	//		m_framework.GetFrameIndex()
-	//	);
-	//
-	//	Update3DInstances(scene, modelHandler);	
-	//	m_framework.m_commandList->SetPipelineState(m_pipeLineHandler.GetPSO(PIPELINE_STATE_MODELS));
-	//	m_mainRenderer.DefaultRender(models, m_framework.GetFrameIndex(), textureHandler.GetTextures());
-	//	
-	//	// * Transparent rendering
-	//	//m_framework.m_commandList->SetPipelineState(m_pipeLineHandler.GetPSO(PIPELINE_STATE_TRANSPARENT));
-	//	//m_mainRenderer.TransparentRender(scene, m_transparentObjects, models, m_framework.GetFrameIndex(), textureHandler.GetTextures());
-	//}
-	//// End Model Renedering
-	//
-	//
-	//// Render editor models
-	//if (s_engineState == EngineState::ENGINE_STATE_EDITOR) {
-	//
-	//	// Start Collision Rendering
-	//	{
-	//		if (!m_aabbInstances.empty()) {
-	//			m_framework.m_commandList->SetPipelineState(m_pipeLineHandler.GetPSO(PIPELINE_STATE_AABB_WIREFRAME));
-	//			m_mainRenderer.AABBRendering(m_aabbInstances, m_framework.GetFrameIndex());
-	//		}
-	//
-	//		if (!m_rayInstances.empty()) {
-	//			m_framework.m_commandList->SetPipelineState(m_pipeLineHandler.GetPSO(PIPELINE_STATE_RAY_WIREFRAME));
-	//			m_mainRenderer.RayRendering(m_rayInstances, m_framework.GetFrameIndex());
-	//		}
-	//	}
-	//	// End Collision Rendering
-	//}
-	//
-	//// Start UI Rendering
-	//{
-	//	Update2DInstances(scene, spriteHandler);
-	//	
-	//	m_framework.m_commandList->SetGraphicsRootSignature(m_pipeLineHandler.GetRootSignature(ROOTSIGNATURE_STATE_UI)); 
-	//	m_framework.m_commandList->SetPipelineState(m_pipeLineHandler.GetPSO(PIPELINE_STATE_UI));
-	//
-	//	m_2dRenderer.UpdateDefaultUIBuffers(m_framework.GetFrameIndex());
-	//	m_2dRenderer.RenderUI(spriteHandler.GetAllSprites(), m_framework.GetFrameIndex(), textureHandler.GetTextures());
-	//
-	//	m_framework.m_commandList->SetPipelineState(m_pipeLineHandler.GetPSO(PIPELINE_STATE_FONT));
-	//	m_2dRenderer.RenderFontUI(spriteHandler.GetAllFonts(), m_framework.GetFrameIndex(), textureHandler.GetTextures());
-	//}
-	//// End UI Rendering 
-	//
-	//
-	//m_framework.TransitionRenderTarget(D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
-	
-	//RenderImgui();
+
 	m_framework.ExecuteCommandList();
 	ClearAllInstances(modelHandler, spriteHandler);
 }
@@ -214,11 +139,22 @@ void RenderManager::Impl::RenderScene(TextureHandler& textureHandler, ModelHandl
 		cmdList->SetGraphicsRootSignature(m_pipeLineHandler.GetRootSignature(ROOTSIGNATURE_STATE_GBUFFER));
 		cmdList->SetPipelineState(m_pipeLineHandler.GetPSO(PIPELINE_STATE_GBUFFER));
 		
-		m_framework.TransitionMultipleRTV(
+		//m_framework.TransitionMultipleRTV(
+		//	&m_gBuffer.GetGbufferResources()[0], GBUFFER_COUNT,
+		//	D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET
+		//);
+
+		m_framework.QeueuResourceTransition(
 			&m_gBuffer.GetGbufferResources()[0], GBUFFER_COUNT,
 			D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET
 		);
+		ID3D12Resource* resources[] = { m_framework.GetRTV() };
+		m_framework.QeueuResourceTransition(&resources[0], _countof(resources),
+			D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET
+		);
 		
+		m_framework.TransitionAllResources();
+
 		m_gBuffer.ClearRenderTargets(cmdList, {0.0f, 0.0f, 0.f, 0.f}, 1, &m_framework.m_scissorRect);
 		
 		CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(m_framework.m_depthDescriptor->GetCPUDescriptorHandleForHeapStart());
@@ -232,28 +168,40 @@ void RenderManager::Impl::RenderScene(TextureHandler& textureHandler, ModelHandl
 			textureHandler.GetTextures()
 		);	
 	
-		m_framework.TransitionMultipleRTV(
+		m_framework.QeueuResourceTransition(
 			&m_gBuffer.GetGbufferResources()[0], GBUFFER_COUNT,
-			D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
-		);
-
+			D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+		m_framework.TransitionAllResources();
+		//m_framework.TransitionMultipleRTV(
+		//	&m_gBuffer.GetGbufferResources()[0], GBUFFER_COUNT,
+		//	D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
+		//);
 	}
 	//* Scene to Gbuffer end
-	//m_framework.ExecuteCommandList();
-	//m_framework.WaitForPreviousFrame();
-	//m_framework.ResetCommandListAndAllocator(m_pipeLineHandler.GetPSO(PIPELINE_STATE_GBUFFER));
 
 	//* Render scene Ligthing start
-	{
+	{	
+		cmdList->SetGraphicsRootSignature(m_pipeLineHandler.GetRootSignature(ROOTSIGNATURE_STATE_DEFAULT));
+		cmdList->SetPipelineState(m_pipeLineHandler.GetPSO(PIPELINE_STATE_SKYBOX));
+
+		float c[4] = { 0.5f, 0.5f, 1.f, 1.f };
+		D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = m_framework.GetCurrentRTVHandle();
+		CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(m_framework.m_depthDescriptor->GetCPUDescriptorHandleForHeapStart());
+		cmdList->ClearRenderTargetView(rtvHandle, &c[0], 1, &m_framework.m_scissorRect);
+		cmdList->OMSetRenderTargets(1, &rtvHandle, false, &dsvHandle);
+		
+		m_mainRenderer.UpdateDefaultBuffers(cam, camTransform, m_framework.GetFrameIndex());
+
+		m_mainRenderer.RenderSkybox(camTransform, 
+			textureHandler.GetTextures()[skybox.GetCurrentSkyboxTexture() - 1],
+			modelHandler.GetAllModels()[skybox.GetSkyboxCube() - 1],
+			skybox, 
+			m_framework.GetFrameIndex()
+		);
+
 		cmdList->SetGraphicsRootSignature(m_pipeLineHandler.GetRootSignature(ROOTSIGNATURE_STATE_LIGHT));
 		cmdList->SetPipelineState(m_pipeLineHandler.GetPSO(PIPELINE_STATE_DIRECTIONAL_LIGHT));
 		
-		m_framework.TransitionRenderTarget(D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
-		float c[4] = { 0.5f, 0.5f, 1.f, 1.f };
-		D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = m_framework.GetCurrentRTVHandle();
-		cmdList->ClearRenderTargetView(rtvHandle, &c[0], 1, &m_framework.m_scissorRect);
-		cmdList->OMSetRenderTargets(1, &rtvHandle, false, nullptr);
-			
 		m_gBuffer.AssignSRVSlots(cmdList, 2);
 	
 		auto list = scene.Registry().view<DirectionalLight, Transform>();
@@ -266,7 +214,6 @@ void RenderManager::Impl::RenderScene(TextureHandler& textureHandler, ModelHandl
 			break;
 		}
 	
-		m_mainRenderer.UpdateDefaultBuffers(cam, camTransform, m_framework.GetFrameIndex());
 		m_mainRenderer.RenderDirectionalLight(
 			directionalLight, 
 			directionaLightdir, 
@@ -274,10 +221,10 @@ void RenderManager::Impl::RenderScene(TextureHandler& textureHandler, ModelHandl
 			m_framework.GetFrameIndex()
 		);
 			 
-		m_framework.TransitionMultipleRTV(
-			&m_gBuffer.GetGbufferResources()[0], GBUFFER_COUNT,
-			D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_PRESENT
-		);
+		//m_framework.TransitionMultipleRTV(
+		//	&m_gBuffer.GetGbufferResources()[0], GBUFFER_COUNT,
+		//	D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_PRESENT
+		//);
 
 		RenderImgui();
 

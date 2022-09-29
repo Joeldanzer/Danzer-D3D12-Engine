@@ -63,9 +63,9 @@ int main(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ PWSTR 
 			break;
 		}
 
-		game.Update(engine.DeltaTime());
+		game.Update(engine.GetDeltaTime());
 		engine.Update();
-		editor.Update(engine.DeltaTime());
+		editor.Update(engine.GetDeltaTime());
 		
 		engine.LateUpdate();
 
