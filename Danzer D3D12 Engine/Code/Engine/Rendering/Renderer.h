@@ -41,7 +41,7 @@ public:
 	void DefaultRender(std::vector<ModelData>& models, UINT frameIndex, std::vector<TextureHandler::Texture>& textures);
 	//void TransparentRender(Scene* scene, std::vector<Object*>& objects, std::vector<ModelData>& transparentModels, UINT frameIndex, std::vector<TextureHandler::Texture> textures);
 	void RenderToGbuffer(std::vector<ModelData>& models, UINT frameIndex, std::vector<TextureHandler::Texture>& textures);
-	
+
 	void RayRendering(std::vector<RayBuffer::RayInstance >& rays, UINT frameIndex);
 	void AABBRendering(std::vector<AABBBuffer::AABBInstance>& aabb, UINT frameIndex);
 

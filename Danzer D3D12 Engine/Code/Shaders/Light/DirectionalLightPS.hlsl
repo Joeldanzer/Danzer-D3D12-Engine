@@ -12,7 +12,6 @@ float4 main(VertexToPixel input) : SV_TARGET
     if (!(length(worldPosition) > 0))
         discard;
     
-        
     float3 albedo        = albedoTexture.Sample(defaultSample, input.m_uv).rgb;
     float3 normal        = normalTexture.Sample(defaultSample, input.m_uv).rgb; 
     float3 material      = materialTexture.Sample(defaultSample, input.m_uv).rgb; 
@@ -75,7 +74,7 @@ float4 main(VertexToPixel input) : SV_TARGET
             color.rgb = radiance;    
             break;
         case 1:
-            color.rgb = albedo;
+            color.rgb = albedo  * AmbientColor.w;
             break;
         case 2:
             color.rgb = 0.5f + 0.5f * normal;

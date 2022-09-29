@@ -230,6 +230,7 @@ _pkginfo.txt
 # but keep track of directories ending in .cache
 !?*.[Cc]ache/
 
+
 # Others
 ClientBin/
 ~$*
@@ -398,5 +399,9 @@ FodyWeavers.xsd
 
 ### VisualStudio Patch ###
 # Additional files built by Visual Studio
+Danzer D3D12 Engine\Bin\Shaders\
+*.ini
+*.cso
 
 # End of https://www.toptal.com/developers/gitignore/api/visualstudio
+

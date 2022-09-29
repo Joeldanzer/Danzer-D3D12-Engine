@@ -15,6 +15,9 @@ using namespace DirectX::SimpleMath;
 inline float ToRadians(const float degree) {
 	return degree * (3.14f / 180.f);
 }
+inline float ToDegrees(const float radian) {
+	return radian * (180.f / 3.14f);
+}
 
 inline float DistanceVect3(Vect3f p1, Vect3f p2) {
 	return sqrtf(

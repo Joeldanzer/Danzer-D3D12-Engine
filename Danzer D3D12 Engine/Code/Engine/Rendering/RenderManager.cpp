@@ -80,18 +80,6 @@ RenderManager::Impl::Impl::~Impl(){
 
 void RenderManager::Impl::Impl::RenderImgui()
 {
-	D3D12_RECT rect;
-	rect = m_framework.m_scissorRect;
-	rect.bottom = WindowHandler::GetWindowData().m_height;
-	rect.right  = WindowHandler::GetWindowData().m_width;
-
-	D3D12_VIEWPORT view = m_framework.m_viewport;
-	view.Height = (float)WindowHandler::GetWindowData().m_height;
-	view.Width  = (float)WindowHandler::GetWindowData().m_width;
-
-	m_framework.m_commandList->RSSetViewports(1, &view);
-	m_framework.m_commandList->RSSetScissorRects(1, &rect);
-
 	ID3D12DescriptorHeap* descHeaps[] = { m_framework.GetImguiHeap() };
 	m_framework.GetCommandList()->SetDescriptorHeaps(
 		_countof(descHeaps),
@@ -231,7 +219,7 @@ void RenderManager::Impl::RenderScene(TextureHandler& textureHandler, ModelHandl
 			D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET
 		);
 		
-		m_gBuffer.ClearRenderTargets(cmdList, {0.5f, 0.5f, 1.f, 1.f}, 1, &m_framework.m_scissorRect);
+		m_gBuffer.ClearRenderTargets(cmdList, {0.0f, 0.0f, 0.f, 0.f}, 1, &m_framework.m_scissorRect);
 		
 		CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(m_framework.m_depthDescriptor->GetCPUDescriptorHandleForHeapStart());
 		std::array<CD3DX12_CPU_DESCRIPTOR_HANDLE, GBUFFER_COUNT> rtvHandle = m_gBuffer.GetRTVDescriptorHandles();

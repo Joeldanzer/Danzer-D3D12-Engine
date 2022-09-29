@@ -118,7 +118,6 @@ void Renderer::RenderDirectionalLight(DirectionalLight& light, Vect4f direction,
 	
 	m_commandList->DrawInstanced(3, 1, 0, 0);
 }
-
 //*Simple Renderer that doesnt require any lighting or anything else
 void Renderer::DefaultRender(std::vector<ModelData>& models, UINT frameIndex, std::vector<TextureHandler::Texture>& textures)
 {
@@ -170,15 +169,6 @@ void Renderer::RenderToGbuffer(std::vector<ModelData>& models, UINT frameIndex, 
 		if (!models[i].IsTransparent()) {
 
 			ModelData& model = models[i];
-			std::vector<UINT> albedo   = model.GetAlbedoTextures();
-			std::vector<UINT> normal   = model.GetNormalTextures();
-			std::vector<UINT> material = model.GetMaterialTextures();
-
-			model.UpdatedMaterialBuffer(frameIndex);
-			ID3D12DescriptorHeap* cbvDescHeap = model.GetMaterialBuffer().GetDescriptorHeap(frameIndex);
-			m_commandList->SetDescriptorHeaps(1, &cbvDescHeap);
-			m_commandList->SetGraphicsRootDescriptorTable(1, cbvDescHeap->GetGPUDescriptorHandleForHeapStart()); 
-
 			UINT numberOfTransforms = ((UINT)model.GetInstanceTransforms().size() < MAX_INSTANCES_PER_MODEL) ? (UINT)model.GetInstanceTransforms().size() : MAX_INSTANCES_PER_MODEL;
 
 			if (numberOfTransforms > 0) {
@@ -190,24 +180,43 @@ void Renderer::RenderToGbuffer(std::vector<ModelData>& models, UINT frameIndex, 
 				{
 					ModelData::Mesh& mesh = model.GetMeshes()[j];
 					if (mesh.m_renderMesh) {
+
+						MaterialBuffer::Data materialData;
+						materialData.m_emissive = mesh.m_material.m_emissvie;
+						materialData.m_roughness = mesh.m_material.m_roughness;
+						materialData.m_metallic = mesh.m_material.m_shininess;
+						for (UINT i = 0; i < 4; i++)
+							materialData.m_color[i] = mesh.m_material.m_color[i];
+						materialData.m_hasMaterialTexture = mesh.m_material.m_metallic > 0 ? 1 : 0;
+					
+
+						mesh.m_materialBuffer.UpdateBuffer(frameIndex, &materialData);
+						ID3D12DescriptorHeap* cbvDescHeap = mesh.m_materialBuffer.GetDescriptorHeap(frameIndex);
+						m_commandList->SetDescriptorHeaps(1, &cbvDescHeap);
+						m_commandList->SetGraphicsRootDescriptorTable(1, cbvDescHeap->GetGPUDescriptorHandleForHeapStart());
+						
 						ID3D12DescriptorHeap* albedoHeap;
 						ID3D12DescriptorHeap* normalHeap;
 						ID3D12DescriptorHeap* materialHeap;
 
-						if (albedo.empty())
+						UINT albedo   = mesh.m_material.m_albedo;
+						UINT normal   = mesh.m_material.m_normal;
+						UINT metallic = mesh.m_material.m_metallic;
+
+						if (albedo == 0)
 							albedoHeap = textures[0].m_textureDescriptorHeap.Get();
 						else
-							albedoHeap = textures[albedo[j] - 1].m_textureDescriptorHeap.Get();
+							albedoHeap = textures[albedo - 1].m_textureDescriptorHeap.Get();
 
-						if (normal.empty())
+						if (normal == 0)
 							normalHeap = textures[0].m_textureDescriptorHeap.Get();
 						else
-							normalHeap = textures[normal[j] - 1].m_textureDescriptorHeap.Get();
+							normalHeap = textures[normal - 1].m_textureDescriptorHeap.Get();
 
-						if (material.empty())
+						if (metallic == 0)
 							materialHeap = textures[0].m_textureDescriptorHeap.Get();
 						else
-							materialHeap = textures[material[j] - 1].m_textureDescriptorHeap.Get();
+							materialHeap = textures[metallic - 1].m_textureDescriptorHeap.Get();
 
 						m_commandList->SetDescriptorHeaps(1, &albedoHeap);
 						m_commandList->SetGraphicsRootDescriptorTable(2, albedoHeap->GetGPUDescriptorHandleForHeapStart());
@@ -267,7 +276,6 @@ void Renderer::RenderToGbuffer(std::vector<ModelData>& models, UINT frameIndex, 
 //		}
 //	}
 //}
-
 void Renderer::RayRendering(std::vector <RayBuffer::RayInstance > & rays, UINT frameIndex)
 {
 	m_rayBuffer.UpdateBuffer(reinterpret_cast<UINT8*>(&rays[0]), rays.size(), frameIndex);

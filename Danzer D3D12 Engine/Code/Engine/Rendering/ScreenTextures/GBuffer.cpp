@@ -88,15 +88,12 @@ void GBuffer::InitializeGBuffers(DirectX12Framework& framework)
 
 	CD3DX12_HEAP_PROPERTIES heapProperties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
 
-	//for (UINT i = 0; i < GBUFFER_COUNT; i++)
-	//{
 	D3D12_DESCRIPTOR_HEAP_DESC rtvDesc = {  };
 	rtvDesc.NumDescriptors = GBUFFER_COUNT;
 	rtvDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 	rtvDesc.Type  = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
 	
 	result = device->CreateDescriptorHeap(&rtvDesc, IID_PPV_ARGS(m_rtvDescriptor.GetAddressOf()));
-	//result = device->CreateDescriptorHeap(&rtvDesc, IID_PPV_ARGS(m_rtvDescriptor[i].GetAddressOf()));
 	CHECK_HR(result);
 
 	m_rtvDescriptor->SetName(L"Gbuffer RTV Descriptor");
@@ -110,57 +107,38 @@ void GBuffer::InitializeGBuffers(DirectX12Framework& framework)
 	CHECK_HR(result);
 
 	m_srvDescriptor->SetName(L"Gbuffer SRV Descriptor");
-
-	float clearColor[4] = {0.5f, 0.5f, 1.f, 1.f};
-
-	 m_rtvDescSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-	 m_srvDescSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-
-	//m_rtvHeapSize[i] = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+	m_rtvDescSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+	m_srvDescSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	   
 	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvDescriptor->GetCPUDescriptorHandleForHeapStart());
 	CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(m_srvDescriptor->GetCPUDescriptorHandleForHeapStart());
 
+	float clearColor[4] = {0.f, 0.f, 0.f, 0.f};
 	for (UINT i = 0; i < GBUFFER_COUNT; i++)
 	{
 		D3D12_RESOURCE_DESC resourceDesc = CD3DX12_RESOURCE_DESC::Tex2D(
-		formats[i], width, height, 
-		1, 1, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET 
+			formats[i], width, height,
+			1, 1, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET
 		);
 		D3D12_CLEAR_VALUE clearValue;
 		memcpy(&clearValue.Color[0], &clearColor[0], sizeof(float) * 4);
 		clearValue.Format = formats[i];
-		
+
 		result = device->CreateCommittedResource(
-			&heapProperties, 
+			&heapProperties,
 			D3D12_HEAP_FLAG_ALLOW_ALL_BUFFERS_AND_TEXTURES,
 			&resourceDesc,
 			D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
 			&clearValue,
 			IID_PPV_ARGS(m_resources[i].GetAddressOf()));
 		CHECK_HR(result);
-		
+
 		device->CreateRenderTargetView(m_resources[i].Get(), nullptr, rtvHandle);
 		rtvHandle.Offset(1, m_rtvDescSize);
-		
+
 		device->CreateShaderResourceView(m_resources[i].Get(), nullptr, srvHandle);
 		srvHandle.Offset(1, m_srvDescSize);
 
 		m_resources[i]->SetName((LPCWSTR)bufferNames[i].c_str());
 	}
-
-
-
-
-	//for (UINT j = 0; j < FrameCount; i++)
-	//{			
-	//	device->CreateRenderTargetView(m_resources[i][j].Get(), nullptr, rtvHandle);
-	//	rtvHandle.Offset(1, rtvDescSize);
-	//	
-	//	device->CreateShaderResourceView(m_resources[i][j].Get(), nullptr, srvHandle);
-	//	rtvHandle.Offset(1, srvDescSize);
-	//
-	//	std::wstring name(std::to_wstring(i));
-	//	m_resources[i][j]->SetName((LPCWSTR)name.c_str());
-	//}
-	//}
 }
