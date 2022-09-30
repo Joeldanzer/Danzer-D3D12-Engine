@@ -152,6 +152,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Components\Collision\Collider.h" />
+    <ClInclude Include="Components\Script.h" />
     <ClInclude Include="Rendering\Screen Rendering\FullScreenShaderHandler.h" />
     <ClInclude Include="Rendering\Screen Rendering\FullscreenShader.h" />
     <ClInclude Include="Rendering\Models\Material.h" />

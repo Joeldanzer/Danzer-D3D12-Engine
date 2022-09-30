@@ -22,12 +22,12 @@ public:
 	{}
 	~ModelHandler();
 
-	Model CreateCustomModel(CustomModel model, std::wstring texturePath = L"Sprites/defaultTexture.dds", bool transparent = false);
+	Model CreateCustomModel(CustomModel model, bool transparent = false);
 	Model LoadModel(std::wstring fileName, std::string name = "", bool transparent = false, bool uvFlipped = false);
-	Model LoadModel(LoaderModel* loadedModel, bool transparent = false, bool uvFlipped = false);
-	UINT GetExistingModel(std::string modelName);
+	UINT GetExistingModel(std::wstring modelName);
 
-	UINT LoadModelFromLevel(LoaderModel* loadedModel, std::vector<UINT>& textures, bool transparent = false, bool uvFlipped = false);
+	//Model LoadModel(LoaderModel* loadedModel, bool transparent = false, bool uvFlipped = false);
+	//UINT LoadModelFromLevel(LoaderModel* loadedModel, std::vector<UINT>& textures, bool transparent = false, bool uvFlipped = false);
 
 	ModelData& GetLoadedModelInformation(UINT id) {
 		if (id - 1 < m_models.size() && id != 0)

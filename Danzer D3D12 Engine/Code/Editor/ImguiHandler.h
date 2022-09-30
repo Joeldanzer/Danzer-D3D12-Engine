@@ -68,9 +68,18 @@ private:
 	bool TransformSettings(entt::registry& reg);
 	bool DirectionalLightSettings(entt::registry& reg);
 
-	std::wstring OpenFileExplorer();
+	// Not sure if I have named it correct
+	struct FileExplorerExtension {
+		std::wstring m_fileType;
+		std::wstring m_folder;
+	};
+
+	std::wstring OpenFileExplorer(FileExplorerExtension file);
 
 	std::array<std::string, 3> m_stateNames = { "ACTIVE", "NOT_ACTIVE", "DESTROY" };
+	std::unordered_map<std::string, FileExplorerExtension> m_fileExtensions;
+
+	std::vector<std::string> m_componentList;
 
 };
 

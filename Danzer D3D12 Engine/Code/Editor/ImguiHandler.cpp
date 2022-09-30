@@ -21,11 +21,27 @@
 #include <ShlObj_core.h>
 #include <tchar.h>
 
+
 #include "../3rdParty/imgui-master/imgui.h"
 
 ImguiHandler::ImguiHandler() : 
-	m_engine(nullptr)
-{}
+	m_engine(nullptr),
+	m_currentEntity(),
+	m_entitySelected(false),
+	m_name(nullptr),
+	m_tag(nullptr)
+{
+	FileExplorerExtension textures = { L".dds", L"Sprites\\" };
+	m_fileExtensions.emplace("Texture", textures);
+
+	FileExplorerExtension models = { L".fbx", L"Models\\" };
+	m_fileExtensions.emplace("Model", models); 	
+
+	m_componentList = {
+		"Model",
+		"DirectionalLight"
+	};
+}
 ImguiHandler::~ImguiHandler()
 {
     m_name = nullptr;
@@ -56,7 +72,7 @@ void ImguiHandler::Update(const float dt)
 	DirectX12Framework& framework = m_engine->GetFramework();
 	Scene& scene = m_engine->GetSceneManager().GetCurrentScene();
 	entt::registry& reg = scene.Registry();
-
+	//ImGui::ShowDemoWindow();
 	StaticWindows();
 	
 	//if (ImGui::ListBoxHeader("Scene View")) {
@@ -186,6 +202,7 @@ void ImguiHandler::StaticWindows()
 		ImGuiWindowFlags_NoResize |
 		ImGuiWindowFlags_NoCollapse;
 
+	Scene& scene = m_engine->GetSceneManager().GetCurrentScene();
 	entt::registry& reg = m_engine->GetSceneManager().GetCurrentScene().Registry();
 	//* Left Side window Begin
 	{
@@ -197,6 +214,22 @@ void ImguiHandler::StaticWindows()
 		//static bool selectedEntity = false;
 
 		if (ImGui::Begin("Scene View", &isOpen, staticWindowFlags)) {
+			if (ImGui::Button("Create Empty Object")) {
+				scene.CreateBasicEntity("Empty Object");
+			}
+			ImGui::SameLine();
+			if(ImGui::Button("Create Cube")) {
+				auto entity = scene.CreateBasicEntity("Cube");
+				reg.emplace<Model>(entity, m_engine->GetModelHandler().LoadModel(L"Models/Cube.fbx"));
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("Create Sphere")) {
+				auto entity = scene.CreateBasicEntity("Sphere");
+				reg.emplace<Model>(entity, m_engine->GetModelHandler().LoadModel(L"Models/Sphere.fbx"));
+			}
+
+			ImGui::Separator();
+
 			if (ImGui::ListBoxHeader("##", {(float)m_leftWindow.m_width, (float)m_leftWindow.m_width})) {
 				auto scene = reg.view<Transform, Object>();
 				for (auto entity : scene) {
@@ -240,7 +273,40 @@ void ImguiHandler::StaticWindows()
 					ImGui::Separator();
 				if (ModelDataSettings(reg))
 					ImGui::Separator();
+
+				if (ImGui::Button("Add Component")) {
+					ImGui::OpenPopup("ComponentList");
+				}
+				if (ImGui::BeginPopup("ComponentList")) {	
+					std::string selectedComponent = "";
+				
+					for (UINT i = 0; i < m_componentList.size(); i++)
+					{
+						bool selected = (selectedComponent == m_componentList[i]);
+						if (ImGui::Selectable(m_componentList[i].c_str(), selected)) {
+							selectedComponent = m_componentList[i];
+							
+							if (selectedComponent == "Model") {
+								if (!reg.try_get<Model>(m_currentEntity)) {
+									reg.emplace<Model>(m_currentEntity, 0);
+								}
+								break;
+							}
+				
+							if (selectedComponent == "DirectionalLight") {
+								if (!reg.try_get<DirectionalLight>(m_currentEntity)) {
+									reg.emplace<DirectionalLight>(m_currentEntity);
+								}
+								break;
+							}
+				
+						}
+					}
+				
+					ImGui::EndPopup();
+				}
 			}
+			
 				//Transform& transform = reg.get<Transform>(m_currentEntity);
 			ImGui::End();
 		}
@@ -252,91 +318,121 @@ bool ImguiHandler::ModelDataSettings(entt::registry& reg)
 	Model* model = reg.try_get<Model>(m_currentEntity);
 	if (model) {
 		if (ImGui::CollapsingHeader("ModelData")) {
-			ModelData& data = m_engine->GetModelHandler().GetLoadedModelInformation(model->m_modelID);
-			
-			ImGui::Text("Model Name: ");
-			ImGui::SameLine();
-			ImGui::Text(data.Name().c_str());
-
-			if (m_currentMesh > data.GetMeshes().size() - 1)
-				m_currentMesh = 0;
-			
-			ImGui::SliderInt("Mesh", &m_currentMesh, 0, data.GetMeshes().size() - 1);
-			ModelData::Mesh& currentMesh = data.GetMeshes()[m_currentMesh];
-
-			Material& material = currentMesh.m_material;
-			static float roughness = material.m_roughness;
-			static float shininess = material.m_shininess;
-			static float emissive = material.m_emissvie;
-			static float color[3] = { material.m_color[0], material.m_color[1], material.m_color[2] };
-
-			ImGui::ColorEdit3("Albedo Color", color);
-			ImGui::DragFloat("Roughness", &roughness, 0.01f, 0.1f,  2.f);
-			ImGui::DragFloat("Shininess", &shininess, 0.01f, 0.0f,  2.f);
-			ImGui::DragFloat("Emissive",  &emissive,  0.01f, 0.0f,  5.f);
-
-			material.m_roughness = roughness;
-			material.m_shininess = shininess;
-			material.m_emissvie = emissive;
-			memcpy(material.m_color, color, sizeof(float) * 3);
-			
+			if (ImGui::Button("Set Model")) {
+				std::wstring newModel = OpenFileExplorer(m_fileExtensions["Model"]);
+				if (!newModel.empty()) {
+					UINT newModelID = m_engine->GetModelHandler().LoadModel(newModel, "").m_modelID;
+					if (newModelID != 0) {
+						model->m_modelID = newModelID;
+					}
+				}
+			}
 			ImGui::Separator();
-			ImGui::Text("Textures");
 
-			//Abedo start
-			{
-				std::wstring albedo;
-				if (ImGui::Button("Albedo")) {
-					albedo = OpenFileExplorer();
-					material.m_albedo = m_engine->GetTextureHandler().GetTexture(albedo);
-					if (material.m_albedo == 0){
-						material.m_albedo = m_engine->GetTextureHandler().CreateTexture(albedo);
+			if(model->m_modelID != 0) {
+				ModelData& data = m_engine->GetModelHandler().GetLoadedModelInformation(model->m_modelID);
+				
+				ImGui::Text("Model Name: ");
+				ImGui::SameLine();
+				ImGui::Text(data.Name().c_str());
+
+				if (m_currentMesh > data.GetMeshes().size() - 1)
+					m_currentMesh = 0;
+				
+				ImGui::SliderInt("Mesh", &m_currentMesh, 0, data.GetMeshes().size() - 1);
+				ModelData::Mesh& currentMesh = data.GetMeshes()[m_currentMesh];
+
+				Material& material = currentMesh.m_material;
+				static float roughness = material.m_roughness;
+				static float shininess = material.m_shininess;
+				static float emissive = material.m_emissvie;
+				static float color[3] = { material.m_color[0], material.m_color[1], material.m_color[2] };
+
+				ImGui::ColorEdit3("Albedo Color", color);
+				ImGui::DragFloat("Roughness", &roughness, 0.01f, 0.1f,  2.f);
+				ImGui::DragFloat("Shininess", &shininess, 0.01f, 0.0f,  2.f);
+				ImGui::DragFloat("Emissive",  &emissive,  0.01f, 0.0f,  5.f);
+
+				material.m_roughness = roughness;
+				material.m_shininess = shininess;
+				material.m_emissvie = emissive;
+				memcpy(material.m_color, color, sizeof(float) * 3);
+				
+				ImGui::Separator();
+				ImGui::Text("Textures");
+
+				//Abedo start
+				{
+					std::wstring albedo;
+					if (ImGui::Button("Albedo")) {
+						std::wstring newAlbedo = OpenFileExplorer(m_fileExtensions["Texture"]);
+						if (!newAlbedo.empty()) {
+							albedo = newAlbedo;
+							material.m_albedo = m_engine->GetTextureHandler().GetTexture(albedo);
+							if (material.m_albedo == 0){
+								material.m_albedo = m_engine->GetTextureHandler().CreateTexture(albedo);
+							}
+
+						}
+						else
+							albedo = m_engine->GetTextureHandler().GetTextureData(material.m_albedo).m_texturePath;
 					}
+					else
+						albedo = m_engine->GetTextureHandler().GetTextureData(material.m_albedo).m_texturePath;
+
+					ImGui::SameLine();
+					CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle = AddImguiImage(albedo);
+					ImGui::Image((ImTextureID)srvHandle.ptr, { 50.f, 50.f });
 				}
-				else
-					albedo = m_engine->GetTextureHandler().GetTextureData(material.m_albedo).m_texturePath;
+				//Albedo end
 
 				ImGui::SameLine();
-				CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle = AddImguiImage(albedo);
-				ImGui::Image((ImTextureID)srvHandle.ptr, { 50.f, 50.f });
-			}
-			//Albedo end
+				{
+					std::wstring normal;
+					if (ImGui::Button("Normal")) {
+						std::wstring newNormal = OpenFileExplorer(m_fileExtensions["Texture"]);
+						if (!newNormal.empty()) {
+							normal = newNormal;
+							material.m_normal = m_engine->GetTextureHandler().GetTexture(normal);
+							if (material.m_normal  == 0) {
+								material.m_normal = m_engine->GetTextureHandler().CreateTexture(normal);
+							}
+						}
+						else
+							normal = m_engine->GetTextureHandler().GetTextureData(material.m_normal).m_texturePath;
 
-			ImGui::SameLine();
-			{
-				std::wstring normal;
-				if (ImGui::Button("Normal")) {
-					normal = OpenFileExplorer();
-					material.m_normal = m_engine->GetTextureHandler().GetTexture(normal);
-					if (material.m_normal  == 0) {
-						material.m_normal = m_engine->GetTextureHandler().CreateTexture(normal);
 					}
+					else
+						normal = m_engine->GetTextureHandler().GetTextureData(material.m_normal).m_texturePath;
+
+					ImGui::SameLine();
+					CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle = AddImguiImage(normal);
+					ImGui::Image((ImTextureID)srvHandle.ptr, { 50.f, 50.f });
 				}
-				else
-					normal = m_engine->GetTextureHandler().GetTextureData(material.m_normal).m_texturePath;
 
 				ImGui::SameLine();
-				CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle = AddImguiImage(normal);
-				ImGui::Image((ImTextureID)srvHandle.ptr, { 50.f, 50.f });
-			}
+				{
+					std::wstring metallic;
+					if (ImGui::Button("Metallic")) {
+						std::wstring newMetallic = OpenFileExplorer(m_fileExtensions["Texture"]);
+						if (!newMetallic.empty()) {
+							metallic = newMetallic;
+							material.m_metallic = m_engine->GetTextureHandler().GetTexture(metallic);
+							if (material.m_metallic == 0) {
+								material.m_metallic = m_engine->GetTextureHandler().CreateTexture(metallic);
+							}
+						}
+						else
+							metallic = m_engine->GetTextureHandler().GetTextureData(material.m_metallic).m_texturePath;
 
-			ImGui::SameLine();
-			{
-				std::wstring metallic;
-				if (ImGui::Button("Metallic")) {
-					metallic = OpenFileExplorer();
-					material.m_metallic = m_engine->GetTextureHandler().GetTexture(metallic);
-					if (material.m_metallic == 0) {
-						material.m_metallic = m_engine->GetTextureHandler().CreateTexture(metallic);
 					}
+					else
+						metallic = m_engine->GetTextureHandler().GetTextureData(material.m_metallic).m_texturePath;
+
+					ImGui::SameLine();
+					CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle = AddImguiImage(metallic);
+					ImGui::Image((ImTextureID)srvHandle.ptr, { 50.f, 50.f });
 				}
-				else
-					metallic = m_engine->GetTextureHandler().GetTextureData(material.m_metallic).m_texturePath;
-
-
-				ImGui::SameLine();
-				CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle = AddImguiImage(metallic);
-				ImGui::Image((ImTextureID)srvHandle.ptr, { 50.f, 50.f });
 			}
 
 		}
@@ -406,14 +502,15 @@ bool ImguiHandler::TransformSettings(entt::registry& reg)
 		float scale[3]	  = {transform.m_scale.x,    transform.m_scale.y,    transform.m_scale.z	};
 		
 		Vect3f euler = transform.m_rotation.ToEuler();
-		float rotation[3] = { euler.y, euler.x, euler.z };
-
+		float rotation[3] = { ToDegrees(euler.x), ToDegrees(euler.y), ToDegrees(euler.z) };
+		
 		ImGui::DragFloat3("Position", position, 0.01f, -FLT_MAX, FLT_MAX);
-		ImGui::DragFloat3("Rotation", rotation, 0.01f, -FLT_MAX, FLT_MAX);
+		ImGui::DragFloat3("Rotation", rotation, 0.1f,  -360.f, 360.f);
 		ImGui::DragFloat3("Scale",    scale,    0.01f, -FLT_MAX, FLT_MAX);
 
+		transform.m_rotation = Quat4f::CreateFromYawPitchRoll({ToRadians(rotation[0]), ToRadians(rotation[1]), ToRadians(rotation[2])}); // * (qZ));
+
 		transform.m_position = { position[0], position[1], position[2], 1.f };
-		transform.m_rotation = Quat4f::CreateFromYawPitchRoll(rotation[0], rotation[1], rotation[2]);
 		transform.m_scale	 = { scale[0], scale[1], scale[2], 1.f};
 
 		return true;
@@ -500,27 +597,33 @@ CD3DX12_GPU_DESCRIPTOR_HANDLE ImguiHandler::AddImguiImage(std::wstring path)
 
 	return m_imguiTextures[m_imguiTextures.size() - 1].m_srvGpuHandle;
 }
-std::wstring ImguiHandler::OpenFileExplorer()
+std::wstring ImguiHandler::OpenFileExplorer(FileExplorerExtension file)
 {
 	//LPOPENFILE
+	
+	//const char type[5] = {};
+	//std::string toString = { file.m_fileType.begin(), file.m_fileType.end() };
+	//memcpy(type, toString.c_str(), 5);
+	//const char fileType = *file.m_fileType.c_str();
+	
 	WCHAR fileName[MAX_PATH];//[MAX_PATH];
 	OPENFILENAME ofn;
 	ZeroMemory(&ofn, sizeof(ofn));
 	ZeroMemory(&fileName, sizeof(fileName)); 
 	ofn.lStructSize = sizeof(ofn);
 	ofn.hwndOwner = NULL;
-	ofn.lpstrFilter = _T(".dds");
+	ofn.lpstrFilter = _T("");
 	ofn.lpstrFile = fileName;
-	ofn.lpstrInitialDir = _T("Sprites\\");
+	ofn.lpstrInitialDir = LPCWSTR(file.m_folder.c_str());
 	ofn.nMaxFile = MAX_PATH;
-	ofn.lpstrTitle = _T("Select Texture");
-	ofn.Flags = OFN_DONTADDTORECENT | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR;
+	ofn.lpstrTitle = _T("Select File");
+	ofn.Flags = OFN_DONTADDTORECENT  | OFN_NOCHANGEDIR;
 
 	if (GetOpenFileName(&ofn)) {
 		
 		std::wstring texture(fileName);
-		if (!texture.empty() || texture.find_last_of(L".dds") != std::wstring::npos) {
-			size_t pos = texture.find(L"Sprites\\");
+		if (!texture.empty() || texture.find_last_of(file.m_fileType) != std::wstring::npos) {
+			size_t pos = texture.find(file.m_folder);
 			texture = texture.erase(0, pos);
 			
 			pos = texture.find(L"\\");

@@ -139,11 +139,6 @@ void RenderManager::Impl::RenderScene(TextureHandler& textureHandler, ModelHandl
 		cmdList->SetGraphicsRootSignature(m_pipeLineHandler.GetRootSignature(ROOTSIGNATURE_STATE_GBUFFER));
 		cmdList->SetPipelineState(m_pipeLineHandler.GetPSO(PIPELINE_STATE_GBUFFER));
 		
-		//m_framework.TransitionMultipleRTV(
-		//	&m_gBuffer.GetGbufferResources()[0], GBUFFER_COUNT,
-		//	D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET
-		//);
-
 		m_framework.QeueuResourceTransition(
 			&m_gBuffer.GetGbufferResources()[0], GBUFFER_COUNT,
 			D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET
@@ -172,10 +167,6 @@ void RenderManager::Impl::RenderScene(TextureHandler& textureHandler, ModelHandl
 			&m_gBuffer.GetGbufferResources()[0], GBUFFER_COUNT,
 			D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 		m_framework.TransitionAllResources();
-		//m_framework.TransitionMultipleRTV(
-		//	&m_gBuffer.GetGbufferResources()[0], GBUFFER_COUNT,
-		//	D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
-		//);
 	}
 	//* Scene to Gbuffer end
 

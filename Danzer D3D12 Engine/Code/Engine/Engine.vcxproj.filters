@@ -149,5 +149,6 @@
     <ClInclude Include="Rendering\Models\Material.h" />
     <ClInclude Include="Rendering\Screen Rendering\FullscreenShader.h" />
     <ClInclude Include="Rendering\Screen Rendering\FullScreenShaderHandler.h" />
+    <ClInclude Include="Components\Script.h" />
   </ItemGroup>
 </Project>
