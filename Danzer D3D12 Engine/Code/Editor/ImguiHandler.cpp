@@ -215,17 +215,17 @@ void ImguiHandler::StaticWindows()
 
 		if (ImGui::Begin("Scene View", &isOpen, staticWindowFlags)) {
 			if (ImGui::Button("Create Empty Object")) {
-				scene.CreateBasicEntity("Empty Object");
+				m_currentEntity = scene.CreateBasicEntity("Empty Object");
 			}
 			ImGui::SameLine();
 			if(ImGui::Button("Create Cube")) {
-				auto entity = scene.CreateBasicEntity("Cube");
-				reg.emplace<Model>(entity, m_engine->GetModelHandler().LoadModel(L"Models/Cube.fbx"));
+				m_currentEntity = scene.CreateBasicEntity("Cube");
+				reg.emplace<Model>(m_currentEntity, m_engine->GetModelHandler().LoadModel(L"Models/Cube.fbx"));
 			}
 			ImGui::SameLine();
 			if (ImGui::Button("Create Sphere")) {
-				auto entity = scene.CreateBasicEntity("Sphere");
-				reg.emplace<Model>(entity, m_engine->GetModelHandler().LoadModel(L"Models/Sphere.fbx"));
+				m_currentEntity = scene.CreateBasicEntity("Sphere");
+				reg.emplace<Model>(m_currentEntity, m_engine->GetModelHandler().LoadModel(L"Models/Sphere.fbx"));
 			}
 
 			ImGui::Separator();
