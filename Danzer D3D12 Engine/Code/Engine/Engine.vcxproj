@@ -152,6 +152,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Components\Collision\Collider.h" />
+    <ClInclude Include="Components\Script.h" />
+    <ClInclude Include="Rendering\Screen Rendering\FullScreenShaderHandler.h" />
+    <ClInclude Include="Rendering\Screen Rendering\FullscreenShader.h" />
     <ClInclude Include="Rendering\Models\Material.h" />
     <ClInclude Include="Components\Model.h" />
     <ClInclude Include="Components\Object.h" />
@@ -161,7 +164,7 @@
     <ClInclude Include="Components\DirectionalLight.h" />
     <ClInclude Include="Rendering\Buffers\MaterialBuffer.h" />
     <ClInclude Include="Rendering\Buffers\LightBuffer.h" />
-    <ClInclude Include="Rendering\ScreenTextures\GBuffer.h" />
+    <ClInclude Include="Rendering\Screen Rendering\GBuffer.h" />
     <ClInclude Include="Rendering\Buffers\RayBuffer.h" />
     <ClInclude Include="Rendering\Buffers\AABBBuffer.h" />
     <ClInclude Include="CollisionManager.h" />
@@ -196,7 +199,7 @@
     <ClInclude Include="Scene.h" />
     <ClInclude Include="SceneManager.h" />
     <ClInclude Include="Components\Collision\SphereCollider.h" />
-    <ClInclude Include="Rendering\ScreenTextures\ScreenTexture.h" />
+    <ClInclude Include="Rendering\Screen Rendering\ScreenTexture.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="Rendering\Models\TransformBuffer.h" />
     <ClInclude Include="Rendering\Buffers\VertexBuffer.h" />
@@ -208,9 +211,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Core\input.cpp" />
+    <ClCompile Include="Rendering\Screen Rendering\FullScreenShaderHandler.cpp" />
+    <ClCompile Include="Rendering\Screen Rendering\FullscreenShader.cpp" />
     <ClCompile Include="Rendering\Buffers\MaterialBuffer.cpp" />
     <ClCompile Include="Rendering\Buffers\LightBuffer.cpp" />
-    <ClCompile Include="Rendering\ScreenTextures\GBuffer.cpp" />
+    <ClCompile Include="Rendering\Screen Rendering\GBuffer.cpp" />
     <ClCompile Include="Rendering\Buffers\RayBuffer.cpp" />
     <ClCompile Include="Rendering\Buffers\AABBBuffer.cpp" />
     <ClCompile Include="CollisionManager.cpp" />
@@ -233,7 +238,7 @@
     <ClCompile Include="Rendering\SkyBox.cpp" />
     <ClCompile Include="Scene.cpp" />
     <ClCompile Include="SceneManager.cpp" />
-    <ClCompile Include="Rendering\ScreenTextures\ScreenTexture.cpp" />
+    <ClCompile Include="Rendering\Screen Rendering\ScreenTexture.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>

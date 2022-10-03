@@ -17,12 +17,12 @@ ModelHandler::~ModelHandler(){
 	m_models.clear();
 }
 
-Model ModelHandler::CreateCustomModel(CustomModel customModel, std::wstring texturePath, bool transparent)
+Model ModelHandler::CreateCustomModel(CustomModel customModel, bool transparent)
 {
 	ID3D12Device* device = m_framework.GetDevice();
 	ID3D12GraphicsCommandList* cmdList = m_framework.GetCommandList();
-	// Check if this model has already been loaded, and if so just return its ID
-	UINT modelExist = GetExistingModel(customModel.m_customModelName);
+
+	UINT modelExist = GetExistingModel(L"CustomCube");
 	if (modelExist != 0) {
 		return modelExist;
 	}
@@ -80,9 +80,6 @@ Model ModelHandler::CreateCustomModel(CustomModel customModel, std::wstring text
 		Vect3f pos = { customModel.m_verticies[i].m_position.x, customModel.m_verticies[i].m_position.y, customModel.m_verticies[i].m_position.z };
 		verticies.emplace_back(pos);
 	}
-	
-	UINT texture = m_textureHandler.CreateTexture(texturePath);
-	m_textureHandler.LoadAllCreatedTexuresToGPU();
 
 	std::vector<ModelData::Mesh> meshes = { mesh };
 	UINT id = GetNewlyCreatedModelID(ModelData(meshes, m_framework.GetDevice(), verticies, customModel.m_customModelName, transparent));
@@ -93,10 +90,8 @@ Model ModelHandler::CreateCustomModel(CustomModel customModel, std::wstring text
 // Load model from Assimp, if you need to get a model ID 
 // Use GetExistingModel(srtring name) instead. 
 Model ModelHandler::LoadModel(std::wstring fileName, std::string name, bool transparent, bool uvFlipped)
-{
-	//std::string nameStr(fileName.begin(), fileName.end());
-	
-	UINT exists = GetExistingModel(name);
+{	
+	UINT exists = GetExistingModel(fileName);
 	if (exists != 0) {
 		return exists;
 	}
@@ -135,45 +130,42 @@ Model ModelHandler::LoadModel(std::wstring fileName, std::string name, bool tran
 	return Model(id);
 }
 
-Model ModelHandler::LoadModel(LoaderModel* loadedModel, bool transparent, bool uvFlipped)
+//Model ModelHandler::LoadModel(LoaderModel* loadedModel, bool transparent, bool uvFlipped)
+//{
+//	UINT exists = GetExistingModel(loadedModel->m_name);
+//	if (exists != 0) {
+//		return exists;
+//	}
+//
+//	m_framework.ResetCommandListAndAllocator(nullptr);
+//	std::string s = SetModelName({ loadedModel->m_name.begin(), loadedModel->m_name.end()});
+//	
+//	std::vector<ModelData::Mesh> meshes = LoadMeshFromLoaderModel(loadedModel, s);
+//
+//	// Now we set the buffer infromation into our BUFFER_VIEWS as well as 
+//	// creating DescriptorHeaps and SRV for our textures
+//	for (UINT i = 0; i < meshes.size(); i++)
+//	{
+//		meshes[i].m_indexBufferView.BufferLocation = meshes[i].m_indexBuffer->GetGPUVirtualAddress();
+//		meshes[i].m_indexBufferView.Format = DXGI_FORMAT_R32_UINT;
+//		meshes[i].m_indexBufferView.SizeInBytes = sizeof(unsigned int) * meshes[i].m_numIndices;
+//
+//		meshes[i].m_vertexBufferView.BufferLocation = meshes[i].m_vertexBuffer->GetGPUVirtualAddress();
+//		meshes[i].m_vertexBufferView.StrideInBytes = meshes[i].m_vertexSize;
+//		meshes[i].m_vertexBufferView.SizeInBytes = meshes[i].m_vertexSize * meshes[i].m_numVerticies;
+//	}
+//
+//	m_textureHandler.LoadAllCreatedTexuresToGPU();
+//
+//	UINT id = GetNewlyCreatedModelID(ModelData(meshes, m_framework.GetDevice(), loadedModel->m_verticies, s, transparent));
+//	return Model(id);
+//}
+
+UINT ModelHandler::GetExistingModel(std::wstring modelPath)
 {
-	UINT exists = GetExistingModel(loadedModel->m_name);
-	if (exists != 0) {
-		return exists;
-	}
-
-	m_framework.ResetCommandListAndAllocator(nullptr);
-	std::string s = SetModelName({ loadedModel->m_name.begin(), loadedModel->m_name.end()});
-	
-	std::vector<ModelData::Mesh> meshes = LoadMeshFromLoaderModel(loadedModel, s);
-
-	// Now we set the buffer infromation into our BUFFER_VIEWS as well as 
-	// creating DescriptorHeaps and SRV for our textures
-	for (UINT i = 0; i < meshes.size(); i++)
-	{
-		meshes[i].m_indexBufferView.BufferLocation = meshes[i].m_indexBuffer->GetGPUVirtualAddress();
-		meshes[i].m_indexBufferView.Format = DXGI_FORMAT_R32_UINT;
-		meshes[i].m_indexBufferView.SizeInBytes = sizeof(unsigned int) * meshes[i].m_numIndices;
-
-		meshes[i].m_vertexBufferView.BufferLocation = meshes[i].m_vertexBuffer->GetGPUVirtualAddress();
-		meshes[i].m_vertexBufferView.StrideInBytes = meshes[i].m_vertexSize;
-		meshes[i].m_vertexBufferView.SizeInBytes = meshes[i].m_vertexSize * meshes[i].m_numVerticies;
-	}
-
-	m_textureHandler.LoadAllCreatedTexuresToGPU();
-
-	UINT id = GetNewlyCreatedModelID(ModelData(meshes, m_framework.GetDevice(), loadedModel->m_verticies, s, transparent));
-	return Model(id);
-}
-
-UINT ModelHandler::GetExistingModel(std::string modelName)
-{
-	if(modelName.empty())
-		modelName = SetModelName({ modelName.begin(), modelName.end() }); 
-
 	for (UINT i = 0; i < m_models.size(); i++)
 	{
-		if (modelName == m_models[i].Name()) {
+		if (modelPath == m_models[i].m_modelPath) {
 			return i + 1;
 		}
 	}
@@ -181,39 +173,37 @@ UINT ModelHandler::GetExistingModel(std::string modelName)
 	return 0;
 }
 
-UINT ModelHandler::LoadModelFromLevel(LoaderModel* loadedModel, std::vector<UINT>& textures, bool transparent, bool uvFlipped)
-{
-
-	UINT exists = GetExistingModel(loadedModel->m_name);
-	if (exists != 0) {
-		return exists;
-	}
-
-	m_framework.ResetCommandListAndAllocator(nullptr);
-	std::vector<ModelData::Mesh> meshes = LoadMeshFromLoaderModel(loadedModel, textures);
-
-	std::string s = SetModelName({ loadedModel->m_name.begin(), loadedModel->m_name.end() });
-
-	// Now we set the buffer infromation into our BUFFER_VIEWS as well as 
-	// creating DescriptorHeaps and SRV for our textures
-	for (UINT i = 0; i < meshes.size(); i++)
-	{
-		meshes[i].m_indexBufferView.BufferLocation = meshes[i].m_indexBuffer->GetGPUVirtualAddress();
-		meshes[i].m_indexBufferView.Format = DXGI_FORMAT_R32_UINT;
-		meshes[i].m_indexBufferView.SizeInBytes = sizeof(unsigned int) * meshes[i].m_numIndices;
-
-		meshes[i].m_vertexBufferView.BufferLocation = meshes[i].m_vertexBuffer->GetGPUVirtualAddress();
-		meshes[i].m_vertexBufferView.StrideInBytes = meshes[i].m_vertexSize;
-		meshes[i].m_vertexBufferView.SizeInBytes = meshes[i].m_vertexSize * meshes[i].m_numVerticies;
-
-	}
-
-	UINT id = GetNewlyCreatedModelID(ModelData(meshes, m_framework.GetDevice(), loadedModel->m_verticies, s, transparent));
-	
-	return id;
-}
-
-
+//UINT ModelHandler::LoadModelFromLevel(LoaderModel* loadedModel, std::vector<UINT>& textures, bool transparent, bool uvFlipped)
+//{
+//
+//	//UINT exists = GetExistingModel(loadedModel->m_name);
+//	//if (exists != 0) {
+//	//	return exists;
+//	//}
+//
+//	m_framework.ResetCommandListAndAllocator(nullptr);
+//	std::vector<ModelData::Mesh> meshes = LoadMeshFromLoaderModel(loadedModel, textures);
+//
+//	std::string s = SetModelName({ loadedModel->m_name.begin(), loadedModel->m_name.end() });
+//
+//	// Now we set the buffer infromation into our BUFFER_VIEWS as well as 
+//	// creating DescriptorHeaps and SRV for our textures
+//	for (UINT i = 0; i < meshes.size(); i++)
+//	{
+//		meshes[i].m_indexBufferView.BufferLocation = meshes[i].m_indexBuffer->GetGPUVirtualAddress();
+//		meshes[i].m_indexBufferView.Format = DXGI_FORMAT_R32_UINT;
+//		meshes[i].m_indexBufferView.SizeInBytes = sizeof(unsigned int) * meshes[i].m_numIndices;
+//
+//		meshes[i].m_vertexBufferView.BufferLocation = meshes[i].m_vertexBuffer->GetGPUVirtualAddress();
+//		meshes[i].m_vertexBufferView.StrideInBytes = meshes[i].m_vertexSize;
+//		meshes[i].m_vertexBufferView.SizeInBytes = meshes[i].m_vertexSize * meshes[i].m_numVerticies;
+//
+//	}
+//
+//	UINT id = GetNewlyCreatedModelID(ModelData(meshes, m_framework.GetDevice(), loadedModel->m_verticies, s, transparent));
+//	
+//	return id;
+//}
 
 void ModelHandler::SetMaterialForModel(UINT model, Material material, UINT meshIndex)
 {

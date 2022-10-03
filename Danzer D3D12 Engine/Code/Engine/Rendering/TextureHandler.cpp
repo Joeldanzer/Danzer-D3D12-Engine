@@ -45,7 +45,10 @@ void TextureHandler::LoadAllExistingTextures()
 	for (const auto& entry : std::filesystem::directory_iterator(path))
 	{
 		std::wstring file = entry.path().c_str();
-		CreateTexture(file);
+		if (file.find(L"Skybox") != std::wstring::npos)
+			CreateTexture(file, true);
+		else
+			CreateTexture(file);
 	}
 
 	LoadAllCreatedTexuresToGPU();

@@ -24,11 +24,11 @@ private:
 Game::Impl::Impl(Engine& engine) :
 	m_engine(engine)
 {
-	entt::registry& reg = engine.SceneManager().GetCurrentScene().Registry();
+	entt::registry& reg = engine.GetSceneManager().GetCurrentScene().Registry();
 
-	entt::entity copper  = engine.SceneManager().GetCurrentScene().CreateBasicEntity("ParticleChest");
+	entt::entity copper  = engine.GetSceneManager().GetCurrentScene().CreateBasicEntity("ParticleChest");
 
-	Model copperSphere = engine.ModelHandler().LoadModel(L"Models/VertexPaintPlane.fbx", "Chest");
+	Model copperSphere = engine.GetModelHandler().LoadModel(L"Models/VertexPaintPlane.fbx", "Chest");
 	reg.emplace<Model>(copper, copperSphere);
 	
 	std::array<std::string, 3> textures;
@@ -36,14 +36,14 @@ Game::Impl::Impl(Engine& engine) :
 	textures[1] = "Sprites/Copper_01_n.dds";
 	textures[2] = "Sprites/Copper_01_m.dds";
 	float color[4] = { 1.f, 1.f, 1.f, 1.f };
-	Material material = m_engine.TextureHandler().CreateMaterial(textures.data(), 1.f, 1.f, 1.f, color);
-	m_engine.ModelHandler().SetMaterialForModel(copperSphere.m_modelID, material);
+	Material material = m_engine.GetTextureHandler().CreateMaterial(textures.data(), 1.f, 1.f, 1.f, color);
+	m_engine.GetModelHandler().SetMaterialForModel(copperSphere.m_modelID, material);
 }
 Game::Impl::~Impl(){}
 
 void Game::Impl::Update(const float dt)
 {
-	entt::registry& reg = m_engine.SceneManager().GetCurrentScene().Registry();
+	entt::registry& reg = m_engine.GetSceneManager().GetCurrentScene().Registry();
 }
 
 

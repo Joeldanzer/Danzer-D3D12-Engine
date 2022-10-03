@@ -3,9 +3,11 @@
   <ItemGroup>
     <ClInclude Include="Editor.h" />
     <ClInclude Include="ImguiHandler.h" />
+    <ClInclude Include="EditorLoader.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Editor.cpp" />
     <ClCompile Include="ImguiHandler.cpp" />
+    <ClCompile Include="EditorLoader.cpp" />
   </ItemGroup>
 </Project>

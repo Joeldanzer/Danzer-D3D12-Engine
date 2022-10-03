@@ -24,8 +24,8 @@ public:
 	void TransitionRenderTarget(D3D12_RESOURCE_STATES present, D3D12_RESOURCE_STATES newState);
 	void TransitionMultipleRTV(ID3D12Resource** resources, UINT numberOfresources, D3D12_RESOURCE_STATES present, D3D12_RESOURCE_STATES newState);
 
-	void QeueuRTVTransitions(ID3D12Resource** resources, UINT numberOfresources, D3D12_RESOURCE_STATES present, D3D12_RESOURCE_STATES newState);
-	void TransitionRTVS(); 
+	void QeueuResourceTransition(ID3D12Resource** resources, UINT numberOfresources, D3D12_RESOURCE_STATES present, D3D12_RESOURCE_STATES newState);
+	void TransitionAllResources(); 
 
 	void SetViewport(UINT w, UINT h);
 
@@ -66,6 +66,12 @@ private:
 	// Def wanna spli this class up. Tho DX12Framework can be used to init everything still
 	ComPtr<IDXGISwapChain3>			  m_swapChain;
 	ComPtr<ID3D12Device>			  m_device;
+
+	struct StateTransition {
+		D3D12_RESOURCE_STATES m_currentState;
+		D3D12_RESOURCE_STATES m_newState;
+	};
+	std::vector<std::pair<ID3D12Resource*, StateTransition>> m_transitionQeueu;
 
 	ComPtr<ID3D12Resource>			  m_depthBuffer;
 	ComPtr<ID3D12DescriptorHeap>	  m_depthDescriptor;

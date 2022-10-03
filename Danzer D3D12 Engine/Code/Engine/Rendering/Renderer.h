@@ -36,7 +36,7 @@ public:
 	void Init(DirectX12Framework& framework);
 
 	void UpdateDefaultBuffers(Camera& camera, Transform&, UINT frameIndex);
-	void RenderSkybox(Transform& cameraTransform, TextureHandler::Texture& textures, TextureHandler::Texture& textures1, ModelData& model, Skybox& skybox, UINT frameIndex);
+	void RenderSkybox(Transform& cameraTransform, TextureHandler::Texture& textures, ModelData& model, Skybox& skybox, UINT frameIndex);
 	void RenderDirectionalLight(DirectionalLight& light, Vect4f direction, TextureHandler::Texture& skyboxTexture, UINT frameIndex);
 	void DefaultRender(std::vector<ModelData>& models, UINT frameIndex, std::vector<TextureHandler::Texture>& textures);
 	//void TransparentRender(Scene* scene, std::vector<Object*>& objects, std::vector<ModelData>& transparentModels, UINT frameIndex, std::vector<TextureHandler::Texture> textures);

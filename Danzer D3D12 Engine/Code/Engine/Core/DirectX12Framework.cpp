@@ -207,8 +207,6 @@ void DirectX12Framework::ExecuteCommandList()
 	ID3D12CommandList* commandLists[] = { m_commandList.Get() };
     m_commandQeueu->ExecuteCommandLists(_countof(commandLists), commandLists);
 
-	//m_commandAllocator[m_frameIndex]->
-
 	result = m_commandQeueu->Signal(m_fences[m_frameIndex].Get(),
 		m_fenceValues[m_frameIndex]);
 
@@ -263,6 +261,33 @@ void DirectX12Framework::TransitionMultipleRTV(ID3D12Resource** resources, UINT 
 		transitions.emplace_back(CD3DX12_RESOURCE_BARRIER::Transition(resources[i], present, newState));
 	}
 	m_commandList->ResourceBarrier(numberOfresources, &transitions[0]);
+}
+
+void DirectX12Framework::QeueuResourceTransition(ID3D12Resource** resources, UINT numberOfresources, D3D12_RESOURCE_STATES present, D3D12_RESOURCE_STATES newState)
+{
+	for (UINT i = 0; i < numberOfresources; i++)
+	{
+		std::pair<ID3D12Resource*, StateTransition> transition;
+		transition.first = resources[i];
+		transition.second = {present, newState};
+		m_transitionQeueu.emplace_back(transition);
+	}
+}
+
+void DirectX12Framework::TransitionAllResources()
+{
+	std::vector<CD3DX12_RESOURCE_BARRIER> transitionList;
+	for (UINT i = 0; i < m_transitionQeueu.size(); i++)
+	{
+		std::pair<ID3D12Resource*, StateTransition> transition = m_transitionQeueu[i];
+		transitionList.emplace_back(CD3DX12_RESOURCE_BARRIER::Transition(
+			transition.first,
+			transition.second.m_currentState,
+			transition.second.m_newState)
+		);
+	}
+	m_commandList->ResourceBarrier(transitionList.size(), &transitionList[0]);	
+	m_transitionQeueu.clear();
 }
 
 void DirectX12Framework::SetViewport(UINT w, UINT h)

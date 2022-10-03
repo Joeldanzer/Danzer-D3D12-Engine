@@ -21,7 +21,7 @@ float4 main(VertexToPixel input) : SV_TARGET
     float emissiveData  = material.b;
     float roughness     = material.g;
     float ao = normalTexture.Sample(defaultSample, input.m_uv).a;
-    
+ 
     float3 toEye = normalize(CameraPosition.xyz - worldPosition);
   
     //float shadowData = PixelShader_Shadow(float4(worldposition, 1.0f));
@@ -30,9 +30,7 @@ float4 main(VertexToPixel input) : SV_TARGET
     
     float3 specualrcolor = lerp((float3) 0.04, albedo, metallic);
     float3 diffusecolor  = lerp((float3) 0.00, albedo, 1 - metallic);
-   
-     //diffusecolor *= ao;
-    
+       
     float3 ambience = EvaluateAmbience(skyboxTexture, defaultSample, normal, vertexNormal, toEye, roughness, metallic, albedo, ao, albedo, specualrcolor, AmbientColor);
     float3 directionalLight = EvaluateDirectionalLight(diffusecolor, specualrcolor, normal, roughness, LightColor.rgb * LightColor.w, LightDirection.xyz, toEye.xyz);
     //if (shadowData > 0.0f)
