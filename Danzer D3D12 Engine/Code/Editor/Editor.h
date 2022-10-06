@@ -2,7 +2,6 @@
 #include "ImguiHandler.h"
 
 class Engine;
-class Camera;
 
 class Editor
 {

@@ -32,7 +32,10 @@ int main(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ PWSTR 
 	MSG msg;
 	ZeroMemory(&msg, sizeof(MSG));
 
+#ifdef _DEBUG
 	DebugWindow();
+#endif // _DEBUG
+
 
 	// Will thread this
 
@@ -56,29 +59,20 @@ int main(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ PWSTR 
 				break;
 
 			Input::GetInstance().UpdateEvents(msg.message, msg.wParam, msg.lParam);
-
 		}
 
 		if (GetAsyncKeyState(VK_ESCAPE)) {
 			break;
 		}
 
-		game.Update(engine.GetDeltaTime());
+		// * Turned off at the moment when working with Editor.
+		//game.Update(engine.GetDeltaTime());
 		engine.Update();
 		editor.Update(engine.GetDeltaTime());
 		
 		engine.LateUpdate();
 
-		// Plans for this engine perhaps?
-		// #ifdef _DEBUG
-		// if(editor.StartGame()){
-		// Change size of window and other stuff
-		// game.update()
-		// } 
-		// else {
-		//	editor.Update()
-		// }
-		//#endif
+		
 	}
 	
 	return 0;
