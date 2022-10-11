@@ -66,6 +66,9 @@ private:
 	
 	void StaticWindows();
 
+	void SaveScene(entt::registry& reg);
+	void SaveSceneAs(entt::registry& reg);
+
 	bool ModelDataSettings(entt::registry& reg);
 	bool ObjectSettings(entt::registry& reg);
 	bool TransformSettings(entt::registry& reg);
@@ -80,5 +83,7 @@ private:
 
 	EditorLoadAndSave m_sceneLoader;
 	FileExplorer m_fileExplorer;
+
+	bool m_removeEntity;
 };
 

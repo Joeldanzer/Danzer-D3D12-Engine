@@ -21,6 +21,9 @@ public:
 	}
 	//Camera& GetMainCamera(); 
 
+	const std::string& SceneName() {
+		return m_scene;
+	}
 	
 	void UpdateTransforms();
 	void ResetAllObjectsInScene();

@@ -17,6 +17,8 @@
 #include "Components/Sprite.h"
 #include "Components/Transform.h"
 
+#include "Core/input.hpp"
+
 #include <tchar.h>
 
 #include "../3rdParty/imgui-master/imgui.h"
@@ -74,45 +76,71 @@ void ImguiHandler::Update(const float dt)
 	entt::registry& reg = scene.Registry();
 	if (ImGui::BeginMainMenuBar()) {
 		if (ImGui::BeginMenu("File")) {
-			if (ImGui::MenuItem("Open", "CTRL+O")) {
+			if (ImGui::MenuItem("Load Scene", "CTRL+O")) {
 				std::wstring scene = m_fileExplorer.OpenFileExplorer(FILE_EXPLORER_GET, m_fileExtensions["Scenes"]);
 				if (!scene.empty()) {
 
-					// This is very complicated for no reason atm, something i really want to fix 
-					// once i get a good idea how to handle scenes between edtior and game
-					entt::entity camEntt = m_engine.GetSceneManager().GetCurrentScene().GetMainCamera();
-					Camera& camera = reg.get<Camera>(camEntt);
-					Transform& transform = reg.get<Transform>(camEntt);
-					Object& obj = reg.get<Object>(camEntt);
+					// This section is not my proudest programming moment...
+					// Definetly Gonna rewrite this whole section when I have remade
+					// Scenes and how they function.
 
-					Scene& newScene = m_engine.GetSceneManager().CreateEmptyScene({ scene.begin(), scene.end() });
-					entt::registry& newReg = newScene.Registry();
-					entt::entity newCam = newReg.create();
-					newReg.emplace<Camera>(newCam, camera);
-					newReg.emplace<Transform>(newCam, transform);
-					newReg.emplace<Object>(newCam, obj);
+					bool loadScene = false;
 
-					m_engine.GetSceneManager().SetScene({scene.begin(), scene.end()}, newCam);
+					std::string sceneInString = { scene.begin(), scene.end() };
+					if (sceneInString != m_engine.GetSceneManager().GetCurrentScene().SceneName()) {
+						loadScene = true;
+					}
+					else {
+						if (ImGui::BeginPopupContextWindow()) {
+							ImGui::Text("Want to save scene before loading the same/a new one?");
 
-					m_sceneLoader.LoadScene({ scene.begin(), scene.end() }, newReg);
+							if (ImGui::Button("Save")) {
+								SaveScene(reg);
+								loadScene = true;
+							}
+							ImGui::SameLine();
+							if(ImGui::Button("Load"))
+								loadScene = true;
+
+							ImGui::SameLine();
+							if (ImGui::Button("Close")){}
+							
+							ImGui::EndPopup();
+						}
+					}
+
+					if (loadScene) {
+						// This is very complicated for no reason atm, something i really want to fix 
+						// once i get a good idea how to handle scenes between edtior and game
+						entt::entity camEntt = m_engine.GetSceneManager().GetCurrentScene().GetMainCamera();
+						Camera& camera = reg.get<Camera>(camEntt);
+						Transform& transform = reg.get<Transform>(camEntt);
+						Object& obj = reg.get<Object>(camEntt);
+
+						Scene& newScene = m_engine.GetSceneManager().CreateEmptyScene(sceneInString);
+						if (!newScene.Registry().empty())
+							newScene.Registry().clear();
+
+						entt::registry& newReg = newScene.Registry();
+						entt::entity newCam = newReg.create();
+						newReg.emplace<Camera>(newCam, camera);
+						newReg.emplace<Transform>(newCam, transform);
+						newReg.emplace<Object>(newCam, obj);
+
+						m_engine.GetSceneManager().SetScene(sceneInString, newCam);
+						m_sceneLoader.LoadScene(sceneInString, newReg);
+
+						m_itemsHasBeenSelected = false;
+					}
 				}
 			}
 
-			if (ImGui::MenuItem("Save", "CTRL+S")) {
-
-				if (!m_sceneLoader.CurrentScene().empty()) {
-					m_sceneLoader.SaveScene(m_sceneLoader.CurrentScene(), reg);
-				}
-				else {
-					std::wstring scene = m_fileExplorer.OpenFileExplorer(FILE_EXPLORER_SAVE, m_fileExtensions["Scenes"]);
-					m_sceneLoader.SaveScene({ scene.begin(), scene.end() }, reg);
-				}
-
+			if (ImGui::MenuItem("Save Scene", "CTRL+S")) {
+				SaveScene(reg);
 			}
 			
-			if (ImGui::MenuItem("Save as", "F12")) {
-				std::wstring scene = m_fileExplorer.OpenFileExplorer(FILE_EXPLORER_SAVE, m_fileExtensions["Scenes"]);
-				m_sceneLoader.SaveScene({ scene.begin(), scene.end() }, reg);
+			if (ImGui::MenuItem("Save Scene as", "F12")) {
+				SaveSceneAs(reg);
 			}
 
 			ImGui::EndMenu();
@@ -120,7 +148,13 @@ void ImguiHandler::Update(const float dt)
 	}
 	ImGui::EndMainMenuBar();
 	
+	if (Input::GetInstance().IsKeyPressed(VK_DELETE)) {
+		m_removeEntity = true;
+	}
+
 	StaticWindows();
+
+	m_removeEntity = false;
 }
 
 
@@ -159,8 +193,11 @@ void ImguiHandler::StaticWindows()
 
 			ImGui::Separator();
 
+
+
 			if (ImGui::ListBoxHeader("##", {(float)m_leftWindow.m_width, (float)m_leftWindow.m_width})) {
 				auto scene = reg.view<Transform, Object>();
+				entt::entity previousEntity;
 				for (auto entity : scene) {
 					if (reg.try_get<Camera>(entity)) {
 						continue;
@@ -172,11 +209,22 @@ void ImguiHandler::StaticWindows()
 						m_currentEntity = entity;
 						m_currentMesh = 0;
 						Transform& transform = reg.get<Transform>(entity);
+
+						if (m_removeEntity) {
+							if (previousEntity != entity) {
+								m_currentEntity = previousEntity;
+							}
+
+							reg.destroy(entity);
+							m_removeEntity = false;
+						}
 						//memcpy(m_currentRotation, &transform.m_rotation.x, sizeof(float) * 3);
 
 						if (!m_itemsHasBeenSelected)
 							m_itemsHasBeenSelected = true;
 					}
+
+					previousEntity = entity;
 				}
 				
 				ImGui::ListBoxFooter();
@@ -243,6 +291,21 @@ void ImguiHandler::StaticWindows()
 		}
 	}
 	//* Right side window en
+}
+void ImguiHandler::SaveScene(entt::registry& reg)
+{
+	if (!m_sceneLoader.CurrentScene().empty()) {
+		m_sceneLoader.SaveScene(m_sceneLoader.CurrentScene(), reg);
+	}
+	else {
+		std::wstring scene = m_fileExplorer.OpenFileExplorer(FILE_EXPLORER_SAVE, m_fileExtensions["Scenes"]);
+		m_sceneLoader.SaveScene({ scene.begin(), scene.end() }, reg);
+	}
+}
+void ImguiHandler::SaveSceneAs(entt::registry& reg)
+{
+	std::wstring scene = m_fileExplorer.OpenFileExplorer(FILE_EXPLORER_SAVE, m_fileExtensions["Scenes"]);
+	m_sceneLoader.SaveScene({ scene.begin(), scene.end() }, reg);
 }
 bool ImguiHandler::ModelDataSettings(entt::registry& reg)
 {
