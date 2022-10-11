@@ -140,7 +140,7 @@ void EditorLoadAndSave::SaveScene(std::string scene, entt::registry& reg)
 
 				Transform& transform = reg.get<Transform>(entity); 
 				Vect3f euler = transform.m_rotation.ToEuler();
-				euler = { ToDegrees(euler.x), ToDegrees(euler.y), ToDegrees(euler.x) };
+				euler = { ToDegrees(euler.x), ToDegrees(euler.y), ToDegrees(euler.z) };
 
 				writer.Key("Transform");
 				writer.StartObject();

@@ -67,7 +67,7 @@ void ImguiHandler::Init()
 
 void ImguiHandler::Update(const float dt)
 {
-	ImGui::ShowDemoWindow();
+	//ImGui::ShowDemoWindow();
 
 	DirectX12Framework& framework = m_engine.GetFramework();
 	Scene& scene = m_engine.GetSceneManager().GetCurrentScene();
@@ -78,6 +78,8 @@ void ImguiHandler::Update(const float dt)
 				std::wstring scene = m_fileExplorer.OpenFileExplorer(FILE_EXPLORER_GET, m_fileExtensions["Scenes"]);
 				if (!scene.empty()) {
 
+					// This is very complicated for no reason atm, something i really want to fix 
+					// once i get a good idea how to handle scenes between edtior and game
 					entt::entity camEntt = m_engine.GetSceneManager().GetCurrentScene().GetMainCamera();
 					Camera& camera = reg.get<Camera>(camEntt);
 					Transform& transform = reg.get<Transform>(camEntt);
