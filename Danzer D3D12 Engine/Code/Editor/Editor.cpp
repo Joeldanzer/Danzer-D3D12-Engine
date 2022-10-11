@@ -2,6 +2,7 @@
 
 #include "Core/Engine.h"
 #include "Core/input.hpp"
+#include "Core/WindowHandler.h"
 
 #include "SceneManager.h"
 
@@ -14,12 +15,10 @@
 Editor::Editor(Engine& engine) :
 	m_engine(engine),
 	m_turnSpeed(2.f),
-	m_moveSpeed(10.f)
+	m_moveSpeed(10.f),
+	m_imguiHandler(engine)
 {
-	m_imguiHandler.Init(engine);
-	
-	entt::registry& reg = m_engine.GetSceneManager().GetCurrentScene().Registry();
-	Scene& scene = engine.GetSceneManager().GetCurrentScene();
+	m_imguiHandler.Init();
 }
 Editor::~Editor(){}
 

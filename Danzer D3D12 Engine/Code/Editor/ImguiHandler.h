@@ -5,13 +5,15 @@
 //#include "entt/entt.hpp"
 #include "Core/MathDefinitions.h"
 
+#include "EditorLoadAndSave.h"
+#include "FileExplorer.h"
+
 #include <string>
 #include <vector>
 
 class Engine;
 class Object;
 class Object2D;
-
 
 class ImguiHandler
 {
@@ -27,14 +29,15 @@ public:
 		//entt::entity m_entity;
 	};
 
-	ImguiHandler();
+	ImguiHandler(Engine& engine);
 	~ImguiHandler();
 
-	void Init(Engine& engine);
+	void Init();
 
 	void Update(const float dt);
 
 private:
+
 	struct ImguiTexture {
 		unsigned int m_descriptorIndex;
 		std::wstring m_imagePath;
@@ -50,7 +53,7 @@ private:
 
 	CD3DX12_GPU_DESCRIPTOR_HANDLE AddImguiImage(std::wstring path);
 
-	Engine* m_engine;
+	Engine& m_engine;
 	int m_currentMesh = 0;
 	//float m_currentRotation[3] ={1.f, 5.f, 30.f};
 	entt::entity m_currentEntity;
@@ -63,23 +66,24 @@ private:
 	
 	void StaticWindows();
 
+	void SaveScene(entt::registry& reg);
+	void SaveSceneAs(entt::registry& reg);
+
 	bool ModelDataSettings(entt::registry& reg);
 	bool ObjectSettings(entt::registry& reg);
 	bool TransformSettings(entt::registry& reg);
 	bool DirectionalLightSettings(entt::registry& reg);
 
 	// Not sure if I have named it correct
-	struct FileExplorerExtension {
-		std::wstring m_fileType;
-		std::wstring m_folder;
-	};
-
-	std::wstring OpenFileExplorer(FileExplorerExtension file);
 
 	std::array<std::string, 3> m_stateNames = { "ACTIVE", "NOT_ACTIVE", "DESTROY" };
-	std::unordered_map<std::string, FileExplorerExtension> m_fileExtensions;
+	std::unordered_map<std::string, FileExplorer::FileType> m_fileExtensions;
 
 	std::vector<std::string> m_componentList;
 
+	EditorLoadAndSave m_sceneLoader;
+	FileExplorer m_fileExplorer;
+
+	bool m_removeEntity;
 };
 

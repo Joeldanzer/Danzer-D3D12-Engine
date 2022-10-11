@@ -58,13 +58,12 @@ Model ModelHandler::CreateCustomModel(CustomModel customModel, bool transparent)
 	//Faster to execute them at the same time
 	cmdList->ResourceBarrier(static_cast<UINT>(resourceBarriers.size()), &resourceBarriers[0]);
 	
-	
 	m_framework.ExecuteCommandList();
 	m_framework.WaitForPreviousFrame();
 	
 	std::vector<Vect3f> verticies;
 
-	// Now add the data from the GPU -> CPU after executinng commandlist
+	// Now add the data from the CPU -> GPU after executinng commandlist
 	{
 		mesh.m_indexBufferView.BufferLocation = mesh.m_indexBuffer->GetGPUVirtualAddress();
 		mesh.m_indexBufferView.Format = DXGI_FORMAT_R32_UINT;
@@ -82,13 +81,11 @@ Model ModelHandler::CreateCustomModel(CustomModel customModel, bool transparent)
 	}
 
 	std::vector<ModelData::Mesh> meshes = { mesh };
-	UINT id = GetNewlyCreatedModelID(ModelData(meshes, m_framework.GetDevice(), verticies, customModel.m_customModelName, transparent));
+	UINT id = GetNewlyCreatedModelID(ModelData(meshes, m_framework.GetDevice(), verticies, L"", customModel.m_customModelName, transparent));
 	
 	return Model(id);
 }
 
-// Load model from Assimp, if you need to get a model ID 
-// Use GetExistingModel(srtring name) instead. 
 Model ModelHandler::LoadModel(std::wstring fileName, std::string name, bool transparent, bool uvFlipped)
 {	
 	UINT exists = GetExistingModel(fileName);
@@ -126,7 +123,8 @@ Model ModelHandler::LoadModel(std::wstring fileName, std::string name, bool tran
 	else
 		modelName = name;
 
-	UINT id = GetNewlyCreatedModelID(ModelData(meshes, m_framework.GetDevice(), verticies, modelName, transparent));
+
+	UINT id = GetNewlyCreatedModelID(ModelData(meshes, m_framework.GetDevice(), verticies, fileName, modelName, transparent));
 	return Model(id);
 }
 

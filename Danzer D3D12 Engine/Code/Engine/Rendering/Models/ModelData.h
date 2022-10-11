@@ -43,13 +43,14 @@ public:
 	ModelData() = delete;
 	~ModelData() = default;
 	explicit ModelData(const ModelData&) = default;
-	explicit ModelData(std::vector<Mesh>& data, ID3D12Device* device, std::vector<Vect3f>& verticies, std::string name = "", bool transparent = false) :
+	explicit ModelData(std::vector<Mesh>& data, ID3D12Device* device, std::vector<Vect3f>& verticies, std::wstring fileName, std::string name = "", bool transparent = false) :
 		m_ID(0),
 		m_name(name),
 		m_meshes(data),
 		m_renderModel(false),
 		m_verticies(verticies),
-		m_transparent(transparent)
+		m_transparent(transparent),
+		m_modelPath(fileName)
 	{
 		for (auto& mesh : m_meshes)
 			mesh.m_materialBuffer.Init(device);
@@ -105,6 +106,10 @@ public:
 	}
 	std::vector<UINT>& GetMaterialTextures() {
 		return m_materialTextures;
+	}
+
+	std::wstring& GetModelPath() {
+		return m_modelPath;
 	}
 
 private:

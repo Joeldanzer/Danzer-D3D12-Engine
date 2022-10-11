@@ -17,25 +17,28 @@
 #include "Components/Sprite.h"
 #include "Components/Transform.h"
 
-#include <shtypes.h>
-#include <ShlObj_core.h>
-#include <tchar.h>
+#include "Core/input.hpp"
 
+#include <tchar.h>
 
 #include "../3rdParty/imgui-master/imgui.h"
 
-ImguiHandler::ImguiHandler() : 
-	m_engine(nullptr),
+ImguiHandler::ImguiHandler(Engine& engine) :
+	m_engine(engine),
 	m_currentEntity(),
 	m_entitySelected(false),
 	m_name(nullptr),
-	m_tag(nullptr)
+	m_tag(nullptr),
+	m_sceneLoader(engine)
 {
-	FileExplorerExtension textures = { L".dds", L"Sprites\\" };
+	FileExplorer::FileType textures = { L".dds", L"Sprites\\" };
 	m_fileExtensions.emplace("Texture", textures);
 
-	FileExplorerExtension models = { L".fbx", L"Models\\" };
+	FileExplorer::FileType models = { L".fbx", L"Models\\" };
 	m_fileExtensions.emplace("Model", models); 	
+
+	FileExplorer::FileType  scenes = { L".json", L"Scenes\\" };
+	m_fileExtensions.emplace("Scenes", scenes);
 
 	m_componentList = {
 		"Model",
@@ -46,22 +49,19 @@ ImguiHandler::~ImguiHandler()
 {
     m_name = nullptr;
     m_tag  = nullptr;
-	m_engine = nullptr;
 }
 
-void ImguiHandler::Init(Engine& engine)
+void ImguiHandler::Init()
 {
-	m_engine = &engine;
-	
 	m_rightWindow.m_height = WindowHandler::GetWindowData().m_height;
 	m_rightWindow.m_width = 400;
 	m_rightWindow.m_positon.x = WindowHandler::GetWindowData().m_width - (m_rightWindow.m_width/2);
-	m_rightWindow.m_positon.y = m_rightWindow.m_height / 2;
+	m_rightWindow.m_positon.y = (m_rightWindow.m_height / 2) + 19;
 
 	m_leftWindow.m_height = WindowHandler::GetWindowData().m_height / 2;
 	m_leftWindow.m_width = 400;
 	m_leftWindow.m_positon.x = m_leftWindow.m_width / 2;
-	m_leftWindow.m_positon.y = m_leftWindow.m_height / 2;
+	m_leftWindow.m_positon.y = (m_leftWindow.m_height / 2) + 19;
 
 	m_tag = new char;
 	m_name = new char;
@@ -69,129 +69,92 @@ void ImguiHandler::Init(Engine& engine)
 
 void ImguiHandler::Update(const float dt)
 {
-	DirectX12Framework& framework = m_engine->GetFramework();
-	Scene& scene = m_engine->GetSceneManager().GetCurrentScene();
-	entt::registry& reg = scene.Registry();
 	//ImGui::ShowDemoWindow();
-	StaticWindows();
-	
-	//if (ImGui::ListBoxHeader("Scene View")) {
-	//	
-	//
-	//	ImGui::ListBoxFooter();
-	//+}
 
-	//if (ImGui::BeginMainMenuBar()) {
-	//
-	//	if (ImGui::BeginMenu("File")) {
-	//		if(ImGui::MenuItem("File Stuff")){
-	//		}
-	//
-	//		ImGui::EndMenu();
-	//	}
-	//
-	//	ImGui::EndMainMenuBar();
-	//}
-	//
-	//bool show = true;
-	//
-	//
-	//ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize;
-	//
-	//unsigned int w = WindowHandler::GetWindowData().m_width;
-	//unsigned int h = WindowHandler::GetWindowData().m_height;
-	//
-	//static bool selected3DItem = false;
-	//static bool selected2DItem = false;
-	//
-	//
-	//ImGui::SetNextWindowPos({ 0, 19 });
-	//ImGui::SetNextWindowSize({(float)w/4, (float)h/2});
-	//
-	//if (ImGui::Begin("##", &show, window_flags)) {
-	//	
-	//	if(ImGui::BeginTabBar("##tabbar1", ImGuiTabBarFlags_None)) {
-	//		if (ImGui::BeginTabItem("Scene")) {
-	//			
-	//			m_selectedScene = 1;
-	//
-	//			if (ImGui::ListBoxHeader("##Scene Window", { (float)(w/4) - 15, (float)(h/2) - 55 })) {
-	//				
-	//		
-	//				//for (UINT i = 0; i < scene->GetObjects().size(); i++)
-	//				//{
-	//				//	// WHY WARNING??
-	//				//	Object& obj = *scene->GetObjects()[i];
-	//				//	if (ImGui::Selectable(obj.GetName().c_str(), selected3DItem)) {
-	//				//		obj.Select(true);
-	//				//		m_object = &obj;
-	//				//	}
-	//				//	else {
-	//				//		obj.Select(false);
-	//				//	}
-	//				//}
-	//			
-	//				ImGui::ListBoxFooter();
-	//			}
-	//			ImGui::EndTabItem();
-	//		}
-	//
-	//		if (ImGui::BeginTabItem("UI")) {
-	//
-	//			m_selectedScene = -1;
-	//
-	//			if (ImGui::ListBoxHeader("##UI Window", { (float)(w / 4) - 15, (float)(h / 2) - 55 })) {
-	//
-	//
-	//				//for (UINT i = 0; i < scene->GetSprites().size(); i++)
-	//				//{
-	//				//	// WHY WARNING??
-	//				//	//Object2D* obj = scene->GetSprites()[i];
-	//				//	//if (ImGui::Selectable(obj->GetName().c_str(), selected2DItem)) {
-	//				//	//	obj->Select(true);
-	//				//	//	m_object2D = obj;
-	//				//	//}
-	//				//	//else {
-	//				//	//	obj->Select(false);
-	//				//	//}
-	//				//}
-	//
-	//				ImGui::ListBoxFooter();
-	//			}
-	//			ImGui::EndTabItem();
-	//		}
-	//		ImGui::EndTabBar();
-	//	}
-	//
-	//
-	//	//ImGui::PopStyleColor();
-	//	ImGui::End();
-	//}
-	//
-	//ImGui::SetNextWindowPos({float(w - (w/4)), 19.f});
-	//ImGui::SetNextWindowSize({ (float)w / 4, (float)h - 40.f });
-	//
-	//if (ImGui::Begin("##info", &show, window_flags)) {
-	//
-	//	if (ImGui::BeginTabBar("##tabs", ImGuiTabBarFlags_None)) {
-	//		if (ImGui::BeginTabItem("Object")) {
-	//
-	//			if(m_selectedScene == 1)
-	//				Object3DImgui();
-	//
-	//			if(m_selectedScene == -1)
-	//				Object2DImgui();
-	//
-	//
-	//			ImGui::EndTabItem();
-	//		}
-	//
-	//		ImGui::EndTabBar();
-	//	}
-	//	ImGui::End();
-	//}
-	//
-	////ImGui::ShowDemoWindow(&show);
+	DirectX12Framework& framework = m_engine.GetFramework();
+	Scene& scene = m_engine.GetSceneManager().GetCurrentScene();
+	entt::registry& reg = scene.Registry();
+	if (ImGui::BeginMainMenuBar()) {
+		if (ImGui::BeginMenu("File")) {
+			if (ImGui::MenuItem("Load Scene", "CTRL+O")) {
+				std::wstring scene = m_fileExplorer.OpenFileExplorer(FILE_EXPLORER_GET, m_fileExtensions["Scenes"]);
+				if (!scene.empty()) {
+
+					// This section is not my proudest programming moment...
+					// Definetly Gonna rewrite this whole section when I have remade
+					// Scenes and how they function.
+
+					bool loadScene = false;
+
+					std::string sceneInString = { scene.begin(), scene.end() };
+					if (sceneInString != m_engine.GetSceneManager().GetCurrentScene().SceneName()) {
+						loadScene = true;
+					}
+					else {
+						if (ImGui::BeginPopupContextWindow()) {
+							ImGui::Text("Want to save scene before loading the same/a new one?");
+
+							if (ImGui::Button("Save")) {
+								SaveScene(reg);
+								loadScene = true;
+							}
+							ImGui::SameLine();
+							if(ImGui::Button("Load"))
+								loadScene = true;
+
+							ImGui::SameLine();
+							if (ImGui::Button("Close")){}
+							
+							ImGui::EndPopup();
+						}
+					}
+
+					if (loadScene) {
+						// This is very complicated for no reason atm, something i really want to fix 
+						// once i get a good idea how to handle scenes between edtior and game
+						entt::entity camEntt = m_engine.GetSceneManager().GetCurrentScene().GetMainCamera();
+						Camera& camera = reg.get<Camera>(camEntt);
+						Transform& transform = reg.get<Transform>(camEntt);
+						Object& obj = reg.get<Object>(camEntt);
+
+						Scene& newScene = m_engine.GetSceneManager().CreateEmptyScene(sceneInString);
+						if (!newScene.Registry().empty())
+							newScene.Registry().clear();
+
+						entt::registry& newReg = newScene.Registry();
+						entt::entity newCam = newReg.create();
+						newReg.emplace<Camera>(newCam, camera);
+						newReg.emplace<Transform>(newCam, transform);
+						newReg.emplace<Object>(newCam, obj);
+
+						m_engine.GetSceneManager().SetScene(sceneInString, newCam);
+						m_sceneLoader.LoadScene(sceneInString, newReg);
+
+						m_itemsHasBeenSelected = false;
+					}
+				}
+			}
+
+			if (ImGui::MenuItem("Save Scene", "CTRL+S")) {
+				SaveScene(reg);
+			}
+			
+			if (ImGui::MenuItem("Save Scene as", "F12")) {
+				SaveSceneAs(reg);
+			}
+
+			ImGui::EndMenu();
+		}
+	}
+	ImGui::EndMainMenuBar();
+	
+	if (Input::GetInstance().IsKeyPressed(VK_DELETE)) {
+		m_removeEntity = true;
+	}
+
+	StaticWindows();
+
+	m_removeEntity = false;
 }
 
 
@@ -202,8 +165,8 @@ void ImguiHandler::StaticWindows()
 		ImGuiWindowFlags_NoResize |
 		ImGuiWindowFlags_NoCollapse;
 
-	Scene& scene = m_engine->GetSceneManager().GetCurrentScene();
-	entt::registry& reg = m_engine->GetSceneManager().GetCurrentScene().Registry();
+	Scene& scene = m_engine.GetSceneManager().GetCurrentScene();
+	entt::registry& reg = m_engine.GetSceneManager().GetCurrentScene().Registry();
 	//* Left Side window Begin
 	{
 		ImGui::SetNextWindowSize({ (float)m_leftWindow.m_width, (float)m_leftWindow.m_height });
@@ -220,32 +183,48 @@ void ImguiHandler::StaticWindows()
 			ImGui::SameLine();
 			if(ImGui::Button("Create Cube")) {
 				m_currentEntity = scene.CreateBasicEntity("Cube");
-				reg.emplace<Model>(m_currentEntity, m_engine->GetModelHandler().LoadModel(L"Models/Cube.fbx"));
+				reg.emplace<Model>(m_currentEntity, m_engine.GetModelHandler().LoadModel(L"Models/Cube.fbx"));
 			}
 			ImGui::SameLine();
 			if (ImGui::Button("Create Sphere")) {
 				m_currentEntity = scene.CreateBasicEntity("Sphere");
-				reg.emplace<Model>(m_currentEntity, m_engine->GetModelHandler().LoadModel(L"Models/Sphere.fbx"));
+				reg.emplace<Model>(m_currentEntity, m_engine.GetModelHandler().LoadModel(L"Models/Sphere.fbx"));
 			}
 
 			ImGui::Separator();
 
+
+
 			if (ImGui::ListBoxHeader("##", {(float)m_leftWindow.m_width, (float)m_leftWindow.m_width})) {
 				auto scene = reg.view<Transform, Object>();
+				entt::entity previousEntity;
 				for (auto entity : scene) {
+					if (reg.try_get<Camera>(entity)) {
+						continue;
+					}
+
 					Object& obj = reg.get<Object>(entity);
 					bool isSelected = (entity == m_currentEntity);
 					if (ImGui::Selectable(obj.m_name.c_str(), isSelected)) {
 						m_currentEntity = entity;
 						m_currentMesh = 0;
 						Transform& transform = reg.get<Transform>(entity);
+
+						if (m_removeEntity) {
+							if (previousEntity != entity) {
+								m_currentEntity = previousEntity;
+							}
+
+							reg.destroy(entity);
+							m_removeEntity = false;
+						}
 						//memcpy(m_currentRotation, &transform.m_rotation.x, sizeof(float) * 3);
 
 						if (!m_itemsHasBeenSelected)
 							m_itemsHasBeenSelected = true;
 					}
 
-
+					previousEntity = entity;
 				}
 				
 				ImGui::ListBoxFooter();
@@ -313,15 +292,30 @@ void ImguiHandler::StaticWindows()
 	}
 	//* Right side window en
 }
+void ImguiHandler::SaveScene(entt::registry& reg)
+{
+	if (!m_sceneLoader.CurrentScene().empty()) {
+		m_sceneLoader.SaveScene(m_sceneLoader.CurrentScene(), reg);
+	}
+	else {
+		std::wstring scene = m_fileExplorer.OpenFileExplorer(FILE_EXPLORER_SAVE, m_fileExtensions["Scenes"]);
+		m_sceneLoader.SaveScene({ scene.begin(), scene.end() }, reg);
+	}
+}
+void ImguiHandler::SaveSceneAs(entt::registry& reg)
+{
+	std::wstring scene = m_fileExplorer.OpenFileExplorer(FILE_EXPLORER_SAVE, m_fileExtensions["Scenes"]);
+	m_sceneLoader.SaveScene({ scene.begin(), scene.end() }, reg);
+}
 bool ImguiHandler::ModelDataSettings(entt::registry& reg)
 {
 	Model* model = reg.try_get<Model>(m_currentEntity);
 	if (model) {
 		if (ImGui::CollapsingHeader("ModelData")) {
 			if (ImGui::Button("Set Model")) {
-				std::wstring newModel = OpenFileExplorer(m_fileExtensions["Model"]);
+				std::wstring newModel = m_fileExplorer.OpenFileExplorer(FILE_EXPLORER_GET, m_fileExtensions["Model"]);
 				if (!newModel.empty()) {
-					UINT newModelID = m_engine->GetModelHandler().LoadModel(newModel, "").m_modelID;
+					UINT newModelID = m_engine.GetModelHandler().LoadModel(newModel, "").m_modelID;
 					if (newModelID != 0) {
 						model->m_modelID = newModelID;
 					}
@@ -330,7 +324,7 @@ bool ImguiHandler::ModelDataSettings(entt::registry& reg)
 			ImGui::Separator();
 
 			if(model->m_modelID != 0) {
-				ModelData& data = m_engine->GetModelHandler().GetLoadedModelInformation(model->m_modelID);
+				ModelData& data = m_engine.GetModelHandler().GetLoadedModelInformation(model->m_modelID);
 				
 				ImGui::Text("Model Name: ");
 				ImGui::SameLine();
@@ -365,20 +359,20 @@ bool ImguiHandler::ModelDataSettings(entt::registry& reg)
 				{
 					std::wstring albedo;
 					if (ImGui::Button("Albedo")) {
-						std::wstring newAlbedo = OpenFileExplorer(m_fileExtensions["Texture"]);
+						std::wstring newAlbedo = m_fileExplorer.OpenFileExplorer(FILE_EXPLORER_GET, m_fileExtensions["Texture"]);
 						if (!newAlbedo.empty()) {
 							albedo = newAlbedo;
-							material.m_albedo = m_engine->GetTextureHandler().GetTexture(albedo);
+							material.m_albedo = m_engine.GetTextureHandler().GetTexture(albedo);
 							if (material.m_albedo == 0){
-								material.m_albedo = m_engine->GetTextureHandler().CreateTexture(albedo);
+								material.m_albedo = m_engine.GetTextureHandler().CreateTexture(albedo);
 							}
 
 						}
 						else
-							albedo = m_engine->GetTextureHandler().GetTextureData(material.m_albedo).m_texturePath;
+							albedo = m_engine.GetTextureHandler().GetTextureData(material.m_albedo).m_texturePath;
 					}
 					else
-						albedo = m_engine->GetTextureHandler().GetTextureData(material.m_albedo).m_texturePath;
+						albedo = m_engine.GetTextureHandler().GetTextureData(material.m_albedo).m_texturePath;
 
 					ImGui::SameLine();
 					CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle = AddImguiImage(albedo);
@@ -390,20 +384,20 @@ bool ImguiHandler::ModelDataSettings(entt::registry& reg)
 				{
 					std::wstring normal;
 					if (ImGui::Button("Normal")) {
-						std::wstring newNormal = OpenFileExplorer(m_fileExtensions["Texture"]);
+						std::wstring newNormal = m_fileExplorer.OpenFileExplorer(FILE_EXPLORER_GET, m_fileExtensions["Texture"]);
 						if (!newNormal.empty()) {
 							normal = newNormal;
-							material.m_normal = m_engine->GetTextureHandler().GetTexture(normal);
+							material.m_normal = m_engine.GetTextureHandler().GetTexture(normal);
 							if (material.m_normal  == 0) {
-								material.m_normal = m_engine->GetTextureHandler().CreateTexture(normal);
+								material.m_normal = m_engine.GetTextureHandler().CreateTexture(normal);
 							}
 						}
 						else
-							normal = m_engine->GetTextureHandler().GetTextureData(material.m_normal).m_texturePath;
+							normal = m_engine.GetTextureHandler().GetTextureData(material.m_normal).m_texturePath;
 
 					}
 					else
-						normal = m_engine->GetTextureHandler().GetTextureData(material.m_normal).m_texturePath;
+						normal = m_engine.GetTextureHandler().GetTextureData(material.m_normal).m_texturePath;
 
 					ImGui::SameLine();
 					CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle = AddImguiImage(normal);
@@ -414,20 +408,20 @@ bool ImguiHandler::ModelDataSettings(entt::registry& reg)
 				{
 					std::wstring metallic;
 					if (ImGui::Button("Metallic")) {
-						std::wstring newMetallic = OpenFileExplorer(m_fileExtensions["Texture"]);
+						std::wstring newMetallic = m_fileExplorer.OpenFileExplorer(FILE_EXPLORER_GET, m_fileExtensions["Texture"]);
 						if (!newMetallic.empty()) {
 							metallic = newMetallic;
-							material.m_metallic = m_engine->GetTextureHandler().GetTexture(metallic);
+							material.m_metallic = m_engine.GetTextureHandler().GetTexture(metallic);
 							if (material.m_metallic == 0) {
-								material.m_metallic = m_engine->GetTextureHandler().CreateTexture(metallic);
+								material.m_metallic = m_engine.GetTextureHandler().CreateTexture(metallic);
 							}
 						}
 						else
-							metallic = m_engine->GetTextureHandler().GetTextureData(material.m_metallic).m_texturePath;
+							metallic = m_engine.GetTextureHandler().GetTextureData(material.m_metallic).m_texturePath;
 
 					}
 					else
-						metallic = m_engine->GetTextureHandler().GetTextureData(material.m_metallic).m_texturePath;
+						metallic = m_engine.GetTextureHandler().GetTextureData(material.m_metallic).m_texturePath;
 
 					ImGui::SameLine();
 					CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle = AddImguiImage(metallic);
@@ -558,11 +552,11 @@ CD3DX12_GPU_DESCRIPTOR_HANDLE ImguiHandler::AddImguiImage(std::wstring path)
 			return m_imguiTextures[i].m_srvGpuHandle;
 	}
 
-	m_engine->GetFramework().ResetCommandListAndAllocator(nullptr);
+	m_engine.GetFramework().ResetCommandListAndAllocator(nullptr);
 	ImguiTexture texture;
 
-	ID3D12Device* device = m_engine->GetFramework().GetDevice();
-	ID3D12GraphicsCommandList* cmdList = m_engine->GetFramework().GetCommandList();
+	ID3D12Device* device = m_engine.GetFramework().GetDevice();
+	ID3D12GraphicsCommandList* cmdList = m_engine.GetFramework().GetCommandList();
 
 	CD3DX12_RESOURCE_BARRIER barrier = LoadATextures(
 		path,
@@ -572,10 +566,10 @@ CD3DX12_GPU_DESCRIPTOR_HANDLE ImguiHandler::AddImguiImage(std::wstring path)
 	);
 
 	cmdList->ResourceBarrier(1, &barrier);
-	m_engine->GetFramework().ExecuteCommandList();
-	m_engine->GetFramework().WaitForPreviousFrame();
+	m_engine.GetFramework().ExecuteCommandList();
+	m_engine.GetFramework().WaitForPreviousFrame();
 
-	ID3D12DescriptorHeap* imguiDesc = m_engine->GetFramework().GetImguiHeap();
+	ID3D12DescriptorHeap* imguiDesc = m_engine.GetFramework().GetImguiHeap();
 
 	CD3DX12_GPU_DESCRIPTOR_HANDLE srvGpuHandle;
 	CD3DX12_CPU_DESCRIPTOR_HANDLE srvCpuHandle;
@@ -596,41 +590,4 @@ CD3DX12_GPU_DESCRIPTOR_HANDLE ImguiHandler::AddImguiImage(std::wstring path)
 
 
 	return m_imguiTextures[m_imguiTextures.size() - 1].m_srvGpuHandle;
-}
-std::wstring ImguiHandler::OpenFileExplorer(FileExplorerExtension file)
-{
-	//LPOPENFILE
-	
-	//const char type[5] = {};
-	//std::string toString = { file.m_fileType.begin(), file.m_fileType.end() };
-	//memcpy(type, toString.c_str(), 5);
-	//const char fileType = *file.m_fileType.c_str();
-	
-	WCHAR fileName[MAX_PATH];//[MAX_PATH];
-	OPENFILENAME ofn;
-	ZeroMemory(&ofn, sizeof(ofn));
-	ZeroMemory(&fileName, sizeof(fileName)); 
-	ofn.lStructSize = sizeof(ofn);
-	ofn.hwndOwner = NULL;
-	ofn.lpstrFilter = _T("");
-	ofn.lpstrFile = fileName;
-	ofn.lpstrInitialDir = LPCWSTR(file.m_folder.c_str());
-	ofn.nMaxFile = MAX_PATH;
-	ofn.lpstrTitle = _T("Select File");
-	ofn.Flags = OFN_DONTADDTORECENT  | OFN_NOCHANGEDIR;
-
-	if (GetOpenFileName(&ofn)) {
-		
-		std::wstring texture(fileName);
-		if (!texture.empty() || texture.find_last_of(file.m_fileType) != std::wstring::npos) {
-			size_t pos = texture.find(file.m_folder);
-			texture = texture.erase(0, pos);
-			
-			pos = texture.find(L"\\");
-			texture.replace(pos, 1, L"/");
-
-			return texture;
-		}
-	}
-	return L"";
 }

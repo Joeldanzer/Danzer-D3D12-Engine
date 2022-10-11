@@ -190,6 +190,7 @@ float3 EvaluateAmbience(TextureCube cubeMap, SamplerState defaultSampler, float3
     
     float l = BurleyToMip(perceptualRoughness, numMips, RdotNsat);
     
+    // Take the maxinum of Mips to get the Average color of skybox
     float3 specRad = cubeMap.SampleLevel(defaultSampler, vR, numMips).rgb;
     float3 diffRad = cubeMap.SampleLevel(defaultSampler, vN, (float) (nrBrdfMips - 1)).rgb;
     
