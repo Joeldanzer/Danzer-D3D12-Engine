@@ -13,15 +13,16 @@ float4 main(VertexToPixel input) : SV_TARGET
         discard;
     
     float3 albedo        = albedoTexture.Sample(defaultSample, input.m_uv).rgb;
-    float3 normal        = normalTexture.Sample(defaultSample, input.m_uv).rgb; 
-    float3 material      = materialTexture.Sample(defaultSample, input.m_uv).rgb; 
+    float4 normal        = normalTexture.Sample(defaultSample, input.m_uv).rgba; 
+    float4 material      = materialTexture.Sample(defaultSample, input.m_uv); 
     float3 vertexNormal  = vertexNormalTexture.Sample(defaultSample, input.m_uv).xyz; 
     
-    float metallic      = material.r;
-    float emissiveData  = material.b;
-    float roughness     = material.g;
-    float ao = normalTexture.Sample(defaultSample, input.m_uv).a;
- 
+    float emissiveData = normal.w;
+    float metallic     = material.r;
+    float roughness    = material.g;
+    float height       = material.b;
+    float ao           = material.w;
+    
     float3 toEye = normalize(CameraPosition.xyz - worldPosition);
   
     //float shadowData = PixelShader_Shadow(float4(worldposition, 1.0f));
@@ -31,8 +32,8 @@ float4 main(VertexToPixel input) : SV_TARGET
     float3 specualrcolor = lerp((float3) 0.04, albedo, metallic);
     float3 diffusecolor  = lerp((float3) 0.00, albedo, 1 - metallic);
        
-    float3 ambience = EvaluateAmbience(skyboxTexture, defaultSample, normal, vertexNormal, toEye, roughness, metallic, albedo, ao, albedo, specualrcolor, AmbientColor);
-    float3 directionalLight = EvaluateDirectionalLight(diffusecolor, specualrcolor, normal, roughness, LightColor.rgb * LightColor.w, LightDirection.xyz, toEye.xyz);
+    float3 ambience = EvaluateAmbience(skyboxTexture, defaultSample, normal.rgb, vertexNormal, toEye, roughness, metallic, albedo, ao, albedo, specualrcolor, AmbientColor);
+    float3 directionalLight = EvaluateDirectionalLight(diffusecolor, specualrcolor, normal.rgb, roughness, LightColor.rgb * LightColor.w, LightDirection.xyz, toEye.xyz);
     //if (shadowData > 0.0f)
     //{
     //}
@@ -72,16 +73,16 @@ float4 main(VertexToPixel input) : SV_TARGET
             color.rgb = radiance;    
             break;
         case 1:
-            color.rgb = albedo  * AmbientColor.w;
+            color.rgb = directionalLight; //albedo  * AmbientColor.w;
             break;
         case 2:
-            color.rgb = 0.5f + 0.5f * normal;
+            color.rgb = normal.rgb;
             break;
         case 3:
-            color.rgb = material;
+            color.rgb = vertexNormal;
             break;
         case 4:
-            color.rgb = vertexNormal;
+            color.rgb = vertexColorTexture.Sample(defaultSample, input.m_uv).rgb;
             break;
         case 5:
             color.rgb = worldPosition;

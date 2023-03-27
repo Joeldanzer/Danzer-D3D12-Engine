@@ -338,38 +338,15 @@ bool ImguiHandler::ModelDataSettings(entt::registry& reg)
 
 				Material& material = currentMesh.m_material;
 				static float roughness = material.m_roughness;
-				static float shininess = material.m_shininess;
+				static float metallic = material.m_shininess;
 				static float emissive = material.m_emissvie;
 				static float color[3] = { material.m_color[0], material.m_color[1], material.m_color[2] };
 
 				ImGui::ColorEdit3("Albedo Color", color);
-				ImGui::DragFloat("Roughness", &roughness, 0.01f, 0.1f,  2.f);
-				ImGui::DragFloat("Shininess", &shininess, 0.01f, 0.0f,  2.f);
-				ImGui::DragFloat("Emissive",  &emissive,  0.01f, 0.0f,  5.f);
-
-				material.m_roughness = roughness;
-				material.m_shininess = shininess;
-				material.m_emissvie = emissive;
-				memcpy(material.m_color, color, sizeof(float) * 3);
-				
-				ImGui::Separator();
-				ImGui::Text("Textures");
-
-				//Abedo start
 				{
 					std::wstring albedo;
 					if (ImGui::Button("Albedo")) {
-						std::wstring newAlbedo = m_fileExplorer.OpenFileExplorer(FILE_EXPLORER_GET, m_fileExtensions["Texture"]);
-						if (!newAlbedo.empty()) {
-							albedo = newAlbedo;
-							material.m_albedo = m_engine.GetTextureHandler().GetTexture(albedo);
-							if (material.m_albedo == 0){
-								material.m_albedo = m_engine.GetTextureHandler().CreateTexture(albedo);
-							}
-
-						}
-						else
-							albedo = m_engine.GetTextureHandler().GetTextureData(material.m_albedo).m_texturePath;
+						albedo = SelectTexture(material.m_albedo);
 					}
 					else
 						albedo = m_engine.GetTextureHandler().GetTextureData(material.m_albedo).m_texturePath;
@@ -378,57 +355,80 @@ bool ImguiHandler::ModelDataSettings(entt::registry& reg)
 					CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle = AddImguiImage(albedo);
 					ImGui::Image((ImTextureID)srvHandle.ptr, { 50.f, 50.f });
 				}
-				//Albedo end
 
-				ImGui::SameLine();
 				{
-					std::wstring normal;
-					if (ImGui::Button("Normal")) {
-						std::wstring newNormal = m_fileExplorer.OpenFileExplorer(FILE_EXPLORER_GET, m_fileExtensions["Texture"]);
-						if (!newNormal.empty()) {
-							normal = newNormal;
-							material.m_normal = m_engine.GetTextureHandler().GetTexture(normal);
-							if (material.m_normal  == 0) {
-								material.m_normal = m_engine.GetTextureHandler().CreateTexture(normal);
-							}
-						}
-						else
-							normal = m_engine.GetTextureHandler().GetTextureData(material.m_normal).m_texturePath;
-
+					std::wstring metallicMap;
+					if (ImGui::Button("Metallic Map")) {
+						metallicMap = SelectTexture(material.m_metallicMap);
 					}
 					else
-						normal = m_engine.GetTextureHandler().GetTextureData(material.m_normal).m_texturePath;
+						metallicMap = m_engine.GetTextureHandler().GetTextureData(material.m_metallicMap).m_texturePath;
 
 					ImGui::SameLine();
-					CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle = AddImguiImage(normal);
+					CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle = AddImguiImage(metallicMap);
+					ImGui::Image((ImTextureID)srvHandle.ptr, { 50.f, 50.f });
+				}
+				ImGui::SameLine();
+				ImGui::DragFloat("Metallic",  &metallic, 0.01f, 0.0f,  2.f);
+				
+				{
+					std::wstring roughnessMap;
+					if (ImGui::Button("Roughness Map")) {
+						roughnessMap = SelectTexture(material.m_roughnessMap);
+					}
+					else
+						roughnessMap = m_engine.GetTextureHandler().GetTextureData(material.m_roughnessMap).m_texturePath;
+
+					ImGui::SameLine();
+					CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle = AddImguiImage(roughnessMap);
+					ImGui::Image((ImTextureID)srvHandle.ptr, { 50.f, 50.f });
+				}
+				ImGui::SameLine();
+				ImGui::DragFloat("Roughness", &roughness, 0.01f, 0.1f,  2.f);
+				ImGui::DragFloat("Emissive",  &emissive,  0.01f, 0.0f,  5.f);
+
+				{
+					std::wstring normmal;
+					if (ImGui::Button("Normal Map")) {
+						normmal = SelectTexture(material.m_normal);
+					}
+					else
+						normmal = m_engine.GetTextureHandler().GetTextureData(material.m_normal).m_texturePath;
+
+					ImGui::SameLine();
+					CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle = AddImguiImage(normmal);
+					ImGui::Image((ImTextureID)srvHandle.ptr, { 50.f, 50.f });
+				}
+				{
+					std::wstring height;
+					if (ImGui::Button("Height Map")) {
+						height = SelectTexture(material.m_heightMap);
+					}
+					else
+						height = m_engine.GetTextureHandler().GetTextureData(material.m_heightMap).m_texturePath;
+
+					ImGui::SameLine();
+					CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle = AddImguiImage(height);
+					ImGui::Image((ImTextureID)srvHandle.ptr, { 50.f, 50.f });
+				}
+				{
+					std::wstring ao;
+					if (ImGui::Button("AO Map")) {
+						ao = SelectTexture(material.m_aoMap);
+					}
+					else
+						ao = m_engine.GetTextureHandler().GetTextureData(material.m_aoMap).m_texturePath;
+
+					ImGui::SameLine();
+					CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle = AddImguiImage(ao);
 					ImGui::Image((ImTextureID)srvHandle.ptr, { 50.f, 50.f });
 				}
 
-				ImGui::SameLine();
-				{
-					std::wstring metallic;
-					if (ImGui::Button("Metallic")) {
-						std::wstring newMetallic = m_fileExplorer.OpenFileExplorer(FILE_EXPLORER_GET, m_fileExtensions["Texture"]);
-						if (!newMetallic.empty()) {
-							metallic = newMetallic;
-							material.m_metallic = m_engine.GetTextureHandler().GetTexture(metallic);
-							if (material.m_metallic == 0) {
-								material.m_metallic = m_engine.GetTextureHandler().CreateTexture(metallic);
-							}
-						}
-						else
-							metallic = m_engine.GetTextureHandler().GetTextureData(material.m_metallic).m_texturePath;
-
-					}
-					else
-						metallic = m_engine.GetTextureHandler().GetTextureData(material.m_metallic).m_texturePath;
-
-					ImGui::SameLine();
-					CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle = AddImguiImage(metallic);
-					ImGui::Image((ImTextureID)srvHandle.ptr, { 50.f, 50.f });
-				}
+				material.m_roughness = roughness;
+				material.m_shininess = metallic;
+				material.m_emissvie = emissive;
+				memcpy(material.m_color, color, sizeof(float) * 3);
 			}
-
 		}
 			return true;
 	}
@@ -541,6 +541,21 @@ bool ImguiHandler::DirectionalLightSettings(entt::registry& reg)
 	}
 
 	return false;
+}
+
+std::wstring ImguiHandler::SelectTexture(UINT& texture)
+{
+	std::wstring newAlbedo = m_fileExplorer.OpenFileExplorer(FILE_EXPLORER_GET, m_fileExtensions["Texture"]);
+	if (!newAlbedo.empty()) {
+		texture = m_engine.GetTextureHandler().GetTexture(newAlbedo);
+		if (texture == 0) {
+			texture = m_engine.GetTextureHandler().CreateTexture(newAlbedo);
+		}
+
+		return newAlbedo;
+	}
+	else
+		return m_engine.GetTextureHandler().GetTextureData(texture).m_texturePath;
 }
 
 CD3DX12_GPU_DESCRIPTOR_HANDLE ImguiHandler::AddImguiImage(std::wstring path)
