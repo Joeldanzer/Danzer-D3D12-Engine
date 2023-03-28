@@ -47,7 +47,6 @@ public:
 
 private:
 	void SetDescriptorHeaps(ID3D12DescriptorHeap** descriptorHeaps, UINT count, UINT descriptorIndex = 0);
-	ID3D12DescriptorHeap* SetCorrectTextureHeap(UINT texture, std::vector<TextureHandler::Texture>& textures);
 
 	UINT m_descriptorIndex;
 

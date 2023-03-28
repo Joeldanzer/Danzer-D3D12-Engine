@@ -36,6 +36,7 @@ cbuffer Material : register(b1)
     float Metallic;
     float Roughness;
     float Emissive;
+    uint  HasMaterialTexture;
     float4 MaterialColor;
     
     //256-byte alligned
@@ -45,7 +46,4 @@ cbuffer Material : register(b1)
 SamplerState defaultSampler   : register(s0);
 Texture2D    albedoTexture    : register(t0);
 Texture2D    normalTexture    : register(t1);
-Texture2D    metallicTexture  : register(t2);
-Texture2D    roughnessTexture : register(t3);
-Texture2D    heightTexture    : register(t4);
-Texture2D    aoTexrure        : register(t5);
+Texture2D    matrerialTexture : register(t2);

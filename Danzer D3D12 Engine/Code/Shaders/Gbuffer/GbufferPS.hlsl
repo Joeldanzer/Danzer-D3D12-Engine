@@ -12,15 +12,19 @@ struct GBufferOutput {
 GBufferOutput main(VertexToPixel input)
 {
 	GBufferOutput output;
-    float4 color           = float4(MaterialColor.rgb, 1.f);
-    output.m_Albedo		   = albedoTexture.Sample(defaultSampler, input.m_uv) * color;	
+    output.m_Albedo		   = albedoTexture.Sample(defaultSampler, input.m_uv) * MaterialColor;	
     clip(output.m_Albedo.a < 0.1f ? -1 : 1);
     output.m_Normal.rgb    = GetNormal(input).rgb;
-    output.m_Normal.w	   = GetEmissive(input) * Emissive;
-    output.m_Material      = float4(GetMetallic(input) * Metallic, GetRoughness(input) * Roughness, GetHeight(input), GetAmbientOcclusion(input));
-    output.m_VertexNormal  = float4(input.m_normal.xyz, 1.f);
-    output.m_VertexColor   = input.m_tangent;
-    output.m_WorldPosition = input.m_biNormal;
+    output.m_Normal.w	   = GetAmbientOcclusion(input);
+    
+    if(HasMaterialTexture == 1)
+        output.m_Material = float4(GetMetallic(input) * Metallic, GetRoughness(input) * Roughness, GetEmissive(input) * Emissive, 1.f);
+    else
+        output.m_Material = float4(Metallic, Roughness, Emissive, 1.f);
+    
+    output.m_VertexNormal  = float4(abs(input.m_normal.xyz), 1.f);
+    output.m_VertexColor   = input.m_color;
+    output.m_WorldPosition = input.m_worldPosition;
 
 	return output;
 }

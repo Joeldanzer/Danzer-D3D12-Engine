@@ -21,8 +21,7 @@ std::unique_ptr<LoaderModel> ModelLoaderCustom::LoadModelFromAssimp(std::string 
     auto flags = 0
         | aiProcessPreset_TargetRealtime_MaxQuality
         | aiProcess_ConvertToLeftHanded
-        //| aiProcess_GenUVCoords
-        | aiProcess_FixInfacingNormals
+        | aiProcess_GenUVCoords
         | aiProcess_CalcTangentSpace
         | aiProcess_GlobalScale
         | aiProcess_GenBoundingBoxes

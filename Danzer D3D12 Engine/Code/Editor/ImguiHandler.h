@@ -74,7 +74,7 @@ private:
 	bool TransformSettings(entt::registry& reg);
 	bool DirectionalLightSettings(entt::registry& reg);
 
-	std::wstring SelectTexture(UINT& texture);
+	// Not sure if I have named it correct
 
 	std::array<std::string, 3> m_stateNames = { "ACTIVE", "NOT_ACTIVE", "DESTROY" };
 	std::unordered_map<std::string, FileExplorer::FileType> m_fileExtensions;

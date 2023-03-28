@@ -248,27 +248,10 @@ void EditorLoadAndSave::SaveModelSettings(Model* model, rapidjson::PrettyWriter<
 				str = { normal.begin(), normal.end() };
 				writer.String(str.c_str());
 
-				writer.Key("Metallic Map");
-				std::wstring met = m_engine.GetTextureHandler().GetTextureData(material.m_metallicMap).m_texturePath;
-				str = { met.begin(), met.end() };
+				writer.Key("Material");
+				std::wstring mat = m_engine.GetTextureHandler().GetTextureData(material.m_metallic).m_texturePath;
+				str = { mat.begin(), mat.end() };
 				writer.String(str.c_str());
-
-				writer.Key("Roughness Map");
-				std::wstring rog = m_engine.GetTextureHandler().GetTextureData(material.m_roughnessMap).m_texturePath;
-				str = { rog.begin(), rog.end() };
-				writer.String(str.c_str());
-
-				writer.Key("Height Map");
-				std::wstring h = m_engine.GetTextureHandler().GetTextureData(material.m_heightMap).m_texturePath;
-				str = { h.begin(), h.end() };
-				writer.String(str.c_str());
-
-				writer.Key("AO Map");
-				std::wstring ao = m_engine.GetTextureHandler().GetTextureData(material.m_aoMap).m_texturePath;
-				str = { ao.begin(), ao.end() };
-				writer.String(str.c_str());
-
-
 			}
 			writer.EndObject();
 		}
@@ -304,13 +287,10 @@ void EditorLoadAndSave::GetModelSettings(entt::entity entity, entt::registry& re
 					1.f
 				};
 
-				std::string textures[6] = {
+				std::string textures[3] = {
 					meshMaterial["Albedo"].GetString(),
 					meshMaterial["Normal"].GetString(),
-					meshMaterial["Metallic Map"].GetString(),
-					meshMaterial["Roughness Map"].GetString(),
-					meshMaterial["Height Map"].GetString(),
-					meshMaterial["AO Map"].GetString(),
+					meshMaterial["Material"].GetString()
 				};
 				Material material = m_engine.GetTextureHandler().CreateMaterial(textures, metallic, roughness, emissive, color);
 				m_engine.GetModelHandler().SetMaterialForModel(model.m_modelID, material, (UINT)i);

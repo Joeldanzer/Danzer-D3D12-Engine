@@ -14,7 +14,7 @@
 
 Editor::Editor(Engine& engine) :
 	m_engine(engine),
-	m_turnSpeed(50.f),
+	m_turnSpeed(2.f),
 	m_moveSpeed(10.f),
 	m_imguiHandler(engine)
 {
@@ -34,23 +34,19 @@ void Editor::CameraControlls(const float dt)
 	Transform& transform = reg.get<Transform>(m_engine.GetSceneManager().GetCurrentScene().GetMainCamera());
 	Camera& camera = reg.get<Camera>(m_engine.GetSceneManager().GetCurrentScene().GetMainCamera());
 
-	Vect3f euler = transform.m_rotation.ToEuler();
-
-	euler = { ToDegrees(euler.x), ToDegrees(euler.y), ToDegrees(euler.z) };
-
 	if (Input::GetInstance().IsKeyDown(VK_SHIFT)) {
-		if (Input::GetInstance().IsMouseDown(Input::MouseButton::Left) && Input::GetInstance().MouseDeltaX() > 0 ||
+		if (Input::GetInstance().IsMouseDown(Input::MouseButton::Left) && Input::GetInstance().MouseDeltaX() > 0 || 
 			Input::GetInstance().IsMouseDown(Input::MouseButton::Left) && Input::GetInstance().MouseDeltaX() < 0) {
-			euler.y += Input::GetInstance().MouseDeltaX() * m_turnSpeed * dt; 
+			transform.m_rotation *= Quat4f::CreateFromAxisAngle({0.f, 1.f, 0.f}, (m_turnSpeed * Input::GetInstance().MouseDeltaX()) * dt);
 		}
 
 		if (Input::GetInstance().IsMouseDown(Input::MouseButton::Left) && Input::GetInstance().MouseDeltaY() > 0 ||
 			Input::GetInstance().IsMouseDown(Input::MouseButton::Left) && Input::GetInstance().MouseDeltaY() < 0) {
-			euler.x += Input::GetInstance().MouseDeltaY() * m_turnSpeed * dt;
+			transform.m_rotation *= Quat4f::CreateFromAxisAngle(transform.GetWorld().Right(), (m_turnSpeed * Input::GetInstance().MouseDeltaY()) * dt);
 		}
 	}
-
-	transform.m_rotation = Quat4f::CreateFromYawPitchRoll({ToRadians(euler.x), ToRadians(euler.y), ToRadians(euler.z)});
+	
+	transform.m_rotation.z = 0.f;
 	
 	Vect3f forward = transform.GetWorld().Forward();
 	if (Input::GetInstance().MouseWheel() < 0){

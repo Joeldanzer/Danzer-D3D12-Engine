@@ -117,21 +117,18 @@ std::vector<UINT> TextureHandler::CreateMultipleTextures(std::string* textures, 
 //	return newTextures;
 //}
 
-Material TextureHandler::CreateMaterial(std::string textures[6], float metallic, float roughness, float emissive, float color[4])
+Material TextureHandler::CreateMaterial(std::string textures[3], float metallic, float roughness, float emissive, float color[4])
 {
-	std::vector<UINT> IDs = CreateMultipleTextures(&textures[0], 6);
+	std::vector<UINT> IDs = CreateMultipleTextures(&textures[0], 3);
 
 	Material material;
-	material.m_albedo	    = IDs[0];
-	material.m_normal		= IDs[1];
-	material.m_metallicMap  = IDs[2];
-	material.m_roughnessMap = IDs[3];
-	material.m_heightMap    = IDs[4];
-	material.m_aoMap	    = IDs[5];
+	material.m_albedo =   IDs[0];
+	material.m_normal =   IDs[1];
+	material.m_metallic = IDs[2];
 
 	material.m_shininess = metallic;
 	material.m_roughness = roughness;
-	material.m_emissvie  = emissive;
+	material.m_emissvie = emissive;
 
 	for (UINT i = 0; i < 4; i++)
 		material.m_color[i] = color[i];

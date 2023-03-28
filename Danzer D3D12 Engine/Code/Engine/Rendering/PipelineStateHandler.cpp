@@ -66,11 +66,7 @@ void PipelineStateHandler::CreateLightRootSignature(ID3D12Device* device)
 	rootParameter[3].InitAsDescriptorTable(1, &skyboxDescRange, D3D12_SHADER_VISIBILITY_PIXEL);
 
 	CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc;
-	rootSignatureDesc.Init(_countof(rootParameter), &rootParameter[0], 1, &m_samplerDescs[SAMPLER_DESC_WRAP], 
-		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
-		D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS     |
-		D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS       |
-		D3D12_ROOT_SIGNATURE_FLAG_DENY_VERTEX_SHADER_ROOT_ACCESS);
+	rootSignatureDesc.Init(_countof(rootParameter), &rootParameter[0], 1, &m_samplerDescs[SAMPLER_DESC_WRAP]);
 
 	ID3DBlob* signature;
 	ID3DBlob* error = nullptr;
@@ -85,7 +81,7 @@ void PipelineStateHandler::CreateLightRootSignature(ID3D12Device* device)
 //* GBuffer Root signature
 void PipelineStateHandler::CreateGBufferRootSingature(ID3D12Device* device)
 {
-	CD3DX12_ROOT_PARAMETER rootParameter[8] = {};
+	CD3DX12_ROOT_PARAMETER rootParameter[5] = {};
 
 	//* Camera Buffer
 	CD3DX12_DESCRIPTOR_RANGE cbvCamera(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
@@ -102,21 +98,9 @@ void PipelineStateHandler::CreateGBufferRootSingature(ID3D12Device* device)
 	CD3DX12_DESCRIPTOR_RANGE normalDescRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1);
 	rootParameter[3].InitAsDescriptorTable(1, &normalDescRange, D3D12_SHADER_VISIBILITY_PIXEL);
 	
-	//* Metallic texture
-	CD3DX12_DESCRIPTOR_RANGE metallicDescRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 2);
-	rootParameter[4].InitAsDescriptorTable(1, &metallicDescRange, D3D12_SHADER_VISIBILITY_PIXEL);
-
-	//* Roughness texture
-	CD3DX12_DESCRIPTOR_RANGE roguhnessDescRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 3);
-	rootParameter[5].InitAsDescriptorTable(1, &roguhnessDescRange, D3D12_SHADER_VISIBILITY_PIXEL);
-
-	//* Height texture
-	CD3DX12_DESCRIPTOR_RANGE heightDescRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 4);
-	rootParameter[6].InitAsDescriptorTable(1, &heightDescRange, D3D12_SHADER_VISIBILITY_PIXEL);
-
-	//* Height texture
-	CD3DX12_DESCRIPTOR_RANGE aoDescRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 5);
-	rootParameter[7].InitAsDescriptorTable(1, &aoDescRange, D3D12_SHADER_VISIBILITY_PIXEL);
+	//* Material texture
+	CD3DX12_DESCRIPTOR_RANGE materialDescRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 2);
+	rootParameter[4].InitAsDescriptorTable(1, &materialDescRange, D3D12_SHADER_VISIBILITY_PIXEL);
 
 	CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc;
 	rootSignatureDesc.Init(_countof(rootParameter), &rootParameter[0], 1, &m_samplerDescs[SAMPLER_DESC_WRAP],
