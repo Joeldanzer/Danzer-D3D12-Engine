@@ -55,7 +55,6 @@ private:
 	Camera m_camera;
 
 	float m_deltaTime;
-
 };
 
 Engine::Impl::Impl(unsigned int width, unsigned int height) :

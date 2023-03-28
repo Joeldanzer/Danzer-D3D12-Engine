@@ -3,9 +3,13 @@
 struct Material {
 	//*Textures ID's, only use TextureHandler  
 	//*when assigning these values! 
-	unsigned int m_albedo = 0;
-	unsigned int m_normal = 0;
-	unsigned int m_metallic = 0;
+	unsigned int m_albedo    = 0;
+	unsigned int m_normal	 = 0;
+
+	unsigned int m_metallicMap  = 0;
+	unsigned int m_roughnessMap = 0;
+	unsigned int m_heightMap    = 0;
+	unsigned int m_aoMap        = 0;
 
 	//*Additional or replacement values 
 	float m_shininess = 1.f;

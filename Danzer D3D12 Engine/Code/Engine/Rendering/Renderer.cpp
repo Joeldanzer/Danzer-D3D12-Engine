@@ -187,44 +187,32 @@ void Renderer::RenderToGbuffer(std::vector<ModelData>& models, UINT frameIndex, 
 						materialData.m_metallic = mesh.m_material.m_shininess;
 						for (UINT i = 0; i < 4; i++)
 							materialData.m_color[i] = mesh.m_material.m_color[i];
-						materialData.m_hasMaterialTexture = mesh.m_material.m_metallic > 0 ? 1 : 0;
 					
-
 						mesh.m_materialBuffer.UpdateBuffer(frameIndex, &materialData);
 						ID3D12DescriptorHeap* cbvDescHeap = mesh.m_materialBuffer.GetDescriptorHeap(frameIndex);
 						m_commandList->SetDescriptorHeaps(1, &cbvDescHeap);
 						m_commandList->SetGraphicsRootDescriptorTable(1, cbvDescHeap->GetGPUDescriptorHandleForHeapStart());
 						
-						ID3D12DescriptorHeap* albedoHeap;
-						ID3D12DescriptorHeap* normalHeap;
-						ID3D12DescriptorHeap* materialHeap;
-
-						UINT albedo   = mesh.m_material.m_albedo;
-						UINT normal   = mesh.m_material.m_normal;
-						UINT metallic = mesh.m_material.m_metallic;
-
-						if (albedo == 0)
-							albedoHeap = textures[0].m_textureDescriptorHeap.Get();
-						else
-							albedoHeap = textures[albedo - 1].m_textureDescriptorHeap.Get();
-
-						if (normal == 0)
-							normalHeap = textures[0].m_textureDescriptorHeap.Get();
-						else
-							normalHeap = textures[normal - 1].m_textureDescriptorHeap.Get();
-
-						if (metallic == 0)
-							materialHeap = textures[0].m_textureDescriptorHeap.Get();
-						else
-							materialHeap = textures[metallic - 1].m_textureDescriptorHeap.Get();
+						ID3D12DescriptorHeap* albedoHeap    = SetCorrectTextureHeap(mesh.m_material.m_albedo, textures);
+						ID3D12DescriptorHeap* normalHeap    = SetCorrectTextureHeap(mesh.m_material.m_normal, textures);
+						ID3D12DescriptorHeap* heightHeap    = SetCorrectTextureHeap(mesh.m_material.m_heightMap, textures);
+						ID3D12DescriptorHeap* metallicHeap  = SetCorrectTextureHeap(mesh.m_material.m_metallicMap, textures);
+						ID3D12DescriptorHeap* roughnessHeap = SetCorrectTextureHeap(mesh.m_material.m_roughnessMap, textures);
+						ID3D12DescriptorHeap* aoHeap	    = SetCorrectTextureHeap(mesh.m_material.m_aoMap, textures);
 
 						m_commandList->SetDescriptorHeaps(1, &albedoHeap);
 						m_commandList->SetGraphicsRootDescriptorTable(2, albedoHeap->GetGPUDescriptorHandleForHeapStart());
 						m_commandList->SetDescriptorHeaps(1, &normalHeap);
 						m_commandList->SetGraphicsRootDescriptorTable(3, normalHeap->GetGPUDescriptorHandleForHeapStart());
-						m_commandList->SetDescriptorHeaps(1, &materialHeap);
-						m_commandList->SetGraphicsRootDescriptorTable(4, materialHeap->GetGPUDescriptorHandleForHeapStart());
-						
+						m_commandList->SetDescriptorHeaps(1, &metallicHeap);
+						m_commandList->SetGraphicsRootDescriptorTable(4, metallicHeap->GetGPUDescriptorHandleForHeapStart());
+						m_commandList->SetDescriptorHeaps(1, &roughnessHeap);
+						m_commandList->SetGraphicsRootDescriptorTable(5, roughnessHeap->GetGPUDescriptorHandleForHeapStart());
+						m_commandList->SetDescriptorHeaps(1, &heightHeap);
+						m_commandList->SetGraphicsRootDescriptorTable(6, heightHeap->GetGPUDescriptorHandleForHeapStart());
+						m_commandList->SetDescriptorHeaps(1, &aoHeap);
+						m_commandList->SetGraphicsRootDescriptorTable(7, aoHeap->GetGPUDescriptorHandleForHeapStart());
+
 						D3D12_VERTEX_BUFFER_VIEW vBufferViews[2] = {
 							mesh.m_vertexBufferView, model.GetTransformInstanceBuffer().GetBufferView(frameIndex)
 						};
@@ -312,4 +300,12 @@ void Renderer::SetDescriptorHeaps(ID3D12DescriptorHeap** descriptorHeaps, UINT c
 
 	if(descriptorIndex != 0)
 		m_descriptorIndex = descriptorIndex;
+}
+
+ID3D12DescriptorHeap* Renderer::SetCorrectTextureHeap(UINT texture, std::vector<TextureHandler::Texture>& textures)
+{
+	if (texture == 0)
+		return textures[0].m_textureDescriptorHeap.Get();
+	else
+		return textures[texture - 1].m_textureDescriptorHeap.Get();
 }
