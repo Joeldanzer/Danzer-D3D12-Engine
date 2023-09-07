@@ -43,7 +43,7 @@ public:
 	ModelData() = delete;
 	~ModelData() = default;
 	explicit ModelData(const ModelData&) = default;
-	explicit ModelData(std::vector<Mesh>& data, ID3D12Device* device, std::vector<Vect3f>& verticies, std::wstring fileName, std::string name = "", bool transparent = false) :
+	explicit ModelData(std::vector<Mesh>& data, ID3D12Device* device, DescriptorHeapWrapper* cbvWrapper, std::vector<Vect3f>& verticies, std::wstring fileName, std::string name = "", bool transparent = false) :
 		m_ID(0),
 		m_name(name),
 		m_meshes(data),
@@ -53,7 +53,7 @@ public:
 		m_modelPath(fileName)
 	{
 		for (auto& mesh : m_meshes)
-			mesh.m_materialBuffer.Init(device);
+			mesh.m_materialBuffer.Init(device, cbvWrapper);
 
 		m_transformBuffer.Init(device);
 		//m_materialBuffer.Init(device);

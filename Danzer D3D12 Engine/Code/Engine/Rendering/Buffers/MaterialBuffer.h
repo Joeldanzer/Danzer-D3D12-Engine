@@ -8,7 +8,7 @@ public:
 	MaterialBuffer();
 	~MaterialBuffer();
 
-	void Init(ID3D12Device* device) override;
+	void Init(ID3D12Device* device, DescriptorHeapWrapper* cbvWrapper) override;
 	void UpdateBuffer(UINT frameIndex, void* cbvData) override;
 
 	// Camera Buffer Data

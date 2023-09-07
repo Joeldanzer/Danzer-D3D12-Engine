@@ -81,7 +81,7 @@ Model ModelHandler::CreateCustomModel(CustomModel customModel, bool transparent)
 	}
 
 	std::vector<ModelData::Mesh> meshes = { mesh };
-	UINT id = GetNewlyCreatedModelID(ModelData(meshes, m_framework.GetDevice(), verticies, L"", customModel.m_customModelName, transparent));
+	UINT id = GetNewlyCreatedModelID(ModelData(meshes, m_framework.GetDevice(), &m_framework.GetCbvSrvUavWrapper(), verticies, L"", customModel.m_customModelName, transparent));
 	
 	return Model(id);
 }
@@ -124,7 +124,7 @@ Model ModelHandler::LoadModel(std::wstring fileName, std::string name, bool tran
 		modelName = name;
 
 
-	UINT id = GetNewlyCreatedModelID(ModelData(meshes, m_framework.GetDevice(), verticies, fileName, modelName, transparent));
+	UINT id = GetNewlyCreatedModelID(ModelData(meshes, m_framework.GetDevice(), &m_framework.GetCbvSrvUavWrapper(), verticies, fileName, modelName, transparent));
 	return Model(id);
 }
 

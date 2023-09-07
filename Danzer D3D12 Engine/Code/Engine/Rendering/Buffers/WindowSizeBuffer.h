@@ -8,7 +8,7 @@ public:
 	WindowBuffer();
 	~WindowBuffer();
 
-	void Init(ID3D12Device* device) override;
+	void Init(ID3D12Device* device, DescriptorHeapWrapper* cbvWrapper) override;
 	void UpdateBuffer(/*ID3D12GraphicsCommandList* cmdList,*/ UINT frameIndex, void* cbvData) override;
 
 	struct Data {

@@ -65,6 +65,7 @@
     <ClCompile Include="Rendering\Buffers\MaterialBuffer.cpp" />
     <ClCompile Include="Rendering\Screen Rendering\FullscreenShader.cpp" />
     <ClCompile Include="Rendering\Screen Rendering\FullScreenShaderHandler.cpp" />
+    <ClCompile Include="Core\DesriptorHeapWrapper.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Core\DirectX12Framework.h">
@@ -150,5 +151,6 @@
     <ClInclude Include="Rendering\Screen Rendering\FullscreenShader.h" />
     <ClInclude Include="Rendering\Screen Rendering\FullScreenShaderHandler.h" />
     <ClInclude Include="Components\Script.h" />
+    <ClInclude Include="Core\DesriptorHeapWrapper.h" />
   </ItemGroup>
 </Project>

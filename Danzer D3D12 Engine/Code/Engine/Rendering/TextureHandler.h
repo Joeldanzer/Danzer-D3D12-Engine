@@ -24,9 +24,9 @@ public:
 	struct Texture {
 		std::wstring m_texturePath;
 		bool m_cubeMap = false;
+		UINT m_offsetID = 0;
 
 		ComPtr<ID3D12Resource>		 m_textureBuffer;
-		ComPtr<ID3D12DescriptorHeap> m_textureDescriptorHeap;
 	};
 
 	void LoadAllExistingTextures();
@@ -44,7 +44,7 @@ public:
 		texture = texture > 0 ? texture : 1;
 		return m_textures[texture - 1];
 	}
-	ID3D12DescriptorHeap* GetDescriptorHeap(UINT id) { return m_textures[id].m_textureDescriptorHeap.Get(); }
+	//ID3D12DescriptorHeap* GetDescriptorHeap(UINT id) { return m_textures[id].m_textureDescriptorHeap.Get(); }
 	std::wstring GetCorrectPathAndName(std::wstring path);
 
 private:

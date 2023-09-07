@@ -109,6 +109,8 @@ void RenderManager::Impl::Impl::RenderFrame(TextureHandler& textureHandler, Mode
 	m_framework.m_commandList->ClearDepthStencilView(m_framework.m_depthDescriptor->GetCPUDescriptorHandleForHeapStart(),
 		D3D12_CLEAR_FLAG_DEPTH, 1.f, 0, 1, &m_framework.m_scissorRect);
 
+	ID3D12DescriptorHeap* cbvSrvHeap = m_framework.GetCbvSrvUavWrapper().GetDescriptorHeap();
+	m_framework.m_commandList->SetDescriptorHeaps(1, &cbvSrvHeap);
 	RenderScene(textureHandler, modelHandler, scene, skybox);
 
 	m_framework.ExecuteCommandList();
@@ -183,12 +185,12 @@ void RenderManager::Impl::RenderScene(TextureHandler& textureHandler, ModelHandl
 		
 		m_mainRenderer.UpdateDefaultBuffers(cam, camTransform, m_framework.GetFrameIndex());
 
-		m_mainRenderer.RenderSkybox(camTransform, 
-			textureHandler.GetTextures()[skybox.GetCurrentSkyboxTexture() - 1],
-			modelHandler.GetAllModels()[skybox.GetSkyboxCube() - 1],
-			skybox, 
-			m_framework.GetFrameIndex()
-		);
+		//m_mainRenderer.RenderSkybox(camTransform, 
+		//	textureHandler.GetTextures()[skybox.GetCurrentSkyboxTexture() - 1],
+		//	modelHandler.GetAllModels()[skybox.GetSkyboxCube() - 1],
+		//	skybox, 
+		//	m_framework.GetFrameIndex()
+		//);
 
 		cmdList->SetGraphicsRootSignature(m_pipeLineHandler.GetRootSignature(ROOTSIGNATURE_STATE_LIGHT));
 		cmdList->SetPipelineState(m_pipeLineHandler.GetPSO(PIPELINE_STATE_DIRECTIONAL_LIGHT));
@@ -205,12 +207,12 @@ void RenderManager::Impl::RenderScene(TextureHandler& textureHandler, ModelHandl
 			break;
 		}
 	
-		m_mainRenderer.RenderDirectionalLight(
-			directionalLight, 
-			directionaLightdir, 
-			textureHandler.GetTextures()[skybox.GetCurrentActiveSkybox()[1] - 1], 
-			m_framework.GetFrameIndex()
-		);
+		//m_mainRenderer.RenderDirectionalLight(
+		//	directionalLight, 
+		//	directionaLightdir, 
+		//	textureHandler.GetTextures()[skybox.GetCurrentActiveSkybox()[1] - 1], 
+		//	m_framework.GetFrameIndex()
+		//);
 			 
 		//m_framework.TransitionMultipleRTV(
 		//	&m_gBuffer.GetGbufferResources()[0], GBUFFER_COUNT,

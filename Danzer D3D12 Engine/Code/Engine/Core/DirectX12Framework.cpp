@@ -109,17 +109,18 @@ void DirectX12Framework::InitFramework()
 
 	m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
 
-	// Create descriptor heap
+	//Create descriptor heap
 	D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
-	rtvHeapDesc.NumDescriptors = FrameCount;
+	rtvHeapDesc.NumDescriptors = FrameCount; // Set num of descriptors to the maximum possible number
 	rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 	rtvHeapDesc.Type  = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
-
+	
 	result = m_device->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&m_rtvHeap));
 	CHECK_HR(result);
 	m_rtvDescripterSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
-	// Create fram resource
+
+	//Create frame resource
 	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart());
 
 	ID3D12CommandAllocator** alloc = new ID3D12CommandAllocator * [FrameCount];
@@ -150,9 +151,9 @@ void DirectX12Framework::InitFramework()
 
 	m_commandList->SetName(L"Defualt CommandList");
 	m_cmdIsRecording = true;
-	//m_commandList->Close();
 	// Immediatly close command lists as they open after being created.
 
+	// Fences 
 	for (UINT i = 0; i < FrameCount; i++)
 	{
 		result = m_device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fences[i]));
@@ -168,6 +169,9 @@ void DirectX12Framework::InitFramework()
 
 	CreateDepthStencilView();
 	SetViewport(WindowHandler::GetWindowData().m_width, WindowHandler::GetWindowData().m_height);
+
+	// Creates the descriptor heap used for all the information that gets sent to the GPU before rendering.
+	m_cbvSrvUavWrapper.CreateDescriptorHeap(m_device.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, MAX_NUMBER_OF_DESCTRIPTORS + 2, true);
 
 	InitImgui();
 

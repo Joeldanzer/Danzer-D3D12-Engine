@@ -5,18 +5,9 @@
 LightBuffer::LightBuffer(){}
 LightBuffer::~LightBuffer(){}
 
-void LightBuffer::Init(ID3D12Device* device)
+void LightBuffer::Init(ID3D12Device* device, DescriptorHeapWrapper* cbvWrapper)
 {
 	HRESULT result;
-	for (UINT i = 0; i < FrameCount; i++)
-	{
-		D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
-		heapDesc.NumDescriptors = 1;
-		heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-		heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-		result = device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&m_mainDescriptorHeap[i]));
-		CHECK_HR(result);
-	}
 
 	for (UINT i = 0; i < FrameCount; i++)
 	{
@@ -33,10 +24,15 @@ void LightBuffer::Init(ID3D12Device* device)
 		);
 		CHECK_HR(result);
 
+		CD3DX12_CPU_DESCRIPTOR_HANDLE cbvHandle(cbvWrapper->GetDescriptorHeap()->GetCPUDescriptorHandleForHeapStart());
+
 		D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
 		cbvDesc.BufferLocation = m_bufferUpload[i]->GetGPUVirtualAddress();
 		cbvDesc.SizeInBytes = (sizeof(LightBuffer::Data) + 255) & ~255; // Contant buffer size if required to be 256-byte aligned.
-		device->CreateConstantBufferView(&cbvDesc, m_mainDescriptorHeap[i]->GetCPUDescriptorHandleForHeapStart());
+		device->CreateConstantBufferView(&cbvDesc, cbvHandle);
+
+		cbvHandle.Offset(cbvWrapper->DESCRIPTOR_SIZE());
+		cbvWrapper->m_handleCurrentOffset += cbvWrapper->DESCRIPTOR_SIZE();
 
 		ZeroMemory(&m_lightBufferData, sizeof(LightBuffer::Data));
 		CD3DX12_RANGE readRange(0, 0); // Don't intend to read this resource on the CPU

@@ -12,22 +12,22 @@ void Renderer2D::Init(DirectX12Framework& framework)
 {
 	m_commandList = framework.GetCommandList();
 
-	m_windowBuffer.Init(framework.GetDevice());
-	m_spriteSheetBuffer.Init(framework.GetDevice());
+	m_windowBuffer.Init(framework.GetDevice(), &framework.GetCbvSrvUavWrapper());
+	m_spriteSheetBuffer.Init(framework.GetDevice(), &framework.GetCbvSrvUavWrapper());
 	CreateUIVertexAndIndexBuffers(framework);
 }
 
 void Renderer2D::UpdateDefaultUIBuffers(UINT frameIndex)
 {
-	WindowBuffer::Data data;
-	data.m_windowSize.x = (float)WindowHandler::GetWindowData().m_width  / 2;
-	data.m_windowSize.y = (float)WindowHandler::GetWindowData().m_height / 2;
-
-	m_windowBuffer.UpdateBuffer(frameIndex, &data);
-
-	ID3D12DescriptorHeap* descHeaps[] = { m_windowBuffer.GetDescriptorHeap(frameIndex) };
-	m_commandList->SetDescriptorHeaps(_countof(descHeaps), &descHeaps[0]);
-	m_commandList->SetGraphicsRootDescriptorTable(0, m_windowBuffer.GetDescriptorHeap(frameIndex)->GetGPUDescriptorHandleForHeapStart());
+	//WindowBuffer::Data data;
+	//data.m_windowSize.x = (float)WindowHandler::GetWindowData().m_width  / 2;
+	//data.m_windowSize.y = (float)WindowHandler::GetWindowData().m_height / 2;
+	//
+	//m_windowBuffer.UpdateBuffer(frameIndex, &data);
+	//
+	//ID3D12DescriptorHeap* descHeaps[] = { m_windowBuffer.GetDescriptorHeap(frameIndex) };
+	//m_commandList->SetDescriptorHeaps(_countof(descHeaps), &descHeaps[0]);
+	//m_commandList->SetGraphicsRootDescriptorTable(0, m_windowBuffer.GetDescriptorHeap(frameIndex)->GetGPUDescriptorHandleForHeapStart());
 }
 
 void Renderer2D::RenderUI(std::vector<SpriteData>& sprites, UINT frameIndex, std::vector<TextureHandler::Texture> textures)
@@ -43,9 +43,9 @@ void Renderer2D::RenderUI(std::vector<SpriteData>& sprites, UINT frameIndex, std
 		sprite.UpdateInstanceBuffer(frameIndex);
 		m_commandList->IASetVertexBuffers(1, 1, &sprite.GetInstanceBuffer().GetBufferView(frameIndex));
 
-		ID3D12DescriptorHeap* descHeaps[] = { textures[sheet.m_texture - 1].m_textureDescriptorHeap.Get() };
-		m_commandList->SetDescriptorHeaps(_countof(descHeaps), &descHeaps[0]);
-		m_commandList->SetGraphicsRootDescriptorTable(1, descHeaps[0]->GetGPUDescriptorHandleForHeapStart());
+		//ID3D12DescriptorHeap* descHeaps[] = { textures[sheet.m_texture - 1].m_textureDescriptorHeap.Get() };
+		//m_commandList->SetDescriptorHeaps(_countof(descHeaps), &descHeaps[0]);
+		//m_commandList->SetGraphicsRootDescriptorTable(1, descHeaps[0]->GetGPUDescriptorHandleForHeapStart());
 	
 		m_commandList->DrawIndexedInstanced(6, sprite.GetInstances().size(), 0, 0, 0);
 	}
@@ -64,9 +64,9 @@ void Renderer2D::RenderFontUI(std::vector<Font>& fonts, UINT frameIndex, std::ve
 			font.UpdateInstanceBuffer(frameIndex);
 			m_commandList->IASetVertexBuffers(0, 1, &font.GetInstanceBuffer().GetBufferView(frameIndex));
 	
-			ID3D12DescriptorHeap* descHeaps[] = { textures[fontData.m_texture - 1].m_textureDescriptorHeap.Get() };
-			m_commandList->SetDescriptorHeaps(_countof(descHeaps), &descHeaps[0]);
-			m_commandList->SetGraphicsRootDescriptorTable(1, descHeaps[0]->GetGPUDescriptorHandleForHeapStart());
+			//ID3D12DescriptorHeap* descHeaps[] = { textures[fontData.m_texture - 1].m_textureDescriptorHeap.Get() };
+			//m_commandList->SetDescriptorHeaps(_countof(descHeaps), &descHeaps[0]);
+			//m_commandList->SetGraphicsRootDescriptorTable(1, descHeaps[0]->GetGPUDescriptorHandleForHeapStart());
 	
 			m_commandList->DrawInstanced(6, font.GetInstances().size(), 0, 0);
 		}
