@@ -37,7 +37,7 @@ public:
 
 	void UpdateDefaultBuffers(Camera& camera, Transform&, UINT frameIndex);
 	void RenderSkybox(Transform& cameraTransform, TextureHandler::Texture& textures, ModelData& model, Skybox& skybox, UINT frameIndex);
-	void RenderDirectionalLight(DirectionalLight& light, Vect4f direction, TextureHandler::Texture& skyboxTexture, UINT frameIndex);
+	void RenderDirectionalLight(DirectionalLight& light, Vect4f direction, TextureHandler::Texture& skyboxTexture, UINT frameIndex, UINT& startLocation);
 	void DefaultRender(std::vector<ModelData>& models, UINT frameIndex, std::vector<TextureHandler::Texture>& textures);
 	//void TransparentRender(Scene* scene, std::vector<Object*>& objects, std::vector<ModelData>& transparentModels, UINT frameIndex, std::vector<TextureHandler::Texture> textures);
 	void RenderToGbuffer(std::vector<ModelData>& models, UINT frameIndex, std::vector<TextureHandler::Texture>& textures);

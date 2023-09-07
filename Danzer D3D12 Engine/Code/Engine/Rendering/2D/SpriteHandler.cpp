@@ -43,7 +43,7 @@ void SpriteHandler::CreateSpriteSheet(std::wstring sprite)
     UINT spriteID = m_textureHandler.GetTexture(sprite);
 
     if (spriteID == 0){
-        m_framework.ResetCommandListAndAllocator(nullptr);
+        m_framework.ResetCommandListAndAllocator(nullptr, L"SpriteHandler: Line 46");
         spriteID = m_textureHandler.CreateTexture(sprite);
         m_textureHandler.LoadAllCreatedTexuresToGPU();
     }
@@ -150,7 +150,7 @@ void SpriteHandler::LoadFont(std::string fontJSON)
 
     UINT textureID = m_textureHandler.GetTexture({ texturePath.begin(), texturePath.end() });
     if (textureID == 0) {
-        m_framework.ResetCommandListAndAllocator(nullptr);
+        m_framework.ResetCommandListAndAllocator(nullptr, L"SpriteHandler: Line 153");
         textureID = m_textureHandler.CreateTexture({texturePath.begin(), texturePath.end()});
         m_textureHandler.LoadAllCreatedTexuresToGPU();
     }

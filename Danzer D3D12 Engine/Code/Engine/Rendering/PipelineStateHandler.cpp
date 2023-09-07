@@ -48,33 +48,42 @@ void PipelineStateHandler::Init(DirectX12Framework& framework)
 //* Light Root Signature
 void PipelineStateHandler::CreateLightRootSignature(ID3D12Device* device)
 {
-	CD3DX12_ROOT_PARAMETER rootParameter[4] = {};
+	CD3DX12_ROOT_PARAMETER rootParameter[9] = {};
 	
 	//* Camera & Light Buffer
-	CD3DX12_DESCRIPTOR_RANGE cameraBuffer(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
-	rootParameter[0].InitAsDescriptorTable(1, &cameraBuffer, D3D12_SHADER_VISIBILITY_PIXEL);
+	CD3DX12_DESCRIPTOR_RANGE cameraLightBuffer(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
+	rootParameter[0].InitAsDescriptorTable(1, &cameraLightBuffer, D3D12_SHADER_VISIBILITY_PIXEL);
 
-	CD3DX12_DESCRIPTOR_RANGE lightBuffer(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 2, 1);
+	CD3DX12_DESCRIPTOR_RANGE lightBuffer(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);
 	rootParameter[1].InitAsDescriptorTable(1, &lightBuffer, D3D12_SHADER_VISIBILITY_PIXEL);
 
-	//* Albedo, Normal, Material, VertexColor, VertexNormal, WorldPosition
-	CD3DX12_DESCRIPTOR_RANGE textureDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 6, 0, 0 D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND);
-	rootParameter[2].InitAsDescriptorTable(1, &textureDescriptorRange, D3D12_SHADER_VISIBILITY_PIXEL);
-
-	//* Skybox
-	CD3DX12_DESCRIPTOR_RANGE skyboxDescRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 6);
-	rootParameter[3].InitAsDescriptorTable(1, &skyboxDescRange, D3D12_SHADER_VISIBILITY_PIXEL);
+	//* Albedo, Normal, Material, VertexColor, VertexNormal, WorldPosition, Skybox 
+	CD3DX12_DESCRIPTOR_RANGE albedo(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
+	rootParameter[2].InitAsDescriptorTable(1, &albedo, D3D12_SHADER_VISIBILITY_PIXEL);
+	CD3DX12_DESCRIPTOR_RANGE normal(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1);
+	rootParameter[3].InitAsDescriptorTable(1, &normal, D3D12_SHADER_VISIBILITY_PIXEL);
+	CD3DX12_DESCRIPTOR_RANGE material(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 2);
+	rootParameter[4].InitAsDescriptorTable(1, &material, D3D12_SHADER_VISIBILITY_PIXEL);
+	CD3DX12_DESCRIPTOR_RANGE vertexColor(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 3);
+	rootParameter[5].InitAsDescriptorTable(1, &vertexColor, D3D12_SHADER_VISIBILITY_PIXEL);
+	CD3DX12_DESCRIPTOR_RANGE vertexNormal(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 4);
+	rootParameter[6].InitAsDescriptorTable(1, &vertexNormal, D3D12_SHADER_VISIBILITY_PIXEL);
+	CD3DX12_DESCRIPTOR_RANGE worldPosition(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 5);
+	rootParameter[7].InitAsDescriptorTable(1, &worldPosition, D3D12_SHADER_VISIBILITY_PIXEL);
+	CD3DX12_DESCRIPTOR_RANGE skybox(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 6);
+	rootParameter[8].InitAsDescriptorTable(1, &skybox, D3D12_SHADER_VISIBILITY_PIXEL);
 
 	CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc;
 	rootSignatureDesc.Init(_countof(rootParameter), &rootParameter[0], 1, &m_samplerDescs[SAMPLER_DESC_WRAP], 
 		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
 		D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS     |
 		D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS       |
-		D3D12_ROOT_SIGNATURE_FLAG_DENY_VERTEX_SHADER_ROOT_ACCESS);
+		D3D12_ROOT_SIGNATURE_FLAG_DENY_VERTEX_SHADER_ROOT_ACCESS     
+	);
 
-	ID3DBlob* signature;
-	ID3DBlob* error = nullptr;
-	HRESULT result = D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error);
+	ID3DBlob* signature = nullptr;
+	ID3DBlob* error     = nullptr;
+	HRESULT result = D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, & error);
 	CHECK_HR(result);
 
 	result = device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&m_rootSignatures[ROOTSIGNATURE_STATE_LIGHT]));

@@ -102,7 +102,7 @@ void RenderManager::Impl::Impl::RenderFrame(TextureHandler& textureHandler, Mode
 	Camera&    cam			= scene.Registry().get<Camera>(scene.GetMainCamera());
 	Transform& camTransform = scene.Registry().get<Transform>(scene.GetMainCamera());
 
-	m_framework.ResetCommandListAndAllocator(nullptr);
+	m_framework.ResetCommandListAndAllocator(nullptr, L"RenderManager: Line 105");
 
 	m_framework.m_commandList->RSSetViewports(1, &m_framework.m_viewport);
 	m_framework.m_commandList->RSSetScissorRects(1, &m_framework.m_scissorRect);
@@ -195,7 +195,8 @@ void RenderManager::Impl::RenderScene(TextureHandler& textureHandler, ModelHandl
 		cmdList->SetGraphicsRootSignature(m_pipeLineHandler.GetRootSignature(ROOTSIGNATURE_STATE_LIGHT));
 		cmdList->SetPipelineState(m_pipeLineHandler.GetPSO(PIPELINE_STATE_DIRECTIONAL_LIGHT));
 		
-		m_gBuffer.AssignSRVSlots(cmdList, 2);
+		UINT startLocation = 2;
+		m_gBuffer.AssignSRVSlots(cmdList, &m_framework.GetCbvSrvUavWrapper(), startLocation);
 	
 		auto list = scene.Registry().view<DirectionalLight, Transform>();
 		DirectionalLight directionalLight;
@@ -207,12 +208,13 @@ void RenderManager::Impl::RenderScene(TextureHandler& textureHandler, ModelHandl
 			break;
 		}
 	
-		//m_mainRenderer.RenderDirectionalLight(
-		//	directionalLight, 
-		//	directionaLightdir, 
-		//	textureHandler.GetTextures()[skybox.GetCurrentActiveSkybox()[1] - 1], 
-		//	m_framework.GetFrameIndex()
-		//);
+		m_mainRenderer.RenderDirectionalLight(
+			directionalLight, 
+			directionaLightdir, 
+			textureHandler.GetTextures()[skybox.GetCurrentActiveSkybox()[1] - 1], 
+			m_framework.GetFrameIndex(),
+			startLocation
+		);
 			 
 		//m_framework.TransitionMultipleRTV(
 		//	&m_gBuffer.GetGbufferResources()[0], GBUFFER_COUNT,
@@ -227,7 +229,7 @@ void RenderManager::Impl::RenderScene(TextureHandler& textureHandler, ModelHandl
 	
 	m_framework.ExecuteCommandList();
 	m_framework.WaitForPreviousFrame();
-	m_framework.ResetCommandListAndAllocator(m_pipeLineHandler.GetPSO(PIPELINE_STATE_DIRECTIONAL_LIGHT));
+	m_framework.ResetCommandListAndAllocator(m_pipeLineHandler.GetPSO(PIPELINE_STATE_DIRECTIONAL_LIGHT), L"RenderManager: Line 232");
 }
 
 void RenderManager::Impl::Update3DInstances(Scene& scene, ModelHandler& modelHandler)
@@ -260,9 +262,7 @@ void RenderManager::Impl::Update3DInstances(Scene& scene, ModelHandler& modelHan
 				}
 			}
 		}	
-	}
-
-	
+	}	
 	//* Collider code i want to keep 
 	//if (s_engineState == EngineState::ENGINE_STATE_EDITOR) {
 	//	if (obj->GetComponent("AABBCollider")) {
@@ -285,15 +285,14 @@ void RenderManager::Impl::Update3DInstances(Scene& scene, ModelHandler& modelHan
 	//		}
 	//	}
 	//}
-	
 
+	// Sorts object from closest to furthes for transparent rendering
 	std::sort(m_transparentObjects.begin(), m_transparentObjects.end(), [](Object* o1, Object* o2) {
 		return ObjectFurtherFromCamera(*o1, *o2);
 	});
 }
 void RenderManager::Impl::Update2DInstances(Scene& scene, SpriteHandler& spriteHandler)
 {
-
 	entt::registry& reg = scene.Registry();
 
 	auto spriteView = reg.view<Transform2D, Object, Sprite>();

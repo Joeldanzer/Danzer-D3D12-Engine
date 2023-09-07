@@ -95,8 +95,11 @@ void Renderer::RenderSkybox(Transform& cameraTransform, TextureHandler::Texture&
 	//model.ClearInstanceTransform();
 }
 
-void Renderer::RenderDirectionalLight(DirectionalLight& light, Vect4f direction, TextureHandler::Texture& skyboxTexture, UINT frameIndex)
+void Renderer::RenderDirectionalLight(DirectionalLight& light, Vect4f direction, TextureHandler::Texture& skyboxTexture, UINT frameIndex, UINT& startLocation)
 {
+	D3D12_GPU_DESCRIPTOR_HANDLE cbvSrvHeapStart = m_framework->GetCbvSrvUavWrapper().GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
+	const UINT cbvSrvDescSize = m_framework->GetCbvSrvUavWrapper().DESCRIPTOR_SIZE();
+
 	LightBuffer::Data lightData;
 	lightData.m_ambientColor   = light.m_ambientColor;
 	lightData.m_lightColor	   = light.m_lightColor;
@@ -104,6 +107,9 @@ void Renderer::RenderDirectionalLight(DirectionalLight& light, Vect4f direction,
 
 	m_lightBuffer.UpdateBuffer(frameIndex, &lightData);
 
+	CD3DX12_GPU_DESCRIPTOR_HANDLE cbvHandle(cbvSrvHeapStart, m_lightBuffer.OffsetID(), cbvSrvDescSize);
+	m_commandList->SetGraphicsRootDescriptorTable(startLocation, cbvHandle);
+	startLocation++;
 	//ID3D12DescriptorHeap* descHeap = m_lightBuffer.GetDescriptorHeap(frameIndex);
 	//m_commandList->SetDescriptorHeaps(1, &descHeap);
 	//m_commandList->SetGraphicsRootDescriptorTable(1, descHeap->GetGPUDescriptorHandleForHeapStart());

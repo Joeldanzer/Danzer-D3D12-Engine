@@ -8,6 +8,7 @@
 #include <vector>
 
 class DirectX12Framework;
+class DescriptorHeapWrapper;
 
 struct ID3D12DescriptorHeap;
 struct ID3D12Resource;
@@ -37,14 +38,13 @@ public:
 	//CD3DX12_CPU_DESCRIPTOR_HANDLE GetSRVDescriptorHandles();
 
 	void ClearRenderTargets(ID3D12GraphicsCommandList* cmdList, Vect4f clearColor, UINT numberOfRects, const D3D12_RECT* rect);
-	void AssignSRVSlots(ID3D12GraphicsCommandList* cmdList, UINT startLocation);
+	void AssignSRVSlots(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper* srvWrapper, UINT& startLocation);
 
-	UINT GetRTVDescSize() {
-		return m_rtvDescSize;
-	}
-	UINT GetSRVDescSize() {
-		return m_srvDescSize;
-	}
+	struct Resource {
+		UINT m_offsetID = 0;
+		ComPtr<ID3D12Resource> m_resource;
+	};
+	
 
 private:
 	void InitializeGBuffers(DirectX12Framework& framework);
@@ -52,13 +52,13 @@ private:
 	UINT m_rtvDescSize;
 	UINT m_srvDescSize;
 
-	//std::array<UINT, GBUFFER_COUNT> m_rtvHeapSize; 
+	std::array<UINT, GBUFFER_COUNT> m_rtvHeapSize; 
 	//std::array<ComPtr<ID3D12DescriptorHeap>, GBUFFER_COUNT> m_rtvDescriptor;
 	ComPtr<ID3D12DescriptorHeap> m_rtvDescriptor;
-	ComPtr<ID3D12DescriptorHeap> m_srvDescriptor;
+	//ComPtr<ID3D12DescriptorHeap> m_srvDescriptor;
 
 	//std::array<ComPtr<ID3D12DescriptorHeap>, GBUFFER_COUNT> m_srvDescriptor;
 	//std::array<std::array<ComPtr<ID3D12Resource>, FrameCount>, GBUFFER_COUNT> m_resources2;
-	std::array<ComPtr<ID3D12Resource>, GBUFFER_COUNT> m_resources;
+	std::array<Resource, GBUFFER_COUNT> m_resources;
 };
 

@@ -27,7 +27,8 @@ Model ModelHandler::CreateCustomModel(CustomModel customModel, bool transparent)
 		return modelExist;
 	}
 	
-	m_framework.ResetCommandListAndAllocator(nullptr);
+	if(!m_framework.CmdListIsRecording())
+		m_framework.ResetCommandListAndAllocator(nullptr, L"ModelHandler: Line 30");
 	
 	std::vector<CD3DX12_RESOURCE_BARRIER> resourceBarriers;
 	VertexIndexBufferInfo bufferInfo = GetIndexAndVertexBuffer(sizeof(Vertex) * (unsigned int)customModel.m_verticies.size(), 
@@ -94,7 +95,7 @@ Model ModelHandler::LoadModel(std::wstring fileName, std::string name, bool tran
 	}
 	
 	// Always restet CommandLists as executing them requires them to be close
-	m_framework.ResetCommandListAndAllocator(nullptr);
+	m_framework.ResetCommandListAndAllocator(nullptr, L"ModelHandler: Line 97");
 
 	std::string modelStr = { fileName.begin(), fileName.end() };
 	std::unique_ptr<LoaderModel> loadedModel = m_modelLoader.LoadModelFromAssimp(modelStr, uvFlipped);
@@ -111,8 +112,8 @@ Model ModelHandler::LoadModel(std::wstring fileName, std::string name, bool tran
 		meshes[i].m_indexBufferView.SizeInBytes = sizeof(unsigned int) * meshes[i].m_numIndices;
 
 		meshes[i].m_vertexBufferView.BufferLocation = meshes[i].m_vertexBuffer->GetGPUVirtualAddress();
-		meshes[i].m_vertexBufferView.StrideInBytes = meshes[i].m_vertexSize;
-		meshes[i].m_vertexBufferView.SizeInBytes =   meshes[i].m_vertexSize * meshes[i].m_numVerticies;
+		meshes[i].m_vertexBufferView.StrideInBytes  = meshes[i].m_vertexSize;
+		meshes[i].m_vertexBufferView.SizeInBytes    =   meshes[i].m_vertexSize * meshes[i].m_numVerticies;
 	} 
 	
 	m_textureHandler.LoadAllCreatedTexuresToGPU();

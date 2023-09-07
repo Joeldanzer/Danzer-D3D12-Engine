@@ -81,9 +81,9 @@ Engine::Impl::Impl(unsigned int width, unsigned int height) :
 	//m_textureHandler.CreateTexture(L"Sprites/defaultTexture.dds");
 	//m_textureHandler.LoadAllCreatedTexuresToGPU();
 
-	//CustomModel skyboxCube = ModelData::GetCube();
-	//skyboxCube.m_customModelName = "skybox";
-	//m_skybox.Init(m_modelHandler.CreateCustomModel(skyboxCube).m_modelID, L"Sprites/nightSkybox.dds", true);
+	CustomModel skyboxCube = ModelData::GetCube();
+	skyboxCube.m_customModelName = "skybox";
+	m_skybox.Init(m_modelHandler.CreateCustomModel(skyboxCube).m_modelID, L"Sprites/nightSkybox.dds", true);
 	//m_spriteHandler.CreateSpriteSheet(L"Sprites/testSpriteSheet.dds");
 	//m_spriteHandler.LoadFont("Config/Fonts/ChiliFont.json");
 

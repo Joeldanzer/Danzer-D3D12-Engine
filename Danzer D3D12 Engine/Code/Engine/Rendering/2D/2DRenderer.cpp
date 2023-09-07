@@ -75,7 +75,7 @@ void Renderer2D::RenderFontUI(std::vector<Font>& fonts, UINT frameIndex, std::ve
 
 void Renderer2D::CreateUIVertexAndIndexBuffers(DirectX12Framework& framework)
 {
-	framework.ResetCommandListAndAllocator(nullptr);
+	framework.ResetCommandListAndAllocator(nullptr, L"Renderer2D: Line 78");
 
 	std::array<Vertex, 6> verticies = {
 		// Position						           UV

@@ -16,7 +16,7 @@ public:
 
 	void ExecuteCommandList(); 
 
-	void ResetCommandListAndAllocator(ID3D12PipelineState* pipeline);
+	void ResetCommandListAndAllocator(ID3D12PipelineState* pipeline, std::wstring debugText);
 	void WaitForPreviousFrame();
 	
 	void TransitionRenderTarget(D3D12_RESOURCE_STATES present, D3D12_RESOURCE_STATES newState);

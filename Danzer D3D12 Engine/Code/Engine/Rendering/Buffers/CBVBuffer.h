@@ -15,9 +15,9 @@ public:
 	virtual ~CBVBuffer(){ 
 		for (UINT i = 0; i < FrameCount; i++)
 		{
-			m_bufferUpload[i].~ComPtr();
-			m_bufferUpload[i]->Unmap(0, 0);
-			m_bufferGPUAddress[i] = nullptr;
+			//m_bufferUpload[i]->Unmap(0, 0);
+			//m_bufferUpload[i].~ComPtr();
+			//m_bufferGPUAddress[i] = nullptr;
 			//m_mainDescriptorHeap[i].~ComPtr();
 		}
 	}

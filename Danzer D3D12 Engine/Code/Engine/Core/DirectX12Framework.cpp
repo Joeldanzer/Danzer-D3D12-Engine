@@ -21,7 +21,7 @@ DirectX12Framework::DirectX12Framework() :
 DirectX12Framework::~DirectX12Framework(){
 	// Reset and execute commandList right before we close the program
 	// So everything can finish correctly
-	ResetCommandListAndAllocator(nullptr);
+	ResetCommandListAndAllocator(nullptr, L"DirectX12Framework: line 24");
 	ExecuteCommandList();
 	WaitForPreviousFrame();
 
@@ -213,13 +213,17 @@ void DirectX12Framework::ExecuteCommandList()
 
 	result = m_commandQeueu->Signal(m_fences[m_frameIndex].Get(),
 		m_fenceValues[m_frameIndex]);
-
 	CHECK_HR(result);
+
+	OutputDebugString(L"Command list succesfully closed \n");
 }
 
 
-void DirectX12Framework::ResetCommandListAndAllocator(ID3D12PipelineState* pipeline)
+void DirectX12Framework::ResetCommandListAndAllocator(ID3D12PipelineState* pipeline, std::wstring debugText)
 {
+	debugText += L"\n";
+	OutputDebugString(debugText.c_str());
+	
 	assert(!m_cmdIsRecording, "Trying to reset a recording CommandList");
 
 	HRESULT result;

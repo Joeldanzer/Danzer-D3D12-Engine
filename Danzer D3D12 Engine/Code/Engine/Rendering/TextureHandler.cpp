@@ -39,7 +39,7 @@ void TextureHandler::LoadAllExistingTextures()
 {
 	std::string path = "Sprites/";
 
-	m_framework.ResetCommandListAndAllocator(nullptr);
+	m_framework.ResetCommandListAndAllocator(nullptr, L"TextureHandler: Line 42");
 
 	for (const auto& entry : std::filesystem::directory_iterator(path))
 	{
@@ -83,9 +83,9 @@ void TextureHandler::LoadAllCreatedTexuresToGPU()
 		m_tempTextures.clear();
 		m_resourceBarriers.clear();
 		
-		m_framework.ExecuteCommandList();
-		m_framework.WaitForPreviousFrame();
 	}
+	m_framework.ExecuteCommandList();
+	m_framework.WaitForPreviousFrame();
 }
 
 std::vector<UINT> TextureHandler::CreateMultipleTextures(std::string* textures, UINT numOfTextures)
@@ -151,7 +151,7 @@ UINT TextureHandler::CreateTexture(std::wstring file, bool isCubeMap)
 	}
 		
 	if (!m_framework.CmdListIsRecording()) {
-		m_framework.ResetCommandListAndAllocator(nullptr);
+		m_framework.ResetCommandListAndAllocator(nullptr, L"TextureHandler: Line 154");
 	}
 
 	Texture texture;
