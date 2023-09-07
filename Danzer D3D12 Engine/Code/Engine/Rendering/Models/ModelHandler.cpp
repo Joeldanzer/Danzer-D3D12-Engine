@@ -27,8 +27,8 @@ Model ModelHandler::CreateCustomModel(CustomModel customModel, bool transparent)
 		return modelExist;
 	}
 	
-	if(!m_framework.CmdListIsRecording())
-		m_framework.ResetCommandListAndAllocator(nullptr, L"ModelHandler: Line 30");
+	 if(!m_framework.CmdListIsRecording())
+	 	m_framework.ResetCommandListAndAllocator(nullptr, L"ModelHandler: Line 30");
 	
 	std::vector<CD3DX12_RESOURCE_BARRIER> resourceBarriers;
 	VertexIndexBufferInfo bufferInfo = GetIndexAndVertexBuffer(sizeof(Vertex) * (unsigned int)customModel.m_verticies.size(), 

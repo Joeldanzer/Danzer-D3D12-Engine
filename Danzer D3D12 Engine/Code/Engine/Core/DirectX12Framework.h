@@ -31,7 +31,7 @@ public:
 
 	const UINT	  GetFrameIndex()  { return m_frameIndex; }
 	const UINT	  GetRTVDescSize() { return m_rtvDescripterSize; }
-	const UINT64  GetFenceValue()  { return m_fenceValues[m_frameIndex]; }
+	const UINT64  GetFenceValue()  { return m_fenceValue; }
 
 	D3D12_RECT* GetRect() { return &m_scissorRect; }
 
@@ -47,7 +47,7 @@ public:
 	ID3D12DescriptorHeap*	   GetImguiHeap()	   { return m_imguiDescriptor; }
 	IDXGISwapChain3*		   GetSwapChain()	   { return m_swapChain.Get(); }
 	ID3D12CommandQueue*		   GetCommandQeueu()   { return m_commandQeueu.Get(); }
-	ID3D12Fence*			   GetFence()		   { return m_fences[m_frameIndex].Get(); }
+	ID3D12Fence*			   GetFence()		   { return m_fence.Get(); }
 	
 
 	bool CmdListIsRecording() const noexcept {
@@ -86,18 +86,17 @@ private:
 	
 	ID3D12DescriptorHeap*			  m_imguiDescriptor;
 
-
 	ComPtr<ID3D12CommandQueue>		  m_commandQeueu;
 	ComPtr<ID3D12CommandAllocator>	  m_commandAllocator[FrameCount];
 	ComPtr<ID3D12GraphicsCommandList> m_commandList;
 
 	ComPtr<ID3D12DescriptorHeap>	  m_rtvHeap;
 	ComPtr<ID3D12Resource>			  m_renderTarget[FrameCount];
-	ComPtr<ID3D12Fence>				  m_fences[FrameCount];
 	ComPtr<ID3D12InfoQueue>			  m_infoQueue;
 
-	HANDLE m_fenceEvent;			 
-	UINT64 m_fenceValues[FrameCount];
+	ComPtr<ID3D12Fence>				  m_fence;
+	HANDLE							  m_fenceEvent;			 
+	UINT64							  m_fenceValue;
 
 	bool m_cmdIsRecording;
 

@@ -83,9 +83,10 @@ void TextureHandler::LoadAllCreatedTexuresToGPU()
 		m_tempTextures.clear();
 		m_resourceBarriers.clear();
 		
+		m_framework.ExecuteCommandList();
+		m_framework.WaitForPreviousFrame();
+		
 	}
-	m_framework.ExecuteCommandList();
-	m_framework.WaitForPreviousFrame();
 }
 
 std::vector<UINT> TextureHandler::CreateMultipleTextures(std::string* textures, UINT numOfTextures)

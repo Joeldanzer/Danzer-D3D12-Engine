@@ -11,7 +11,7 @@ DirectX12Framework::DirectX12Framework() :
 	m_rtvDescripterSize(0),
 	m_frameIndex(0),
 	m_fenceEvent(HANDLE()),
-	m_fenceValues(),
+	m_fenceValue(0),
 	m_scissorRect(D3D12_RECT()),
 	m_viewport(D3D12_VIEWPORT()),
 	m_cmdIsRecording(false)
@@ -34,11 +34,11 @@ DirectX12Framework::~DirectX12Framework(){
 	m_commandQeueu->Release();
 	m_rtvHeap->Release();
 	m_infoQueue->Release();
+	m_fence->Release();
 
 	for (UINT i = 0; i < FrameCount; i++)
 	{
 		m_renderTarget[i]->Release();
-		m_fences[i]->Release();
 		m_commandAllocator[i]->Release();
 	}
 }
@@ -153,19 +153,19 @@ void DirectX12Framework::InitFramework()
 	m_cmdIsRecording = true;
 	// Immediatly close command lists as they open after being created.
 
-	// Fences 
-	for (UINT i = 0; i < FrameCount; i++)
-	{
-		result = m_device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fences[i]));
-		CHECK_HR(result);
-
-		m_fenceValues[i] = 0;
-	}
-
-	m_fenceEvent = CreateEvent(nullptr, false, false, nullptr);
-	if (m_fenceEvent == nullptr) {
-		throw "Failed to create fence event!";
-	}
+		
+		//for (UINT i = 0; i < FrameCount; i++)
+	//{
+	//	result = m_device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fences[i]));
+	//	CHECK_HR(result);
+	//
+	//	m_fenceValues[i] = 0;
+	//}
+	//
+	//m_fenceEvent = CreateEvent(nullptr, false, false, nullptr);
+	//if (m_fenceEvent == nullptr) {
+	//	throw "Failed to create fence event!";
+	//}
 
 	CreateDepthStencilView();
 	SetViewport(WindowHandler::GetWindowData().m_width, WindowHandler::GetWindowData().m_height);
@@ -174,8 +174,21 @@ void DirectX12Framework::InitFramework()
 	m_cbvSrvUavWrapper.CreateDescriptorHeap(m_device.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, MAX_NUMBER_OF_DESCTRIPTORS + 2, true);
 
 	InitImgui();
-
 	ExecuteCommandList();
+
+	// Fences 
+	result = m_device->CreateFence(m_fenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence));
+	
+	m_fenceEvent = CreateEvent(nullptr, false, false, nullptr);
+
+
+	const UINT64 fenceToWaitFor = m_fenceValue;
+	result = m_commandQeueu->Signal(m_fence.Get(), fenceToWaitFor);
+	m_fenceValue++;
+
+
+	result = m_fence->SetEventOnCompletion(fenceToWaitFor, m_fenceEvent);
+	WaitForSingleObject(m_fenceEvent, INFINITE);
 }
 
 void DirectX12Framework::InitImgui()
@@ -211,9 +224,9 @@ void DirectX12Framework::ExecuteCommandList()
 	ID3D12CommandList* commandLists[] = { m_commandList.Get() };
     m_commandQeueu->ExecuteCommandLists(_countof(commandLists), commandLists);
 
-	result = m_commandQeueu->Signal(m_fences[m_frameIndex].Get(),
-		m_fenceValues[m_frameIndex]);
-	CHECK_HR(result);
+	//result = m_commandQeueu->Signal(m_fences[m_frameIndex].Get(),
+	//	m_fenceValues[m_frameIndex]);
+	//CHECK_HR(result);
 
 	OutputDebugString(L"Command list succesfully closed \n");
 }
@@ -238,16 +251,18 @@ void DirectX12Framework::ResetCommandListAndAllocator(ID3D12PipelineState* pipel
 
 void DirectX12Framework::WaitForPreviousFrame()
 {
-	m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
-	
-	if (m_fences[m_frameIndex]->GetCompletedValue() < m_fenceValues[m_frameIndex]) {
-		HRESULT result = m_fences[m_frameIndex]->SetEventOnCompletion(m_fenceValues[m_frameIndex], m_fenceEvent);
-		CHECK_HR(result);
-
-		WaitForSingleObject(m_fenceEvent, INFINITE);
-	}
-
-	m_fenceValues[m_frameIndex]++;
+	//m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
+	//
+	//UINT64 completedValue = m_fences[m_frameIndex]->GetCompletedValue();
+	//
+	//if (completedValue < m_fenceValues[m_frameIndex]) {
+	//	HRESULT result = m_fences[m_frameIndex]->SetEventOnCompletion(m_fenceValues[m_frameIndex], m_fenceEvent);
+	//	CHECK_HR(result);
+	//
+	//	WaitForSingleObject(m_fenceEvent, INFINITE);
+	//}
+	//
+	//m_fenceValues[m_frameIndex]++;
 }
 
 void DirectX12Framework::TransitionRenderTarget(D3D12_RESOURCE_STATES present, D3D12_RESOURCE_STATES newState)
