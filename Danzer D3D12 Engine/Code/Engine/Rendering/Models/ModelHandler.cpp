@@ -113,7 +113,7 @@ Model ModelHandler::LoadModel(std::wstring fileName, std::string name, bool tran
 
 		meshes[i].m_vertexBufferView.BufferLocation = meshes[i].m_vertexBuffer->GetGPUVirtualAddress();
 		meshes[i].m_vertexBufferView.StrideInBytes  = meshes[i].m_vertexSize;
-		meshes[i].m_vertexBufferView.SizeInBytes    =   meshes[i].m_vertexSize * meshes[i].m_numVerticies;
+		meshes[i].m_vertexBufferView.SizeInBytes    = meshes[i].m_vertexSize * meshes[i].m_numVerticies;
 	} 
 	
 	m_textureHandler.LoadAllCreatedTexuresToGPU();
