@@ -87,8 +87,9 @@ private:
 	ID3D12DescriptorHeap*			  m_imguiDescriptor;
 
 	ComPtr<ID3D12CommandQueue>		  m_commandQeueu;
-	ComPtr<ID3D12CommandAllocator>	  m_commandAllocator[FrameCount];
+	ComPtr<ID3D12CommandAllocator>	  m_commandAllocator;
 	ComPtr<ID3D12GraphicsCommandList> m_commandList;
+	//ComPtr<ID3D12CommandAllocator>	  m_commandAllocator[FrameCount];
 
 	ComPtr<ID3D12DescriptorHeap>	  m_rtvHeap;
 	ComPtr<ID3D12Resource>			  m_renderTarget[FrameCount];

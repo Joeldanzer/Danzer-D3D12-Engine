@@ -27,8 +27,8 @@ Model ModelHandler::CreateCustomModel(CustomModel customModel, bool transparent)
 		return modelExist;
 	}
 	
-	 if(!m_framework.CmdListIsRecording())
-	 	m_framework.ResetCommandListAndAllocator(nullptr, L"ModelHandler: Line 30");
+	 //if(!m_framework.CmdListIsRecording())
+	 //	m_framework.ResetCommandListAndAllocator(nullptr, L"ModelHandler: Line 30");
 	
 	std::vector<CD3DX12_RESOURCE_BARRIER> resourceBarriers;
 	VertexIndexBufferInfo bufferInfo = GetIndexAndVertexBuffer(sizeof(Vertex) * (unsigned int)customModel.m_verticies.size(), 
@@ -59,8 +59,8 @@ Model ModelHandler::CreateCustomModel(CustomModel customModel, bool transparent)
 	//Faster to execute them at the same time
 	cmdList->ResourceBarrier(static_cast<UINT>(resourceBarriers.size()), &resourceBarriers[0]);
 	
-	m_framework.ExecuteCommandList();
-	m_framework.WaitForPreviousFrame();
+	//m_framework.ExecuteCommandList();
+	//m_framework.WaitForPreviousFrame();
 	
 	std::vector<Vect3f> verticies;
 
@@ -278,8 +278,8 @@ std::vector<ModelData::Mesh> ModelHandler::LoadMeshFromLoaderModel(LoaderModel* 
 
 	cmdList->ResourceBarrier(static_cast<UINT>(resourceBarriers.size()), &resourceBarriers[0]);
 	// Execute our commandList so the new information is sent to the GPU
-	m_framework.ExecuteCommandList();
-	m_framework.WaitForPreviousFrame();
+	//m_framework.ExecuteCommandList();
+	//m_framework.WaitForPreviousFrame();
 
 	return meshes;
 }
@@ -330,8 +330,8 @@ std::vector<ModelData::Mesh> ModelHandler::LoadMeshFromLoaderModel(LoaderModel* 
 
 	cmdList->ResourceBarrier(static_cast<UINT>(resourceBarriers.size()), &resourceBarriers[0]);
 	// Execute our commandList so the new information is sent to the GPU
-	m_framework.ExecuteCommandList();
-	m_framework.WaitForPreviousFrame();
+	//m_framework.ExecuteCommandList();
+	//m_framework.WaitForPreviousFrame();
 
 	return meshes;
 }

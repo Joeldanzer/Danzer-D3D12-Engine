@@ -157,7 +157,7 @@ void RenderManager::Impl::RenderScene(TextureHandler& textureHandler, ModelHandl
 		CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(m_framework.m_depthDescriptor->GetCPUDescriptorHandleForHeapStart());
 		std::array<CD3DX12_CPU_DESCRIPTOR_HANDLE, GBUFFER_COUNT> rtvHandle = m_gBuffer.GetRTVDescriptorHandles();
 		cmdList->OMSetRenderTargets(GBUFFER_COUNT, &rtvHandle[0], false, &dsvHandle);
-		
+
 		m_mainRenderer.UpdateDefaultBuffers(cam, camTransform, m_framework.GetFrameIndex());
 		m_mainRenderer.RenderToGbuffer(
 			modelHandler.GetAllModels(), 
@@ -169,13 +169,18 @@ void RenderManager::Impl::RenderScene(TextureHandler& textureHandler, ModelHandl
 			&m_gBuffer.GetGbufferResources()[0], GBUFFER_COUNT,
 			D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 		m_framework.TransitionAllResources();
+
+		//m_framework.ExecuteCommandList();
+		//m_framework.WaitForPreviousFrame();
 	}
 	//* Scene to Gbuffer end
 
 	//* Render scene Ligthing start
 	{	
-		cmdList->SetGraphicsRootSignature(m_pipeLineHandler.GetRootSignature(ROOTSIGNATURE_STATE_DEFAULT));
-		cmdList->SetPipelineState(m_pipeLineHandler.GetPSO(PIPELINE_STATE_SKYBOX));
+		//m_framework.ResetCommandListAndAllocator(nullptr, L"HEWHHEE");
+
+		//cmdList->SetGraphicsRootSignature(m_pipeLineHandler.GetRootSignature(ROOTSIGNATURE_STATE_DEFAULT));
+		//cmdList->SetPipelineState(m_pipeLineHandler.GetPSO(PIPELINE_STATE_SKYBOX));
 
 		float c[4] = { 0.5f, 0.5f, 1.f, 1.f };
 		D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = m_framework.GetCurrentRTVHandle();
@@ -183,7 +188,6 @@ void RenderManager::Impl::RenderScene(TextureHandler& textureHandler, ModelHandl
 		cmdList->ClearRenderTargetView(rtvHandle, &c[0], 1, &m_framework.m_scissorRect);
 		cmdList->OMSetRenderTargets(1, &rtvHandle, false, &dsvHandle);
 		
-		m_mainRenderer.UpdateDefaultBuffers(cam, camTransform, m_framework.GetFrameIndex());
 
 		//m_mainRenderer.RenderSkybox(camTransform, 
 		//	textureHandler.GetTextures()[skybox.GetCurrentSkyboxTexture() - 1],
@@ -191,26 +195,29 @@ void RenderManager::Impl::RenderScene(TextureHandler& textureHandler, ModelHandl
 		//	skybox, 
 		//	m_framework.GetFrameIndex()
 		//);
-
+		ID3D12DescriptorHeap* cbvSrvHeap = m_framework.GetCbvSrvUavWrapper().GetDescriptorHeap();
+		m_framework.m_commandList->SetDescriptorHeaps(1, &cbvSrvHeap);
+		
 		cmdList->SetGraphicsRootSignature(m_pipeLineHandler.GetRootSignature(ROOTSIGNATURE_STATE_LIGHT));
 		cmdList->SetPipelineState(m_pipeLineHandler.GetPSO(PIPELINE_STATE_DIRECTIONAL_LIGHT));
-		
-		UINT startLocation = 2;
-		m_gBuffer.AssignSRVSlots(cmdList, &m_framework.GetCbvSrvUavWrapper(), startLocation);
 	
 		auto list = scene.Registry().view<DirectionalLight, Transform>();
 		DirectionalLight directionalLight;
-		Vect4f directionaLightdir = {0.f, 0.f, 0.f, 1.f};
+		Vect4f directionaLightdir = { 0.f, 0.f, 0.f, 1.f };
 		for (auto entity : list) {
 			directionalLight = reg.get<DirectionalLight>(entity);
 			Vect3f dir = reg.get<Transform>(entity).GetWorld().Down();
 			directionaLightdir = { dir.x, dir.y, dir.z, 1.f };
 			break;
 		}
-	
+
+		UINT startLocation = 1;
+		m_mainRenderer.UpdateDefaultBuffers(cam, camTransform, m_framework.GetFrameIndex());
+		m_mainRenderer.UpdateLightBuffer(directionalLight, directionaLightdir, m_framework.GetFrameIndex(), startLocation);
+
+		m_gBuffer.AssignSRVSlots(cmdList, &m_framework.GetCbvSrvUavWrapper(), startLocation);
+
 		m_mainRenderer.RenderDirectionalLight(
-			directionalLight, 
-			directionaLightdir, 
 			textureHandler.GetTextures()[skybox.GetCurrentActiveSkybox()[1] - 1], 
 			m_framework.GetFrameIndex(),
 			startLocation

@@ -35,11 +35,11 @@ DirectX12Framework::~DirectX12Framework(){
 	m_rtvHeap->Release();
 	m_infoQueue->Release();
 	m_fence->Release();
+    m_commandAllocator->Release();
 
 	for (UINT i = 0; i < FrameCount; i++)
 	{
 		m_renderTarget[i]->Release();
-		m_commandAllocator[i]->Release();
 	}
 }
 
@@ -119,12 +119,12 @@ void DirectX12Framework::InitFramework()
 	CHECK_HR(result);
 	m_rtvDescripterSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
+	CreateDepthStencilView();
+	InitImgui();
 
 	//Create frame resource
 	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart());
-
-	ID3D12CommandAllocator** alloc = new ID3D12CommandAllocator * [FrameCount];
-
+	
 	for (UINT i = 0; i < FrameCount; i++)
 	{
 		result = m_swapChain->GetBuffer(i, IID_PPV_ARGS(&m_renderTarget[i]));
@@ -134,58 +134,38 @@ void DirectX12Framework::InitFramework()
 	
 		std::wstring name(std::to_wstring(i));
 		m_renderTarget[i]->SetName((LPCWSTR)name.c_str());
-
-		// Create command allocaters for the number of back buffers
-		result = m_device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT , IID_PPV_ARGS(&m_commandAllocator[i]));
-		CHECK_HR(result);
-
-		std::wstring s = L"Command Allocator (" + std::to_wstring(i) + L")";
-		m_commandAllocator[i]->SetName(s.c_str());
-
-		//m_commandAllocator[i]->SetName(L"Direct Commandlist Allocator");
 	}
+	
+	result = m_device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT , IID_PPV_ARGS(&m_commandAllocator));
+	CHECK_HR(result);
+
+	std::wstring s = L"Default Command Allocator";
+	m_commandAllocator->SetName(s.c_str());
 
 	result = m_device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, 
-		m_commandAllocator[m_frameIndex].Get(), nullptr, IID_PPV_ARGS(&m_commandList));
+		m_commandAllocator.Get(), nullptr, IID_PPV_ARGS(&m_commandList));
 	CHECK_HR(result);
 
 	m_commandList->SetName(L"Defualt CommandList");
-	m_cmdIsRecording = true;
-	// Immediatly close command lists as they open after being created.
+	
+	result = m_commandList->Close();
+	CHECK_HR(result);
 
-		
-		//for (UINT i = 0; i < FrameCount; i++)
-	//{
-	//	result = m_device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fences[i]));
-	//	CHECK_HR(result);
-	//
-	//	m_fenceValues[i] = 0;
-	//}
-	//
-	//m_fenceEvent = CreateEvent(nullptr, false, false, nullptr);
-	//if (m_fenceEvent == nullptr) {
-	//	throw "Failed to create fence event!";
-	//}
+	ID3D12CommandList* commandLists[] = { m_commandList.Get() };
+	m_commandQeueu->ExecuteCommandLists(_countof(commandLists), commandLists);
 
-	CreateDepthStencilView();
 	SetViewport(WindowHandler::GetWindowData().m_width, WindowHandler::GetWindowData().m_height);
 
 	// Creates the descriptor heap used for all the information that gets sent to the GPU before rendering.
 	m_cbvSrvUavWrapper.CreateDescriptorHeap(m_device.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, MAX_NUMBER_OF_DESCTRIPTORS + 2, true);
 
-	InitImgui();
-	ExecuteCommandList();
-
 	// Fences 
-	result = m_device->CreateFence(m_fenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence));
-	
+	result = m_device->CreateFence(m_fenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence));	
 	m_fenceEvent = CreateEvent(nullptr, false, false, nullptr);
-
 
 	const UINT64 fenceToWaitFor = m_fenceValue;
 	result = m_commandQeueu->Signal(m_fence.Get(), fenceToWaitFor);
 	m_fenceValue++;
-
 
 	result = m_fence->SetEventOnCompletion(fenceToWaitFor, m_fenceEvent);
 	WaitForSingleObject(m_fenceEvent, INFINITE);
@@ -202,7 +182,7 @@ void DirectX12Framework::InitImgui()
 	D3D12_DESCRIPTOR_HEAP_DESC desc = {};
 	desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 	desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-	desc.NumDescriptors = 1000;
+	desc.NumDescriptors = 10000;
 	result = m_device->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&m_imguiDescriptor));
 	CHECK_HR(result);
 
@@ -224,9 +204,8 @@ void DirectX12Framework::ExecuteCommandList()
 	ID3D12CommandList* commandLists[] = { m_commandList.Get() };
     m_commandQeueu->ExecuteCommandLists(_countof(commandLists), commandLists);
 
-	//result = m_commandQeueu->Signal(m_fences[m_frameIndex].Get(),
-	//	m_fenceValues[m_frameIndex]);
-	//CHECK_HR(result);
+	result = m_commandQeueu->Signal(m_fence.Get(), m_fenceValue);
+	CHECK_HR(result);
 
 	OutputDebugString(L"Command list succesfully closed \n");
 }
@@ -240,10 +219,10 @@ void DirectX12Framework::ResetCommandListAndAllocator(ID3D12PipelineState* pipel
 	assert(!m_cmdIsRecording, "Trying to reset a recording CommandList");
 
 	HRESULT result;
-	result = m_commandAllocator[m_frameIndex]->Reset();
+	result = m_commandAllocator->Reset();
 	CHECK_HR(result);      
 
-	result = m_commandList->Reset(m_commandAllocator[m_frameIndex].Get(), pipeline);
+	result = m_commandList->Reset(m_commandAllocator.Get(), pipeline);
 	CHECK_HR(result);
 
 	m_cmdIsRecording = true;
@@ -251,18 +230,18 @@ void DirectX12Framework::ResetCommandListAndAllocator(ID3D12PipelineState* pipel
 
 void DirectX12Framework::WaitForPreviousFrame()
 {
-	//m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
-	//
-	//UINT64 completedValue = m_fences[m_frameIndex]->GetCompletedValue();
-	//
-	//if (completedValue < m_fenceValues[m_frameIndex]) {
-	//	HRESULT result = m_fences[m_frameIndex]->SetEventOnCompletion(m_fenceValues[m_frameIndex], m_fenceEvent);
-	//	CHECK_HR(result);
-	//
-	//	WaitForSingleObject(m_fenceEvent, INFINITE);
-	//}
-	//
-	//m_fenceValues[m_frameIndex]++;
+	m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
+	
+	UINT64 completedValue = m_fence->GetCompletedValue();
+	
+	if (completedValue < m_fenceValue) {
+		HRESULT result = m_fence->SetEventOnCompletion(m_fenceValue, m_fenceEvent);
+		CHECK_HR(result);
+	
+		WaitForSingleObject(m_fenceEvent, INFINITE);
+	}
+	
+	m_fenceValue++;
 }
 
 void DirectX12Framework::TransitionRenderTarget(D3D12_RESOURCE_STATES present, D3D12_RESOURCE_STATES newState)
@@ -360,7 +339,7 @@ void DirectX12Framework::CreateDepthStencilView()
 	HRESULT result;
 
 	D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc = {};
-	dsvHeapDesc.NumDescriptors = 1;
+	dsvHeapDesc.NumDescriptors = FrameCount + 1;
 	dsvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
 	dsvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 	result = m_device->CreateDescriptorHeap(&dsvHeapDesc, IID_PPV_ARGS(&m_depthDescriptor));

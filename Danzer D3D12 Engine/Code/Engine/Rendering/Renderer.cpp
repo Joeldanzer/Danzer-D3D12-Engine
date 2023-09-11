@@ -6,6 +6,7 @@
 #include "Components/Object.h"
 #include "Components/DirectionalLight.h"
 #include "SkyBox.h"
+#include "Rendering/Screen Rendering/GBuffer.h"
 
 #include "Camera.h"
 
@@ -27,14 +28,20 @@ Renderer::~Renderer()
 
 void Renderer::Init(DirectX12Framework& framework)
 {
+	m_framework = &framework;
+
 	m_commandList = framework.GetCommandList();
+	//m_framework->ResetCommandListAndAllocator(nullptr, L"Renderer: Line 33");
+	
 	m_cameraBuffer.Init(framework.GetDevice(),   &framework.GetCbvSrvUavWrapper());
 	m_lightBuffer.Init(framework.GetDevice(),    &framework.GetCbvSrvUavWrapper());
 	m_materialBuffer.Init(framework.GetDevice(), &framework.GetCbvSrvUavWrapper());
 	//m_aabbBuffer.Init(framework.GetDevice(), &m_framework->GetCbvSrvUavWrapper());
 	//m_rayBuffer.Init(framework.GetDevice(), &m_framework->GetCbvSrvUavWrapper());
 
-	m_framework = &framework;
+	//m_framework->ExecuteCommandList();
+	//m_framework->WaitForPreviousFrame();
+
 }
 
 //* Default Buffers for all existing 3D models. Should only be updated once per frame!
@@ -95,28 +102,26 @@ void Renderer::RenderSkybox(Transform& cameraTransform, TextureHandler::Texture&
 	//model.ClearInstanceTransform();
 }
 
-void Renderer::RenderDirectionalLight(DirectionalLight& light, Vect4f direction, TextureHandler::Texture& skyboxTexture, UINT frameIndex, UINT& startLocation)
+//void Renderer::RenderDirectionalLight(DirectionalLight& light, Vect4f direction, TextureHandler::Texture& skyboxTexture, UINT frameIndex, UINT& startLocation)
+void Renderer::RenderDirectionalLight(TextureHandler::Texture& skyboxTexture, UINT frameIndex, UINT& startLocation)
 {
 	D3D12_GPU_DESCRIPTOR_HANDLE cbvSrvHeapStart = m_framework->GetCbvSrvUavWrapper().GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
 	const UINT cbvSrvDescSize = m_framework->GetCbvSrvUavWrapper().DESCRIPTOR_SIZE();
 
-	LightBuffer::Data lightData;
-	lightData.m_ambientColor   = light.m_ambientColor;
-	lightData.m_lightColor	   = light.m_lightColor;
-	lightData.m_lightDirection = direction;
+	//LightBuffer::Data lightData;
+	//lightData.m_ambientColor   = light.m_ambientColor;
+	//lightData.m_lightColor	   = light.m_lightColor;
+	//lightData.m_lightDirection = direction;
+	//
+	//m_lightBuffer.UpdateBuffer(frameIndex, &lightData);
+	//
+	//CD3DX12_GPU_DESCRIPTOR_HANDLE cbvHandle(cbvSrvHeapStart, m_lightBuffer.OffsetID(), cbvSrvDescSize);
+	//m_commandList->SetGraphicsRootDescriptorTable(startLocation, cbvHandle);
+	//startLocation++;
 
-	m_lightBuffer.UpdateBuffer(frameIndex, &lightData);
-
-	CD3DX12_GPU_DESCRIPTOR_HANDLE cbvHandle(cbvSrvHeapStart, m_lightBuffer.OffsetID(), cbvSrvDescSize);
-	m_commandList->SetGraphicsRootDescriptorTable(startLocation, cbvHandle);
-	startLocation++;
-	//ID3D12DescriptorHeap* descHeap = m_lightBuffer.GetDescriptorHeap(frameIndex);
-	//m_commandList->SetDescriptorHeaps(1, &descHeap);
-	//m_commandList->SetGraphicsRootDescriptorTable(1, descHeap->GetGPUDescriptorHandleForHeapStart());
-
-	//ID3D12DescriptorHeap* skyboxTextureHeap = skyboxTexture.m_textureDescriptorHeap.Get();
-	//m_commandList->SetDescriptorHeaps(1, &skyboxTextureHeap);
-	//m_commandList->SetGraphicsRootDescriptorTable(3, skyboxTextureHeap->GetGPUDescriptorHandleForHeapStart());
+	CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle(cbvSrvHeapStart, skyboxTexture.m_offsetID, cbvSrvDescSize);
+	m_commandList->SetGraphicsRootDescriptorTable(startLocation, srvHandle);
+	//startLocation ++;
 
 	m_commandList->IASetVertexBuffers(0, 0, nullptr);
 	m_commandList->IASetIndexBuffer(nullptr);
@@ -197,21 +202,18 @@ void Renderer::RenderToGbuffer(std::vector<ModelData>& models, UINT frameIndex, 
 						for (UINT i = 0; i < 4; i++)
 							materialData.m_color[i] = mesh.m_material.m_color[i];
 						
-						//CD3DX12_GPU_DESCRIPTOR_HANDLE cbvSrcHandle(cbvSrvHeapStart, )
-
-						//mesh.m_materialBuffer.UpdateBuffer(frameIndex, &materialData);
-						//ID3D12DescriptorHeap* cbvDescHeap = mesh.m_materialBuffer.GetDescriptorHeap(frameIndex);
-						//m_commandList->SetDescriptorHeaps(1, &cbvDescHeap);
-						//m_commandList->SetGraphicsRootDescriptorTable(1, cbvDescHeap->GetGPUDescriptorHandleForHeapStart());
-						
+						m_materialBuffer.UpdateBuffer(frameIndex, &materialData);
+						CD3DX12_GPU_DESCRIPTOR_HANDLE cbvHandle(cbvSrvHeapStart, m_materialBuffer.OffsetID(), cbvSrvDescSize);
+						m_commandList->SetGraphicsRootDescriptorTable(1, cbvHandle);
+				
 						// Handle for each texture that will be used
 						CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandles[6]; 
-						srvHandles[0] = CD3DX12_GPU_DESCRIPTOR_HANDLE(cbvSrvHeapStart, textures[mesh.m_material.m_albedo].m_offsetID, cbvSrvDescSize);
-						srvHandles[1] = CD3DX12_GPU_DESCRIPTOR_HANDLE(cbvSrvHeapStart, textures[mesh.m_material.m_normal].m_offsetID, cbvSrvDescSize);
-						srvHandles[2] = CD3DX12_GPU_DESCRIPTOR_HANDLE(cbvSrvHeapStart, textures[mesh.m_material.m_heightMap].m_offsetID, cbvSrvDescSize);
+						srvHandles[0] = CD3DX12_GPU_DESCRIPTOR_HANDLE(cbvSrvHeapStart, textures[mesh.m_material.m_albedo].m_offsetID,	   cbvSrvDescSize);
+						srvHandles[1] = CD3DX12_GPU_DESCRIPTOR_HANDLE(cbvSrvHeapStart, textures[mesh.m_material.m_normal].m_offsetID,	   cbvSrvDescSize);
+						srvHandles[2] = CD3DX12_GPU_DESCRIPTOR_HANDLE(cbvSrvHeapStart, textures[mesh.m_material.m_heightMap].m_offsetID,   cbvSrvDescSize);
 						srvHandles[3] = CD3DX12_GPU_DESCRIPTOR_HANDLE(cbvSrvHeapStart, textures[mesh.m_material.m_metallicMap].m_offsetID, cbvSrvDescSize);
-						srvHandles[4] = CD3DX12_GPU_DESCRIPTOR_HANDLE(cbvSrvHeapStart, textures[mesh.m_material.m_roughness].m_offsetID, cbvSrvDescSize);
-						srvHandles[5] = CD3DX12_GPU_DESCRIPTOR_HANDLE(cbvSrvHeapStart, textures[mesh.m_material.m_aoMap].m_offsetID, cbvSrvDescSize);
+						srvHandles[4] = CD3DX12_GPU_DESCRIPTOR_HANDLE(cbvSrvHeapStart, textures[mesh.m_material.m_roughness].m_offsetID,   cbvSrvDescSize);
+						srvHandles[5] = CD3DX12_GPU_DESCRIPTOR_HANDLE(cbvSrvHeapStart, textures[mesh.m_material.m_aoMap].m_offsetID,       cbvSrvDescSize);
 
 						for (UINT i = 0; i < _countof(srvHandles); i++)
 							m_commandList->SetGraphicsRootDescriptorTable(i+2, srvHandles[i]);
@@ -285,6 +287,23 @@ void Renderer::AABBRendering(std::vector<AABBBuffer::AABBInstance>& aabb, UINT f
 	m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_POINTLIST);
 
 	m_commandList->DrawInstanced(1, (UINT)aabb.size(), 0, 0);
+}
+
+void Renderer::UpdateLightBuffer(const DirectionalLight& light, const Vect4f& direction, UINT frameIndex, UINT& startLocation)
+{
+	D3D12_GPU_DESCRIPTOR_HANDLE cbvSrvHeapStart = m_framework->GetCbvSrvUavWrapper().GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
+	const UINT cbvSrvDescSize = m_framework->GetCbvSrvUavWrapper().DESCRIPTOR_SIZE();
+
+	LightBuffer::Data lightData;
+	lightData.m_ambientColor = light.m_ambientColor;
+	lightData.m_lightColor = light.m_lightColor;
+	lightData.m_lightDirection = direction;
+
+	m_lightBuffer.UpdateBuffer(frameIndex, &lightData);
+
+	CD3DX12_GPU_DESCRIPTOR_HANDLE cbvHandle(cbvSrvHeapStart, m_lightBuffer.OffsetID(), cbvSrvDescSize);
+	m_commandList->SetGraphicsRootDescriptorTable(startLocation, cbvHandle);
+	startLocation++;
 }
 
 //* Use to make it easier to keep track on setting DescriptorHeaps as it can get a bit confusing when CBV/SRV/UAV

@@ -59,17 +59,20 @@ private:
 
 Engine::Impl::Impl(unsigned int width, unsigned int height) :
 	m_framework(),
-	m_sceneManager(),
-	m_collisionManager(),
-	m_renderManager(m_framework),
 	m_windowHandler({ 0, 0, width, height }),
-	m_camera(65.f, (float)m_windowHandler.GetWindowData().m_width / (float)m_windowHandler.GetWindowData().m_height),
+	m_renderManager(m_framework),
 	m_textureHandler(m_framework),
 	m_modelHandler(m_framework, m_textureHandler),
 	m_spriteHandler(m_framework, m_textureHandler),
+	m_sceneManager(),
+	m_collisionManager(),
+	m_camera(65.f, (float)m_windowHandler.GetWindowData().m_width / (float)m_windowHandler.GetWindowData().m_height),
 	m_skybox(m_textureHandler),
 	m_deltaTime(0.f)
 {
+	m_framework.ExecuteCommandList();
+	m_framework.WaitForPreviousFrame();
+
 	ImGuiIO* io = &ImGui::GetIO();
 	ImVec2 vec;
 	vec.x = (float)width;
@@ -81,9 +84,13 @@ Engine::Impl::Impl(unsigned int width, unsigned int height) :
 	//m_textureHandler.CreateTexture(L"Sprites/defaultTexture.dds");
 	//m_textureHandler.LoadAllCreatedTexuresToGPU();
 
+	m_framework.ResetCommandListAndAllocator(nullptr, L"Line 87");
+
 	CustomModel skyboxCube = ModelData::GetCube();
 	skyboxCube.m_customModelName = "skybox";
 	m_skybox.Init(m_modelHandler.CreateCustomModel(skyboxCube).m_modelID, L"Sprites/nightSkybox.dds", true);
+	m_framework.ExecuteCommandList();
+	m_framework.WaitForPreviousFrame();
 	//m_spriteHandler.CreateSpriteSheet(L"Sprites/testSpriteSheet.dds");
 	//m_spriteHandler.LoadFont("Config/Fonts/ChiliFont.json");
 

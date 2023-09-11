@@ -567,7 +567,9 @@ CD3DX12_GPU_DESCRIPTOR_HANDLE ImguiHandler::AddImguiImage(std::wstring path)
 			return m_imguiTextures[i].m_srvGpuHandle;
 	}
 
-	m_engine.GetFramework().ResetCommandListAndAllocator(nullptr, L"ImguiHandler: Line 570");
+	if(!m_engine.GetFramework().CmdListIsRecording())
+		m_engine.GetFramework().ResetCommandListAndAllocator(nullptr, L"ImguiHandler: Line 570");
+
 	ImguiTexture texture;
 
 	ID3D12Device* device = m_engine.GetFramework().GetDevice();

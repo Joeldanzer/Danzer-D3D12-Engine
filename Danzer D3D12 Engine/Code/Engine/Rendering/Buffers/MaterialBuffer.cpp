@@ -32,14 +32,15 @@ void MaterialBuffer::Init(ID3D12Device* device, DescriptorHeapWrapper* cbvWrappe
 
 		CD3DX12_CPU_DESCRIPTOR_HANDLE cbvHandle(cbvWrapper->GetDescriptorHeap()->GetCPUDescriptorHandleForHeapStart());
 
+		cbvHandle.Offset(cbvWrapper->m_handleCurrentOffset * cbvWrapper->DESCRIPTOR_SIZE());
+
 		D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
 		cbvDesc.BufferLocation = m_bufferUpload[i]->GetGPUVirtualAddress();
 		cbvDesc.SizeInBytes = (sizeof(MaterialBuffer::Data) + 255) & ~255; // Contant buffer size if required to be 256-byte aligned.
 		device->CreateConstantBufferView(&cbvDesc, cbvHandle);
 
 		m_offsetID = cbvWrapper->m_handleCurrentOffset;
-		cbvHandle.Offset(cbvWrapper->DESCRIPTOR_SIZE());
-		cbvWrapper->m_handleCurrentOffset += cbvWrapper->DESCRIPTOR_SIZE();
+		cbvWrapper->m_handleCurrentOffset++;
 
 		ZeroMemory(&m_materialBufferData, sizeof(MaterialBuffer::Data));
 		CD3DX12_RANGE readRange(0, 0); // Don't intend to read this resource on the CPU

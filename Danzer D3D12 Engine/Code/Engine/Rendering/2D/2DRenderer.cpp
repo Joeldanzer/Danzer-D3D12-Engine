@@ -10,11 +10,11 @@ Renderer2D::~Renderer2D(){}
 
 void Renderer2D::Init(DirectX12Framework& framework)
 {
-	m_commandList = framework.GetCommandList();
-
-	m_windowBuffer.Init(framework.GetDevice(), &framework.GetCbvSrvUavWrapper());
-	m_spriteSheetBuffer.Init(framework.GetDevice(), &framework.GetCbvSrvUavWrapper());
-	CreateUIVertexAndIndexBuffers(framework);
+	//m_commandList = framework.GetCommandList();
+	//
+	//m_windowBuffer.Init(framework.GetDevice(), &framework.GetCbvSrvUavWrapper());
+	//m_spriteSheetBuffer.Init(framework.GetDevice(), &framework.GetCbvSrvUavWrapper());
+	//CreateUIVertexAndIndexBuffers(framework);
 }
 
 void Renderer2D::UpdateDefaultUIBuffers(UINT frameIndex)

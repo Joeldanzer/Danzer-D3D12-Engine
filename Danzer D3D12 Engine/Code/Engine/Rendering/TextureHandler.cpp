@@ -39,7 +39,7 @@ void TextureHandler::LoadAllExistingTextures()
 {
 	std::string path = "Sprites/";
 
-	m_framework.ResetCommandListAndAllocator(nullptr, L"TextureHandler: Line 42");
+	//m_framework.ResetCommandListAndAllocator(nullptr, L"TextureHandler: Line 42");
 
 	for (const auto& entry : std::filesystem::directory_iterator(path))
 	{
@@ -65,6 +65,8 @@ void TextureHandler::LoadAllCreatedTexuresToGPU()
 
 		HRESULT result;
 
+		cbvSrvHandle.Offset(srvWrapper->m_handleCurrentOffset * srvWrapper->DESCRIPTOR_SIZE());
+
 		for (UINT i = 0; i < m_tempTextures.size(); i++) {
 			DirectX::CreateShaderResourceView(
 				m_framework.GetDevice(), 
@@ -74,7 +76,7 @@ void TextureHandler::LoadAllCreatedTexuresToGPU()
 			// Offset the descriptor and save the offset value for later use in rendering.
 			m_tempTextures[i].m_offsetID = srvWrapper->m_handleCurrentOffset;
 			cbvSrvHandle.Offset(srvWrapper->DESCRIPTOR_SIZE());
-			srvWrapper->m_handleCurrentOffset += srvWrapper->DESCRIPTOR_SIZE();
+			srvWrapper->m_handleCurrentOffset++;
 
 
 			m_textures.emplace_back(m_tempTextures[i]);
@@ -83,8 +85,8 @@ void TextureHandler::LoadAllCreatedTexuresToGPU()
 		m_tempTextures.clear();
 		m_resourceBarriers.clear();
 		
-		m_framework.ExecuteCommandList();
-		m_framework.WaitForPreviousFrame();
+		//m_framework.ExecuteCommandList();
+		//m_framework.WaitForPreviousFrame();
 		
 	}
 }
@@ -174,7 +176,7 @@ UINT TextureHandler::GetTexture(std::wstring texturePath)
 	for (UINT i = 0; i < m_textures.size(); i++)
 	{
 		if (texturePath == m_textures[i].m_texturePath)
-			return i + 1;
+			return i;
 	}
 
 	return 0;
