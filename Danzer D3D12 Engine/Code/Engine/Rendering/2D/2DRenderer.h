@@ -16,7 +16,8 @@ class Renderer2D
 {
 public:
 	Renderer2D() : 
-		m_commandList(nullptr) {}
+		m_commandList(nullptr),
+		m_framework(nullptr){}
 	~Renderer2D();
 
 	void Init(DirectX12Framework& framework);
@@ -28,6 +29,8 @@ public:
 private:
 	void CreateUIVertexAndIndexBuffers(DirectX12Framework& framework);
 
+	DirectX12Framework*         m_framework;
+	
 	WindowBuffer				m_windowBuffer;
 	WindowBuffer				m_spriteSheetBuffer; //Reuse Window Buffer for now until spritesheet needs something else
 

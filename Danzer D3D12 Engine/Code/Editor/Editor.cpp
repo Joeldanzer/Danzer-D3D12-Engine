@@ -52,7 +52,7 @@ void Editor::CameraControlls(const float dt)
 
 	transform.m_rotation = Quat4f::CreateFromYawPitchRoll({ToRadians(euler.x), ToRadians(euler.y), ToRadians(euler.z)});
 	
-	Vect3f forward = transform.GetWorld().Forward();
+	Vect3f forward = transform.World().Forward();
 	if (Input::GetInstance().MouseWheel() < 0){
 		transform.m_position += (forward * m_moveSpeed) * dt;
 	}

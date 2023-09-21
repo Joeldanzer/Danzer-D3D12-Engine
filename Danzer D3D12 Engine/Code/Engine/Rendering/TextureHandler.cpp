@@ -11,11 +11,6 @@
 TextureHandler::TextureHandler(DirectX12Framework& framework) :
 	m_framework(framework)
 {
-	//*The 2 Default Textures
-	//std::array<std::string, 2> defaultTextures = { "Sprites/greyEmptyTexture.dds" ,"Sprites/defaultTexture.dds" };
-	//CreateTexture(L"Sprites/greyEmptyTexture.dds");
-	//CreateTexture(L"Sprites/defaultTexture.dds");
-	//LoadAllCreatedTexuresToGPU();
 	LoadAllExistingTextures();
 }
 TextureHandler::~TextureHandler()
@@ -41,11 +36,13 @@ void TextureHandler::LoadAllExistingTextures()
 
 	//m_framework.ResetCommandListAndAllocator(nullptr, L"TextureHandler: Line 42");
 
+	bool isSkybox = true;
+
 	for (const auto& entry : std::filesystem::directory_iterator(path))
 	{
 		std::wstring file = entry.path().c_str();
 		if (file.find(L"Skybox") != std::wstring::npos)
-			CreateTexture(file, true);
+			CreateTexture(file, isSkybox);
 		else
 			CreateTexture(file);
 	}
@@ -71,7 +68,8 @@ void TextureHandler::LoadAllCreatedTexuresToGPU()
 			DirectX::CreateShaderResourceView(
 				m_framework.GetDevice(), 
 				m_tempTextures[i].m_textureBuffer.Get(),
-				cbvSrvHandle);
+				cbvSrvHandle,
+				m_tempTextures[i].m_cubeMap);
 
 			// Offset the descriptor and save the offset value for later use in rendering.
 			m_tempTextures[i].m_offsetID = srvWrapper->m_handleCurrentOffset;
@@ -84,10 +82,6 @@ void TextureHandler::LoadAllCreatedTexuresToGPU()
 
 		m_tempTextures.clear();
 		m_resourceBarriers.clear();
-		
-		//m_framework.ExecuteCommandList();
-		//m_framework.WaitForPreviousFrame();
-		
 	}
 }
 
@@ -141,6 +135,7 @@ Material TextureHandler::CreateMaterial(std::string textures[6], float metallic,
 	return material;
 }
 
+//* OUTDATED INFORMATION
 //* Create Texture expects CommandList to have already been resetted
 //* before use. LoadAllCreatedTexuresToGPU also needs to be called directly after this,
 //* CreateMultipleTextures loads all created textures to the GPU automatically.
@@ -163,8 +158,6 @@ UINT TextureHandler::CreateTexture(std::wstring file, bool isCubeMap)
 	CD3DX12_RESOURCE_BARRIER resource = LoadTextures(file, &texture.m_textureBuffer, isCubeMap);
 	m_resourceBarriers.emplace_back(resource);
 	m_tempTextures.emplace_back(texture);
-
-	//LoadAllCreatedTexuresToGPU();
 
 	return m_textures.size() + m_tempTextures.size();
 }

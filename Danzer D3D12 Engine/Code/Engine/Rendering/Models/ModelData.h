@@ -53,7 +53,7 @@ public:
 		m_modelPath(fileName)
 	{
 		for (auto& mesh : m_meshes)
-			mesh.m_materialBuffer.Init(device, cbvWrapper);
+			mesh.m_materialBuffer.Init(device, cbvWrapper, mesh.m_materialBuffer.FetchData(), sizeof(MaterialBuffer::Data));
 
 		m_transformBuffer.Init(device);
 		//m_materialBuffer.Init(device);

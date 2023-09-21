@@ -41,8 +41,7 @@ int main(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ PWSTR 
 
 	//Launch Engine stuff!
 	Engine engine = Engine(1920, 1080);
-
-	Editor editor(engine);
+	//Editor editor(engine);
 
 	Game game(engine);
 
@@ -66,13 +65,11 @@ int main(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ PWSTR 
 		}
 
 		// * Turned off at the moment when working with Editor.
-		//game.Update(engine.GetDeltaTime());
+		game.Update(engine.GetDeltaTime());
 		engine.Update();
-		editor.Update(engine.GetDeltaTime());
+		//editor.Update(engine.GetDeltaTime());
 		
-		engine.LateUpdate();
-
-		
+		engine.LateUpdate();		
 	}
 	
 	return 0;

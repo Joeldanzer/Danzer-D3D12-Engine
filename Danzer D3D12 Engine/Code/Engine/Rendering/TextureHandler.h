@@ -41,8 +41,8 @@ public:
 
 	std::vector<Texture>& GetTextures() { return m_textures; }
 	Texture& GetTextureData(UINT texture) {
-		texture = texture > 0 ? texture : 1;
-		return m_textures[texture - 1];
+		texture = texture > 0 && texture < m_textures.size() ? texture : 0;
+		return m_textures[texture];
 	}
 	//ID3D12DescriptorHeap* GetDescriptorHeap(UINT id) { return m_textures[id].m_textureDescriptorHeap.Get(); }
 	std::wstring GetCorrectPathAndName(std::wstring path);

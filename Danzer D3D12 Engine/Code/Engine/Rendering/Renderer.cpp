@@ -33,9 +33,9 @@ void Renderer::Init(DirectX12Framework& framework)
 	m_commandList = framework.GetCommandList();
 	//m_framework->ResetCommandListAndAllocator(nullptr, L"Renderer: Line 33");
 	
-	m_cameraBuffer.Init(framework.GetDevice(),   &framework.GetCbvSrvUavWrapper());
-	m_lightBuffer.Init(framework.GetDevice(),    &framework.GetCbvSrvUavWrapper());
-	m_materialBuffer.Init(framework.GetDevice(), &framework.GetCbvSrvUavWrapper());
+	m_cameraBuffer.Init(framework.GetDevice(),   &framework.GetCbvSrvUavWrapper(), m_cameraBuffer.FetchData(), sizeof(CameraBuffer::Data));
+	m_lightBuffer.Init(framework.GetDevice(),    &framework.GetCbvSrvUavWrapper(), m_lightBuffer.FetchData(),  sizeof(LightBuffer::Data));
+	m_materialBuffer.Init(framework.GetDevice(), &framework.GetCbvSrvUavWrapper(), m_materialBuffer.FetchData(), sizeof(MaterialBuffer::Data));
 	//m_aabbBuffer.Init(framework.GetDevice(), &m_framework->GetCbvSrvUavWrapper());
 	//m_rayBuffer.Init(framework.GetDevice(), &m_framework->GetCbvSrvUavWrapper());
 
@@ -51,14 +51,16 @@ void Renderer::UpdateDefaultBuffers(Camera& camera, Transform& transform, UINT f
 	m_descriptorIndex = 0;
 	
 	CameraBuffer::Data bufferData;
-	bufferData.m_transform  = transform.GetWorld().Invert();
+	bufferData.m_transform  = transform.World().Invert();
 	bufferData.m_projection = camera.GetProjection();
 	bufferData.m_position = { transform.m_position.x, transform.m_position.y, transform.m_position.z, float(camera.m_renderTarget)};
 	Vect4f eye = { bufferData.m_transform.Forward() };
 	eye.w = 1.f;
 	bufferData.m_direction = eye;
 
-	m_cameraBuffer.UpdateBuffer(frameIndex, &bufferData);
+	printf("Buffer Update: %f \n", transform.m_rotation.y);
+
+	m_cameraBuffer.UpdateBuffer(&bufferData);
 
 	D3D12_GPU_DESCRIPTOR_HANDLE cbvSrvHeapStart = m_framework->GetCbvSrvUavWrapper().GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
 	CD3DX12_GPU_DESCRIPTOR_HANDLE cbvHandle(cbvSrvHeapStart, m_cameraBuffer.OffsetID(), m_framework->GetCbvSrvUavWrapper().DESCRIPTOR_SIZE());
@@ -67,61 +69,41 @@ void Renderer::UpdateDefaultBuffers(Camera& camera, Transform& transform, UINT f
 
 void Renderer::RenderSkybox(Transform& cameraTransform, TextureHandler::Texture& textures, ModelData& model, Skybox& skybox, UINT frameIndex)
 {
-	//UINT oldDescripterIndex = m_descriptorIndex;
-	
-	//ID3D12DescriptorHeap* descHeaps1[1] = { textures1.m_textureDescriptorHeap.Get() };
-	//ID3D12DescriptorHeap* descHeaps[1] = {textures.m_textureDescriptorHeap.Get()};
-	
-	//m_commandList->SetDescriptorHeaps(_countof(descHeaps), &descHeaps[0]);
-	//m_commandList->SetGraphicsRootDescriptorTable(0, textures1.m_textureDescriptorHeap->GetGPUDescriptorHandleForHeapStart());	
-	
-	//m_commandList->SetDescriptorHeaps(_countof(descHeaps), &descHeaps[0]);
-	//CD3DX12_GPU_DESCRIPTOR_HANDLE descHandle ;
-	//m_commandList->SetGraphicsRootDescriptorTable(1, textures.m_textureDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
+	D3D12_GPU_DESCRIPTOR_HANDLE cbvSrvHeapStart = m_framework->GetCbvSrvUavWrapper().GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
+	const UINT cbvSrvDescSize					= m_framework->GetCbvSrvUavWrapper().DESCRIPTOR_SIZE();
 
-	//ModelData::Mesh& mesh = model.GetMeshes()[0];
-	//
-	//if (!model.GetInstanceTransforms().empty())
-	//	model.ClearInstanceTransform();
-	//
-	//Mat4f transform = Mat4f::CreateScale({ 5.f, 5.f, 5.f });
-	//transform *= Mat4f::CreateFromQuaternion(skybox.GetRotation());
-	//transform.Translation(cameraTransform.m_position);
-	//
-	//model.AddInstanceTransform(transform);
-	//model.UpdateTransformInstanceBuffer(frameIndex);
-	//D3D12_VERTEX_BUFFER_VIEW vBufferViews[2] = {
-	//	mesh.m_vertexBufferView, model.GetTransformInstanceBuffer().GetBufferView(frameIndex)
-	//};
-	//m_commandList->IASetVertexBuffers(0, 2, &vBufferViews[0]);
-	//m_commandList->IASetIndexBuffer(&mesh.m_indexBufferView);
-	//m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	//
-	//m_commandList->DrawIndexedInstanced(mesh.m_numIndices, 1, 0, 0, 0);
-	//
-	//model.ClearInstanceTransform();
+	CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle(cbvSrvHeapStart, textures.m_offsetID, cbvSrvDescSize);
+	m_commandList->SetGraphicsRootDescriptorTable(1, srvHandle);
+
+	ModelData::Mesh& mesh = model.GetMeshes()[0];
+	
+	if (!model.GetInstanceTransforms().empty())
+		 model.ClearInstanceTransform();
+	
+	//* Add the rotation from the skybox and always place it a the cameras position
+	Mat4f transform = Mat4f::CreateScale({ 5.f, 5.f, 5.f });
+	transform *= Mat4f::CreateFromQuaternion(skybox.GetRotation());
+	transform.Translation(cameraTransform.m_position);   
+	
+	model.AddInstanceTransform(transform);
+	model.UpdateTransformInstanceBuffer(frameIndex);
+	D3D12_VERTEX_BUFFER_VIEW vBufferViews[2] = {
+		mesh.m_vertexBufferView, model.GetTransformInstanceBuffer().GetBufferView(frameIndex)
+	};
+	m_commandList->IASetVertexBuffers(0, 2, &vBufferViews[0]);
+	m_commandList->IASetIndexBuffer(&mesh.m_indexBufferView);
+	m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	
+	m_commandList->DrawIndexedInstanced(mesh.m_numIndices, 1, 0, 0, 0);
 }
 
-//void Renderer::RenderDirectionalLight(DirectionalLight& light, Vect4f direction, TextureHandler::Texture& skyboxTexture, UINT frameIndex, UINT& startLocation)
 void Renderer::RenderDirectionalLight(TextureHandler::Texture& skyboxTexture, UINT frameIndex, UINT& startLocation)
 {
 	D3D12_GPU_DESCRIPTOR_HANDLE cbvSrvHeapStart = m_framework->GetCbvSrvUavWrapper().GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
 	const UINT cbvSrvDescSize = m_framework->GetCbvSrvUavWrapper().DESCRIPTOR_SIZE();
 
-	//LightBuffer::Data lightData;
-	//lightData.m_ambientColor   = light.m_ambientColor;
-	//lightData.m_lightColor	   = light.m_lightColor;
-	//lightData.m_lightDirection = direction;
-	//
-	//m_lightBuffer.UpdateBuffer(frameIndex, &lightData);
-	//
-	//CD3DX12_GPU_DESCRIPTOR_HANDLE cbvHandle(cbvSrvHeapStart, m_lightBuffer.OffsetID(), cbvSrvDescSize);
-	//m_commandList->SetGraphicsRootDescriptorTable(startLocation, cbvHandle);
-	//startLocation++;
-
 	CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle(cbvSrvHeapStart, skyboxTexture.m_offsetID, cbvSrvDescSize);
 	m_commandList->SetGraphicsRootDescriptorTable(startLocation, srvHandle);
-	//startLocation ++;
 
 	m_commandList->IASetVertexBuffers(0, 0, nullptr);
 	m_commandList->IASetIndexBuffer(nullptr);
@@ -202,7 +184,7 @@ void Renderer::RenderToGbuffer(std::vector<ModelData>& models, UINT frameIndex, 
 						for (UINT i = 0; i < 4; i++)
 							materialData.m_color[i] = mesh.m_material.m_color[i];
 						
-						m_materialBuffer.UpdateBuffer(frameIndex, &materialData);
+						m_materialBuffer.UpdateBuffer(&materialData);
 						CD3DX12_GPU_DESCRIPTOR_HANDLE cbvHandle(cbvSrvHeapStart, m_materialBuffer.OffsetID(), cbvSrvDescSize);
 						m_commandList->SetGraphicsRootDescriptorTable(1, cbvHandle);
 				
@@ -232,7 +214,6 @@ void Renderer::RenderToGbuffer(std::vector<ModelData>& models, UINT frameIndex, 
 		}
 	}
 }
-
 //*Transparent 3D objects needs to be rendered individually in distance order,
 //*like what a depth buffer does but manually.
 //void Renderer::TransparentRender(Scene* scene, std::vector<Object*>& objects, std::vector<ModelData>& models, UINT frameIndex, std::vector<TextureHandler::Texture> textures)
@@ -299,27 +280,9 @@ void Renderer::UpdateLightBuffer(const DirectionalLight& light, const Vect4f& di
 	lightData.m_lightColor = light.m_lightColor;
 	lightData.m_lightDirection = direction;
 
-	m_lightBuffer.UpdateBuffer(frameIndex, &lightData);
+	m_lightBuffer.UpdateBuffer(&lightData);
 
 	CD3DX12_GPU_DESCRIPTOR_HANDLE cbvHandle(cbvSrvHeapStart, m_lightBuffer.OffsetID(), cbvSrvDescSize);
 	m_commandList->SetGraphicsRootDescriptorTable(startLocation, cbvHandle);
 	startLocation++;
-}
-
-//* Use to make it easier to keep track on setting DescriptorHeaps as it can get a bit confusing when CBV/SRV/UAV
-//* All share the same SetGraphicsRootDescriptorTable, do remember that PipelineStateHandler is where the resource slots
-//* of the specific resources that is used are located. 
-void Renderer::SetDescriptorHeaps(ID3D12DescriptorHeap** descriptorHeaps, UINT count, UINT descriptorIndex)
-{
-	m_commandList->SetDescriptorHeaps(count, descriptorHeaps);
-	for (UINT i = 0; i < count; i++)
-	{
-		if (descriptorHeaps[i]) {
-			m_commandList->SetGraphicsRootDescriptorTable(m_descriptorIndex, descriptorHeaps[i]->GetGPUDescriptorHandleForHeapStart());
-		}
-		m_descriptorIndex++;
-	}
-
-	if(descriptorIndex != 0)
-		m_descriptorIndex = descriptorIndex;
 }

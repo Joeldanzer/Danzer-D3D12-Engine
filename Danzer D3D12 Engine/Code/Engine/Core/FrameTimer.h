@@ -19,6 +19,6 @@ public:
 private:
 	LARGE_INTEGER m_preformanceFrequency, m_lastTick;
 	float m_deltaTime;
-	float m_minFps = 60.f;
+	float m_minFps = 120.0f;
 };
 

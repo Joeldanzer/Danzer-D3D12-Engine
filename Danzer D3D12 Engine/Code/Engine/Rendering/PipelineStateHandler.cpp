@@ -162,7 +162,6 @@ void PipelineStateHandler::CreateDefaultRootSingature(ID3D12Device* device)
 		D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS	 |
 		D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS);
 
-
 	ID3DBlob* signature;
 	ID3DBlob* error = nullptr;
 	HRESULT result = D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error);
@@ -184,7 +183,7 @@ void PipelineStateHandler::CreateUIRootSignature(ID3D12Device* device)
 	rootParameter[0].InitAsDescriptorTable(1, &cbvDescriptorRange);
 
 	// SRV Root singature creation
-	CD3DX12_DESCRIPTOR_RANGE srvDescriptorRange;
+	CD3DX12_DESCRIPTOR_RANGE srvDescriptorRange = {};
 	srvDescriptorRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0); // SRV0
 	rootParameter[1].InitAsDescriptorTable(1, &srvDescriptorRange);
 	// end of SRV
@@ -194,7 +193,6 @@ void PipelineStateHandler::CreateUIRootSignature(ID3D12Device* device)
 		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
 		D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS	 |
 		D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS);
-
 
 	ID3DBlob* signature;
 	ID3DBlob* error = nullptr;
@@ -223,7 +221,7 @@ void PipelineStateHandler::CreateTransparentPSO(ID3D12Device* device)
 	blendDesc.AlphaToCoverageEnable = false;
 	
 	D3D12_DEPTH_STENCIL_DESC depthStencilDesc = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
-	depthStencilDesc.DepthEnable = true;
+	depthStencilDesc.DepthEnable = false;
 
 	D3D12_RASTERIZER_DESC rasterizerDesc = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
 	rasterizerDesc.CullMode = D3D12_CULL_MODE_BACK;
@@ -455,11 +453,11 @@ void PipelineStateHandler::CreateModelPSO(ID3D12Device* device)
 	CHECK_HR(result);
 
 	D3D12_SHADER_BYTECODE vsByte = {};
-	vsByte.BytecodeLength = vs->GetBufferSize();
+	vsByte.BytecodeLength  = vs->GetBufferSize();
 	vsByte.pShaderBytecode = vs->GetBufferPointer();
 
 	D3D12_SHADER_BYTECODE psByte = {};
-	psByte.BytecodeLength = ps->GetBufferSize();
+	psByte.BytecodeLength  = ps->GetBufferSize();
 	psByte.pShaderBytecode = ps->GetBufferPointer();
 
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
@@ -502,8 +500,6 @@ void PipelineStateHandler::CreateUIPSO(ID3D12Device* device)
 	rasterizerDesc.CullMode = D3D12_CULL_MODE_BACK;
 	rasterizerDesc.FillMode = D3D12_FILL_MODE_SOLID;
 
-	//D3D12_DEPTH_STENCIL_DESC depthStencilDesc = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
-
 	DXGI_SAMPLE_DESC sample = { 1, 0 };
 
 	ID3DBlob* vs;
@@ -516,11 +512,11 @@ void PipelineStateHandler::CreateUIPSO(ID3D12Device* device)
 	CHECK_HR(result);
 
 	D3D12_SHADER_BYTECODE vsByte = {};
-	vsByte.BytecodeLength = vs->GetBufferSize();
+	vsByte.BytecodeLength  = vs->GetBufferSize();
 	vsByte.pShaderBytecode = vs->GetBufferPointer();
 
 	D3D12_SHADER_BYTECODE psByte = {};
-	psByte.BytecodeLength = ps->GetBufferSize();
+	psByte.BytecodeLength  = ps->GetBufferSize();
 	psByte.pShaderBytecode = ps->GetBufferPointer();
 
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
@@ -621,9 +617,8 @@ void PipelineStateHandler::CreateSkyboxPSO(ID3D12Device* device)
 	HRESULT result;
 
 	D3D12_BLEND_DESC blendDesc = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
-	//blendDesc.IndependentBlendEnable = false;
 	D3D12_DEPTH_STENCIL_DESC depthStencilDesc = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
-	depthStencilDesc.DepthEnable = true;
+	depthStencilDesc.DepthEnable = false;
 	depthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
 	depthStencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
 
@@ -642,11 +637,11 @@ void PipelineStateHandler::CreateSkyboxPSO(ID3D12Device* device)
 	CHECK_HR(result);
 
 	D3D12_SHADER_BYTECODE vsByte = {};
-	vsByte.BytecodeLength = vs->GetBufferSize();
+	vsByte.BytecodeLength  = vs->GetBufferSize();
 	vsByte.pShaderBytecode = vs->GetBufferPointer();
 
 	D3D12_SHADER_BYTECODE psByte = {};
-	psByte.BytecodeLength = ps->GetBufferSize();
+	psByte.BytecodeLength  = ps->GetBufferSize();
 	psByte.pShaderBytecode = ps->GetBufferPointer();
 
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};

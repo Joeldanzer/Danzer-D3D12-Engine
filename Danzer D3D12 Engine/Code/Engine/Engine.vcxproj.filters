@@ -66,6 +66,7 @@
     <ClCompile Include="Rendering\Screen Rendering\FullscreenShader.cpp" />
     <ClCompile Include="Rendering\Screen Rendering\FullScreenShaderHandler.cpp" />
     <ClCompile Include="Core\DesriptorHeapWrapper.cpp" />
+    <ClCompile Include="Rendering\Buffers\CBVBuffer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Core\DirectX12Framework.h">

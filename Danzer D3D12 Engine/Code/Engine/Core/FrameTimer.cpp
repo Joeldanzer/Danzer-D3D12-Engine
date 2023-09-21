@@ -12,8 +12,8 @@ void FrameTimer::Update() {
 	LARGE_INTEGER  currentTick, elapsedTime;
 	QueryPerformanceCounter(&currentTick);
 	elapsedTime.QuadPart = currentTick.QuadPart - m_lastTick.QuadPart;
-	elapsedTime.QuadPart *= 1000000;
+	elapsedTime.QuadPart *= 10000000;
 	elapsedTime.QuadPart /= m_preformanceFrequency.QuadPart;
-	m_deltaTime = (float)(elapsedTime.QuadPart) / 1000000.f;
+	m_deltaTime = (float)(elapsedTime.QuadPart) / 10000000;
 	m_lastTick = currentTick;
 }

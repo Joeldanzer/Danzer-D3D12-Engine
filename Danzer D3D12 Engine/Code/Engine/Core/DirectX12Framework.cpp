@@ -216,16 +216,17 @@ void DirectX12Framework::ResetCommandListAndAllocator(ID3D12PipelineState* pipel
 	debugText += L"\n";
 	OutputDebugString(debugText.c_str());
 	
-	assert(!m_cmdIsRecording, "Trying to reset a recording CommandList");
+	//assert(!m_cmdIsRecording, "Trying to reset a recording CommandList");
+	if (!m_cmdIsRecording) {
+		HRESULT result;
+		result = m_commandAllocator->Reset();
+		CHECK_HR(result);      
 
-	HRESULT result;
-	result = m_commandAllocator->Reset();
-	CHECK_HR(result);      
+		result = m_commandList->Reset(m_commandAllocator.Get(), pipeline);
+		CHECK_HR(result);
 
-	result = m_commandList->Reset(m_commandAllocator.Get(), pipeline);
-	CHECK_HR(result);
-
-	m_cmdIsRecording = true;
+		m_cmdIsRecording = true;
+	}
 }
 
 void DirectX12Framework::WaitForPreviousFrame()

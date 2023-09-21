@@ -68,21 +68,20 @@ void Scene::UpdateTransforms()
 	auto view = m_sceneRegistry.view<Transform>();
 	for (auto entity : view)
 	{
-		Transform& transform = view.get<Transform>(entity);
+		Transform& transform = view.get<Transform>(entity);	
+
+		// Check if transform has been updated
+		//if (transform.m_world != transform.m_last) {
+			transform.m_last = transform.m_world;
+			Mat4f mat;
+			mat  = Mat4f::CreateFromQuaternion(transform.m_rotation);
+			mat  *= Mat4f::CreateScale(transform.m_scale); 
+			mat.Translation(transform.m_position);
 		
-		transform.m_last = transform.m_world;
+			transform.m_local = mat;
 
-		Mat4f mat;
-		mat *= Mat4f::CreateScale(transform.m_scale); 
-		mat *= Mat4f::CreateFromQuaternion(transform.m_rotation);
-		mat.Translation(transform.m_position);
-
-		transform.m_local = mat;
-
-		if (transform.Parent())
-			transform.m_world = transform.m_local * transform.Parent()->m_world;
-		else
-			transform.m_world = transform.m_local;
+			transform.m_world = !transform.Parent() ? transform.m_world = transform.m_local : transform.m_local * transform.Parent()->m_world;
+		//}
 	}
 }
 

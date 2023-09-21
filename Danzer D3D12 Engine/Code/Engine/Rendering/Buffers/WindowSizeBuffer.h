@@ -8,12 +8,15 @@ public:
 	WindowBuffer();
 	~WindowBuffer();
 
-	void Init(ID3D12Device* device, DescriptorHeapWrapper* cbvWrapper) override;
-	void UpdateBuffer(/*ID3D12GraphicsCommandList* cmdList,*/ UINT frameIndex, void* cbvData) override;
+	void UpdateBuffer(void* cbvData) override;
 
 	struct Data {
 		Vect2f m_windowSize;
 	};
+
+	Data* FetchData() {
+		return &m_windowData;
+	}
 
 private :
 	Data m_windowData;

@@ -99,7 +99,7 @@ private:
 	HANDLE							  m_fenceEvent;			 
 	UINT64							  m_fenceValue;
 
-	bool m_cmdIsRecording;
+	bool							  m_cmdIsRecording;
 
 	UINT							  m_rtvDescripterSize;
 	UINT						      m_frameIndex;

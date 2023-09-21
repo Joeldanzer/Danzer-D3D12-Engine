@@ -5,48 +5,9 @@
 LightBuffer::LightBuffer(){}
 LightBuffer::~LightBuffer(){}
 
-void LightBuffer::Init(ID3D12Device* device, DescriptorHeapWrapper* cbvWrapper)
-{
-	HRESULT result;
-
-	for (UINT i = 0; i < FrameCount; i++)
-	{
-		CD3DX12_HEAP_PROPERTIES uploadHeap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-		UINT size = (sizeof(LightBuffer::Data) + 255) & ~255;
-		CD3DX12_RESOURCE_DESC buffer = CD3DX12_RESOURCE_DESC::Buffer(size);
-		result = device->CreateCommittedResource(
-			&uploadHeap,
-			D3D12_HEAP_FLAG_NONE,
-			&buffer,
-			D3D12_RESOURCE_STATE_GENERIC_READ,
-			nullptr,
-			IID_PPV_ARGS(&m_bufferUpload[i])
-		);
-		CHECK_HR(result);
-
-		CD3DX12_CPU_DESCRIPTOR_HANDLE cbvHandle(cbvWrapper->GetDescriptorHeap()->GetCPUDescriptorHandleForHeapStart());
-
-		cbvHandle.Offset(cbvWrapper->m_handleCurrentOffset * cbvWrapper->DESCRIPTOR_SIZE());
-
-		D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
-		cbvDesc.BufferLocation = m_bufferUpload[i]->GetGPUVirtualAddress();
-		cbvDesc.SizeInBytes = (sizeof(LightBuffer::Data) + 255) & ~255; // Contant buffer size if required to be 256-byte aligned.
-		device->CreateConstantBufferView(&cbvDesc, cbvHandle);
-
-		m_offsetID = cbvWrapper->m_handleCurrentOffset;
-		cbvWrapper->m_handleCurrentOffset++;
-
-		ZeroMemory(&m_lightBufferData, sizeof(LightBuffer::Data));
-		CD3DX12_RANGE readRange(0, 0); // Don't intend to read this resource on the CPU
-		result = m_bufferUpload[i]->Map(0, &readRange, reinterpret_cast<void**>(&m_bufferGPUAddress[i]));
-		CHECK_HR(result);
-		memcpy(m_bufferGPUAddress[i], &m_lightBufferData, sizeof(LightBuffer::Data));
-	}
-}
-
-void LightBuffer::UpdateBuffer(/*ID3D12GraphicsCommandList* cmdList,*/ UINT frameIndex, void* cbvData)
+void LightBuffer::UpdateBuffer(void* cbvData)
 {
 	Data* data = reinterpret_cast<Data*>(cbvData);
 	m_lightBufferData = *data;
-	memcpy(m_bufferGPUAddress[frameIndex], &m_lightBufferData, sizeof(Data));
+	memcpy(m_bufferGPUAddress, &m_lightBufferData, sizeof(Data));
 }

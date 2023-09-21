@@ -26,7 +26,7 @@ public:
 	const float		    GetDeltaTime()		  const noexcept;
 	SceneManager&	    GetSceneManager()	  const noexcept;
 	ModelHandler&		GetModelHandler()	  const noexcept;
-	SpriteHandler&		GetSpriteFactory()	  const noexcept;
+	SpriteHandler&		GetSpriteHandler()	  const noexcept;
 	RenderManager&	    GetRenderManager()	  const noexcept;
 	DirectX12Framework& GetFramework()		  const noexcept;
 	//LevelLoaderCustom&  GetLevelLoader()	  const noexcept;

@@ -2,6 +2,9 @@
 #include "Engine.h"
 #include "Level Loader/LevelLoaderCustom.h"
 
+
+#include "Components/Transform.h"
+#include "Core/input.hpp"
 #include "Rendering/TextureHandler.h"
 #include "DirectX12Framework.h"
 #include "WindowHandler.h"
@@ -70,6 +73,7 @@ Engine::Impl::Impl(unsigned int width, unsigned int height) :
 	m_skybox(m_textureHandler),
 	m_deltaTime(0.f)
 {
+
 	m_framework.ExecuteCommandList();
 	m_framework.WaitForPreviousFrame();
 
@@ -91,7 +95,7 @@ Engine::Impl::Impl(unsigned int width, unsigned int height) :
 	m_skybox.Init(m_modelHandler.CreateCustomModel(skyboxCube).m_modelID, L"Sprites/nightSkybox.dds", true);
 	m_framework.ExecuteCommandList();
 	m_framework.WaitForPreviousFrame();
-	//m_spriteHandler.CreateSpriteSheet(L"Sprites/testSpriteSheet.dds");
+	m_spriteHandler.CreateSpriteSheet(L"Sprites/testSpriteSheet.dds", 4, 4);
 	//m_spriteHandler.LoadFont("Config/Fonts/ChiliFont.json");
 
 	//Camera camera(65.f, (float)m_windowHandler.GetWindowData().m_width / (float)m_windowHandler.GetWindowData().m_height);
@@ -119,23 +123,23 @@ Engine::~Engine(){}
 
 void Engine::Impl::Update()
 {
+	m_frameTimer.Update();
+	const float deltaTime = m_frameTimer.GetRealDeltaTime();
+	
 	ImGui::NewFrame();
 	ImGui_ImplDX12_NewFrame();
 	ImGui_ImplWin32_NewFrame();
-
-	m_frameTimer.Update();
-	const float deltaTime = m_frameTimer.GetRealDeltaTime();
 
 	m_skybox.Update(deltaTime);
 
 	//m_sceneManager.GetCurrentScene()->UpdateAllObjectsInScene(deltaTime);
 	//m_collisionManager.UpdateCollisions(m_sceneManager.GetCurrentScene()->GetObjects());
 
-	m_sceneManager.GetCurrentScene().UpdateTransforms();
 }
 
 void Engine::Impl::LateUpdate()
 {
+	m_sceneManager.GetCurrentScene().UpdateTransforms();
 	m_renderManager.RenderFrame(m_textureHandler, m_modelHandler, m_spriteHandler, m_skybox, m_sceneManager.GetCurrentScene());
 
 	m_framework.GetSwapChain()->Present(1, 0);
@@ -184,7 +188,7 @@ ModelHandler& Engine::GetModelHandler() const noexcept
 	return m_Impl->GetModelFactory();
 }
 
-SpriteHandler& Engine::GetSpriteFactory() const noexcept
+SpriteHandler& Engine::GetSpriteHandler() const noexcept
 {
 	return m_Impl->GetSpriteFactory();
 }

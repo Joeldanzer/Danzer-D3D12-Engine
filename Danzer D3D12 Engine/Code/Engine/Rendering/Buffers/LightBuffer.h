@@ -8,8 +8,7 @@ public:
 	LightBuffer();
 	~LightBuffer();
 
-	void Init(ID3D12Device* device, DescriptorHeapWrapper* cbvWrapper) override;
-	void UpdateBuffer(UINT frameIndex, void* cbvData) override;
+	void UpdateBuffer(void* cbvData) override;
 
 	// Camera Buffer Data
 	struct Data {
@@ -17,6 +16,10 @@ public:
 		Vect4f m_ambientColor;
 		Vect4f m_lightDirection;
 	};
+
+	Data* FetchData() {
+		return &m_lightBufferData;
+	}
 
 private:
 	Data m_lightBufferData;
