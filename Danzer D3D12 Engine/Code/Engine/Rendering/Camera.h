@@ -15,6 +15,10 @@ public:
 	void SetFarPlane(float farPlane);
 	void SetAspectRatio(float aspectRatio);
 
+	UINT& RenderTarget() {
+		return m_renderTarget;
+	}
+
 private:
 	friend class Editor;
 	friend class Renderer;

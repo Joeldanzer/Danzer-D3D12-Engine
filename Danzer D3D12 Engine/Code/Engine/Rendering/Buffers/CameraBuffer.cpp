@@ -3,13 +3,8 @@
 
 #include "../../Core/DirectX12Framework.h"
 
-CameraBuffer::CameraBuffer()
-{
-}
-
-CameraBuffer::~CameraBuffer()
-{
-}
+CameraBuffer::CameraBuffer(){}
+CameraBuffer::~CameraBuffer(){}
 
 void CameraBuffer::UpdateBuffer(void* cbvData)
 {

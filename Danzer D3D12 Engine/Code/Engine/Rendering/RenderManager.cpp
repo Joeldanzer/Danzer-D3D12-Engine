@@ -22,8 +22,10 @@
 #include "SkyBox.h"
 #include "Scene.h"
 
+#include <queue>
 #include <algorithm>
 #include <type_traits>
+
 
 class RenderManager::Impl {
 public:
@@ -36,6 +38,7 @@ public:
 	void RenderImgui();
 
 	void WaitForPreviousFrame();
+	void BeginFrame();
 	void RenderFrame(TextureHandler& textureHandler, ModelHandler& modelHandler,
 		SpriteHandler& SpriteHandler, Skybox& skybox, Scene& scene/*Camera, Ligthing, GameObjects, etc...*/);
 
@@ -57,7 +60,14 @@ private:
 
 	DirectX12Framework& m_framework;
 
-	std::vector<Object*>			      m_transparentObjects;
+
+	//std::priority_queue<TransparentObject, std::vector<TransparentObject>, >
+	//struct TransparentObject {
+	//	Transform m_transform;
+	//	UINT      m_model;
+	//};
+
+	//std::vector<ModelData*>			      m_transparentObjects;
 	std::vector<AABBBuffer::AABBInstance> m_aabbInstances;
 	std::vector<RayBuffer::RayInstance>   m_rayInstances;
 };
@@ -93,45 +103,52 @@ void RenderManager::Impl::Impl::WaitForPreviousFrame()
 	m_framework.WaitForPreviousFrame();
 }
 
+void RenderManager::Impl::BeginFrame()
+{
+	//m_framework.ResetCommandListAndAllocator(nullptr, L"RenderManager: Line 108");
+	//
+	//m_framework.m_commandList->RSSetViewports(1, &m_framework.m_viewport);
+	//m_framework.m_commandList->RSSetScissorRects(1, &m_framework.m_scissorRect);
+	//m_framework.m_commandList->ClearDepthStencilView(m_framework.m_depthDescriptor->GetCPUDescriptorHandleForHeapStart(),
+	//	D3D12_CLEAR_FLAG_DEPTH, 1.f, 0, 1, &m_framework.m_scissorRect);
+	//
+	//m_framework.ExecuteCommandList();
+	//m_framework.WaitForPreviousFrame();
+
+}
+
+// DirectX12Framework pipeline needs to be fully reworked it seems >:(
+
 void RenderManager::Impl::Impl::RenderFrame(TextureHandler& textureHandler, ModelHandler& modelHandler,
-	SpriteHandler& spriteHandler, Skybox& skybox, Scene& scene)
+	 SpriteHandler& spriteHandler, Skybox& skybox, Scene& scene)
 {	
 	ImGui::Render();
 
 	Camera&    cam			= scene.Registry().get<Camera>(scene.GetMainCamera());
 	Transform& camTransform = scene.Registry().get<Transform>(scene.GetMainCamera());
 
-	m_framework.ResetCommandListAndAllocator(nullptr, L"RenderManager: Line 105");
+	m_framework.WaitForPreviousFrame();
+	m_framework.ResetCommandListAndAllocator(nullptr, L"RenderManager: Line 127");
 
+	m_framework.m_commandList->ClearDepthStencilView(
+		m_framework.m_depthDescriptor->GetCPUDescriptorHandleForHeapStart(),
+		D3D12_CLEAR_FLAG_DEPTH, 1.f, 0, 0, nullptr);
 	m_framework.m_commandList->RSSetViewports(1, &m_framework.m_viewport);
 	m_framework.m_commandList->RSSetScissorRects(1, &m_framework.m_scissorRect);
-	m_framework.m_commandList->ClearDepthStencilView(m_framework.m_depthDescriptor->GetCPUDescriptorHandleForHeapStart(),
-		D3D12_CLEAR_FLAG_DEPTH, 1.f, 0, 1, &m_framework.m_scissorRect);
 
 	ID3D12DescriptorHeap* cbvSrvHeap = m_framework.GetCbvSrvUavWrapper().GetDescriptorHeap();
 	m_framework.m_commandList->SetDescriptorHeaps(1, &cbvSrvHeap);
 	RenderScene(textureHandler, spriteHandler, modelHandler, scene, skybox);
 
 	m_framework.ExecuteCommandList();
-	//WaitForPreviousFrame();
 	ClearAllInstances(modelHandler, spriteHandler);
-}
-
-//* Can not be associate to a class and is only used for std::sort funnction! 
-bool ObjectFurtherFromCamera(const Object& o1, const Object& o2)
-{
-	//if (o1.GetDistanceFromCam() > o2.GetDistanceFromCam())
-	//	return true;
-	
-	return false;
 }
 
 void RenderManager::Impl::RenderScene(TextureHandler& textureHandler, SpriteHandler& spriteHandler, ModelHandler& modelHandler, Scene& scene, Skybox& skybox)
 {
 	ID3D12GraphicsCommandList* cmdList = m_framework.GetCommandList();
-
+	
 	entt::registry& reg		= scene.Registry();
-
 	Camera& cam		        = reg.get<Camera>(scene.GetMainCamera());
 	Transform& camTransform = reg.get<Transform>(scene.GetMainCamera());
 	
@@ -154,17 +171,27 @@ void RenderManager::Impl::RenderScene(TextureHandler& textureHandler, SpriteHand
 
 		m_gBuffer.ClearRenderTargets(cmdList, {0.0f, 0.0f, 0.f, 0.f}, 1, &m_framework.m_scissorRect);
 		
+
 		CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(m_framework.m_depthDescriptor->GetCPUDescriptorHandleForHeapStart());
 		std::array<CD3DX12_CPU_DESCRIPTOR_HANDLE, GBUFFER_COUNT> rtvHandle = m_gBuffer.GetRTVDescriptorHandles();
 		cmdList->OMSetRenderTargets(GBUFFER_COUNT, &rtvHandle[0], false, &dsvHandle);
 
 		m_mainRenderer.UpdateDefaultBuffers(cam, camTransform, m_framework.GetFrameIndex());
+
+		// Render non transparent objects first
 		m_mainRenderer.RenderToGbuffer(
 			modelHandler.GetAllModels(), 
 			m_framework.GetFrameIndex(), 
-			textureHandler.GetTextures()
+			textureHandler.GetTextures(),
+			false
 		);	
-	
+
+		//m_mainRenderer.RenderToGbuffer(
+		//	modelHandler.GetAllModels(),
+		//	m_framework.GetFrameIndex(),
+		//	textureHandler.GetTextures(),
+		//	false
+		//);
 		m_framework.QeueuResourceTransition(
 			&m_gBuffer.GetGbufferResources()[0], GBUFFER_COUNT,
 			D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
@@ -177,6 +204,7 @@ void RenderManager::Impl::RenderScene(TextureHandler& textureHandler, SpriteHand
 	
 		float c[4] = { 0.5f, 0.5f, 1.f, 1.f };
 		D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = m_framework.GetCurrentRTVHandle();
+		//CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(m_framework.m_depthDescriptor->GetCPUDescriptorHandleForHeapStart());
 		cmdList->ClearRenderTargetView(rtvHandle, &c[0], 1, &m_framework.m_scissorRect);
 		cmdList->OMSetRenderTargets(1, &rtvHandle, false, nullptr);
 		
@@ -229,9 +257,9 @@ void RenderManager::Impl::RenderScene(TextureHandler& textureHandler, SpriteHand
 
 	m_framework.TransitionRenderTarget(D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
 	
-	m_framework.ExecuteCommandList();
-	m_framework.WaitForPreviousFrame();
-	m_framework.ResetCommandListAndAllocator(nullptr, L"RenderManager: Line 232");
+	//m_framework.ExecuteCommandList();
+	//m_framework.WaitForPreviousFrame();
+	//m_framework.ResetCommandListAndAllocator(nullptr, L"RenderManager: Line 232");
 	//m_framework.ResetCommandListAndAllocator(m_pipeLineHandler.GetPSO(PIPELINE_STATE_DIRECTIONAL_LIGHT), L"RenderManager: Line 232");
 }
 
@@ -290,9 +318,7 @@ void RenderManager::Impl::Update3DInstances(Scene& scene, ModelHandler& modelHan
 	//}
 
 	// Sorts object from closest to furthes for transparent rendering
-	std::sort(m_transparentObjects.begin(), m_transparentObjects.end(), [](Object* o1, Object* o2) {
-		return ObjectFurtherFromCamera(*o1, *o2);
-	});
+
 }
 void RenderManager::Impl::Update2DInstances(Scene& scene, SpriteHandler& spriteHandler)
 {
@@ -387,7 +413,7 @@ void RenderManager::Impl::ClearAllInstances(ModelHandler& modelHandler, SpriteHa
 	}
 
 	m_aabbInstances.clear();
-	m_transparentObjects.clear();
+	//m_transparentObjects.clear();
 	m_rayInstances.clear();
 }
 
@@ -401,7 +427,14 @@ RenderManager::~RenderManager()
 	m_Impl->~Impl();
 }
 
+void RenderManager::BeginFrame()
+{
+	m_Impl->BeginFrame();
+}
+
 void RenderManager::RenderFrame(TextureHandler& textureHandler, ModelHandler& modelHandler, SpriteHandler& SpriteHandler, Skybox& skybox, Scene& scene)
 {
 	m_Impl->RenderFrame(textureHandler, modelHandler, SpriteHandler, skybox, scene);
 }
+
+

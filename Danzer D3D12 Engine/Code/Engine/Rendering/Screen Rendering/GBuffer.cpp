@@ -11,11 +11,7 @@ GBuffer::GBuffer(DirectX12Framework& framework)
 	framework.ResetCommandListAndAllocator(nullptr, L"GBuffer: Line 11");
 	InitializeGBuffers(framework);
 }
-
-GBuffer::~GBuffer()
-{
-}
-
+GBuffer::~GBuffer(){}
 
 std::array<ID3D12Resource*, GBUFFER_COUNT> GBuffer::GetGbufferResources()
 {
@@ -104,16 +100,7 @@ void GBuffer::InitializeGBuffers(DirectX12Framework& framework)
 	CHECK_HR(result);
 	
 	m_rtvDescriptor->SetName(L"Gbuffer RTV Descriptor");
-	//
-	//D3D12_DESCRIPTOR_HEAP_DESC srvDesc = {  };
-	//srvDesc.NumDescriptors = GBUFFER_COUNT;
-	//srvDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-	//srvDesc.Type  = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-	//
-	//result = device->CreateDescriptorHeap(&srvDesc, IID_PPV_ARGS(m_srvDescriptor.GetAddressOf()));
-	//CHECK_HR(result);
 
-	//m_srvDescriptor->SetName(L"Gbuffer SRV Descriptor");
 	m_rtvDescSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 	m_srvDescSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 	   

@@ -46,7 +46,7 @@ private:
 
 	Mat4f m_last;
 	Mat4f m_world;
-	Mat4f m_local;
+	Mat4f m_local; 
 	
 	Transform* m_parent = nullptr;
 };

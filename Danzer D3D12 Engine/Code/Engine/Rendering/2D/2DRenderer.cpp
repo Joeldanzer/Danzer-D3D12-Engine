@@ -102,7 +102,7 @@ void Renderer2D::CreateUIVertexAndIndexBuffers(DirectX12Framework& framework)
 		 0,  1,  2,  3,  4,  5
 	};
 
-	VertexIndexBufferInfo bufferInfo = GetIndexAndVertexBuffer(verticies.size() * sizeof(Vertex), 
+	VertexIndexBufferInfo bufferInfo = GetIndexAndVertexBuffer(L"Default",verticies.size() * sizeof(Vertex),
 		indices.size() * sizeof(UINT), framework.GetDevice());
 
 	CD3DX12_RESOURCE_BARRIER resourceBarriers[2];

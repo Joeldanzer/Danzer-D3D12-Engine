@@ -19,9 +19,9 @@ GBufferOutput main(VertexToPixel input)
     output.m_Normal.w	   = GetEmissive(input) * Emissive;
     //output.m_Material      = float4(GetMetallic(input) * Metallic, GetRoughness(input) * Roughness, GetHeight(input), GetAmbientOcclusion(input));
     output.m_Material      = float4(GetMetallic(input), GetRoughness(input), GetHeight(input), GetAmbientOcclusion(input));
-    output.m_VertexNormal  = float4(input.m_normal.xyz, 1.f);
+    output.m_VertexNormal  = float4(abs(input.m_normal.xyz), 1.f);
     output.m_VertexColor   = input.m_tangent;
-    output.m_WorldPosition = input.m_biNormal;
+    output.m_WorldPosition = input.m_worldPosition;
 
 	return output;
 }

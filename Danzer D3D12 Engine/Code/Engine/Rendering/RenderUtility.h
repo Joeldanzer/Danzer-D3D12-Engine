@@ -16,8 +16,12 @@ struct VertexIndexBufferInfo {
 	ID3D12Resource* m_vBufferUpload = nullptr;
 };
 
+inline std::wstring ToWstring(std::string s) {
+	return std::wstring(s.begin(), s.end());
+}
+
 // Load Vertex/Index buffers And Vertex/Index Upload Resources
-inline VertexIndexBufferInfo GetIndexAndVertexBuffer(unsigned int vertexSize, unsigned int indicesSize, 
+inline VertexIndexBufferInfo GetIndexAndVertexBuffer(std::wstring modelName, unsigned int vertexSize, unsigned int indicesSize, 
 	ID3D12Device* device) {
 	HRESULT result;
 
@@ -39,7 +43,8 @@ inline VertexIndexBufferInfo GetIndexAndVertexBuffer(unsigned int vertexSize, un
 			IID_PPV_ARGS(&bufferInfo.m_vBuffer));
 		CHECK_HR(result);
 
-		bufferInfo.m_vBuffer->SetName(L"Custom Model Vertex Buffer");
+		
+		bufferInfo.m_vBuffer->SetName(std::wstring(modelName + L" Vertex Buffer").c_str());
 
 		result = device->CreateCommittedResource(
 			&heapUpload,
@@ -50,7 +55,7 @@ inline VertexIndexBufferInfo GetIndexAndVertexBuffer(unsigned int vertexSize, un
 			IID_PPV_ARGS(&bufferInfo.m_vBufferUpload));
 		CHECK_HR(result);
 
-		bufferInfo.m_vBufferUpload->SetName(L"Custom Model Vertex Buffer Upload");
+		bufferInfo.m_vBufferUpload->SetName(std::wstring(modelName + L" Vertex Buffer Upload").c_str());
 	} // End of vertex buffer
 
 	// IndexBuffers
@@ -66,7 +71,7 @@ inline VertexIndexBufferInfo GetIndexAndVertexBuffer(unsigned int vertexSize, un
 			IID_PPV_ARGS(&bufferInfo.m_iBuffer));
 		CHECK_HR(result);
 
-		bufferInfo.m_iBuffer->SetName(L"Custom Model Index Buffer");
+		bufferInfo.m_iBuffer->SetName(std::wstring(modelName + L" Index Buffer").c_str());
 
 		result = device->CreateCommittedResource(
 			&heapUpload,
@@ -77,7 +82,7 @@ inline VertexIndexBufferInfo GetIndexAndVertexBuffer(unsigned int vertexSize, un
 			IID_PPV_ARGS(&bufferInfo.m_iBufferUpload));
 		CHECK_HR(result);
 
-		bufferInfo.m_iBufferUpload->SetName(L"Custom Model Index Buffer Upload");
+		bufferInfo.m_iBufferUpload->SetName(std::wstring(modelName + L" Index Buffer Upload").c_str());
 	} // End of index buffer
 
 	return bufferInfo;
@@ -130,7 +135,7 @@ inline CD3DX12_RESOURCE_BARRIER LoadATextures(std::wstring file, ID3D12Device* d
 }
 
 //* Keep in mind when using this that Your destBuffer is set to COPY_DESTINATION and fromBuffer is GENERIC_READ
-inline CD3DX12_RESOURCE_BARRIER SetSubresourceData(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* destBuffer, ID3D12Resource* fromBuffer, UINT* ptrData, UINT sizeOfData, UINT count) {
+inline CD3DX12_RESOURCE_BARRIER SetSubresourceData(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* destBuffer, ID3D12Resource* fromBuffer, UINT* ptrData, UINT sizeOfData, UINT count, D3D12_RESOURCE_STATES newState) {
 	
 	D3D12_SUBRESOURCE_DATA data = {};
 	data.pData = ptrData;
@@ -141,7 +146,7 @@ inline CD3DX12_RESOURCE_BARRIER SetSubresourceData(ID3D12GraphicsCommandList* cm
 	
 	CD3DX12_RESOURCE_BARRIER resourceBarrier;
 	resourceBarrier  = CD3DX12_RESOURCE_BARRIER::Transition(
-		destBuffer, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
+		destBuffer, D3D12_RESOURCE_STATE_COPY_DEST, newState);
 
 	return resourceBarrier;
 }

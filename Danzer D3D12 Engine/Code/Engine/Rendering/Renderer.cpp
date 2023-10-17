@@ -58,8 +58,6 @@ void Renderer::UpdateDefaultBuffers(Camera& camera, Transform& transform, UINT f
 	eye.w = 1.f;
 	bufferData.m_direction = eye;
 
-	printf("Buffer Update: %f \n", transform.m_rotation.y);
-
 	m_cameraBuffer.UpdateBuffer(&bufferData);
 
 	D3D12_GPU_DESCRIPTOR_HANDLE cbvSrvHeapStart = m_framework->GetCbvSrvUavWrapper().GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
@@ -111,58 +109,15 @@ void Renderer::RenderDirectionalLight(TextureHandler::Texture& skyboxTexture, UI
 	
 	m_commandList->DrawInstanced(3, 1, 0, 0);
 }
-//*Simple Renderer that doesnt require any lighting or anything else
-void Renderer::DefaultRender(std::vector<ModelData>& models, UINT frameIndex, std::vector<TextureHandler::Texture>& textures)
-{
-	//for (UINT i = 0; i < models.size(); i++)
-	//{
-	//	if (!models[i].IsTransparent()) {
-	//
-	//		ModelData& model = models[i];
-	//		
-	//		UINT numberOfTransforms = ((UINT)model.GetInstanceTransforms().size() < MAX_INSTANCES_PER_MODEL) ? (UINT)model.GetInstanceTransforms().size() : MAX_INSTANCES_PER_MODEL;
-	//
-	//		if (numberOfTransforms > 0) {
-	//			model.UpdateTransformInstanceBuffer(frameIndex);
-	//			
-	//			for (ModelData::Mesh& mesh : model.GetMeshes())
-	//			{
-	//				if (mesh.m_renderMesh) {
-	//					//Before rendering save current Descriptor index
-	//					UINT oldDescripterIndex = m_descriptorIndex;
-	//
-	//					//std::vector<ID3D12DescriptorHeap*> descHeaps;
-	//					//for (UINT heaps = 0; heaps < mesh.m_textures.size(); heaps++)
-	//					//	descHeaps.emplace_back(mesh.m_textures[heaps].m_textureDescriptorHeap.Get());
-	//					
-	//					ID3D12DescriptorHeap* descHeaps[] = { textures[mesh.m_texture - 1].m_textureDescriptorHeap.Get()};
-	//					m_commandList->SetDescriptorHeaps(1, &descHeaps[0]);
-	//					m_commandList->SetGraphicsRootDescriptorTable(2, descHeaps[0]->GetGPUDescriptorHandleForHeapStart());
-	//					//SetDescriptorHeaps(&descHeaps[0], 1, oldDescripterIndex);
-	//
-	//					D3D12_VERTEX_BUFFER_VIEW vBufferViews[2] = {
-	//						mesh.m_vertexBufferView, model.GetTransformInstanceBuffer().GetBufferView(frameIndex)
-	//					};
-	//					m_commandList->IASetVertexBuffers(0, 2, &vBufferViews[0]);
-	//					m_commandList->IASetIndexBuffer(&mesh.m_indexBufferView);
-	//					m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	//
-	//					m_commandList->DrawIndexedInstanced(mesh.m_numIndices, numberOfTransforms, 0, 0, 0);
-	//				}			
-	//			}			
-	//		}
-	//	}
-	//}
-}
 
-void Renderer::RenderToGbuffer(std::vector<ModelData>& models, UINT frameIndex, std::vector<TextureHandler::Texture>& textures)
+void Renderer::RenderToGbuffer(std::vector<ModelData>& models, UINT frameIndex, std::vector<TextureHandler::Texture>& textures, bool renderTransparency)
 {
 	D3D12_GPU_DESCRIPTOR_HANDLE cbvSrvHeapStart = m_framework->GetCbvSrvUavWrapper().GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
 	const UINT cbvSrvDescSize					= m_framework->GetCbvSrvUavWrapper().DESCRIPTOR_SIZE();
 
 	for (UINT i = 0; i < models.size(); i++)
 	{
-		if (!models[i].IsTransparent()) {
+		if (models[i].IsTransparent() == renderTransparency) {
 
 			ModelData& model = models[i];
 			UINT numberOfTransforms = ((UINT)model.GetInstanceTransforms().size() < MAX_INSTANCES_PER_MODEL) ? (UINT)model.GetInstanceTransforms().size() : MAX_INSTANCES_PER_MODEL;
@@ -214,41 +169,53 @@ void Renderer::RenderToGbuffer(std::vector<ModelData>& models, UINT frameIndex, 
 		}
 	}
 }
-//*Transparent 3D objects needs to be rendered individually in distance order,
-//*like what a depth buffer does but manually.
-//void Renderer::TransparentRender(Scene* scene, std::vector<Object*>& objects, std::vector<ModelData>& models, UINT frameIndex, std::vector<TextureHandler::Texture> textures)
+//void Renderer::TransparentRender(Scene* scene, std::vector<ModelData>& models, UINT frameIndex, std::vector<TextureHandler::Texture> textures)
 //{
-//	for (UINT i = 0; i < objects.size(); i++)
+//	D3D12_GPU_DESCRIPTOR_HANDLE cbvSrvHeapStart = m_framework->GetCbvSrvUavWrapper().GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
+//	const UINT cbvSrvDescSize = m_framework->GetCbvSrvUavWrapper().DESCRIPTOR_SIZE();
+//
+//	for (UINT i = 0; i < models.size(); i++)
 //	{
-//		if (models[objects[i]->GetModel() - 1].IsTransparent()) {
-//			ModelData& model = models[objects[i]->GetModel() - 1];
-//
-//			model.AddInstanceTransform(objects[i]->GetTransform() * scene->GetLayer(objects[i]->GetLayer()).m_layerTransform);
-//			model.UpdateTransformInstanceBuffer(frameIndex);
+//		if (models[i].IsTransparent()) {
+//			ModelData& model = models[i];
+//			UINT numberOfTransforms = ((UINT)model.GetInstanceTransforms().size() < MAX_INSTANCES_PER_MODEL) ? (UINT)model.GetInstanceTransforms().size() : MAX_INSTANCES_PER_MODEL;
 //			
-//			for (ModelData::Mesh& mesh : model.GetMeshes())
-//			{
-//				if (mesh.m_renderMesh) {
-//					//Before rendering save current Descriptor index
-//					UINT oldDescripterIndex = m_descriptorIndex;
-//			
-//					ID3D12DescriptorHeap* descHeaps[] = { textures[mesh.m_texture - 1].m_textureDescriptorHeap.Get() };
-//					m_commandList->SetDescriptorHeaps(1, &descHeaps[0]);
-//					m_commandList->SetGraphicsRootDescriptorTable(2, descHeaps[0]->GetGPUDescriptorHandleForHeapStart());
-//
-//					D3D12_VERTEX_BUFFER_VIEW vBufferViews[2] = {
-//						mesh.m_vertexBufferView, model.GetTransformInstanceBuffer().GetBufferView(frameIndex)
-//					};
-//
-//					m_commandList->IASetVertexBuffers(0, 2, &vBufferViews[0]);
-//					m_commandList->IASetIndexBuffer(&mesh.m_indexBufferView);
-//					m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-//			
-//					m_commandList->DrawIndexedInstanced(mesh.m_numIndices, 1, 0, 0, model.GetInstanceTransforms().size() - 1);
-//				}
+//			if (numberOfTransforms > 0) {
+//				model.UpdateTransformInstanceBuffer(frameIndex);
 //			}
 //		}
 //	}
+//	//for (UINT i = 0; i < objects.size(); i++)
+//	//{
+//	//	if (models[objects[i].GetModel() - 1].IsTransparent()) {
+//	//		ModelData& model = models[objects[i]->GetModel() - 1];
+//	//
+//	//		model.AddInstanceTransform(objects[i]->GetTransform() * scene->GetLayer(objects[i]->GetLayer()).m_layerTransform);
+//	//		model.UpdateTransformInstanceBuffer(frameIndex);
+//	//		
+//	//		for (ModelData::Mesh& mesh : model.GetMeshes())
+//	//		{
+//	//			if (mesh.m_renderMesh) {
+//	//				//Before rendering save current Descriptor index
+//	//				UINT oldDescripterIndex = m_descriptorIndex;
+//	//		
+//	//				ID3D12DescriptorHeap* descHeaps[] = { textures[mesh.m_texture - 1].m_textureDescriptorHeap.Get() };
+//	//				m_commandList->SetDescriptorHeaps(1, &descHeaps[0]);
+//	//				m_commandList->SetGraphicsRootDescriptorTable(2, descHeaps[0]->GetGPUDescriptorHandleForHeapStart());
+//	//
+//	//				D3D12_VERTEX_BUFFER_VIEW vBufferViews[2] = {
+//	//					mesh.m_vertexBufferView, model.GetTransformInstanceBuffer().GetBufferView(frameIndex)
+//	//				};
+//	//
+//	//				m_commandList->IASetVertexBuffers(0, 2, &vBufferViews[0]);
+//	//				m_commandList->IASetIndexBuffer(&mesh.m_indexBufferView);
+//	//				m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+//	//		
+//	//				m_commandList->Draw(mesh.m_numIndices, 1, 0, 0);
+//	//			}
+//	//		}
+//	//	}
+//	//}
 //}
 void Renderer::RayRendering(std::vector <RayBuffer::RayInstance > & rays, UINT frameIndex)
 {

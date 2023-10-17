@@ -22,8 +22,8 @@ struct VertexToPixel
 
 cbuffer MainCamera : register(b0)
 {
-    float4x4 CameraTransform;
-    float4x4 CameraProjection;
+    column_major float4x4 CameraTransform;
+    column_major float4x4 CameraProjection;
     float4   CameraPosition;
     float4   Eye;
 

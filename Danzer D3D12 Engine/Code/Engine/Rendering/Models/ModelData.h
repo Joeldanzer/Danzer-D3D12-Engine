@@ -121,6 +121,7 @@ private:
 	std::vector<Mat4f> m_instanceTransforms;
 	std::vector<Mat4f> m_instanceTransparentTransforms;
 
+	// Vertext paint inforamtion
 	std::vector<UINT> m_albedoTextures;
 	std::vector<UINT> m_normalTextures;
 	std::vector<UINT> m_materialTextures;

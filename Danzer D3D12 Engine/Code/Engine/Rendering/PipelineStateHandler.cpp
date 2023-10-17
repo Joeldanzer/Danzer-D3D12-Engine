@@ -671,7 +671,14 @@ void PipelineStateHandler::CreateGBufferPSO(ID3D12Device* device)
 	HRESULT result;
 
 	D3D12_BLEND_DESC blendDesc = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+	blendDesc.RenderTarget->BlendEnable = false;
+
 	D3D12_DEPTH_STENCIL_DESC depthStencilDesc = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
+	//depthStencilDesc.DepthEnable = true;
+	//depthStencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+	//depthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
+	//depthStencilDesc.StencilEnable = true;
+
 	D3D12_RASTERIZER_DESC rasterizerDesc = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
 
 	DXGI_SAMPLE_DESC sample = { 1, 0 };
@@ -686,11 +693,11 @@ void PipelineStateHandler::CreateGBufferPSO(ID3D12Device* device)
 	CHECK_HR(result);
 
 	D3D12_SHADER_BYTECODE vsByte = {};
-	vsByte.BytecodeLength = vs->GetBufferSize();
+	vsByte.BytecodeLength  = vs->GetBufferSize();
 	vsByte.pShaderBytecode = vs->GetBufferPointer();
 
 	D3D12_SHADER_BYTECODE psByte = {};
-	psByte.BytecodeLength = ps->GetBufferSize();
+	psByte.BytecodeLength  = ps->GetBufferSize();
 	psByte.pShaderBytecode = ps->GetBufferPointer();
 
 	std::array<DXGI_FORMAT, GBUFFER_COUNT> formats = {
@@ -807,8 +814,8 @@ void PipelineStateHandler::InitializeInputLayouts()
 
 	m_inputLayouts[INPUT_LAYOUT_INSTANCE_MODEL] = {
 		// Per Vertex
-		{ "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT,  D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,0 },
-		{ "UV",		  0, DXGI_FORMAT_R32G32_FLOAT,		 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT,  D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "UV",		  0, DXGI_FORMAT_R32G32_FLOAT,		 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,  0 },
 
 		// Per Instance
 		{ "TRANSFORM",0, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },

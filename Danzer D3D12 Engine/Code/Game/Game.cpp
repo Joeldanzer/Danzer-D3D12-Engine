@@ -45,9 +45,16 @@ Game::Impl::Impl(Engine& engine) :
 	obj.m_state = Object::STATE::ACTIVE;
 	//sprite.m_spriteSheet = engine.GetSpriteHandler().GetCreatedSpriteSheet("testSpriteSheet");
 	sprite.m_spriteSheet = engine.GetSpriteHandler().GetCreatedSpriteSheet("testSpriteSheet");
-	transform.m_scale = { 0.0f, 0.0f };
+	transform.m_scale = { 0.2f, 0.2f };
+	transform.m_position = {-0.9f, 0.8f };
 
 	m_currentTime = m_time;
+	
+	auto entity = reg.create();
+	reg.emplace<Transform>(entity);
+	reg.emplace<Object>(entity);
+    reg.emplace<Model>(entity, engine.GetModelHandler().LoadModel(L"Models/sponzaAtrium.fbx", "Spinza Atrium"));
+	
 	//transform.m_position = { 0.5f, 0.5f };
 
 }
@@ -69,8 +76,6 @@ void Game::Impl::Update(const float dt)
 
 	Transform& transform = reg.get<Transform>(m_engine.GetSceneManager().GetCurrentScene().GetMainCamera());
 		
-	printf("Game Update: %f \n", transform.m_rotation.y);
-
 	if (Input::GetInstance().IsKeyDown(VK_RIGHT))
 		transform.m_rotation *= Quat4f::CreateFromAxisAngle(Vect3f().Up,  dt * 2.f);
 	if (Input::GetInstance().IsKeyDown(VK_LEFT))
@@ -80,6 +85,29 @@ void Game::Impl::Update(const float dt)
 		transform.m_rotation *= Quat4f::CreateFromAxisAngle(transform.World().Left(), dt * 2.f);
 	if (Input::GetInstance().IsKeyDown(VK_DOWN))
 		transform.m_rotation *= Quat4f::CreateFromAxisAngle(transform.World().Left(), -(dt * 2.f));
+
+	if (Input::GetInstance().IsKeyDown('W'))
+		transform.m_position.z += dt * 5.0f;
+	if (Input::GetInstance().IsKeyDown('S'))
+		transform.m_position.z -= dt * 5.0f;
+	if (Input::GetInstance().IsKeyDown('A'))
+		transform.m_position.x += dt * 5.0f;
+	if (Input::GetInstance().IsKeyDown('D'))
+		transform.m_position.x -= dt * 5.0f;
+
+	if (Input::GetInstance().IsKeyDown(VK_SPACE))
+		transform.m_position.y += dt * 5.0f;
+	if (Input::GetInstance().IsKeyDown(VK_SHIFT))
+		transform.m_position.y -= dt * 5.0f;
+
+	if (Input::GetInstance().IsKeyPressed('Z')) {
+		auto cameraList = reg.view<Camera>();
+		for (UINT i = 0; i < cameraList.size(); i++)
+		{
+			Camera& cam = reg.get<Camera>(cameraList[i]);
+			cam.RenderTarget() = cam.RenderTarget() < 7 ? cam.RenderTarget() + 1 : 0;
+		}
+	}
 
 }
 
