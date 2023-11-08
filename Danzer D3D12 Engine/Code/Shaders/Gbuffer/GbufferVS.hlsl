@@ -6,9 +6,9 @@ VertexToPixel main(InputToVertex input)
    
     // From object -> world -> camera -> projectioc
     float4 toWorld =  mul(input.m_transform, input.m_position);
-    float4 toCamera = mul(CameraTransform, toWorld);
-    float4 toProj =   mul(CameraProjection, toCamera);
-    
+    float4 toCamera = mul(CameraTransform,   toWorld);
+    float4 toProj =   mul(CameraProjection,  toCamera);
+   
     output.m_position      = toProj;
 
     output.m_normal        = mul(input.m_transform, float4(input.m_normal.xyz, 0.f));

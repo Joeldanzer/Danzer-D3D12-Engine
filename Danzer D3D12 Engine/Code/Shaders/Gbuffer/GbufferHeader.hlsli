@@ -1,12 +1,12 @@
 struct InputToVertex
 {
-    float4                m_position    : POSITION;
-    float4                m_normal      : NORMAL;
-    float4                m_tangent     : TANGENT;
-    float4                m_biNormal    : BINORMAL;
-    float4                m_color       : COLOR;
-    float2                m_uv          : UV;
-    column_major float4x4 m_transform   : TRANSFORM;
+    float4   m_position    : POSITION;
+    float4   m_normal      : NORMAL;
+    float4   m_tangent     : TANGENT;
+    float4   m_biNormal    : BINORMAL;
+    float4   m_color       : COLOR;
+    float2   m_uv          : UV;
+    float4x4 m_transform   : TRANSFORM;
 };
 
 struct VertexToPixel
@@ -22,10 +22,10 @@ struct VertexToPixel
 
 cbuffer MainCamera : register(b0)
 {
-    column_major float4x4 CameraTransform;
-    column_major float4x4 CameraProjection;
-    float4   CameraPosition;
-    float4   Eye;
+    float4x4 CameraTransform;
+    float4x4 CameraProjection;
+    float4 CameraPosition;
+    float4 Eye;
 
     // Needs to be 256-byte alligned
     float4 trash[6];
