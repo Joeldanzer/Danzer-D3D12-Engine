@@ -26,8 +26,10 @@ public:
 	RenderManager(DirectX12Framework& framework);
 	~RenderManager();
 
+	void BeginFrame();
 	void RenderFrame(TextureHandler& textureHandler, ModelHandler& modelHandler,
 		SpriteHandler& SpriteHandler, Skybox& skybox, Scene& scene/*Camera, Ligthing, GameObjects, etc...*/);
+
 
 private:
 	friend class Impl;

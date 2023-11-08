@@ -8,14 +8,18 @@ public:
 	SpriteSheetBuffer();
 	~SpriteSheetBuffer();
 
-	void Init(ID3D12Device* device) override;
-	void UpdateBuffer(/*ID3D12GraphicsCommandList* cmdList,*/ UINT frameIndex, void* cbvData) override;
+	//void Init(ID3D12Device* device, DescriptorHeapWrapper* cbvWrapper) override;
+	void UpdateBuffer(void* cbvData, unsigned int frame) override;
 
 	struct Data {
 		//Vect2f m_spriteSheetSize;
 	};
 
+	Data* FetchData() {
+		return &m_spriteSheetData;
+	}
+
 private:
-	Data m_windowData;
+	Data m_spriteSheetData;
 };
 

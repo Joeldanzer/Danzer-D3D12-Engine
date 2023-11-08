@@ -8,19 +8,16 @@
 
 GBuffer::GBuffer(DirectX12Framework& framework)
 {
+	framework.ResetCommandListAndAllocator(nullptr, L"GBuffer: Line 11");
 	InitializeGBuffers(framework);
 }
-
-GBuffer::~GBuffer()
-{
-}
-
+GBuffer::~GBuffer(){}
 
 std::array<ID3D12Resource*, GBUFFER_COUNT> GBuffer::GetGbufferResources()
 {
 	std::array<ID3D12Resource*, GBUFFER_COUNT> resources;
 	for (UINT i = 0; i < GBUFFER_COUNT; i++)
-		resources[i] = m_resources[i].Get();
+		resources[i] = m_resources[i].m_resource.Get();
 
 	return resources;
 }
@@ -46,15 +43,21 @@ void GBuffer::ClearRenderTargets(ID3D12GraphicsCommandList* cmdList, Vect4f clea
 	for (UINT i = 0; i < GBUFFER_COUNT; i++)
 	{
 		cmdList->ClearRenderTargetView(rtvHandle, &clearColor.x, numberOfRects, rect);
-		rtvHandle.Offset(1, m_rtvDescSize);
+		rtvHandle.Offset(m_rtvDescSize);
 	}
 }
 
-void GBuffer::AssignSRVSlots(ID3D12GraphicsCommandList* cmdList, UINT startLocation)
+void GBuffer::AssignSRVSlots(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper* srvWrapper, UINT& startLocation)
 {
-	ID3D12DescriptorHeap* heap[1] = { m_srvDescriptor.Get() };
-	cmdList->SetDescriptorHeaps(1, &heap[0]);
-	cmdList->SetGraphicsRootDescriptorTable(startLocation, m_srvDescriptor->GetGPUDescriptorHandleForHeapStart());
+
+	D3D12_GPU_DESCRIPTOR_HANDLE cbvSrvHeapStart = srvWrapper->GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
+	const UINT cbvSrvDescSize = srvWrapper->DESCRIPTOR_SIZE();
+
+	for (UINT i = 0; i < GBUFFER_COUNT; i++) {
+		CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle(cbvSrvHeapStart, m_resources[i].m_offsetID, cbvSrvDescSize);
+		cmdList->SetGraphicsRootDescriptorTable(startLocation, srvHandle);
+		startLocation++;
+	}
 }
 
 void GBuffer::InitializeGBuffers(DirectX12Framework& framework)
@@ -87,7 +90,7 @@ void GBuffer::InitializeGBuffers(DirectX12Framework& framework)
 	};
 
 	CD3DX12_HEAP_PROPERTIES heapProperties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
-
+	
 	D3D12_DESCRIPTOR_HEAP_DESC rtvDesc = {  };
 	rtvDesc.NumDescriptors = GBUFFER_COUNT;
 	rtvDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
@@ -95,24 +98,19 @@ void GBuffer::InitializeGBuffers(DirectX12Framework& framework)
 	
 	result = device->CreateDescriptorHeap(&rtvDesc, IID_PPV_ARGS(m_rtvDescriptor.GetAddressOf()));
 	CHECK_HR(result);
-
+	
 	m_rtvDescriptor->SetName(L"Gbuffer RTV Descriptor");
 
-	D3D12_DESCRIPTOR_HEAP_DESC srvDesc = {  };
-	srvDesc.NumDescriptors = GBUFFER_COUNT;
-	srvDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-	srvDesc.Type  = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-
-	result = device->CreateDescriptorHeap(&srvDesc, IID_PPV_ARGS(m_srvDescriptor.GetAddressOf()));
-	CHECK_HR(result);
-
-	m_srvDescriptor->SetName(L"Gbuffer SRV Descriptor");
 	m_rtvDescSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 	m_srvDescSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 	   
 	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvDescriptor->GetCPUDescriptorHandleForHeapStart());
-	CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(m_srvDescriptor->GetCPUDescriptorHandleForHeapStart());
+	CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(framework.GetCbvSrvUavWrapper().GetDescriptorHeap()->GetCPUDescriptorHandleForHeapStart());
 
+	DescriptorHeapWrapper* srvWrapper = &framework.GetCbvSrvUavWrapper();
+
+	srvHandle.Offset(srvWrapper->m_handleCurrentOffset * srvWrapper->DESCRIPTOR_SIZE());
+	
 	float clearColor[4] = {0.f, 0.f, 0.f, 0.f};
 	for (UINT i = 0; i < GBUFFER_COUNT; i++)
 	{
@@ -130,15 +128,17 @@ void GBuffer::InitializeGBuffers(DirectX12Framework& framework)
 			&resourceDesc,
 			D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
 			&clearValue,
-			IID_PPV_ARGS(m_resources[i].GetAddressOf()));
+			IID_PPV_ARGS(m_resources[i].m_resource.GetAddressOf()));
 		CHECK_HR(result);
 
-		device->CreateRenderTargetView(m_resources[i].Get(), nullptr, rtvHandle);
+		device->CreateRenderTargetView(m_resources[i].m_resource.Get(), nullptr, rtvHandle);
 		rtvHandle.Offset(1, m_rtvDescSize);
 
-		device->CreateShaderResourceView(m_resources[i].Get(), nullptr, srvHandle);
-		srvHandle.Offset(1, m_srvDescSize);
+		m_resources[i].m_offsetID = srvWrapper->m_handleCurrentOffset;
+		device->CreateShaderResourceView(m_resources[i].m_resource.Get(), nullptr, srvHandle);
+		srvWrapper->m_handleCurrentOffset++;
+		srvHandle.Offset(m_srvDescSize);
 
-		m_resources[i]->SetName((LPCWSTR)bufferNames[i].c_str());
+		m_resources[i].m_resource->SetName((LPCWSTR)bufferNames[i].c_str());
 	}
 }

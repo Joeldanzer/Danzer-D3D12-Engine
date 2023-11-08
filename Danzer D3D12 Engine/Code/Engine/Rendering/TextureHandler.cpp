@@ -11,18 +11,12 @@
 TextureHandler::TextureHandler(DirectX12Framework& framework) :
 	m_framework(framework)
 {
-	//*The 2 Default Textures
-	//std::array<std::string, 2> defaultTextures = { "Sprites/greyEmptyTexture.dds" ,"Sprites/defaultTexture.dds" };
-	//CreateTexture(L"Sprites/greyEmptyTexture.dds");
-	//CreateTexture(L"Sprites/defaultTexture.dds");
-	//LoadAllCreatedTexuresToGPU();
 	LoadAllExistingTextures();
 }
 TextureHandler::~TextureHandler()
 {
 	for (UINT i = 0; i < m_textures.size(); i++)
 	{
-		m_textures[i].m_textureDescriptorHeap->Release();
 		m_textures[i].m_textureBuffer->Release();
 	}
 }
@@ -40,13 +34,15 @@ void TextureHandler::LoadAllExistingTextures()
 {
 	std::string path = "Sprites/";
 
-	m_framework.ResetCommandListAndAllocator(nullptr);
+	//m_framework.ResetCommandListAndAllocator(nullptr, L"TextureHandler: Line 42");
+
+	bool isSkybox = true;
 
 	for (const auto& entry : std::filesystem::directory_iterator(path))
 	{
 		std::wstring file = entry.path().c_str();
 		if (file.find(L"Skybox") != std::wstring::npos)
-			CreateTexture(file, true);
+			CreateTexture(file, isSkybox);
 		else
 			CreateTexture(file);
 	}
@@ -57,29 +53,29 @@ void TextureHandler::LoadAllExistingTextures()
 //* This is/should always be called after creating 1 or multiple textures,
 void TextureHandler::LoadAllCreatedTexuresToGPU()
 {
+	DescriptorHeapWrapper* srvWrapper = &m_framework.GetCbvSrvUavWrapper();
+	UINT offset = 0;
+
+	CD3DX12_CPU_DESCRIPTOR_HANDLE cbvSrvHandle(srvWrapper->GetDescriptorHeap()->GetCPUDescriptorHandleForHeapStart());
 	if (!m_resourceBarriers.empty()) {
 		m_framework.GetCommandList()->ResourceBarrier(m_resourceBarriers.size(), &m_resourceBarriers[0]);
 
-		m_framework.ExecuteCommandList();
-		m_framework.WaitForPreviousFrame();
-
 		HRESULT result;
 
+		cbvSrvHandle.Offset(srvWrapper->m_handleCurrentOffset * srvWrapper->DESCRIPTOR_SIZE());
+
 		for (UINT i = 0; i < m_tempTextures.size(); i++) {
-			D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
-			heapDesc.NumDescriptors = 1;
-			heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-			heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-			result = m_framework.GetDevice()->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&m_tempTextures[i].m_textureDescriptorHeap));
-			CHECK_HR(result);
-
-			m_tempTextures[i].m_textureDescriptorHeap->SetName(m_tempTextures[i].m_texturePath.c_str());
-
 			DirectX::CreateShaderResourceView(
-				m_framework.GetDevice(), m_tempTextures[i].m_textureBuffer.Get(),
-				m_tempTextures[i].m_textureDescriptorHeap->GetCPUDescriptorHandleForHeapStart(),
-				m_tempTextures[i].m_cubeMap
-			);
+				m_framework.GetDevice(), 
+				m_tempTextures[i].m_textureBuffer.Get(),
+				cbvSrvHandle,
+				m_tempTextures[i].m_cubeMap);
+
+			// Offset the descriptor and save the offset value for later use in rendering.
+			m_tempTextures[i].m_offsetID = srvWrapper->m_handleCurrentOffset;
+			cbvSrvHandle.Offset(srvWrapper->DESCRIPTOR_SIZE());
+			srvWrapper->m_handleCurrentOffset++;
+
 
 			m_textures.emplace_back(m_tempTextures[i]);
 		}
@@ -139,6 +135,7 @@ Material TextureHandler::CreateMaterial(std::string textures[6], float metallic,
 	return material;
 }
 
+//* OUTDATED INFORMATION
 //* Create Texture expects CommandList to have already been resetted
 //* before use. LoadAllCreatedTexuresToGPU also needs to be called directly after this,
 //* CreateMultipleTextures loads all created textures to the GPU automatically.
@@ -152,7 +149,7 @@ UINT TextureHandler::CreateTexture(std::wstring file, bool isCubeMap)
 	}
 		
 	if (!m_framework.CmdListIsRecording()) {
-		m_framework.ResetCommandListAndAllocator(nullptr);
+		m_framework.ResetCommandListAndAllocator(nullptr, L"TextureHandler: Line 154");
 	}
 
 	Texture texture;
@@ -161,8 +158,6 @@ UINT TextureHandler::CreateTexture(std::wstring file, bool isCubeMap)
 	CD3DX12_RESOURCE_BARRIER resource = LoadTextures(file, &texture.m_textureBuffer, isCubeMap);
 	m_resourceBarriers.emplace_back(resource);
 	m_tempTextures.emplace_back(texture);
-
-	LoadAllCreatedTexuresToGPU();
 
 	return m_textures.size() + m_tempTextures.size();
 }
@@ -174,7 +169,7 @@ UINT TextureHandler::GetTexture(std::wstring texturePath)
 	for (UINT i = 0; i < m_textures.size(); i++)
 	{
 		if (texturePath == m_textures[i].m_texturePath)
-			return i + 1;
+			return i;
 	}
 
 	return 0;

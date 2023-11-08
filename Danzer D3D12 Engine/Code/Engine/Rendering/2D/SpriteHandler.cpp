@@ -8,8 +8,6 @@
 #include "Rendering/TextureHandler.h"
 #include "../RenderUtility.h"
 
-
-//#include <winsock2.h>
 #pragma comment(lib, "Ws2_32.lib")
 #include <fstream>
 
@@ -36,58 +34,56 @@ Text SpriteHandler::CreateTextFromFont(std::string fontName)
 }
 
 // All spritesheets should be initialized at the beginning of the program.
-void SpriteHandler::CreateSpriteSheet(std::wstring sprite)
+void SpriteHandler::CreateSpriteSheet(std::wstring sprite, const UINT widthFrames, const UINT heightFrames)
 {
-    SpriteData::Sheet spriteSheet;
-    
+    SpriteData::Sheet spriteSheet; 
     UINT spriteID = m_textureHandler.GetTexture(sprite);
 
-    if (spriteID == 0){
-        m_framework.ResetCommandListAndAllocator(nullptr);
-        spriteID = m_textureHandler.CreateTexture(sprite);
-        m_textureHandler.LoadAllCreatedTexuresToGPU();
-    }
-
     spriteSheet.m_texture = spriteID;
+
+    TextureHandler::Texture& texture = m_textureHandler.GetTextureData(spriteID);
 
     // Get Width and Height of sprite sheet
     std::ifstream file(sprite);
     UINT width, height;
 
-    file.seekg(16);
+    //// Width & height are 4-byte integer starting at offset 12 to 16
+    file.seekg(12);
     file.read((char*)&width,  4);
-    height = width;
+    file.read((char*)&height, 4);
+    //file.seekg(16);
 
-    spriteSheet.m_width  = width;
-    spriteSheet.m_height = height;
+    spriteSheet.m_width   = width;
+    spriteSheet.m_height  = height;
     spriteSheet.m_texture = spriteID;
 
-    float newWidth  = width  / 4.f;
-    float newHeight = height / 4.f;
+    // Get new width and height for each fram on the sheet
+    UINT newWidth  = width  / widthFrames;
+    UINT newHeight = height / heightFrames;
 
     UINT i = 0;
 
-    for (UINT y = 0; y < 4; y++)
+    for (UINT y = 0; y < heightFrames; y++)
     {
-        float newY = ((float)height/4.f)* y;
-        for (UINT x = 0; x < 4; x++)
+        float newY = newHeight * y;
+        for (UINT x = 0; x < widthFrames; x++)
         {
-            float newX = ((float)width / 4.f) * x;
+            float newX = newWidth * x;
             SpriteData::Frame frame;
             frame.m_framePosition = { newX, newY };
             frame.m_height = (UINT)newHeight;
             frame.m_width =  (UINT)newWidth;
             spriteSheet.m_frames.emplace_back(frame);
             i++;
-        }
-        
+        } 
     }
 
    AddNewlyCreatedSprite(SpriteData(spriteSheet, m_framework.GetDevice(), SetSpriteName(sprite)));
 }
 
 void SpriteHandler::LoadFont(std::string fontJSON)
-{
+{  
+    
     rapidjson::Document doc;
 
     char* str = nullptr;
@@ -150,7 +146,7 @@ void SpriteHandler::LoadFont(std::string fontJSON)
 
     UINT textureID = m_textureHandler.GetTexture({ texturePath.begin(), texturePath.end() });
     if (textureID == 0) {
-        m_framework.ResetCommandListAndAllocator(nullptr);
+        m_framework.ResetCommandListAndAllocator(nullptr, L"SpriteHandler: Line 153");
         textureID = m_textureHandler.CreateTexture({texturePath.begin(), texturePath.end()});
         m_textureHandler.LoadAllCreatedTexuresToGPU();
     }
@@ -160,7 +156,7 @@ void SpriteHandler::LoadFont(std::string fontJSON)
     AddNewlyCreatedFont(Font(data, m_framework.GetDevice(), SetSpriteName({texturePath.begin(), texturePath.end()})));
 }
 
-UINT SpriteHandler::GetLoadedSpriteAndFrame(std::string sprite, UINT& frame)
+UINT SpriteHandler::GetLoadedSpriteAndFrame(const std::string sprite, const UINT frame)
 {
     for (auto& sheet : m_sprites)
     {
@@ -168,7 +164,7 @@ UINT SpriteHandler::GetLoadedSpriteAndFrame(std::string sprite, UINT& frame)
             if (frame < sheet.GetSheet().m_frames.size())
                 return sheet.GetID();
                 
-            frame = 0;
+            //frame = 0;
             return sheet.GetID();
         }
     }

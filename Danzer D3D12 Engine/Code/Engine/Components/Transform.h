@@ -12,13 +12,13 @@ public:
 	Quat4f m_rotation;
 	Vect3f m_scale;
 
-	const Mat4f& GetLocal() {
+	const Mat4f& Local() {
 		return m_local;
 	}
-	const Mat4f& GetLast() {
+	const Mat4f& Last() {
 		return m_last;
 	}
-	const Mat4f& GetWorld() {
+	const Mat4f& World() {
 		return m_world;
 	}
 
@@ -46,7 +46,7 @@ private:
 
 	Mat4f m_last;
 	Mat4f m_world;
-	Mat4f m_local;
+	Mat4f m_local; 
 	
 	Transform* m_parent = nullptr;
 };

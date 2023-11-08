@@ -21,11 +21,12 @@ std::unique_ptr<LoaderModel> ModelLoaderCustom::LoadModelFromAssimp(std::string 
     auto flags = 0
         | aiProcessPreset_TargetRealtime_MaxQuality
         | aiProcess_ConvertToLeftHanded
-        //| aiProcess_GenUVCoords
+        | aiProcess_GenUVCoords
         | aiProcess_FixInfacingNormals
         | aiProcess_CalcTangentSpace
         | aiProcess_GlobalScale
         | aiProcess_GenBoundingBoxes
+        
         ;
 
     const aiScene* scene = m_importer.ReadFile(fileName, flags);
@@ -176,7 +177,10 @@ void ModelLoaderCustom::LoadVerticies(std::vector<Vect3f>& v3Verts, aiMesh* mesh
         }
 
         if (color) {
-            verticies.PushVec4({ mesh->mColors[i]->r, mesh->mColors[i]->g, mesh->mColors[i]->b, mesh->mColors[i]->a });
+            if (mesh->mColors[i])
+                verticies.PushVec4({ mesh->mColors[i]->r, mesh->mColors[i]->g, mesh->mColors[i]->b, mesh->mColors[i]->a });
+            else
+                verticies.PushVec4({ 1.0f, 1.0f, 1.0f, 1.0f });
         }
 
         if (uv) {
@@ -205,21 +209,21 @@ void ModelLoaderCustom::LoadVerticiesWithTransform(std::vector<Vect3f>& v3Verts,
 
     // Save all the different mesh information into a int, easy to detect if a model should have
     // animations, vertex paint or any other kind of stuff.,,
-    shaderType |= position ? LoaderType_Position : 0;
-    shaderType |= normals ? LoaderType_Normal : 0;
+    shaderType |= position  ? LoaderType_Position : 0;
+    shaderType |= normals   ? LoaderType_Normal : 0;
     shaderType |= binormTan ? LoaderType_BinormTan : 0;
-    shaderType |= color ? LoaderType_Color : 0;
-    shaderType |= uv ? LoaderType_UV : 0;
+    shaderType |= color     ? LoaderType_Color : 0;
+    shaderType |= uv        ? LoaderType_UV : 0;
     //  shaderType |= bones    ? LoaderType_Bones     : 0;
 
       // Size of our vertex buffer 
     unsigned int vertexBufferSize = 0;
-    vertexBufferSize += position ? sizeof(float) * 4 : 0;
-    vertexBufferSize += normals ? sizeof(float) * 4 : 0;
+    vertexBufferSize += position  ? sizeof(float) * 4 : 0;
+    vertexBufferSize += normals   ? sizeof(float) * 4 : 0;
     vertexBufferSize += binormTan ? sizeof(float) * 8 : 0;
-    //vertexBufferSize += color ? sizeof(float) * 4 : 0;
-    vertexBufferSize += sizeof(float) * 4;
-    vertexBufferSize += uv ? sizeof(float) * 2 : 0;
+    vertexBufferSize += color     ? sizeof(float) * 4 : sizeof(float) * 4;
+    vertexBufferSize += uv        ? sizeof(float) * 2 : 0;
+    //vertexBufferSize += sizeof(float) * 4;
     //  vertexBufferSize += bones    ? sizeof(float) * 8 : 0;
 
     loaderMesh->m_shaderType = shaderType;
@@ -228,7 +232,7 @@ void ModelLoaderCustom::LoadVerticiesWithTransform(std::vector<Vect3f>& v3Verts,
     loaderMesh->m_verticies = new char[vertexBufferSize * mesh->mNumVertices];
     // Collect all the necessary vertex data from aiMesh 
     VertexCollector verticies;
-    verticies.m_vertexInfo.reserve(mesh->mNumVertices);
+    verticies.m_vertexInfo.reserve(mesh->mNumVertices * vertexBufferSize);
     for (unsigned int i = 0; i < mesh->mNumVertices; i++)
     {
         if (position) {
@@ -246,11 +250,12 @@ void ModelLoaderCustom::LoadVerticiesWithTransform(std::vector<Vect3f>& v3Verts,
             verticies.PushVec4({ mesh->mBitangents[i].x,  mesh->mBitangents[i].y, mesh->mBitangents[i].z, 1.f });
         }
 
-        if (color) {
+        if (color) {         
             verticies.PushVec4({ mesh->mColors[i]->r, mesh->mColors[i]->g, mesh->mColors[i]->b, mesh->mColors[i]->a });
         }
         else
             verticies.PushVec4({ 1.f, 1.f, 1.f, 0.f });
+
 
         if (uv) {
             //if (uvFlipped) 

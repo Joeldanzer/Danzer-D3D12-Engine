@@ -37,18 +37,16 @@ public:
 
 	void UpdateDefaultBuffers(Camera& camera, Transform&, UINT frameIndex);
 	void RenderSkybox(Transform& cameraTransform, TextureHandler::Texture& textures, ModelData& model, Skybox& skybox, UINT frameIndex);
-	void RenderDirectionalLight(DirectionalLight& light, Vect4f direction, TextureHandler::Texture& skyboxTexture, UINT frameIndex);
-	void DefaultRender(std::vector<ModelData>& models, UINT frameIndex, std::vector<TextureHandler::Texture>& textures);
-	//void TransparentRender(Scene* scene, std::vector<Object*>& objects, std::vector<ModelData>& transparentModels, UINT frameIndex, std::vector<TextureHandler::Texture> textures);
-	void RenderToGbuffer(std::vector<ModelData>& models, UINT frameIndex, std::vector<TextureHandler::Texture>& textures);
+	void RenderDirectionalLight(TextureHandler::Texture& skyboxTexture, UINT frameIndex, UINT& startLocation);
+	//void TransparentRender(Scene* scene, std::vector<ModelData>& transparentModels, UINT frameIndex, std::vector<TextureHandler::Texture> textures);
+	void RenderToGbuffer(std::vector<ModelData>& models, UINT frameIndex, std::vector<TextureHandler::Texture>& textures, bool renderTransparency);
 
-	void RayRendering(std::vector<RayBuffer::RayInstance >& rays, UINT frameIndex);
+	void RayRendering(std::vector<RayBuffer::RayInstance>& rays, UINT frameIndex);
 	void AABBRendering(std::vector<AABBBuffer::AABBInstance>& aabb, UINT frameIndex);
 
-private:
-	void SetDescriptorHeaps(ID3D12DescriptorHeap** descriptorHeaps, UINT count, UINT descriptorIndex = 0);
-	ID3D12DescriptorHeap* SetCorrectTextureHeap(UINT texture, std::vector<TextureHandler::Texture>& textures);
+	void UpdateLightBuffer(const DirectionalLight& light, const Vect4f& direction, UINT frameIndex, UINT& startLocation);
 
+private:
 	UINT m_descriptorIndex;
 
 	DirectX12Framework* m_framework;

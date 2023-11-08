@@ -1,6 +1,5 @@
 #pragma once
 
-
 #include "Material.h"
 #include "ModelData.h"
 #include "Components/Model.h"
@@ -52,12 +51,11 @@ private:
 	std::vector<ModelData::Mesh> LoadMeshFromLoaderModel(LoaderModel* loadedModel, std::vector<UINT>& textures);
 	std::string SetModelName(std::wstring modelPath);
 
-	ModelLoaderCustom m_modelLoader;
-	
 	std::vector<ModelData> m_models;
 
 	// Used to easily create necessary buffers for Models.
-	TextureHandler& m_textureHandler;
+	ModelLoaderCustom   m_modelLoader;	
+	TextureHandler&     m_textureHandler;
 	DirectX12Framework& m_framework;
 };
 

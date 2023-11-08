@@ -8,16 +8,19 @@ public:
 	CameraBuffer();
 	~CameraBuffer();
 
-	void Init(ID3D12Device* device) override;
-	void UpdateBuffer(UINT frameIndex, void* cbvData) override;
+	void UpdateBuffer(void* cbvData, unsigned int frame) override;
 
 	// Camera Buffer Data
 	struct Data {
-		Mat4f m_transform;
-		Mat4f m_projection;
-		Vect4f m_position;
-		Vect4f m_direction;
+		Mat4f  m_transform  = Mat4f::Identity;
+		Mat4f  m_projection = Mat4f::Identity;
+		Vect4f m_position   = Vect4f::Zero;
+		Vect4f m_direction  = Vect4f::Zero;
 	};
+
+	Data* FetchData() {
+		return &m_cameraBufferData;
+	}
 
 private:
 	Data m_cameraBufferData;
