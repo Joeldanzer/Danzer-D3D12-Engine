@@ -29,18 +29,11 @@ Renderer::~Renderer()
 void Renderer::Init(DirectX12Framework& framework)
 {
 	m_framework = &framework;
-
 	m_commandList = framework.GetCommandList();
-	//m_framework->ResetCommandListAndAllocator(nullptr, L"Renderer: Line 33");
 	
-	m_cameraBuffer.Init(framework.GetDevice(),   &framework.GetCbvSrvUavWrapper(), m_cameraBuffer.FetchData(), sizeof(CameraBuffer::Data));
-	m_lightBuffer.Init(framework.GetDevice(),    &framework.GetCbvSrvUavWrapper(), m_lightBuffer.FetchData(),  sizeof(LightBuffer::Data));
+	m_cameraBuffer.Init(framework.GetDevice(),   &framework.GetCbvSrvUavWrapper(), m_cameraBuffer.FetchData(),   sizeof(CameraBuffer::Data));
+	m_lightBuffer.Init(framework.GetDevice(),    &framework.GetCbvSrvUavWrapper(), m_lightBuffer.FetchData(),    sizeof(LightBuffer::Data));
 	m_materialBuffer.Init(framework.GetDevice(), &framework.GetCbvSrvUavWrapper(), m_materialBuffer.FetchData(), sizeof(MaterialBuffer::Data));
-	//m_aabbBuffer.Init(framework.GetDevice(), &m_framework->GetCbvSrvUavWrapper());
-	//m_rayBuffer.Init(framework.GetDevice(), &m_framework->GetCbvSrvUavWrapper());
-
-	//m_framework->ExecuteCommandList();
-	//m_framework->WaitForPreviousFrame();
 
 }
 
@@ -58,10 +51,10 @@ void Renderer::UpdateDefaultBuffers(Camera& camera, Transform& transform, UINT f
 	eye.w = 1.f;
 	bufferData.m_direction = eye;
 
-	m_cameraBuffer.UpdateBuffer(&bufferData);
+	m_cameraBuffer.UpdateBuffer(&bufferData, frameIndex);
 
 	D3D12_GPU_DESCRIPTOR_HANDLE cbvSrvHeapStart = m_framework->GetCbvSrvUavWrapper().GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
-	CD3DX12_GPU_DESCRIPTOR_HANDLE cbvHandle(cbvSrvHeapStart, m_cameraBuffer.OffsetID(), m_framework->GetCbvSrvUavWrapper().DESCRIPTOR_SIZE());
+	CD3DX12_GPU_DESCRIPTOR_HANDLE cbvHandle(cbvSrvHeapStart, m_cameraBuffer.OffsetID() + frameIndex, m_framework->GetCbvSrvUavWrapper().DESCRIPTOR_SIZE());
 	m_commandList->SetGraphicsRootDescriptorTable(0, cbvHandle);
 }
 
@@ -139,8 +132,8 @@ void Renderer::RenderToGbuffer(std::vector<ModelData>& models, UINT frameIndex, 
 						for (UINT i = 0; i < 4; i++)
 							materialData.m_color[i] = mesh.m_material.m_color[i];
 						
-						m_materialBuffer.UpdateBuffer(&materialData);
-						CD3DX12_GPU_DESCRIPTOR_HANDLE cbvHandle(cbvSrvHeapStart, m_materialBuffer.OffsetID(), cbvSrvDescSize);
+						m_materialBuffer.UpdateBuffer(&materialData, frameIndex);
+						CD3DX12_GPU_DESCRIPTOR_HANDLE cbvHandle(cbvSrvHeapStart, m_materialBuffer.OffsetID() + frameIndex, cbvSrvDescSize);
 						m_commandList->SetGraphicsRootDescriptorTable(1, cbvHandle);
 				
 						// Handle for each texture that will be used
@@ -247,9 +240,9 @@ void Renderer::UpdateLightBuffer(const DirectionalLight& light, const Vect4f& di
 	lightData.m_lightColor = light.m_lightColor;
 	lightData.m_lightDirection = direction;
 
-	m_lightBuffer.UpdateBuffer(&lightData);
+	m_lightBuffer.UpdateBuffer(&lightData, frameIndex);
 
-	CD3DX12_GPU_DESCRIPTOR_HANDLE cbvHandle(cbvSrvHeapStart, m_lightBuffer.OffsetID(), cbvSrvDescSize);
+	CD3DX12_GPU_DESCRIPTOR_HANDLE cbvHandle(cbvSrvHeapStart, m_lightBuffer.OffsetID() + frameIndex, cbvSrvDescSize);
 	m_commandList->SetGraphicsRootDescriptorTable(startLocation, cbvHandle);
 	startLocation++;
 }

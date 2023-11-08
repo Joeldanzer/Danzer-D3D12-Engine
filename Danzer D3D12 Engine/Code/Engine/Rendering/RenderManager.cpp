@@ -127,11 +127,10 @@ void RenderManager::Impl::Impl::RenderFrame(TextureHandler& textureHandler, Mode
 	Camera&    cam			= scene.Registry().get<Camera>(scene.GetMainCamera());
 	Transform& camTransform = scene.Registry().get<Transform>(scene.GetMainCamera());
 
-	m_framework.WaitForPreviousFrame();
 	m_framework.ResetCommandListAndAllocator(nullptr, L"RenderManager: Line 127");
 
 	m_framework.m_commandList->ClearDepthStencilView(
-		m_framework.m_depthDescriptor->GetCPUDescriptorHandleForHeapStart(),
+		m_framework.m_dsvWrapper.GetDescriptorHeap()->GetCPUDescriptorHandleForHeapStart(),
 		D3D12_CLEAR_FLAG_DEPTH, 1.f, 0, 0, nullptr);
 	m_framework.m_commandList->RSSetViewports(1, &m_framework.m_viewport);
 	m_framework.m_commandList->RSSetScissorRects(1, &m_framework.m_scissorRect);
@@ -172,7 +171,7 @@ void RenderManager::Impl::RenderScene(TextureHandler& textureHandler, SpriteHand
 		m_gBuffer.ClearRenderTargets(cmdList, {0.0f, 0.0f, 0.f, 0.f}, 1, &m_framework.m_scissorRect);
 		
 
-		CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(m_framework.m_depthDescriptor->GetCPUDescriptorHandleForHeapStart());
+		CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(m_framework.m_dsvWrapper.GetDescriptorHeap()->GetCPUDescriptorHandleForHeapStart());
 		std::array<CD3DX12_CPU_DESCRIPTOR_HANDLE, GBUFFER_COUNT> rtvHandle = m_gBuffer.GetRTVDescriptorHandles();
 		cmdList->OMSetRenderTargets(GBUFFER_COUNT, &rtvHandle[0], false, &dsvHandle);
 

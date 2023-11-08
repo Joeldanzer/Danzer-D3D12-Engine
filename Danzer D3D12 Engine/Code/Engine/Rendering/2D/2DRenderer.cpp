@@ -44,9 +44,9 @@ void Renderer2D::RenderUI(std::vector<SpriteData>& sprites, UINT frameIndex, std
 	data.m_windowSize.x = (float)WindowHandler::GetWindowData().m_width  / 2.f;
 	data.m_windowSize.y = (float)WindowHandler::GetWindowData().m_height / 2.f;
 
-	m_windowBuffer.UpdateBuffer(&data);
+	m_windowBuffer.UpdateBuffer(&data, frameIndex);
 
-	CD3DX12_GPU_DESCRIPTOR_HANDLE cbvHandle(cbvSrvHeapStart, m_windowBuffer.OffsetID(), cbvSrvDescSize);
+	CD3DX12_GPU_DESCRIPTOR_HANDLE cbvHandle(cbvSrvHeapStart, m_windowBuffer.OffsetID() + frameIndex, cbvSrvDescSize);
 	m_commandList->SetGraphicsRootDescriptorTable(0, cbvHandle);
 
 	for (auto& sprite : sprites) {

@@ -45,7 +45,7 @@ Game::Impl::Impl(Engine& engine) :
 	obj.m_state = Object::STATE::ACTIVE;
 	//sprite.m_spriteSheet = engine.GetSpriteHandler().GetCreatedSpriteSheet("testSpriteSheet");
 	sprite.m_spriteSheet = engine.GetSpriteHandler().GetCreatedSpriteSheet("testSpriteSheet");
-	transform.m_scale = { 0.2f, 0.2f };
+	transform.m_scale    = { 0.2f, 0.2f };
 	transform.m_position = {-0.9f, 0.8f };
 
 	m_currentTime = m_time;
@@ -53,10 +53,7 @@ Game::Impl::Impl(Engine& engine) :
 	auto entity = reg.create();
 	reg.emplace<Transform>(entity);
 	reg.emplace<Object>(entity);
-    reg.emplace<Model>(entity, engine.GetModelHandler().LoadModel(L"Models/sponzaAtrium.fbx", "Spinza Atrium"));
-	
-	//transform.m_position = { 0.5f, 0.5f };
-
+    reg.emplace<Model>(entity, engine.GetModelHandler().LoadModel(L"Models/Particle_Chest.fbx", "Spinza Atrium"));
 }
 Game::Impl::~Impl(){}
 

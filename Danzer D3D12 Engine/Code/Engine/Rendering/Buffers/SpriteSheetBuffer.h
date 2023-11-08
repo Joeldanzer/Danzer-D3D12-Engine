@@ -9,7 +9,7 @@ public:
 	~SpriteSheetBuffer();
 
 	//void Init(ID3D12Device* device, DescriptorHeapWrapper* cbvWrapper) override;
-	void UpdateBuffer(void* cbvData) override;
+	void UpdateBuffer(void* cbvData, unsigned int frame) override;
 
 	struct Data {
 		//Vect2f m_spriteSheetSize;

@@ -8,7 +8,7 @@ public:
 	CameraBuffer();
 	~CameraBuffer();
 
-	void UpdateBuffer(void* cbvData) override;
+	void UpdateBuffer(void* cbvData, unsigned int frame) override;
 
 	// Camera Buffer Data
 	struct Data {

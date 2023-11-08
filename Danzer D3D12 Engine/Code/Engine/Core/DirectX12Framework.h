@@ -36,14 +36,13 @@ public:
 	D3D12_RECT* GetRect() { return &m_scissorRect; }
 
 	CD3DX12_CPU_DESCRIPTOR_HANDLE GetCurrentRTVHandle();
-
 	DescriptorHeapWrapper& GetCbvSrvUavWrapper() { return m_cbvSrvUavWrapper; }
-
+	DescriptorHeapWrapper& GetDsvDescriptor()    { return m_dsvWrapper; }
+ 
 	ID3D12Device*			   GetDevice()		   { return m_device.Get(); }
 	ID3D12GraphicsCommandList* GetCommandList()    { return m_commandList.Get(); }
 	ID3D12Resource*			   GetRTV()			   { return m_renderTarget[m_frameIndex].Get(); }
-	ID3D12DescriptorHeap*	   GetRTVHeap()		   { return m_rtvHeap.Get(); }
-	//ID3D12DescriptorHeap*	   GetDescriptorHeap() { return m_rtvHeap.Get(); }
+	ID3D12DescriptorHeap*	   GetRTVHeap()		   { return m_rtvWrapper.GetDescriptorHeap(); }
 	ID3D12DescriptorHeap*	   GetImguiHeap()	   { return m_imguiDescriptor; }
 	IDXGISwapChain3*		   GetSwapChain()	   { return m_swapChain.Get(); }
 	ID3D12CommandQueue*		   GetCommandQeueu()   { return m_commandQeueu.Get(); }
@@ -81,7 +80,7 @@ private:
 	DescriptorHeapWrapper			  m_rtvWrapper;
 	DescriptorHeapWrapper			  m_dsvWrapper;
 
-	ComPtr<ID3D12Resource>			  m_depthBuffer;
+	ComPtr<ID3D12Resource>			  m_depthBuffer[FrameCount];
 	ComPtr<ID3D12DescriptorHeap>	  m_depthDescriptor;
 	
 	ID3D12DescriptorHeap*			  m_imguiDescriptor;
@@ -91,7 +90,7 @@ private:
 	ComPtr<ID3D12GraphicsCommandList> m_commandList;
 	//ComPtr<ID3D12CommandAllocator>	  m_commandAllocator[FrameCount];
 
-	ComPtr<ID3D12DescriptorHeap>	  m_rtvHeap;
+	//ComPtr<ID3D12DescriptorHeap>	  m_rtvHeap;
 	ComPtr<ID3D12Resource>			  m_renderTarget[FrameCount];
 	ComPtr<ID3D12InfoQueue>			  m_infoQueue;
 

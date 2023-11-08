@@ -19,9 +19,6 @@ DirectX12Framework::DirectX12Framework() :
 	InitFramework();
 }
 DirectX12Framework::~DirectX12Framework(){
-	// Reset and execute commandList right before we close the program
-	// So everything can finish correctly
-	ResetCommandListAndAllocator(nullptr, L"DirectX12Framework: line 24");
 	ExecuteCommandList();
 	WaitForPreviousFrame();
 
@@ -29,16 +26,15 @@ DirectX12Framework::~DirectX12Framework(){
 	m_device->Release();
 	m_swapChain->Release();
 	m_commandQeueu->Release();
-	m_depthBuffer->Release();
 	m_depthDescriptor->Release();
 	m_commandQeueu->Release();
-	m_rtvHeap->Release();
 	m_infoQueue->Release();
 	m_fence->Release();
     m_commandAllocator->Release();
 
 	for (UINT i = 0; i < FrameCount; i++)
 	{
+		m_depthBuffer[i]->Release();
 		m_renderTarget[i]->Release();
 	}
 }
@@ -110,27 +106,17 @@ void DirectX12Framework::InitFramework()
 	m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
 
 	//Create descriptor heap
-	D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
-	rtvHeapDesc.NumDescriptors = FrameCount; // Set num of descriptors to the maximum possible number
-	rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-	rtvHeapDesc.Type  = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
-	
-	result = m_device->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&m_rtvHeap));
-	CHECK_HR(result);
-	m_rtvDescripterSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+	m_rtvWrapper.CreateDescriptorHeap(m_device.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_RTV, FrameCount, false);
 
 	CreateDepthStencilView();
 	InitImgui();
-
-	//Create frame resource
-	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart());
 	
 	for (UINT i = 0; i < FrameCount; i++)
 	{
+		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvWrapper.GET_CPU_DESCRIPTOR(i));
 		result = m_swapChain->GetBuffer(i, IID_PPV_ARGS(&m_renderTarget[i]));
 		CHECK_HR(result);
 		m_device->CreateRenderTargetView(m_renderTarget[i].Get(), nullptr, rtvHandle);
-		rtvHandle.Offset(1, m_rtvDescripterSize);
 	
 		std::wstring name(std::to_wstring(i));
 		m_renderTarget[i]->SetName((LPCWSTR)name.c_str());
@@ -157,7 +143,7 @@ void DirectX12Framework::InitFramework()
 	SetViewport(WindowHandler::GetWindowData().m_width, WindowHandler::GetWindowData().m_height);
 
 	// Creates the descriptor heap used for all the information that gets sent to the GPU before rendering.
-	m_cbvSrvUavWrapper.CreateDescriptorHeap(m_device.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, MAX_NUMBER_OF_DESCTRIPTORS + 2, true);
+	m_cbvSrvUavWrapper.CreateDescriptorHeap(m_device.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, FrameCount + MAX_NUMBER_OF_DESCTRIPTORS + 2, true);
 
 	// Fences 
 	result = m_device->CreateFence(m_fenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence));	
@@ -190,7 +176,6 @@ void DirectX12Framework::InitImgui()
 
 	ImGui_ImplDX12_Init(m_device.Get(), FrameCount, DXGI_FORMAT_R8G8B8A8_UNORM, m_imguiDescriptor,
 		m_imguiDescriptor->GetCPUDescriptorHandleForHeapStart(), m_imguiDescriptor->GetGPUDescriptorHandleForHeapStart());
-
 }
 
 void DirectX12Framework::ExecuteCommandList()
@@ -339,12 +324,7 @@ void DirectX12Framework::CreateDepthStencilView()
 {
 	HRESULT result;
 
-	D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc = {};
-	dsvHeapDesc.NumDescriptors = 1;
-	dsvHeapDesc.Type  = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
-	dsvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-	result = m_device->CreateDescriptorHeap(&dsvHeapDesc, IID_PPV_ARGS(&m_depthDescriptor));
-	CHECK_HR(result);
+	m_dsvWrapper.CreateDescriptorHeap(m_device.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_DSV, FrameCount, false);
 
 	D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
 	dsvDesc.Format        = DXGI_FORMAT_D32_FLOAT;
@@ -371,16 +351,19 @@ void DirectX12Framework::CreateDepthStencilView()
 		D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL
 	);
 
-	result = m_device->CreateCommittedResource(
-		&defaultHeap,
-		D3D12_HEAP_FLAG_NONE,
-		&tex2D,
-		D3D12_RESOURCE_STATE_DEPTH_WRITE,
-		&clearValueDesc,
-		IID_PPV_ARGS(&m_depthBuffer));
-	CHECK_HR(result);
+	for (UINT i = 0; i < FrameCount; i++)
+	{
+		result = m_device->CreateCommittedResource(
+			&defaultHeap,
+			D3D12_HEAP_FLAG_NONE,
+			&tex2D,
+			D3D12_RESOURCE_STATE_DEPTH_WRITE,
+			&clearValueDesc,
+			IID_PPV_ARGS(&m_depthBuffer[i]));
+		CHECK_HR(result);
 
-	m_device->CreateDepthStencilView(m_depthBuffer.Get(), &dsvDesc, m_depthDescriptor->GetCPUDescriptorHandleForHeapStart());
+		m_device->CreateDepthStencilView(m_depthBuffer[i].Get(), &dsvDesc, m_dsvWrapper.GET_CPU_DESCRIPTOR(i));
+	}
 }
 
 void DirectX12Framework::ScanAdapter(IDXGIAdapter1* adapter, IDXGIFactory4* factory)
@@ -434,14 +417,6 @@ D3D_FEATURE_LEVEL DirectX12Framework::GetFeatureLevel()
 
 CD3DX12_CPU_DESCRIPTOR_HANDLE DirectX12Framework::GetCurrentRTVHandle()
 {
-	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap->GetCPUDescriptorHandleForHeapStart());
-	for (UINT i = 0; i < FrameCount; i++)
-	{
-		if (i == m_frameIndex)
-			break;
-
-		rtvHandle.Offset(1, m_rtvDescripterSize);
-	}
-
+	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvWrapper.GET_CPU_DESCRIPTOR(m_frameIndex));
 	return rtvHandle;
 }

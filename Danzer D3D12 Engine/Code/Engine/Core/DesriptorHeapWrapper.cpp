@@ -21,7 +21,7 @@ HRESULT DescriptorHeapWrapper::CreateDescriptorHeap(ID3D12Device* device, D3D12_
 	result = device->CreateDescriptorHeap(&m_desc, IID_PPV_ARGS(&m_desctiptorHeap));
 
 	m_cpuHeapStart = m_desctiptorHeap->GetCPUDescriptorHandleForHeapStart();
-	m_gpuHeapStart = m_desctiptorHeap->GetGPUDescriptorHandleForHeapStart();
+	if(shaderVisible) m_gpuHeapStart = m_desctiptorHeap->GetGPUDescriptorHandleForHeapStart();
 
 	m_handleIncrementSize = device->GetDescriptorHandleIncrementSize(type);
 

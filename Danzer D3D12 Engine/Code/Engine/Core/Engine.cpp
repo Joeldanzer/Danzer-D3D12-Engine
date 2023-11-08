@@ -71,8 +71,6 @@ Engine::Impl::Impl(unsigned int width, unsigned int height) :
 	m_skybox(m_textureHandler),
 	m_deltaTime(0.f)
 {
-	m_framework.ExecuteCommandList();
-	m_framework.WaitForPreviousFrame();
 
 	ImGuiIO* io = &ImGui::GetIO();
 	ImVec2 vec;
@@ -85,16 +83,19 @@ Engine::Impl::Impl(unsigned int width, unsigned int height) :
 	//m_textureHandler.CreateTexture(L"Sprites/defaultTexture.dds");
 	//m_textureHandler.LoadAllCreatedTexuresToGPU();
 
-	m_framework.ResetCommandListAndAllocator(nullptr, L"Line 87");
+	//m_framework.ResetCommandListAndAllocator(nullptr, L"Line 87");
 
 	CustomModel skyboxCube = ModelData::GetCube();
 	skyboxCube.m_customModelName = "skybox";
 	m_skybox.Init(m_modelHandler.CreateCustomModel(skyboxCube).m_modelID, L"Sprites/nightSkybox.dds", true);
-	m_framework.ExecuteCommandList();
-	m_framework.WaitForPreviousFrame();
 	m_spriteHandler.CreateSpriteSheet(L"Sprites/testSpriteSheet.dds", 4, 4);
 	//m_spriteHandler.LoadFont("Config/Fonts/ChiliFont.json");
+	
+	m_framework.ExecuteCommandList();
+	m_framework.WaitForPreviousFrame();
 
+	//m_framework.ExecuteCommandList();
+	//m_framework.WaitForPreviousFrame();
 	//Camera camera(65.f, (float)m_windowHandler.GetWindowData().m_width / (float)m_windowHandler.GetWindowData().m_height);
 	m_sceneManager.Init(m_camera);
 }
@@ -134,17 +135,14 @@ void Engine::Impl::Update()
 	//m_sceneManager.GetCurrentScene()->UpdateAllObjectsInScene(deltaTime);
 	//m_collisionManager.UpdateCollisions(m_sceneManager.GetCurrentScene()->GetObjects());
 
+	m_sceneManager.GetCurrentScene().UpdateTransforms();
+	m_renderManager.RenderFrame(m_textureHandler, m_modelHandler, m_spriteHandler, m_skybox, m_sceneManager.GetCurrentScene());
 }
 
 void Engine::Impl::LateUpdate()
 {
-	m_sceneManager.GetCurrentScene().UpdateTransforms();
-	m_renderManager.RenderFrame(m_textureHandler, m_modelHandler, m_spriteHandler, m_skybox, m_sceneManager.GetCurrentScene());
-
 	m_framework.GetSwapChain()->Present(1, 0);
 	m_framework.WaitForPreviousFrame();
-
-	//ImGui::EndFrame();
 }
 
 bool Engine::StartEngine(bool editor)
