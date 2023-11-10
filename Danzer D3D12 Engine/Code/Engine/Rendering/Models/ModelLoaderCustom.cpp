@@ -21,12 +21,12 @@ std::unique_ptr<LoaderModel> ModelLoaderCustom::LoadModelFromAssimp(std::string 
     auto flags = 0
         | aiProcessPreset_TargetRealtime_MaxQuality
         | aiProcess_ConvertToLeftHanded
+        | aiProcess_TransformUVCoords
         | aiProcess_GenUVCoords
         | aiProcess_FixInfacingNormals
         | aiProcess_CalcTangentSpace
         | aiProcess_GlobalScale
-        | aiProcess_GenBoundingBoxes
-        
+        //| aiProcess_GenBoundingBoxes 
         ;
 
     const aiScene* scene = m_importer.ReadFile(fileName, flags);
@@ -52,8 +52,7 @@ std::unique_ptr<LoaderModel> ModelLoaderCustom::LoadModelFromAssimp(std::string 
 std::unique_ptr<LoaderModel> ModelLoaderCustom::LoadModelFromAiNode(const aiScene* scene, aiNode* node, std::vector<UINT>& textures, bool uvFlipped)
 {
     std::unique_ptr<LoaderModel> model = std::make_unique<LoaderModel>();
- 
-    //model->m_name = FixModelName(node->mName.C_Str());
+
     model->m_name = node->mName.C_Str();
  
     for (UINT i = 0; i < node->mNumMeshes; i++)
@@ -81,11 +80,6 @@ std::unique_ptr<LoaderModel> ModelLoaderCustom::LoadModelFromAiNode(const aiScen
     if (model->m_meshes.empty())
         return std::unique_ptr<LoaderModel>(nullptr);
 
-    //for (UINT j = 0; j < model->m_meshes.size(); j++)
-    //{
-    //    model->m_textures.emplace_back(textures[model->m_meshes[j]->m_textureIndex]);
-    //}
-
     return model;
 }
 
@@ -110,14 +104,10 @@ void ModelLoaderCustom::GetAllModelProperties(LoaderModel* out, aiNode* currentN
             LoadVerticiesWithTransform(out->m_verticies, assimpMesh, mesh, transform, uvFlipped);
 
             mesh->m_indices.reserve(assimpMesh->mNumFaces * 3LL);
-            for (UINT j = 0; j < assimpMesh->mNumFaces; j++)
-            {
-                for (UINT k = 0; k < assimpMesh->mFaces[j].mNumIndices; k++)
-                {
-                    mesh->m_indices.emplace_back(assimpMesh->mFaces[j].mIndices[k]);
-                }
-            }
-
+            for (UINT p = 0; p < assimpMesh->mNumFaces; p++)
+                for (UINT k = 0; k < assimpMesh->mFaces[p].mNumIndices; k++)               
+                    mesh->m_indices.emplace_back(assimpMesh->mFaces[p].mIndices[k]);
+                
             out->m_meshes.emplace_back(mesh);
         }
 
@@ -158,6 +148,7 @@ void ModelLoaderCustom::LoadVerticies(std::vector<Vect3f>& v3Verts, aiMesh* mesh
     loaderMesh->m_vertexSize = vertexBufferSize;
     loaderMesh->m_vertexCount = mesh->mNumVertices;
     loaderMesh->m_verticies = new char[vertexBufferSize * mesh->mNumVertices];
+
     // Collect all the necessary vertex data from aiMesh 
     VertexCollector verticies;
     verticies.m_vertexInfo.reserve(mesh->mNumVertices);
@@ -172,7 +163,7 @@ void ModelLoaderCustom::LoadVerticies(std::vector<Vect3f>& v3Verts, aiMesh* mesh
         }
 
         if (binormTan) {
-            verticies.PushVec4({ mesh->mTangents[i].x,  mesh->mTangents[i].y, mesh->mTangents[i].z, 1.f });
+            verticies.PushVec4({ mesh->mTangents[i].x,    mesh->mTangents[i].y,   mesh->mTangents[i].z,   1.f });
             verticies.PushVec4({ mesh->mBitangents[i].x,  mesh->mBitangents[i].y, mesh->mBitangents[i].z, 1.f });
         }
 
@@ -198,12 +189,12 @@ void ModelLoaderCustom::LoadVerticies(std::vector<Vect3f>& v3Verts, aiMesh* mesh
 void ModelLoaderCustom::LoadVerticiesWithTransform(std::vector<Vect3f>& v3Verts, aiMesh* mesh, LoaderMesh* loaderMesh, Mat4f transform, bool uvFlipped)
 {
   
-    bool position = mesh->HasPositions();
-    bool uv = mesh->HasTextureCoords(0);
-    bool normals = mesh->HasNormals();
+    bool position  = mesh->HasPositions();
+    bool uv        = mesh->HasTextureCoords(0);
+    bool normals   = mesh->HasNormals();
     bool binormTan = mesh->HasTangentsAndBitangents();
-    bool bones = mesh->HasBones();
-    bool color = mesh->HasVertexColors(0);
+    bool bones     = mesh->HasBones();
+    bool color     = mesh->HasVertexColors(0);
 
     unsigned int shaderType = 0;
 
@@ -250,17 +241,17 @@ void ModelLoaderCustom::LoadVerticiesWithTransform(std::vector<Vect3f>& v3Verts,
             verticies.PushVec4({ mesh->mBitangents[i].x,  mesh->mBitangents[i].y, mesh->mBitangents[i].z, 1.f });
         }
 
-        if (color) {         
-            verticies.PushVec4({ mesh->mColors[i]->r, mesh->mColors[i]->g, mesh->mColors[i]->b, mesh->mColors[i]->a });
+        if (color) {     
+            //if (mesh->mColors[i] != nullptr)
+            //    verticies.PushVec4({ mesh->mColors[i]->r, mesh->mColors[i]->g, mesh->mColors[i]->b, mesh->mColors[i]->a });
+            //else
+            verticies.PushVec4({ 1.0f, 1.0f, 1.0f, 1.0f });
         }
         else
             verticies.PushVec4({ 1.f, 1.f, 1.f, 0.f });
 
 
         if (uv) {
-            //if (uvFlipped) 
-            //    verticies.PushVec2({ fabs(mesh->mTextureCoords[0][i].x - 1), mesh->mTextureCoords[0][i].y });
-            //else   
             verticies.PushVec2({ mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y });
         }
     }
@@ -271,6 +262,8 @@ void ModelLoaderCustom::LoadVerticiesWithTransform(std::vector<Vect3f>& v3Verts,
 Mat4f ModelLoaderCustom::ConvertToEngineMat4(const aiMatrix4x4& assimpMatrix)
 {
     Mat4f mat;
+    //memcpy(&mat, &assimpMatrix, sizeof(float) * 16);
+    
     mat(0, 0) = assimpMatrix.a1; mat(1, 0) = assimpMatrix.a2; mat(2, 0) = assimpMatrix.a3; mat(3, 0) = assimpMatrix.a4;
     mat(0, 1) = assimpMatrix.b1; mat(1, 1) = assimpMatrix.b2; mat(2, 1) = assimpMatrix.b3; mat(3, 1) = assimpMatrix.b4;
     mat(0, 2) = assimpMatrix.c1; mat(1, 2) = assimpMatrix.c2; mat(2, 2) = assimpMatrix.c3; mat(3, 2) = assimpMatrix.c4;

@@ -43,7 +43,6 @@ Game::Impl::Impl(Engine& engine) :
 	Sprite& sprite		   = reg.emplace<Sprite>(m_entity);
 
 	obj.m_state = Object::STATE::ACTIVE;
-	//sprite.m_spriteSheet = engine.GetSpriteHandler().GetCreatedSpriteSheet("testSpriteSheet");
 	sprite.m_spriteSheet = engine.GetSpriteHandler().GetCreatedSpriteSheet("testSpriteSheet");
 	transform.m_scale    = { 0.2f, 0.2f };
 	transform.m_position = {-0.9f, 0.8f };
@@ -51,9 +50,11 @@ Game::Impl::Impl(Engine& engine) :
 	m_currentTime = m_time;
 	
 	auto entity = reg.create();
-	reg.emplace<Transform>(entity);
+	Transform& modelTransform = reg.emplace<Transform>(entity);
+	modelTransform.m_scale	  = {0.1f, 0.1f, 0.1f};
+	modelTransform.m_position = { 0.0f, 0.0f, 0.0f };
 	reg.emplace<Object>(entity);
-    reg.emplace<Model>(entity, engine.GetModelHandler().LoadModel(L"Models/Particle_Chest.fbx", "Spinza Atrium"));
+    reg.emplace<Model>(entity, engine.GetModelHandler().LoadModel(L"Models/Particle_Chest.fbx", "Sponza Atrium"));
 }
 Game::Impl::~Impl(){}
 
@@ -72,30 +73,32 @@ void Game::Impl::Update(const float dt)
 	}
 
 	Transform& transform = reg.get<Transform>(m_engine.GetSceneManager().GetCurrentScene().GetMainCamera());
-		
+	
+	float speed = 2.0f;
+
 	if (Input::GetInstance().IsKeyDown(VK_RIGHT))
-		transform.m_rotation *= Quat4f::CreateFromAxisAngle(Vect3f().Up,  dt * 2.f);
+		transform.m_rotation *= DirectX::XMQuaternionRotationAxis(Vect3f().Up,  dt * 2.f);
 	if (Input::GetInstance().IsKeyDown(VK_LEFT))
-		transform.m_rotation *= Quat4f::CreateFromAxisAngle(Vect3f().Up, -(dt * 2.f));
+		transform.m_rotation *= DirectX::XMQuaternionRotationAxis(Vect3f().Up, -(dt * 2.f));
 	
 	if (Input::GetInstance().IsKeyDown(VK_UP))
-		transform.m_rotation *= Quat4f::CreateFromAxisAngle(transform.World().Left(), dt * 2.f);
+		transform.m_rotation *= DirectX::XMQuaternionRotationAxis(transform.World().Left(), dt * 2.f);
 	if (Input::GetInstance().IsKeyDown(VK_DOWN))
-		transform.m_rotation *= Quat4f::CreateFromAxisAngle(transform.World().Left(), -(dt * 2.f));
+		transform.m_rotation *= DirectX::XMQuaternionRotationAxis(transform.World().Left(), -(dt * 2.f));
 
 	if (Input::GetInstance().IsKeyDown('W'))
-		transform.m_position.z += dt * 5.0f;
+		transform.m_position.z += dt * speed;
 	if (Input::GetInstance().IsKeyDown('S'))
-		transform.m_position.z -= dt * 5.0f;
+		transform.m_position.z -= dt * speed;
 	if (Input::GetInstance().IsKeyDown('A'))
-		transform.m_position.x += dt * 5.0f;
+		transform.m_position.x -= dt * speed;
 	if (Input::GetInstance().IsKeyDown('D'))
-		transform.m_position.x -= dt * 5.0f;
+		transform.m_position.x += dt * speed;
 
 	if (Input::GetInstance().IsKeyDown(VK_SPACE))
-		transform.m_position.y += dt * 5.0f;
+		transform.m_position.y += dt * speed;
 	if (Input::GetInstance().IsKeyDown(VK_SHIFT))
-		transform.m_position.y -= dt * 5.0f;
+		transform.m_position.y -= dt * speed;
 
 	if (Input::GetInstance().IsKeyPressed('Z')) {
 		auto cameraList = reg.view<Camera>();

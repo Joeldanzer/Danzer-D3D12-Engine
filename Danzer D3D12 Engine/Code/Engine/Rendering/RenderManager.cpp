@@ -288,7 +288,7 @@ void RenderManager::Impl::Update3DInstances(Scene& scene, ModelHandler& modelHan
 					//m_transparentObjects.emplace_back(obj);
 				}
 				else {
-					modelData.AddInstanceTransform(transform.m_world); 
+					modelData.AddInstanceTransform(DirectX::XMMatrixTranspose(transform.m_world)); 
 				}
 			}
 		}	

@@ -15,9 +15,9 @@ struct VertexToPixel
 
 cbuffer MainCamera : register(b0)
 {
-    float4x4 CameraTransform;
-    float4x4 CameraProjection;
-    float4   CameraPosition;
+    column_major float4x4 CameraProjection;
+    column_major float4x4 CameraTransform;
+    float4 CameraPosition;
     
     // Needs to be 256-byte alligned
     float4 trash[7];

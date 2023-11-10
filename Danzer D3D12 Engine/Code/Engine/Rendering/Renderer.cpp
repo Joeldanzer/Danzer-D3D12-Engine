@@ -45,7 +45,8 @@ void Renderer::UpdateDefaultBuffers(Camera& camera, Transform& transform, UINT f
 	
 	CameraBuffer::Data bufferData;
 	bufferData.m_transform  = transform.World().Invert();
-	bufferData.m_projection = camera.GetProjection();
+	bufferData.m_transform  = DirectX::XMMatrixTranspose(bufferData.m_transform);
+	bufferData.m_projection = DirectX::XMMatrixTranspose(camera.GetProjection());
 	bufferData.m_position = { transform.m_position.x, transform.m_position.y, transform.m_position.z, float(camera.m_renderTarget)};
 	Vect4f eye = { bufferData.m_transform.Forward() };
 	eye.w = 1.f;
@@ -62,21 +63,22 @@ void Renderer::RenderSkybox(Transform& cameraTransform, TextureHandler::Texture&
 {
 	D3D12_GPU_DESCRIPTOR_HANDLE cbvSrvHeapStart = m_framework->GetCbvSrvUavWrapper().GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
 	const UINT cbvSrvDescSize					= m_framework->GetCbvSrvUavWrapper().DESCRIPTOR_SIZE();
-
+	
 	CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle(cbvSrvHeapStart, textures.m_offsetID, cbvSrvDescSize);
 	m_commandList->SetGraphicsRootDescriptorTable(1, srvHandle);
-
+	
 	ModelData::Mesh& mesh = model.GetMeshes()[0];
 	
 	if (!model.GetInstanceTransforms().empty())
 		 model.ClearInstanceTransform();
 	
 	//* Add the rotation from the skybox and always place it a the cameras position
-	Mat4f transform = Mat4f::CreateScale({ 5.f, 5.f, 5.f });
-	transform *= Mat4f::CreateFromQuaternion(skybox.GetRotation());
-	transform.Translation(cameraTransform.m_position);   
-	
-	model.AddInstanceTransform(transform);
+	DirectX::XMVECTOR quatv = DirectX::XMLoadFloat4(&skybox.GetRotation());
+	Mat4f transform = DirectX::XMMatrixRotationQuaternion(quatv);
+	transform      *= DirectX::XMMatrixScaling(5.0f, 5.0f, 5.0f);
+	transform      *= DirectX::XMMatrixTranslation(cameraTransform.m_position.x, cameraTransform.m_position.y, cameraTransform.m_position.z);
+
+	model.AddInstanceTransform(DirectX::XMMatrixTranspose(transform));
 	model.UpdateTransformInstanceBuffer(frameIndex);
 	D3D12_VERTEX_BUFFER_VIEW vBufferViews[2] = {
 		mesh.m_vertexBufferView, model.GetTransformInstanceBuffer().GetBufferView(frameIndex)

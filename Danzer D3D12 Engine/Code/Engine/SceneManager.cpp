@@ -13,7 +13,7 @@ void SceneManager::Init(Camera& cam)
 	scene.Registry().emplace<Camera>(entity, cam);
 
 	Transform& transform = scene.Registry().get<Transform>(entity);
-	transform.m_position = { 0.f, 2.f, -5.f };
+	transform.m_position = { 0.f, 0.1f, 0.f };
 
 	SetScene("default", entity, false);
 	entt::entity dirLight = scene.CreateBasicEntity("DirectionalLight", "Light");

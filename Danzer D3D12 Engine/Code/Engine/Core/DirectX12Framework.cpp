@@ -43,6 +43,8 @@ void DirectX12Framework::InitFramework()
 {
 	HRESULT result;
 	
+	SetViewport(WindowHandler::GetWindowData().m_width, WindowHandler::GetWindowData().m_height);
+	
 	ComPtr<IDXGIFactory4> factory;
 #ifdef _DEBUG
 	ComPtr<ID3D12Debug> debuController;
@@ -140,7 +142,6 @@ void DirectX12Framework::InitFramework()
 	ID3D12CommandList* commandLists[] = { m_commandList.Get() };
 	m_commandQeueu->ExecuteCommandLists(_countof(commandLists), commandLists);
 
-	SetViewport(WindowHandler::GetWindowData().m_width, WindowHandler::GetWindowData().m_height);
 
 	// Creates the descriptor heap used for all the information that gets sent to the GPU before rendering.
 	m_cbvSrvUavWrapper.CreateDescriptorHeap(m_device.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, FrameCount + MAX_NUMBER_OF_DESCTRIPTORS + 2, true);

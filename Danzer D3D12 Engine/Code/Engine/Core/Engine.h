@@ -29,7 +29,6 @@ public:
 	SpriteHandler&		GetSpriteHandler()	  const noexcept;
 	RenderManager&	    GetRenderManager()	  const noexcept;
 	DirectX12Framework& GetFramework()		  const noexcept;
-	//LevelLoaderCustom&  GetLevelLoader()	  const noexcept;
 	TextureHandler&		GetTextureHandler()	  const noexcept;
 	CollisionManager&	GetCollisionManager() const noexcept;
 

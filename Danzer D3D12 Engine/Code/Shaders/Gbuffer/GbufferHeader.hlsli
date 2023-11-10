@@ -6,7 +6,7 @@ struct InputToVertex
     float4   m_biNormal    : BINORMAL;
     float4   m_color       : COLOR;
     float2   m_uv          : UV;
-    float4x4 m_transform   : TRANSFORM;
+    column_major float4x4 m_transform : TRANSFORM;
 };
 
 struct VertexToPixel
@@ -22,8 +22,8 @@ struct VertexToPixel
 
 cbuffer MainCamera : register(b0)
 {
-    float4x4 CameraTransform;
-    float4x4 CameraProjection;
+    column_major float4x4 CameraProjection;
+    column_major float4x4 CameraTransform;
     float4 CameraPosition;
     float4 Eye;
 

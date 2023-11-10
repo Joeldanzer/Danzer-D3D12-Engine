@@ -42,10 +42,12 @@ void Camera::SetAspectRatio(float aspectRatio)
 void Camera::ConstructProjection()
 {
 	float radiansFOV   = m_fov * (3.14f / 180.f);
-	m_projection(0, 0) = (1 / tanf(radiansFOV / 2.0f));
-	m_projection(1, 1) = (m_aspectRatio) * (1 / tanf(radiansFOV / 2.0f));
-	m_projection(2, 2) =  m_farPlane / (m_farPlane - m_nearPlane);
-	m_projection(3, 2) = -m_nearPlane * m_farPlane / (m_farPlane - m_nearPlane);
-	m_projection(2, 3) = 1;
-	m_projection(3, 3) = 0;
+	//m_projection(0, 0) = (1 / tanf(radiansFOV));
+	//m_projection(1, 1) = (m_aspectRatio) * (1 / tanf(radiansFOV));
+	//m_projection(2, 2) = m_farPlane / (m_farPlane - m_nearPlane);
+	//m_projection(3, 2) = -m_nearPlane * m_farPlane / (m_farPlane - m_nearPlane);
+	//m_projection(2, 3) = 1;
+	//m_projection(3, 3) = 0;
+
+	m_projection = DirectX::XMMatrixPerspectiveFovLH(radiansFOV, m_aspectRatio, m_nearPlane, m_farPlane);
 }

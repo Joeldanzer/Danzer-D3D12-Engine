@@ -259,14 +259,22 @@ std::vector<ModelData::Mesh> ModelHandler::LoadMeshFromLoaderModel(LoaderModel* 
 
 		// Set upload Vertex Buffer SubResourceData to our vertex destBuffer
 		resourceBarriers.emplace_back(SetSubresourceData(
-			cmdList, bufferInfo.m_vBuffer, bufferInfo.m_vBufferUpload,
-			reinterpret_cast<UINT*>(loadedMesh->m_verticies), loadedMesh->m_vertexSize, loadedMesh->m_vertexCount,
+			cmdList, 
+			bufferInfo.m_vBuffer, 
+			bufferInfo.m_vBufferUpload,
+			reinterpret_cast<UINT*>(loadedMesh->m_verticies), 
+			loadedMesh->m_vertexSize, 
+			loadedMesh->m_vertexCount,
 			D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER
 		));
 
 		resourceBarriers.emplace_back(SetSubresourceData(
-			cmdList, bufferInfo.m_iBuffer, bufferInfo.m_iBufferUpload,
-			reinterpret_cast<UINT*>(loadedMesh->m_indices.data()), sizeof(UINT), static_cast<UINT>(loadedMesh->m_indices.size()),
+			cmdList, 
+			bufferInfo.m_iBuffer, 
+			bufferInfo.m_iBufferUpload,
+			reinterpret_cast<UINT*>(loadedMesh->m_indices.data()), 
+			sizeof(UINT), 
+			static_cast<UINT>(loadedMesh->m_indices.size()),
 			D3D12_RESOURCE_STATE_INDEX_BUFFER
 		));
 
