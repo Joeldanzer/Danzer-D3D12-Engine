@@ -63,12 +63,8 @@ Model ModelHandler::CreateCustomModel(CustomModel customModel, bool transparent)
 	//Faster to execute them at the same time
 	cmdList->ResourceBarrier(static_cast<UINT>(resourceBarriers.size()), &resourceBarriers[0]);
 	
-	//m_framework.ExecuteCommandList();
-	//m_framework.WaitForPreviousFrame();
-	
 	std::vector<Vect3f> verticies;
 
-	// Now add the data from the CPU -> GPU after executinng commandlist
 	{
 		mesh.m_indexBufferView.BufferLocation = mesh.m_indexBuffer->GetGPUVirtualAddress();
 		mesh.m_indexBufferView.Format = DXGI_FORMAT_R32_UINT;
@@ -106,6 +102,8 @@ Model ModelHandler::LoadModel(std::wstring fileName, std::string name, bool tran
 
 	std::vector<ModelData::Mesh> meshes = LoadMeshFromLoaderModel(loadedModel.get(), modelStr);
 	std::vector<Vect3f>	      verticies = loadedModel->m_verticies;
+	
+	
 
 	// Now we set the buffer infromation into our BUFFER_VIEWS as well as 
 	// creating DescriptorHeaps and SRV for our textures
@@ -252,9 +250,11 @@ std::vector<ModelData::Mesh> ModelHandler::LoadMeshFromLoaderModel(LoaderModel* 
 
 		// Load our Buffers and Upload Buffers 
 		VertexIndexBufferInfo bufferInfo = GetIndexAndVertexBuffer(
-		    ToWstring(name), loadedMesh->m_vertexSize * loadedMesh->m_vertexCount,
+		    ToWstring(name), 
+			loadedMesh->m_vertexSize * loadedMesh->m_vertexCount,
 			static_cast<UINT>(loadedMesh->m_indices.size()) * sizeof(UINT),
-			device);
+			device
+		);
 
 
 		// Set upload Vertex Buffer SubResourceData to our vertex destBuffer
@@ -289,9 +289,6 @@ std::vector<ModelData::Mesh> ModelHandler::LoadMeshFromLoaderModel(LoaderModel* 
 	}
 
 	cmdList->ResourceBarrier(static_cast<UINT>(resourceBarriers.size()), &resourceBarriers[0]);
-	// Execute our commandList so the new information is sent to the GPU
-	//m_framework.ExecuteCommandList();
-	//m_framework.WaitForPreviousFrame();
 
 	return meshes;
 }
@@ -316,19 +313,27 @@ std::vector<ModelData::Mesh> ModelHandler::LoadMeshFromLoaderModel(LoaderModel* 
 			ToWstring(loadedModel->m_name),
 			loadedMesh->m_vertexSize * loadedMesh->m_vertexCount,
 			static_cast<UINT>(loadedMesh->m_indices.size()) * sizeof(UINT),
-			device);
+			device
+		);
 
 
 		// Set upload Vertex Buffer SubResourceData to our vertex destBuffer
 		resourceBarriers.emplace_back(SetSubresourceData(
-			cmdList, bufferInfo.m_vBuffer, bufferInfo.m_vBufferUpload,
-			reinterpret_cast<UINT*>(loadedMesh->m_verticies), loadedMesh->m_vertexSize, loadedMesh->m_vertexCount,
+			cmdList, 
+			bufferInfo.m_vBuffer, 
+			bufferInfo.m_vBufferUpload,
+			reinterpret_cast<UINT*>(loadedMesh->m_verticies), 
+			loadedMesh->m_vertexSize, 
+			loadedMesh->m_vertexCount,
 			D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER
 		));
 
 		resourceBarriers.emplace_back(SetSubresourceData(
-			cmdList, bufferInfo.m_iBuffer, bufferInfo.m_iBufferUpload,
-			reinterpret_cast<UINT*>(loadedMesh->m_indices.data()), sizeof(UINT), static_cast<UINT>(loadedMesh->m_indices.size()),
+			cmdList, bufferInfo.m_iBuffer, 
+			bufferInfo.m_iBufferUpload,
+			reinterpret_cast<UINT*>(loadedMesh->m_indices.data()), 
+			sizeof(UINT), 
+			static_cast<UINT>(loadedMesh->m_indices.size()),
 			D3D12_RESOURCE_STATE_INDEX_BUFFER
 		));
 
@@ -344,10 +349,7 @@ std::vector<ModelData::Mesh> ModelHandler::LoadMeshFromLoaderModel(LoaderModel* 
 	}
 
 	cmdList->ResourceBarrier(static_cast<UINT>(resourceBarriers.size()), &resourceBarriers[0]);
-	// Execute our commandList so the new information is sent to the GPU
-	//m_framework.ExecuteCommandList();
-	//m_framework.WaitForPreviousFrame();
-
+	
 	return meshes;
 }
 

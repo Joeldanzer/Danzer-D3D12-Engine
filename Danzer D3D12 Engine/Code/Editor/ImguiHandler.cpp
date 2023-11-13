@@ -71,6 +71,8 @@ void ImguiHandler::Update(const float dt)
 {
 	//ImGui::ShowDemoWindow();
 
+	//ImGui::NewFrame();
+
 	DirectX12Framework& framework = m_engine.GetFramework();
 	Scene& scene = m_engine.GetSceneManager().GetCurrentScene();
 	entt::registry& reg = scene.Registry();

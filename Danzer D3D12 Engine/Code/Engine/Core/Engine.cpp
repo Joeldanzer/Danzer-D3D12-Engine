@@ -134,13 +134,13 @@ void Engine::Impl::Update()
 
 	//m_sceneManager.GetCurrentScene()->UpdateAllObjectsInScene(deltaTime);
 	//m_collisionManager.UpdateCollisions(m_sceneManager.GetCurrentScene()->GetObjects());
-
-	m_sceneManager.GetCurrentScene().UpdateTransforms();
-	m_renderManager.RenderFrame(m_textureHandler, m_modelHandler, m_spriteHandler, m_skybox, m_sceneManager.GetCurrentScene());
 }
 
 void Engine::Impl::LateUpdate()
 {
+	m_sceneManager.GetCurrentScene().UpdateTransforms();
+	m_renderManager.RenderFrame(m_textureHandler, m_modelHandler, m_spriteHandler, m_skybox, m_sceneManager.GetCurrentScene());
+	
 	m_framework.GetSwapChain()->Present(1, 0);
 	m_framework.WaitForPreviousFrame();
 }

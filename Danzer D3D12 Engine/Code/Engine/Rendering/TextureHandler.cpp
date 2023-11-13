@@ -178,7 +178,7 @@ UINT TextureHandler::GetTexture(std::wstring texturePath)
 std::wstring TextureHandler::GetCorrectPathAndName(std::wstring path)
 {
 	if (path.empty()) {
-		path = L"Sprites/defaultTexture.dds";
+		path = L"Sprites/0aDefaultTexture.dds";
 	}
 
 	// Check if filepath has .dds, if not change it.
@@ -197,7 +197,7 @@ std::wstring TextureHandler::GetCorrectPathAndName(std::wstring path)
 	// last check if the file actually exists
 	std::ifstream exists(path.c_str());
 	if (!exists.good()) {
-		path = L"Sprites/defaultTexture.dds";
+		path = L"Sprites/0aDefaultTexture.dds";
 	}
 	exists.close();
 

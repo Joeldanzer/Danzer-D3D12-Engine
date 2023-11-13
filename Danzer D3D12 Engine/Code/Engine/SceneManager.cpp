@@ -13,7 +13,8 @@ void SceneManager::Init(Camera& cam)
 	scene.Registry().emplace<Camera>(entity, cam);
 
 	Transform& transform = scene.Registry().get<Transform>(entity);
-	transform.m_position = { 0.f, 0.1f, 0.f };
+	transform.m_position = { 0.f, 10.0f, 0.f };
+	transform.m_rotation = Quat4f::CreateFromAxisAngle({ 0.0f, 1.0f, 0.0f }, 90.0f);
 
 	SetScene("default", entity, false);
 	entt::entity dirLight = scene.CreateBasicEntity("DirectionalLight", "Light");

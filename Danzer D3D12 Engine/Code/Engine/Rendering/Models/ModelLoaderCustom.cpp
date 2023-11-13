@@ -18,15 +18,13 @@ std::unique_ptr<LoaderModel> ModelLoaderCustom::LoadModelFromAssimp(std::string 
     //AI_CONFIG_COLUM_A
     m_importer.SetPropertyBool(AI_CONFIG_FBX_CONVERT_TO_M, false);
     m_importer.SetPropertyBool(AI_CONFIG_IMPORT_FBX_PRESERVE_PIVOTS, true);
+    m_importer.SetPropertyBool(AI_CONFIG_FAVOUR_SPEED, true);
     auto flags = 0
-        | aiProcessPreset_TargetRealtime_MaxQuality
+        | aiProcessPreset_TargetRealtime_Fast
         | aiProcess_ConvertToLeftHanded
         | aiProcess_TransformUVCoords
-        | aiProcess_GenUVCoords
-        | aiProcess_FixInfacingNormals
         | aiProcess_CalcTangentSpace
         | aiProcess_GlobalScale
-        //| aiProcess_GenBoundingBoxes 
         ;
 
     const aiScene* scene = m_importer.ReadFile(fileName, flags);
@@ -43,7 +41,6 @@ std::unique_ptr<LoaderModel> ModelLoaderCustom::LoadModelFromAssimp(std::string 
         rootNode = rootNode->mParent;
 
     GetAllModelProperties(model.get(), rootNode, scene, ConvertToEngineMat4(rootNode->mTransformation), uvFlipped);
-
     LoadMaterials(scene, model.get());
 
     return model;

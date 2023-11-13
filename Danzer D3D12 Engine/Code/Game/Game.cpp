@@ -51,10 +51,12 @@ Game::Impl::Impl(Engine& engine) :
 	
 	auto entity = reg.create();
 	Transform& modelTransform = reg.emplace<Transform>(entity);
-	modelTransform.m_scale	  = {0.1f, 0.1f, 0.1f};
+	modelTransform.m_scale	  = {1.0f, 1.0f, 1.0f};
 	modelTransform.m_position = { 0.0f, 0.0f, 0.0f };
-	reg.emplace<Object>(entity);
-    reg.emplace<Model>(entity, engine.GetModelHandler().LoadModel(L"Models/Particle_Chest.fbx", "Sponza Atrium"));
+	Object& sponzaObj = reg.emplace<Object>(entity);
+	sponzaObj.m_name = "Sponza Atrium";
+
+    reg.emplace<Model>(entity, engine.GetModelHandler().LoadModel(L"Models/Sponza_Modular.fbx", "Sponza Atrium"));
 }
 Game::Impl::~Impl(){}
 
@@ -74,7 +76,7 @@ void Game::Impl::Update(const float dt)
 
 	Transform& transform = reg.get<Transform>(m_engine.GetSceneManager().GetCurrentScene().GetMainCamera());
 	
-	float speed = 2.0f;
+	float speed = 5.0f;
 
 	if (Input::GetInstance().IsKeyDown(VK_RIGHT))
 		transform.m_rotation *= DirectX::XMQuaternionRotationAxis(Vect3f().Up,  dt * 2.f);
