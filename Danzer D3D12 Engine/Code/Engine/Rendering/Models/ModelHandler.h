@@ -45,6 +45,7 @@ public:
 	}
 
 private:	
+	Material GetNewMaterialFromLoadedModel(const std::string& material);
 	UINT GetNewlyCreatedModelID(ModelData model);
 
 	std::vector<ModelData::Mesh> LoadMeshFromLoaderModel(LoaderModel* loadedModel, std::string name);

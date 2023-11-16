@@ -17,13 +17,13 @@ public:
 							    UINT numberOfDescriptors,
 							    bool shaderVisible);
 
-	CD3DX12_CPU_DESCRIPTOR_HANDLE GET_CPU_DESCRIPTOR(UINT offset); //{ return m_cpuHeapStart; }
-	CD3DX12_GPU_DESCRIPTOR_HANDLE GET_GPU_DESCRIPTOR(UINT offset); //{ return m_gpuHeapStart; }
+	CD3DX12_CPU_DESCRIPTOR_HANDLE GET_CPU_DESCRIPTOR(const UINT offset); //{ return m_cpuHeapStart; }
+	CD3DX12_GPU_DESCRIPTOR_HANDLE GET_GPU_DESCRIPTOR(const UINT offset); //{ return m_gpuHeapStart; }
     
 	ID3D12DescriptorHeap*        GetDescriptorHeap()	  { return m_desctiptorHeap.Get(); }
 	const UINT					 DESCRIPTOR_SIZE()        { return m_handleIncrementSize; }
 	
-	UINT						 m_handleCurrentOffset;
+	UINT						 m_handleCurrentOffset; //CurrentOffset * DESCRIPTOR_SIZE
 
 private:
 	D3D12_DESCRIPTOR_HEAP_DESC m_desc;

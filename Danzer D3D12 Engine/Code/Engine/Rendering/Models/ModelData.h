@@ -33,7 +33,7 @@ public:
 		ComPtr<ID3D12Resource>		 m_indexBuffer;
 		ComPtr<ID3D12Resource>		 m_vertexBuffer;
 		
-		Material m_material;
+		Material       m_material;
 		MaterialBuffer m_materialBuffer;
 
 		bool m_renderMesh = true;

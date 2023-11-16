@@ -56,7 +56,7 @@ Game::Impl::Impl(Engine& engine) :
 	Object& sponzaObj = reg.emplace<Object>(entity);
 	sponzaObj.m_name = "Sponza Atrium";
 
-    reg.emplace<Model>(entity, engine.GetModelHandler().LoadModel(L"Models/Sponza_Modular.fbx", "Sponza Atrium"));
+    reg.emplace<Model>(entity, engine.GetModelHandler().LoadModel(L"Models/BlenderSponzaAtriumOld.fbx", "Sponza Atrium"));
 }
 Game::Impl::~Impl(){}
 
@@ -107,7 +107,7 @@ void Game::Impl::Update(const float dt)
 		for (UINT i = 0; i < cameraList.size(); i++)
 		{
 			Camera& cam = reg.get<Camera>(cameraList[i]);
-			cam.RenderTarget() = cam.RenderTarget() < 7 ? cam.RenderTarget() + 1 : 0;
+			cam.RenderTarget() = cam.RenderTarget() < 9 ? cam.RenderTarget() + 1 : 0;
 		}
 	}
 

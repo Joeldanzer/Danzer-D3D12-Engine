@@ -74,7 +74,7 @@ void TextureHandler::LoadAllCreatedTexuresToGPU()
 			// Offset the descriptor and save the offset value for later use in rendering.
 			m_tempTextures[i].m_offsetID = srvWrapper->m_handleCurrentOffset;
 			cbvSrvHandle.Offset(srvWrapper->DESCRIPTOR_SIZE());
-			srvWrapper->m_handleCurrentOffset++;
+			srvWrapper->m_handleCurrentOffset++; // += srvWrapper->DESCRIPTOR_SIZE();
 
 
 			m_textures.emplace_back(m_tempTextures[i]);

@@ -102,8 +102,6 @@ Model ModelHandler::LoadModel(std::wstring fileName, std::string name, bool tran
 
 	std::vector<ModelData::Mesh> meshes = LoadMeshFromLoaderModel(loadedModel.get(), modelStr);
 	std::vector<Vect3f>	      verticies = loadedModel->m_verticies;
-	
-	
 
 	// Now we set the buffer infromation into our BUFFER_VIEWS as well as 
 	// creating DescriptorHeaps and SRV for our textures
@@ -116,9 +114,8 @@ Model ModelHandler::LoadModel(std::wstring fileName, std::string name, bool tran
 		meshes[i].m_vertexBufferView.BufferLocation = meshes[i].m_vertexBuffer->GetGPUVirtualAddress();
 		meshes[i].m_vertexBufferView.StrideInBytes  = meshes[i].m_vertexSize;
 		meshes[i].m_vertexBufferView.SizeInBytes    = meshes[i].m_vertexSize * meshes[i].m_numVerticies;
-	} 
 
-	
+	} 
 
 	std::string modelName = "";
 	if (name.empty())
@@ -213,6 +210,42 @@ void ModelHandler::SetMaterialForModel(UINT model, Material material, UINT meshI
 	mesh.m_material = material;
 }
 
+Material ModelHandler::GetNewMaterialFromLoadedModel(const std::string& materialName)
+{
+	Material material;
+	std::wstring albedo     = std::wstring(materialName.begin(), materialName.end()) + L"_Diffuse.dds";
+	std::wstring normal     = std::wstring(materialName.begin(), materialName.end()) + L"_Normal.dds";
+	std::wstring metal      = std::wstring(materialName.begin(), materialName.end()) + L"_Metallic.dds";
+	std::wstring ao         = std::wstring(materialName.begin(), materialName.end()) + L"_AO.dds";
+	std::wstring smoothness = std::wstring(materialName.begin(), materialName.end()) + L"_Smoothness.dds";
+	std::wstring height     = std::wstring(materialName.begin(), materialName.end()) + L"_Height.dds";
+
+	if (materialName.find("Fabric_Curtain") != std::string::npos) {
+		normal     = L"Sprites/Fabric_Curtain_Normal.dds";
+		metal      = L"Sprites/Fabric_Curtain_Metallic.dds";
+		ao		   = L"Sprites/Fabric_Curtain_AO.dds";
+		smoothness = L"Sprites/Fabric_Curtain_Smoothness.dds";
+
+	}
+	else if (materialName.find("Fabric_Round") != std::string::npos) {
+		normal     = L"Sprites/Fabric_Round_Normal.dds";
+		metal      = L"Sprites/Fabric_Round_Metallic.dds";
+		ao         = L"Sprites/Fabric_Round_AO.dds";
+		smoothness = L"Sprites/Fabric_Round_Smoothness.dds";
+
+	}
+
+
+	material.m_albedo	    = m_textureHandler.GetTexture(albedo);
+	material.m_normal	    = m_textureHandler.GetTexture(normal);
+	material.m_aoMap	    = m_textureHandler.GetTexture(ao);
+	material.m_metallicMap  = m_textureHandler.GetTexture(metal);
+	material.m_roughnessMap = m_textureHandler.GetTexture(smoothness);
+	material.m_heightMap    = m_textureHandler.GetTexture(height);
+
+	return material;
+}
+
 UINT ModelHandler::GetNewlyCreatedModelID(ModelData model)
 {
 	UINT id = 0;
@@ -284,6 +317,8 @@ std::vector<ModelData::Mesh> ModelHandler::LoadMeshFromLoaderModel(LoaderModel* 
 		mesh.m_numVerticies = loadedMesh->m_vertexCount;
 		mesh.m_vertexSize   = loadedMesh->m_vertexSize;
 
+		mesh.m_material = GetNewMaterialFromLoadedModel(loadedModel->m_textures[loadedMesh->m_textureIndex]);
+	
 		// Add our newly created model mesh
 		meshes.emplace_back(mesh);
 	}

@@ -18,13 +18,14 @@ std::unique_ptr<LoaderModel> ModelLoaderCustom::LoadModelFromAssimp(std::string 
     //AI_CONFIG_COLUM_A
     m_importer.SetPropertyBool(AI_CONFIG_FBX_CONVERT_TO_M, false);
     m_importer.SetPropertyBool(AI_CONFIG_IMPORT_FBX_PRESERVE_PIVOTS, true);
-    m_importer.SetPropertyBool(AI_CONFIG_FAVOUR_SPEED, true);
     auto flags = 0
-        | aiProcessPreset_TargetRealtime_Fast
+        | aiProcessPreset_TargetRealtime_MaxQuality
         | aiProcess_ConvertToLeftHanded
+        //| aiProcess_FixInfacingNormals
         | aiProcess_TransformUVCoords
         | aiProcess_CalcTangentSpace
         | aiProcess_GlobalScale
+        | aiProcess_FindInstances
         ;
 
     const aiScene* scene = m_importer.ReadFile(fileName, flags);
@@ -96,6 +97,8 @@ void ModelLoaderCustom::GetAllModelProperties(LoaderModel* out, aiNode* currentN
         {
             aiMesh* assimpMesh = scene->mMeshes[child->mMeshes[j]];
             LoaderMesh* mesh = new LoaderMesh();
+            
+            mesh->m_name = assimpMesh->mName.C_Str();
 
             mesh->m_textureIndex = assimpMesh->mMaterialIndex;
             LoadVerticiesWithTransform(out->m_verticies, assimpMesh, mesh, transform, uvFlipped);
@@ -229,28 +232,25 @@ void ModelLoaderCustom::LoadVerticiesWithTransform(std::vector<Vect3f>& v3Verts,
             verticies.PushVec4({ vertex.x, vertex.y, vertex.z, 1.f });
         }
 
-        if (normals) {
+        if (normals) 
             verticies.PushVec4({ mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z, 1.f });
-        }
-
+        
         if (binormTan) {
-            verticies.PushVec4({ mesh->mTangents[i].x,  mesh->mTangents[i].y, mesh->mTangents[i].z, 1.f });
-            verticies.PushVec4({ mesh->mBitangents[i].x,  mesh->mBitangents[i].y, mesh->mBitangents[i].z, 1.f });
+            verticies.PushVec4({ mesh->mTangents[i].x,   mesh->mTangents[i].y,   mesh->mTangents[i].z,   1.f });
+            verticies.PushVec4({ mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z, 1.f });
         }
 
         if (color) {     
-            //if (mesh->mColors[i] != nullptr)
-            //    verticies.PushVec4({ mesh->mColors[i]->r, mesh->mColors[i]->g, mesh->mColors[i]->b, mesh->mColors[i]->a });
-            //else
-            verticies.PushVec4({ 1.0f, 1.0f, 1.0f, 1.0f });
+           if (mesh->mColors[i] != nullptr)
+               verticies.PushVec4({ mesh->mColors[i]->r, mesh->mColors[i]->g, mesh->mColors[i]->b, mesh->mColors[i]->a });
+           else
+                verticies.PushVec4({ 1.0f, 1.0f, 1.0f, 1.0f });
         }
         else
             verticies.PushVec4({ 1.f, 1.f, 1.f, 0.f });
 
-
-        if (uv) {
-            verticies.PushVec2({ mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y });
-        }
+        if (uv) 
+            verticies.PushVec2({ mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y });        
     }
 
     memcpy(loaderMesh->m_verticies, &verticies.m_vertexInfo[0], vertexBufferSize * mesh->mNumVertices);
@@ -259,7 +259,6 @@ void ModelLoaderCustom::LoadVerticiesWithTransform(std::vector<Vect3f>& v3Verts,
 Mat4f ModelLoaderCustom::ConvertToEngineMat4(const aiMatrix4x4& assimpMatrix)
 {
     Mat4f mat;
-    //memcpy(&mat, &assimpMatrix, sizeof(float) * 16);
     
     mat(0, 0) = assimpMatrix.a1; mat(1, 0) = assimpMatrix.a2; mat(2, 0) = assimpMatrix.a3; mat(3, 0) = assimpMatrix.a4;
     mat(0, 1) = assimpMatrix.b1; mat(1, 1) = assimpMatrix.b2; mat(2, 1) = assimpMatrix.b3; mat(3, 1) = assimpMatrix.b4;
@@ -273,17 +272,17 @@ void ModelLoaderCustom::LoadMaterials(const aiScene* scene, LoaderModel* model)
     for (unsigned int m = 0; m < scene->mNumMaterials; m++)
     {
         LoadTexture(aiTextureType_DIFFUSE,      model->m_textures, scene->mMaterials[m]); // TEXTURE_DEFINITION_ALBEDO
-        LoadTexture(aiTextureType_UNKNOWN,      model->m_textures, scene->mMaterials[m]); // TEXTURE_DEFINITION_ALBEDO
-        LoadTexture(aiTextureType_SPECULAR,     model->m_textures, scene->mMaterials[m]); // TEXTURE_DEFINITION_ROUGHNESS
-        LoadTexture(aiTextureType_AMBIENT,      model->m_textures, scene->mMaterials[m]); // TEXTURE_DEFINITION_AMBIENTOCCLUSION
-        LoadTexture(aiTextureType_EMISSIVE,     model->m_textures, scene->mMaterials[m]); // TEXTURE_DEFINITION_EMISSIVE
+        //LoadTexture(aiTextureType_UNKNOWN,      model->m_textures, scene->mMaterials[m]); // TEXTURE_DEFINITION_ALBEDO
+        //LoadTexture(aiTextureType_SPECULAR,     model->m_textures, scene->mMaterials[m]); // TEXTURE_DEFINITION_ROUGHNESS
+        //LoadTexture(aiTextureType_AMBIENT,      model->m_textures, scene->mMaterials[m]); // TEXTURE_DEFINITION_AMBIENTOCCLUSION
+        //LoadTexture(aiTextureType_EMISSIVE,     model->m_textures, scene->mMaterials[m]); // TEXTURE_DEFINITION_EMISSIVE
         //LoadTexture(aiTextureType_HEIGHT,       model->m_textures, scene->mMaterials[m]);
-        LoadTexture(aiTextureType_NORMALS,      model->m_textures, scene->mMaterials[m]); // TEXTURE_DEFINITION_NORMAL
+        //LoadTexture(aiTextureType_NORMALS,      model->m_textures, scene->mMaterials[m]); // TEXTURE_DEFINITION_NORMAL   
+        //LoadTexture(aiTextureType_METALNESS,    model->m_textures, scene->mMaterials[m]); // TEXTURE_DEFINITION_METALNESS
         //LoadTexture(aiTextureType_SHININESS,    model->m_textures, scene->mMaterials[m]);
         //LoadTexture(aiTextureType_OPACITY,      model->m_textures, scene->mMaterials[m]);
         //LoadTexture(aiTextureType_DISPLACEMENT, model->m_textures, scene->mMaterials[m]);
         //LoadTexture(aiTextureType_LIGHTMAP,     model->m_textures, scene->mMaterials[m]);
-        LoadTexture(aiTextureType_REFLECTION,   model->m_textures, scene->mMaterials[m]); // TEXTURE_DEFINITION_METALNESS
 
     }
 } 
@@ -304,6 +303,11 @@ void ModelLoaderCustom::LoadTexture(int type, std::vector<std::string>& textures
     const size_t lastSlashIdx = filePath.find_last_of("\\/");
     if (std::string::npos != lastSlashIdx) {
         filePath.erase(0, lastSlashIdx + 1);
+        const size_t replaceTextureType = filePath.find("_Diffuse");
+        filePath.erase(replaceTextureType, filePath.size() - replaceTextureType);
+        //const size_t removeExtension = filePath.find_first_of(".");
+        //filePath.erase(filePath.begin() + removeExtension, filePath.end());
+        filePath.insert(0, "Sprites/");
     }
 
     textures.push_back(filePath);

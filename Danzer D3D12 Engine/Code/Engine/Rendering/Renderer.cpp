@@ -137,15 +137,16 @@ void Renderer::RenderToGbuffer(std::vector<ModelData>& models, UINT frameIndex, 
 						m_materialBuffer.UpdateBuffer(&materialData, frameIndex);
 						CD3DX12_GPU_DESCRIPTOR_HANDLE cbvHandle(cbvSrvHeapStart, m_materialBuffer.OffsetID() + frameIndex, cbvSrvDescSize);
 						m_commandList->SetGraphicsRootDescriptorTable(1, cbvHandle);
-				
+						
 						// Handle for each texture that will be used
-						CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandles[6]; 
-						srvHandles[0] = CD3DX12_GPU_DESCRIPTOR_HANDLE(cbvSrvHeapStart, textures[mesh.m_material.m_albedo].m_offsetID,	   cbvSrvDescSize);
-						srvHandles[1] = CD3DX12_GPU_DESCRIPTOR_HANDLE(cbvSrvHeapStart, textures[mesh.m_material.m_normal].m_offsetID,	   cbvSrvDescSize);
-						srvHandles[2] = CD3DX12_GPU_DESCRIPTOR_HANDLE(cbvSrvHeapStart, textures[mesh.m_material.m_heightMap].m_offsetID,   cbvSrvDescSize);
-						srvHandles[3] = CD3DX12_GPU_DESCRIPTOR_HANDLE(cbvSrvHeapStart, textures[mesh.m_material.m_metallicMap].m_offsetID, cbvSrvDescSize);
-						srvHandles[4] = CD3DX12_GPU_DESCRIPTOR_HANDLE(cbvSrvHeapStart, textures[mesh.m_material.m_roughness].m_offsetID,   cbvSrvDescSize);
-						srvHandles[5] = CD3DX12_GPU_DESCRIPTOR_HANDLE(cbvSrvHeapStart, textures[mesh.m_material.m_aoMap].m_offsetID,       cbvSrvDescSize);
+						CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandles[6] = {
+							CD3DX12_GPU_DESCRIPTOR_HANDLE(cbvSrvHeapStart, textures[mesh.m_material.m_albedo].m_offsetID,       cbvSrvDescSize), // Albedo
+							CD3DX12_GPU_DESCRIPTOR_HANDLE(cbvSrvHeapStart, textures[mesh.m_material.m_normal].m_offsetID,	    cbvSrvDescSize), // Normal
+							CD3DX12_GPU_DESCRIPTOR_HANDLE(cbvSrvHeapStart, textures[mesh.m_material.m_metallicMap].m_offsetID,  cbvSrvDescSize), // Metallic
+							CD3DX12_GPU_DESCRIPTOR_HANDLE(cbvSrvHeapStart, textures[mesh.m_material.m_roughnessMap].m_offsetID, cbvSrvDescSize), // Roughness/Smoothness
+							CD3DX12_GPU_DESCRIPTOR_HANDLE(cbvSrvHeapStart, textures[mesh.m_material.m_heightMap].m_offsetID,    cbvSrvDescSize), // Height 
+							CD3DX12_GPU_DESCRIPTOR_HANDLE(cbvSrvHeapStart, textures[mesh.m_material.m_aoMap].m_offsetID,	    cbvSrvDescSize)  // AO
+						};
 
 						for (UINT i = 0; i < _countof(srvHandles); i++)
 							m_commandList->SetGraphicsRootDescriptorTable(i+2, srvHandles[i]);
@@ -238,8 +239,8 @@ void Renderer::UpdateLightBuffer(const DirectionalLight& light, const Vect4f& di
 	const UINT cbvSrvDescSize = m_framework->GetCbvSrvUavWrapper().DESCRIPTOR_SIZE();
 
 	LightBuffer::Data lightData;
-	lightData.m_ambientColor = light.m_ambientColor;
-	lightData.m_lightColor = light.m_lightColor;
+	lightData.m_ambientColor   = light.m_ambientColor;
+	lightData.m_lightColor     = light.m_lightColor;
 	lightData.m_lightDirection = direction;
 
 	m_lightBuffer.UpdateBuffer(&lightData, frameIndex);

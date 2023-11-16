@@ -48,4 +48,4 @@ Texture2D    normalTexture    : register(t1);
 Texture2D    metallicTexture  : register(t2);
 Texture2D    roughnessTexture : register(t3);
 Texture2D    heightTexture    : register(t4);
-Texture2D    aoTexrure        : register(t5);
+Texture2D    aoTexture        : register(t5);

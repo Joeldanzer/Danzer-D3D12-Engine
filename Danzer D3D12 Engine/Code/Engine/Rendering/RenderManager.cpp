@@ -225,11 +225,12 @@ void RenderManager::Impl::RenderScene(TextureHandler& textureHandler, SpriteHand
 		Vect4f directionaLightdir = { 0.f, 0.f, 0.f, 1.f };
 		for (auto entity : list) {
 			directionalLight = reg.get<DirectionalLight>(entity);
-			Vect3f dir = reg.get<Transform>(entity).World().Down();
-			directionaLightdir = { dir.x, dir.y, dir.z, 1.f };
-			break;
+			Transform& transform = reg.get<Transform>(entity);
+			Vect3f dir = transform.m_world.Down();
+			directionaLightdir = { dir.x, dir.y, dir.z, 1.0f };
 		}
 
+		m_mainRenderer.UpdateDefaultBuffers(cam, camTransform, m_framework.GetFrameIndex());
 		UINT startLocation = 1;
 		m_mainRenderer.UpdateLightBuffer(directionalLight, directionaLightdir, m_framework.GetFrameIndex(), startLocation);
 		m_gBuffer.AssignSRVSlots(cmdList, &m_framework.GetCbvSrvUavWrapper(), startLocation);

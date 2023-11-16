@@ -38,11 +38,7 @@ int main(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ PWSTR 
 
 
 	// Will thread this
-
-	//Launch Engine stuff!
-	Engine engine = Engine(1920, 1080);
-	//Editor editor(engine);
-	
+	Engine engine = Engine(1920, 1080);	
 	Game game(engine);
 
 	while (true) {

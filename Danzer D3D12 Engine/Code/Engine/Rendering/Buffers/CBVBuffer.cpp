@@ -10,6 +10,9 @@ void CBVBuffer::Init(ID3D12Device* device, DescriptorHeapWrapper* cbvWrapper, vo
 	UINT size = (sizeOfData + 255) & ~255;
 	m_offsetID = 0;
 
+	CD3DX12_CPU_DESCRIPTOR_HANDLE cbvHandle(cbvWrapper->GetDescriptorHeap()->GetCPUDescriptorHandleForHeapStart());
+	cbvHandle.Offset(cbvWrapper->m_handleCurrentOffset * cbvWrapper->DESCRIPTOR_SIZE());
+	
 	for (unsigned int i = 0; i < FrameCount; i++)
 	{
 		CD3DX12_HEAP_PROPERTIES uploadHeap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
@@ -24,16 +27,13 @@ void CBVBuffer::Init(ID3D12Device* device, DescriptorHeapWrapper* cbvWrapper, vo
 		);
 		CHECK_HR(result);
 
-		CD3DX12_CPU_DESCRIPTOR_HANDLE cbvHandle(cbvWrapper->GetDescriptorHeap()->GetCPUDescriptorHandleForHeapStart());
-
-		cbvHandle.Offset(cbvWrapper->m_handleCurrentOffset * cbvWrapper->DESCRIPTOR_SIZE());
-
 		D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
 		cbvDesc.BufferLocation = m_bufferUpload[i]->GetGPUVirtualAddress();
 		cbvDesc.SizeInBytes = size; // Contant buffer size if required to be 256-byte aligned.
 		device->CreateConstantBufferView(&cbvDesc, cbvHandle);
 
 		m_offsetID = m_offsetID == 0 ? cbvWrapper->m_handleCurrentOffset : m_offsetID;
+		cbvHandle.Offset(cbvWrapper->DESCRIPTOR_SIZE());
 		cbvWrapper->m_handleCurrentOffset++;
 
 		ZeroMemory(&data, sizeOfData);
