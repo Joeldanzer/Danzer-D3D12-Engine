@@ -3,12 +3,13 @@
 class ModelHandler;
 class SpriteHandler;
 class RenderManager;
-class DirectX12Framework;
+class D3D12Framework;
 class SceneManager;
 class LevelLoaderCustom;
 class TextureHandler;
 class CollisionManager;
 class Skybox;
+class D3D12Framework;
 
 class Engine
 {
@@ -19,8 +20,11 @@ public:
 
 	bool StartEngine(bool editor = true/*Some components perhaps...*/);
 
-	void Update();
+	void BeginUpdate();
+	void MidUpdate();
 	void LateUpdate();
+
+	void EndInitFrame();
 
 	const float			GetFPS()			  const noexcept;
 	const float		    GetDeltaTime()		  const noexcept;
@@ -28,9 +32,10 @@ public:
 	ModelHandler&		GetModelHandler()	  const noexcept;
 	SpriteHandler&		GetSpriteHandler()	  const noexcept;
 	RenderManager&	    GetRenderManager()	  const noexcept;
-	DirectX12Framework& GetFramework()		  const noexcept;
+	D3D12Framework&		GetFramework()		  const noexcept;
 	TextureHandler&		GetTextureHandler()	  const noexcept;
 	CollisionManager&	GetCollisionManager() const noexcept;
+	
 
 private:
 	friend class Impl;

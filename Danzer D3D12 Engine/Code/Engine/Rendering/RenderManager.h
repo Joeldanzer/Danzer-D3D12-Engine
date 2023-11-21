@@ -12,7 +12,7 @@ class Skybox;
 class ModelHandler;
 class SpriteHandler;
 class TextureHandler;
-class DirectX12Framework;
+class D3D12Framework;
 
 struct Object;
 struct Sprite;
@@ -23,7 +23,7 @@ class RenderManager
 {
 public:
 	RenderManager() = delete;
-	RenderManager(DirectX12Framework& framework);
+	RenderManager(D3D12Framework& framework);
 	~RenderManager();
 
 	void BeginFrame();

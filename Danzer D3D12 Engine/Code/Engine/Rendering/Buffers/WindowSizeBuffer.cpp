@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "WindowSizeBuffer.h"
 
-#include "../../Core/DirectX12Framework.h"
+#include "../../Core/D3D12Framework.h"
 
 WindowBuffer::WindowBuffer(){}
 WindowBuffer::~WindowBuffer()

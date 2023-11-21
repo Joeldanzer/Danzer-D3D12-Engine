@@ -37,15 +37,15 @@ Game::Impl::Impl(Engine& engine) :
 
 	engine.GetSpriteHandler().CreateSpriteSheet(L"Sprites/RunTestAnimation.dds", 8, 8);
 
-	m_entity = reg.create();
-	Transform2D& transform = reg.emplace<Transform2D>(m_entity);
-	Object& obj			   = reg.emplace<Object>(m_entity);
-	Sprite& sprite		   = reg.emplace<Sprite>(m_entity);
-
-	obj.m_state = Object::STATE::ACTIVE;
-	sprite.m_spriteSheet = engine.GetSpriteHandler().GetCreatedSpriteSheet("testSpriteSheet");
-	transform.m_scale    = { 0.2f, 0.2f };
-	transform.m_position = {-0.9f, 0.8f };
+	//m_entity = reg.create();
+	//Transform2D& transform = reg.emplace<Transform2D>(m_entity);
+	//Object& obj			   = reg.emplace<Object>(m_entity);
+	//Sprite& sprite		   = reg.emplace<Sprite>(m_entity);
+	//
+	//obj.m_state = Object::STATE::ACTIVE;
+	//sprite.m_spriteSheet = engine.GetSpriteHandler().GetCreatedSpriteSheet("testSpriteSheet");
+	//transform.m_scale    = { 0.2f, 0.2f };
+	//transform.m_position = {-0.9f, 0.8f };
 
 	m_currentTime = m_time;
 	
@@ -64,15 +64,15 @@ void Game::Impl::Update(const float dt)
 {
 	entt::registry& reg = m_engine.GetSceneManager().GetCurrentScene().Registry();
 
-	Sprite& sprite = reg.get<Sprite>(m_entity);
-	m_currentTime -= dt;
-	if (m_currentTime < 0.f) {
-		sprite.m_frame++;
-		if (sprite.m_frame > 15)
-			sprite.m_frame = 0;
-
-		m_currentTime = m_time;
-	}
+	//Sprite& sprite = reg.get<Sprite>(m_entity);
+	//m_currentTime -= dt;
+	//if (m_currentTime < 0.f) {
+	//	sprite.m_frame++;
+	//	if (sprite.m_frame > 15)
+	//		sprite.m_frame = 0;
+	//
+	//	m_currentTime = m_time;
+	//}
 
 	Transform& transform = reg.get<Transform>(m_engine.GetSceneManager().GetCurrentScene().GetMainCamera());
 	

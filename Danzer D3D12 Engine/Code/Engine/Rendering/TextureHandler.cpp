@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "TextureHandler.h"
-#include "Core/DirectX12Framework.h"
+#include "FrameResource.h"
+#include "Core/D3D12Framework.h"
 
 #include "../3rdParty/DirectXTK12-main/Inc/DDSTextureLoader.h"
 #include "../3rdParty/DirectXTK12-main/Inc/DirectXHelpers.h"
@@ -8,7 +9,7 @@
 #include <filesystem>
 #include <fstream>
 
-TextureHandler::TextureHandler(DirectX12Framework& framework) :
+TextureHandler::TextureHandler(D3D12Framework& framework) :
 	m_framework(framework)
 {
 	LoadAllExistingTextures();
@@ -21,7 +22,7 @@ TextureHandler::~TextureHandler()
 	}
 }
 
-void TextureHandler::Init(DirectX12Framework& framework, bool loadAllTexures)
+void TextureHandler::Init(D3D12Framework& framework, bool loadAllTexures)
 {
 	m_framework = framework;
 	if (loadAllTexures) {
@@ -53,12 +54,12 @@ void TextureHandler::LoadAllExistingTextures()
 //* This is/should always be called after creating 1 or multiple textures,
 void TextureHandler::LoadAllCreatedTexuresToGPU()
 {
-	DescriptorHeapWrapper* srvWrapper = &m_framework.GetCbvSrvUavWrapper();
+	DescriptorHeapWrapper* srvWrapper = &m_framework.CbvSrvHeap();
 	UINT offset = 0;
 
 	CD3DX12_CPU_DESCRIPTOR_HANDLE cbvSrvHandle(srvWrapper->GetDescriptorHeap()->GetCPUDescriptorHandleForHeapStart());
 	if (!m_resourceBarriers.empty()) {
-		m_framework.GetCommandList()->ResourceBarrier(m_resourceBarriers.size(), &m_resourceBarriers[0]);
+		m_framework.InitCmdList()->ResourceBarrier(m_resourceBarriers.size(), &m_resourceBarriers[0]);
 
 		HRESULT result;
 
@@ -148,10 +149,6 @@ UINT TextureHandler::CreateTexture(std::wstring file, bool isCubeMap)
 			return i + 1;
 	}
 		
-	if (!m_framework.CmdListIsRecording()) {
-		m_framework.ResetCommandListAndAllocator(nullptr, L"TextureHandler: Line 154");
-	}
-
 	Texture texture;
 	texture.m_texturePath = file;
 	texture.m_cubeMap	  = isCubeMap;
@@ -237,12 +234,13 @@ CD3DX12_RESOURCE_BARRIER TextureHandler::LoadTextures(std::wstring file, ID3D12R
 	CHECK_HR(result);
 
 	UpdateSubresources(
-		m_framework.GetCommandList(),
+		m_framework.InitCmdList(),
 		*textureBuffer,
 		uploadBuffer,
 		0, 0,
 		static_cast<UINT>(subresourcedata.size()),
-		subresourcedata.data());
+		subresourcedata.data()
+	);
 
 	CD3DX12_RESOURCE_BARRIER transition = CD3DX12_RESOURCE_BARRIER::Transition(
 		*textureBuffer,

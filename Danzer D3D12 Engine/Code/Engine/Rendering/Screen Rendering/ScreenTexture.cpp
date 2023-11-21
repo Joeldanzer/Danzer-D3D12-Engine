@@ -1,10 +1,10 @@
 #include "stdafx.h"
 #include "ScreenTexture.h"
 
-#include "Core\DirectX12Framework.h"
+#include "Core\D3D12Framework.h"
 
 
-ScreenTexture::ScreenTexture(DirectX12Framework& framework, DXGI_FORMAT format, UINT width, UINT height, std::wstring name)
+ScreenTexture::ScreenTexture(D3D12Framework& framework, DXGI_FORMAT format, UINT width, UINT height, std::wstring name)
 {
 	HRESULT result;
 

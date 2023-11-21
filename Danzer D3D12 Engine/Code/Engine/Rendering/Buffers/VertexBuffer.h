@@ -6,7 +6,7 @@
 #include <vector>
 
 
-class DirectX12Framework;
+class D3D12Framework;
 
 class VertexBuffer
 {

@@ -6,8 +6,9 @@
 
 #include "../RenderManager.h"
 #include "../RenderUtility.h"
-#include "../../Core/DirectX12Framework.h"
+#include "../../Core/D3D12Framework.h"
 
+#include "FrameResource.h"
 #include "Scene.h"
 
 #include <iostream>
@@ -20,7 +21,7 @@ ModelHandler::~ModelHandler(){
 Model ModelHandler::CreateCustomModel(CustomModel customModel, bool transparent)
 {
 	ID3D12Device* device = m_framework.GetDevice();
-	ID3D12GraphicsCommandList* cmdList = m_framework.GetCommandList();
+	ID3D12GraphicsCommandList* cmdList = m_framework.InitCmdList();
 
 	UINT modelExist = GetExistingModel(L"CustomCube");
 	if (modelExist != 0) {
@@ -82,7 +83,7 @@ Model ModelHandler::CreateCustomModel(CustomModel customModel, bool transparent)
 	}
 
 	std::vector<ModelData::Mesh> meshes = { mesh };
-	UINT id = GetNewlyCreatedModelID(ModelData(meshes, m_framework.GetDevice(), &m_framework.GetCbvSrvUavWrapper(), verticies, L"", customModel.m_customModelName, transparent));
+	UINT id = GetNewlyCreatedModelID(ModelData(meshes, m_framework.GetDevice(), &m_framework.CbvSrvHeap(), verticies, L"", customModel.m_customModelName, transparent));
 	
 	return Model(id);
 }
@@ -95,7 +96,7 @@ Model ModelHandler::LoadModel(std::wstring fileName, std::string name, bool tran
 	}
 	
 	// Always restet CommandLists as executing them requires them to be close
-	m_framework.ResetCommandListAndAllocator(nullptr, L"ModelHandler: Line 97");
+	//m_framework.InitiateCommandList(nullptr, L"ModelHandler Line " + __LINE__);
 
 	std::string modelStr = { fileName.begin(), fileName.end() };
 	std::unique_ptr<LoaderModel> loadedModel = m_modelLoader.LoadModelFromAssimp(modelStr, uvFlipped);
@@ -123,7 +124,7 @@ Model ModelHandler::LoadModel(std::wstring fileName, std::string name, bool tran
 	else
 		modelName = name;
 
-	UINT id = GetNewlyCreatedModelID(ModelData(meshes, m_framework.GetDevice(), &m_framework.GetCbvSrvUavWrapper(), verticies, fileName, modelName, transparent));
+	UINT id = GetNewlyCreatedModelID(ModelData(meshes, m_framework.GetDevice(), &m_framework.CbvSrvHeap(), verticies, fileName, modelName, transparent));
 	return Model(id);
 }
 
@@ -269,7 +270,7 @@ UINT ModelHandler::GetNewlyCreatedModelID(ModelData model)
 std::vector<ModelData::Mesh> ModelHandler::LoadMeshFromLoaderModel(LoaderModel* loadedModel, std::string name)
 {
 	ID3D12Device* device = m_framework.GetDevice();
-	ID3D12GraphicsCommandList* cmdList = m_framework.GetCommandList();
+	ID3D12GraphicsCommandList* cmdList = m_framework.InitCmdList();
 
 	std::vector<ModelData::Mesh> meshes;
 	meshes.reserve(loadedModel->m_meshes.size());
@@ -331,7 +332,7 @@ std::vector<ModelData::Mesh> ModelHandler::LoadMeshFromLoaderModel(LoaderModel* 
 std::vector<ModelData::Mesh> ModelHandler::LoadMeshFromLoaderModel(LoaderModel* loadedModel, std::vector<UINT>& textures)
 {
 	ID3D12Device* device = m_framework.GetDevice();
-	ID3D12GraphicsCommandList* cmdList = m_framework.GetCommandList();
+	ID3D12GraphicsCommandList* cmdList = m_framework.InitCmdList();
 
 	std::vector<ModelData::Mesh> meshes;
 	meshes.reserve(loadedModel->m_meshes.size());

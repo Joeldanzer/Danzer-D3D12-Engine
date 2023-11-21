@@ -4,7 +4,7 @@
 #include "../3rdParty/DirectX-Headers-main/include/directx/d3dx12.h"
 #include <array>
 
-class DirectX12Framework;
+class D3D12Framework;
 struct ID3D12Device;
 
 enum PIPELINE_STATES {
@@ -35,7 +35,7 @@ public:
 	PipelineStateHandler();
 	~PipelineStateHandler();
 
-	void Init(DirectX12Framework& framework);
+	void Init(D3D12Framework& framework);
 
 	ID3D12PipelineState* GetPSO(PIPELINE_STATES state) { return m_PSObjects[state].Get(); }
 	ID3D12RootSignature* GetRootSignature(ROOTSINGATURE_STATES state) { return m_rootSignatures[state].Get(); }

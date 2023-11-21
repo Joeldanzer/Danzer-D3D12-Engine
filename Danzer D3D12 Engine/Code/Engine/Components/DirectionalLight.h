@@ -1,6 +1,8 @@
 #pragma once
 #include "Core\MathDefinitions.h"
 
+
+
 class DirectionalLight
 {
 public:

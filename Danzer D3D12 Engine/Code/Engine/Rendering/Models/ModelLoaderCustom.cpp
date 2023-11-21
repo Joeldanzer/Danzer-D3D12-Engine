@@ -188,7 +188,6 @@ void ModelLoaderCustom::LoadVerticies(std::vector<Vect3f>& v3Verts, aiMesh* mesh
 // *Load all verticies and vertex information with the meshes transform in mind.
 void ModelLoaderCustom::LoadVerticiesWithTransform(std::vector<Vect3f>& v3Verts, aiMesh* mesh, LoaderMesh* loaderMesh, Mat4f transform, bool uvFlipped)
 {
-  
     bool position  = mesh->HasPositions();
     bool uv        = mesh->HasTextureCoords(0);
     bool normals   = mesh->HasNormals();
@@ -241,10 +240,7 @@ void ModelLoaderCustom::LoadVerticiesWithTransform(std::vector<Vect3f>& v3Verts,
         }
 
         if (color) {     
-           if (mesh->mColors[i] != nullptr)
                verticies.PushVec4({ mesh->mColors[i]->r, mesh->mColors[i]->g, mesh->mColors[i]->b, mesh->mColors[i]->a });
-           else
-                verticies.PushVec4({ 1.0f, 1.0f, 1.0f, 1.0f });
         }
         else
             verticies.PushVec4({ 1.f, 1.f, 1.f, 0.f });
@@ -271,7 +267,7 @@ void ModelLoaderCustom::LoadMaterials(const aiScene* scene, LoaderModel* model)
 {
     for (unsigned int m = 0; m < scene->mNumMaterials; m++)
     {
-        LoadTexture(aiTextureType_DIFFUSE,      model->m_textures, scene->mMaterials[m]); // TEXTURE_DEFINITION_ALBEDO
+        LoadTexture(aiTextureType_DIFFUSE, model->m_textures, scene->mMaterials[m]); // TEXTURE_DEFINITION_ALBEDO
         //LoadTexture(aiTextureType_UNKNOWN,      model->m_textures, scene->mMaterials[m]); // TEXTURE_DEFINITION_ALBEDO
         //LoadTexture(aiTextureType_SPECULAR,     model->m_textures, scene->mMaterials[m]); // TEXTURE_DEFINITION_ROUGHNESS
         //LoadTexture(aiTextureType_AMBIENT,      model->m_textures, scene->mMaterials[m]); // TEXTURE_DEFINITION_AMBIENTOCCLUSION
@@ -304,9 +300,15 @@ void ModelLoaderCustom::LoadTexture(int type, std::vector<std::string>& textures
     if (std::string::npos != lastSlashIdx) {
         filePath.erase(0, lastSlashIdx + 1);
         const size_t replaceTextureType = filePath.find("_Diffuse");
-        filePath.erase(replaceTextureType, filePath.size() - replaceTextureType);
-        //const size_t removeExtension = filePath.find_first_of(".");
-        //filePath.erase(filePath.begin() + removeExtension, filePath.end());
+        
+        if (filePath.find("Fabric") != std::string::npos) { // Dum if check since the naming convention of this model is horrible
+            filePath.erase(replaceTextureType, 8);
+            const size_t removeExtension = filePath.find_first_of(".");
+            filePath.erase(filePath.begin() + removeExtension, filePath.end());
+        } 
+        else
+            filePath.erase(replaceTextureType, filePath.size() - replaceTextureType);
+       
         filePath.insert(0, "Sprites/");
     }
 

@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "PipelineStateHandler.h"
-#include "Core/DirectX12Framework.h"
+#include "Core/D3D12Framework.h"
 #include "Screen Rendering/GBuffer.h"
 
 #pragma comment(lib, "dxguid.lib")
@@ -22,7 +22,7 @@ PipelineStateHandler::~PipelineStateHandler(){
 	
 }
 
-void PipelineStateHandler::Init(DirectX12Framework& framework)
+void PipelineStateHandler::Init(D3D12Framework& framework)
 {
 	InitializeInputLayouts();
 	InitializeSamplerDescs();
@@ -673,15 +673,21 @@ void PipelineStateHandler::CreateGBufferPSO(ID3D12Device* device)
 	D3D12_BLEND_DESC blendDesc = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
 	blendDesc.RenderTarget->BlendEnable = false;
 
-	D3D12_DEPTH_STENCIL_DESC depthStencilDesc = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
-	//depthStencilDesc.DepthEnable = true;
-	//depthStencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
-	//depthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
-	//depthStencilDesc.StencilEnable = true;
+	CD3DX12_DEPTH_STENCIL_DESC depthStencilDesc(D3D12_DEFAULT);
+	depthStencilDesc.DepthEnable = true;
+	depthStencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+	depthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
+	depthStencilDesc.StencilEnable = false;
 
-	D3D12_RASTERIZER_DESC rasterizerDesc = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+	CD3DX12_RASTERIZER_DESC rastDesc(D3D12_FILL_MODE_SOLID,
+		D3D12_CULL_MODE_NONE, FALSE,
+		D3D12_DEFAULT_DEPTH_BIAS, D3D12_DEFAULT_DEPTH_BIAS_CLAMP,
+		D3D12_DEFAULT_SLOPE_SCALED_DEPTH_BIAS, TRUE, TRUE, FALSE,
+		0, D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF);
 
 	DXGI_SAMPLE_DESC sample = { 1, 0 };
+	sample.Count   = 1;
+	sample.Quality = 0;
 
 	ID3DBlob* vs;
 	ID3DBlob* ps;
@@ -717,7 +723,7 @@ void PipelineStateHandler::CreateGBufferPSO(ID3D12Device* device)
 	psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
 	psoDesc.SampleDesc = sample;
 	psoDesc.SampleMask = 0xffffffff;
-	psoDesc.RasterizerState = rasterizerDesc;
+	psoDesc.RasterizerState = rastDesc;
 	psoDesc.BlendState = blendDesc;
 	psoDesc.DepthStencilState = depthStencilDesc;
 	psoDesc.NumRenderTargets = 6;
@@ -753,7 +759,7 @@ void PipelineStateHandler::InitializeSamplerDescs()
 
 	m_samplerDescs[SAMPLER_DESC_CLAMP] = samplerDesc;
 
-	samplerDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
+	samplerDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
 	samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
 	samplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
 	samplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;

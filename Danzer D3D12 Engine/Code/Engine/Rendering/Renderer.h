@@ -15,7 +15,7 @@ class Camera;
 class Object;
 class Skybox;
 class DirectionalLight;
-class DirectX12Framework;
+class D3D12Framework;
 
 class Transform;
 
@@ -24,8 +24,7 @@ class Renderer
 public:
 	Renderer() : 
 		m_descriptorIndex(0),
-		m_framework(nullptr),
-		m_commandList(nullptr),				 
+		m_framework(nullptr),	 
 		m_rootSignature(nullptr), 
 	 	m_cameraBuffer(CameraBuffer()),
 		m_transformBuffer(TransformBuffer()),
@@ -33,23 +32,23 @@ public:
 	{}
 	~Renderer();
 
-	void Init(DirectX12Framework& framework);
+	void Init(D3D12Framework& framework);
 
-	void UpdateDefaultBuffers(Camera& camera, Transform&, UINT frameIndex);
-	void RenderSkybox(Transform& cameraTransform, TextureHandler::Texture& textures, ModelData& model, Skybox& skybox, UINT frameIndex);
-	void RenderDirectionalLight(TextureHandler::Texture& skyboxTexture, UINT frameIndex, UINT& startLocation);
+	CD3DX12_GPU_DESCRIPTOR_HANDLE UpdateDefaultBuffers(Camera& camera, Transform&, UINT frameIndex);
+	void RenderSkybox(ID3D12GraphicsCommandList* cmdList, Transform& cameraTransform, TextureHandler::Texture& textures, ModelData& model, Skybox& skybox, UINT frameIndex, UINT StartLocation);
+	void RenderDirectionalLight(ID3D12GraphicsCommandList* cmdList, TextureHandler::Texture& skyboxTexture, UINT frameIndex, UINT& startLocation);
 	//void TransparentRender(Scene* scene, std::vector<ModelData>& transparentModels, UINT frameIndex, std::vector<TextureHandler::Texture> textures);
-	void RenderToGbuffer(std::vector<ModelData>& models, UINT frameIndex, std::vector<TextureHandler::Texture>& textures, bool renderTransparency);
+	void RenderToGbuffer(ID3D12GraphicsCommandList* cmdList, std::vector<ModelData>& models, UINT frameIndex, std::vector<TextureHandler::Texture>& textures, bool renderTransparency, UINT startLocation);
 
-	void RayRendering(std::vector<RayBuffer::RayInstance>& rays, UINT frameIndex);
-	void AABBRendering(std::vector<AABBBuffer::AABBInstance>& aabb, UINT frameIndex);
+	//void RayRendering(std::vector<RayBuffer::RayInstance>& rays, UINT frameIndex);
+	//void AABBRendering(std::vector<AABBBuffer::AABBInstance>& aabb, UINT frameIndex);
 
-	void UpdateLightBuffer(const DirectionalLight& light, const Vect4f& direction, UINT frameIndex, UINT& startLocation);
+	CD3DX12_GPU_DESCRIPTOR_HANDLE UpdateLightBuffer(const DirectionalLight& light, const Vect4f& direction, UINT frameIndex);
 
 private:
 	UINT m_descriptorIndex;
 
-	DirectX12Framework* m_framework;
+	D3D12Framework* m_framework;
 
 	AABBBuffer m_aabbBuffer;
 	RayBuffer m_rayBuffer;
@@ -58,7 +57,7 @@ private:
 	LightBuffer m_lightBuffer;
 	MaterialBuffer  m_materialBuffer;
 
-	ID3D12GraphicsCommandList* m_commandList;
+	//ID3D12GraphicsCommandList* m_commandList;
 	ID3D12RootSignature*       m_rootSignature;
 };
 

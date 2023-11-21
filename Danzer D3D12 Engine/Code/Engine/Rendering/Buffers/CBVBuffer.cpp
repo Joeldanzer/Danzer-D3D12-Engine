@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "CBVBuffer.h"
 
-#include "../../Core/DirectX12Framework.h"
+#include "../../Core/D3D12Framework.h"
 
 void CBVBuffer::Init(ID3D12Device* device, DescriptorHeapWrapper* cbvWrapper, void* data, UINT sizeOfData)
 {

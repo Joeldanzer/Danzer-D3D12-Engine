@@ -8,13 +8,13 @@
 class Scene;
 class RenderManager;
 class TextureHandler;
-class DirectX12Framework;
+class D3D12Framework;
 
 class ModelHandler
 {
 public:
 	ModelHandler() = delete;
-	ModelHandler(DirectX12Framework& framework, TextureHandler& textureHandler) :
+	ModelHandler(D3D12Framework& framework, TextureHandler& textureHandler) :
 		m_framework(framework),
 		m_textureHandler(textureHandler),
 		m_modelLoader()
@@ -57,6 +57,6 @@ private:
 	// Used to easily create necessary buffers for Models.
 	ModelLoaderCustom   m_modelLoader;	
 	TextureHandler&     m_textureHandler;
-	DirectX12Framework& m_framework;
+	D3D12Framework& m_framework;
 };
 

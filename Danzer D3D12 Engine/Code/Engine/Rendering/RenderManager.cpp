@@ -1,13 +1,15 @@
 #include "stdafx.h"
 
 #include "../3rdParty/imgui-master/backends/imgui_impl_dx12.h"
+#include "../3rdParty/imgui-master/backends/imgui_impl_win32.h"
 
 #include "RenderManager.h"
-#include "Core/DirectX12Framework.h"
+#include "Core/D3D12Framework.h"
 #include "Core/MathDefinitions.h"
 #include "Core/WindowHandler.h"
 #include "Models/ModelHandler.h"
 #include "2D/SpriteHandler.h"
+#include "FrameResource.h"
 
 #include "Components/Sprite.h"
 #include "Components/Text.h"
@@ -15,6 +17,7 @@
 #include "Components/Transform.h"
 #include "Components/Transform2D.h"
 #include "Components/DirectionalLight.h"
+
 
 #include "Screen Rendering/GBuffer.h"
 #include "Camera.h"
@@ -29,15 +32,14 @@
 
 class RenderManager::Impl {
 public:
-	Impl(DirectX12Framework& framework);
+	Impl(D3D12Framework& framework);
 	~Impl();
 
-	DirectX12Framework& GetFramework() { return m_framework; }
+	D3D12Framework& GetFramework() { return m_framework; }
 	PipelineStateHandler& GetPipelineStateHandler() { return m_pipeLineHandler; }
 
 	void RenderImgui();
 
-	void WaitForPreviousFrame();
 	void BeginFrame();
 	void RenderFrame(TextureHandler& textureHandler, ModelHandler& modelHandler,
 		SpriteHandler& SpriteHandler, Skybox& skybox, Scene& scene/*Camera, Ligthing, GameObjects, etc...*/);
@@ -58,7 +60,7 @@ private:
 	Renderer2D			 m_2dRenderer;
 	GBuffer				 m_gBuffer;
 
-	DirectX12Framework& m_framework;
+	D3D12Framework& m_framework;
 
 
 	//std::priority_queue<TransparentObject, std::vector<TransparentObject>, >
@@ -73,7 +75,7 @@ private:
 };
 
 
-RenderManager::Impl::Impl::Impl(DirectX12Framework& framework) : 
+RenderManager::Impl::Impl::Impl(D3D12Framework& framework) : 
 	m_framework(framework),
 	m_gBuffer(framework)
 {
@@ -89,31 +91,52 @@ RenderManager::Impl::Impl::~Impl(){
 
 void RenderManager::Impl::Impl::RenderImgui()
 {
-	ID3D12DescriptorHeap* descHeaps[] = { m_framework.GetImguiHeap() };
-	m_framework.GetCommandList()->SetDescriptorHeaps(
+	ID3D12DescriptorHeap* descHeaps[] = { m_framework.m_imguiDesc };
+	m_framework.m_frameResources[m_framework.m_frameIndex]->CmdList()->SetDescriptorHeaps(
 		_countof(descHeaps),
 		&descHeaps[0]
 	);
 
-	ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), m_framework.GetCommandList());
-}
-
-void RenderManager::Impl::Impl::WaitForPreviousFrame()
-{
-	m_framework.WaitForPreviousFrame();
+	ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), m_framework.m_frameResources[m_framework.m_frameIndex]->CmdList());
 }
 
 void RenderManager::Impl::BeginFrame()
 {
-	//m_framework.ResetCommandListAndAllocator(nullptr, L"RenderManager: Line 108");
-	//
-	//m_framework.m_commandList->RSSetViewports(1, &m_framework.m_viewport);
-	//m_framework.m_commandList->RSSetScissorRects(1, &m_framework.m_scissorRect);
-	//m_framework.m_commandList->ClearDepthStencilView(m_framework.m_depthDescriptor->GetCPUDescriptorHandleForHeapStart(),
-	//	D3D12_CLEAR_FLAG_DEPTH, 1.f, 0, 1, &m_framework.m_scissorRect);
-	//
-	//m_framework.ExecuteCommandList();
-	//m_framework.WaitForPreviousFrame();
+	ImGui::NewFrame();
+	ImGui_ImplDX12_NewFrame();
+	ImGui_ImplWin32_NewFrame();
+
+	m_framework.InitiateCommandList(nullptr, L"RenderManager Line " + __LINE__);
+	
+	ID3D12GraphicsCommandList* cmdList = m_framework.CurrentFrameResource()->CmdList();
+
+	cmdList->RSSetViewports(1, &m_framework.m_viewport);
+	cmdList->RSSetScissorRects(1, &m_framework.m_scissorRect);
+	cmdList->ClearDepthStencilView(
+		m_framework.DSVHeap().GetDescriptorHeap()->GetCPUDescriptorHandleForHeapStart(),
+		D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 1, &m_framework.m_scissorRect
+	);
+	
+	m_framework.QeueuResourceTransition(&m_gBuffer.GetGbufferResources()[0], GBUFFER_COUNT, 
+		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET);
+
+	ID3D12Resource* resources[] = { m_framework.GetCurrentRTV() };
+	m_framework.QeueuResourceTransition(&resources[0], 1,
+		D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET
+	);
+
+	m_framework.TransitionAllResources();
+
+	// Clear all RenderTargets
+	m_gBuffer.ClearRenderTargets(m_framework.RTVHeap(), cmdList, 1, &m_framework.m_scissorRect);
+	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle = m_framework.RTVHeap().GET_CPU_DESCRIPTOR(0);
+	rtvHandle.Offset(m_framework.m_frameIndex * m_framework.RTVHeap().DESCRIPTOR_SIZE());
+	cmdList->ClearRenderTargetView(
+		rtvHandle,
+		&ClearColor[0], 
+		1,
+		&m_framework.m_scissorRect
+	);
 
 }
 
@@ -123,74 +146,51 @@ void RenderManager::Impl::Impl::RenderFrame(TextureHandler& textureHandler, Mode
 	 SpriteHandler& spriteHandler, Skybox& skybox, Scene& scene)
 {	
 	ImGui::Render();
-
-	Camera&    cam			= scene.Registry().get<Camera>(scene.GetMainCamera());
-	Transform& camTransform = scene.Registry().get<Transform>(scene.GetMainCamera());
-
-	m_framework.ResetCommandListAndAllocator(nullptr, L"RenderManager: Line 127");
-
-	m_framework.m_commandList->ClearDepthStencilView(
-		m_framework.m_dsvWrapper.GetDescriptorHeap()->GetCPUDescriptorHandleForHeapStart(),
-		D3D12_CLEAR_FLAG_DEPTH, 1.f, 0, 0, nullptr);
-	m_framework.m_commandList->RSSetViewports(1, &m_framework.m_viewport);
-	m_framework.m_commandList->RSSetScissorRects(1, &m_framework.m_scissorRect);
-
-	ID3D12DescriptorHeap* cbvSrvHeap = m_framework.GetCbvSrvUavWrapper().GetDescriptorHeap();
-	m_framework.m_commandList->SetDescriptorHeaps(1, &cbvSrvHeap);
 	RenderScene(textureHandler, spriteHandler, modelHandler, scene, skybox);
 
-	m_framework.ExecuteCommandList();
 	ClearAllInstances(modelHandler, spriteHandler);
 }
 
 void RenderManager::Impl::RenderScene(TextureHandler& textureHandler, SpriteHandler& spriteHandler, ModelHandler& modelHandler, Scene& scene, Skybox& skybox)
 {
-	ID3D12GraphicsCommandList* cmdList = m_framework.GetCommandList();
-	
-	entt::registry& reg		= scene.Registry();
-	Camera& cam		        = reg.get<Camera>(scene.GetMainCamera());
+	ID3D12GraphicsCommandList* cmdList = m_framework.CurrentFrameResource()->CmdList();
+
+	ID3D12DescriptorHeap* cbvSrvHeap = m_framework.CbvSrvHeap().GetDescriptorHeap();
+
+	const UINT frameIndex = m_framework.m_frameIndex;
+
+	entt::registry& reg = scene.Registry();
+	Camera& cam = reg.get<Camera>(scene.GetMainCamera());
 	Transform& camTransform = reg.get<Transform>(scene.GetMainCamera());
-	
+
 	{ //* Scene to Gbuffer start
 		Update3DInstances(scene, modelHandler);
+
+
+		CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(m_framework.DSVHeap().GetDescriptorHeap()->GetCPUDescriptorHandleForHeapStart());
+		std::array<CD3DX12_CPU_DESCRIPTOR_HANDLE, GBUFFER_COUNT> rtvHandle = m_gBuffer.GetRTVDescriptorHandles(m_framework.RTVHeap());
+		cmdList->OMSetRenderTargets(GBUFFER_COUNT, &rtvHandle[0], false, &dsvHandle);
 		
 		cmdList->SetGraphicsRootSignature(m_pipeLineHandler.GetRootSignature(ROOTSIGNATURE_STATE_GBUFFER));
 		cmdList->SetPipelineState(m_pipeLineHandler.GetPSO(PIPELINE_STATE_GBUFFER));
-		
-		m_framework.QeueuResourceTransition(
-			&m_gBuffer.GetGbufferResources()[0], GBUFFER_COUNT,
-			D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET
-		);
-		ID3D12Resource* resources[] = { m_framework.GetRTV() };
-		m_framework.QeueuResourceTransition(&resources[0], _countof(resources),
-			D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET
-		);
-		
-		m_framework.TransitionAllResources(); 
+		cmdList->SetDescriptorHeaps(1, &cbvSrvHeap);
 
-		m_gBuffer.ClearRenderTargets(cmdList, {0.0f, 0.0f, 0.f, 0.f}, 1, &m_framework.m_scissorRect);
-		
+		UINT startLocation = 0;
 
-		CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(m_framework.m_dsvWrapper.GetDescriptorHeap()->GetCPUDescriptorHandleForHeapStart());
-		std::array<CD3DX12_CPU_DESCRIPTOR_HANDLE, GBUFFER_COUNT> rtvHandle = m_gBuffer.GetRTVDescriptorHandles();
-		cmdList->OMSetRenderTargets(GBUFFER_COUNT, &rtvHandle[0], false, &dsvHandle);
-
-		m_mainRenderer.UpdateDefaultBuffers(cam, camTransform, m_framework.GetFrameIndex());
+		CD3DX12_GPU_DESCRIPTOR_HANDLE defaultHandle = m_mainRenderer.UpdateDefaultBuffers(cam, camTransform, m_framework.GetFrameIndex());
+		cmdList->SetGraphicsRootDescriptorTable(startLocation, defaultHandle);
+		startLocation++;
 
 		// Render non transparent objects first
 		m_mainRenderer.RenderToGbuffer(
-			modelHandler.GetAllModels(), 
-			m_framework.GetFrameIndex(), 
+			cmdList,
+			modelHandler.GetAllModels(),
+			m_framework.m_frameIndex,
 			textureHandler.GetTextures(),
-			false
-		);	
+			false,
+			startLocation
+		);
 
-		//m_mainRenderer.RenderToGbuffer(
-		//	modelHandler.GetAllModels(),
-		//	m_framework.GetFrameIndex(),
-		//	textureHandler.GetTextures(),
-		//	false
-		//);
 		m_framework.QeueuResourceTransition(
 			&m_gBuffer.GetGbufferResources()[0], GBUFFER_COUNT,
 			D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
@@ -200,26 +200,34 @@ void RenderManager::Impl::RenderScene(TextureHandler& textureHandler, SpriteHand
 	{ //* Render Skybox & Ligth start
 		cmdList->SetGraphicsRootSignature(m_pipeLineHandler.GetRootSignature(ROOTSIGNATURE_STATE_DEFAULT));
 		cmdList->SetPipelineState(m_pipeLineHandler.GetPSO(PIPELINE_STATE_SKYBOX));
-	
-		float c[4] = { 0.5f, 0.5f, 1.f, 1.f };
-		D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = m_framework.GetCurrentRTVHandle();
-		//CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(m_framework.m_depthDescriptor->GetCPUDescriptorHandleForHeapStart());
-		cmdList->ClearRenderTargetView(rtvHandle, &c[0], 1, &m_framework.m_scissorRect);
+
+		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle = m_framework.m_rtvHeap.GET_CPU_DESCRIPTOR(0);
+		rtvHandle.Offset(frameIndex * m_framework.RTVHeap().DESCRIPTOR_SIZE());
+
 		cmdList->OMSetRenderTargets(1, &rtvHandle, false, nullptr);
-		
+
 		//ID3D12DescriptorHeap* cbvSrvHeap = m_framework.GetCbvSrvUavWrapper().GetDescriptorHeap();
 		//m_framework.m_commandList->SetDescriptorHeaps(1, &cbvSrvHeap);
+
+		UINT startLocation = 0;
 		
-		m_mainRenderer.RenderSkybox(camTransform, 
+		D3D12_GPU_DESCRIPTOR_HANDLE defaultHandle = m_mainRenderer.UpdateDefaultBuffers(cam, camTransform, m_framework.GetFrameIndex());
+		cmdList->SetGraphicsRootDescriptorTable(startLocation, defaultHandle);
+		startLocation++;
+
+		m_mainRenderer.RenderSkybox(
+			cmdList,
+			camTransform,
 			textureHandler.GetTextures()[skybox.GetCurrentSkyboxTexture() - 1],
 			modelHandler.GetAllModels()[skybox.GetSkyboxCube() - 1],
-			skybox, 
-			m_framework.GetFrameIndex()
+			skybox,
+			m_framework.GetFrameIndex(),
+			startLocation
 		);
-		
+
 		cmdList->SetGraphicsRootSignature(m_pipeLineHandler.GetRootSignature(ROOTSIGNATURE_STATE_LIGHT));
 		cmdList->SetPipelineState(m_pipeLineHandler.GetPSO(PIPELINE_STATE_DIRECTIONAL_LIGHT));
-	
+
 		auto list = scene.Registry().view<DirectionalLight, Transform>();
 		DirectionalLight directionalLight;
 		Vect4f directionaLightdir = { 0.f, 0.f, 0.f, 1.f };
@@ -230,13 +238,14 @@ void RenderManager::Impl::RenderScene(TextureHandler& textureHandler, SpriteHand
 			directionaLightdir = { dir.x, dir.y, dir.z, 1.0f };
 		}
 
-		m_mainRenderer.UpdateDefaultBuffers(cam, camTransform, m_framework.GetFrameIndex());
-		UINT startLocation = 1;
-		m_mainRenderer.UpdateLightBuffer(directionalLight, directionaLightdir, m_framework.GetFrameIndex(), startLocation);
-		m_gBuffer.AssignSRVSlots(cmdList, &m_framework.GetCbvSrvUavWrapper(), startLocation);
+		D3D12_GPU_DESCRIPTOR_HANDLE lightHandle = m_mainRenderer.UpdateLightBuffer(directionalLight, directionaLightdir, m_framework.GetFrameIndex());
+		cmdList->SetGraphicsRootDescriptorTable(startLocation, lightHandle);
+		startLocation++;
 
+		m_gBuffer.AssignSRVSlots(cmdList, &m_framework.CbvSrvHeap(), startLocation);
 		m_mainRenderer.RenderDirectionalLight(
-			textureHandler.GetTextures()[skybox.GetCurrentActiveSkybox()[1] - 1], 
+			cmdList,
+			textureHandler.GetTextures()[skybox.GetCurrentActiveSkybox()[1] - 1],
 			m_framework.GetFrameIndex(),
 			startLocation
 		);
@@ -246,21 +255,21 @@ void RenderManager::Impl::RenderScene(TextureHandler& textureHandler, SpriteHand
 		cmdList->SetGraphicsRootSignature(m_pipeLineHandler.GetRootSignature(ROOTSIGNATURE_STATE_UI));
 		cmdList->SetPipelineState(m_pipeLineHandler.GetPSO(PIPELINE_STATE_UI));
 
-		ID3D12DescriptorHeap* cbvSrvHeap = m_framework.GetCbvSrvUavWrapper().GetDescriptorHeap();
-		m_framework.m_commandList->SetDescriptorHeaps(1, &cbvSrvHeap);
+		ID3D12DescriptorHeap* cbvSrvHeap = m_framework.CbvSrvHeap().GetDescriptorHeap();
+		cmdList->SetDescriptorHeaps(1, &cbvSrvHeap);
 
 		Update2DInstances(scene, spriteHandler);
-		m_2dRenderer.RenderUI(spriteHandler.GetAllSprites(), m_framework.GetFrameIndex(), textureHandler.GetTextures());
+		m_2dRenderer.RenderUI(
+			cmdList, 
+			spriteHandler.GetAllSprites(), 
+			m_framework.GetFrameIndex(), 
+			textureHandler.GetTextures()
+		);
 	} //* Render 2D Scene End
 
 	RenderImgui(); // Render Imgui over everything else
 
 	m_framework.TransitionRenderTarget(D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
-	
-	//m_framework.ExecuteCommandList();
-	//m_framework.WaitForPreviousFrame();
-	//m_framework.ResetCommandListAndAllocator(nullptr, L"RenderManager: Line 232");
-	//m_framework.ResetCommandListAndAllocator(m_pipeLineHandler.GetPSO(PIPELINE_STATE_DIRECTIONAL_LIGHT), L"RenderManager: Line 232");
 }
 
 void RenderManager::Impl::Update3DInstances(Scene& scene, ModelHandler& modelHandler)
@@ -349,8 +358,8 @@ void RenderManager::Impl::Update2DInstances(Scene& scene, SpriteHandler& spriteH
 
 void RenderManager::Impl::AddSpriteSheetInstance(Sprite& data, Transform2D& transform, SpriteHandler& spriteHandler)
 {
-	float w = (float)WindowHandler::GetWindowData().m_width  / 2.f;
-	float h = (float)WindowHandler::GetWindowData().m_height / 2.f;
+	float w = (float)WindowHandler::WindowData().m_w  / 2.f;
+	float h = (float)WindowHandler::WindowData().m_h / 2.f;
 
 	SpriteData::Sheet& sheet = spriteHandler.GetAllSprites()[data.m_spriteSheet].GetSheet();
 	UINT frame = data.m_frame;
@@ -417,7 +426,7 @@ void RenderManager::Impl::ClearAllInstances(ModelHandler& modelHandler, SpriteHa
 	m_rayInstances.clear();
 }
 
-RenderManager::RenderManager(DirectX12Framework& framework)
+RenderManager::RenderManager(D3D12Framework& framework)
 {
 	m_Impl = new Impl(framework);
 }

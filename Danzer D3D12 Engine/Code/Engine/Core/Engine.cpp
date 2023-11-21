@@ -17,6 +17,7 @@
 #include "Rendering/SkyBox.h"
 #include "CollisionManager.h"
 #include "Rendering/Camera.h"
+#include "D3D12Framework.h"
 
 // ImGui
 #include "../3rdParty/imgui-master/backends/imgui_impl_dx12.h"
@@ -28,8 +29,11 @@ public:
 	Impl(unsigned int width, unsigned int height);
 	~Impl();
 
-	void Update();
+	void BeginUpdate();
+	void MidUpdate();
 	void LateUpdate();
+
+	void EndInitFrame();
 
 	const float			GetFPS()			  noexcept;
 	const float		    GetDeltaTime()		  noexcept;
@@ -37,13 +41,14 @@ public:
 	ModelHandler&		GetModelFactory()	  noexcept;
 	SpriteHandler&		GetSpriteFactory()	  noexcept;
 	RenderManager&	    GetRenderManager()	  noexcept;
-	DirectX12Framework& GetFramework()		  noexcept;
+	D3D12Framework&     GetFramework()		  noexcept;
 	TextureHandler&		GetTextureHandler()	  noexcept;
 	CollisionManager&   GetCollisionManager() noexcept;
 
 private:
 	WindowHandler m_windowHandler;
-	DirectX12Framework m_framework;
+	D3D12Framework m_framework;
+	//DirectX12Framework m_framework;
 	RenderManager m_renderManager;
 	ModelHandler m_modelHandler;
 	SpriteHandler m_spriteHandler;
@@ -59,15 +64,15 @@ private:
 };
 
 Engine::Impl::Impl(unsigned int width, unsigned int height) :
-	m_framework(),
 	m_windowHandler({ 0, 0, width, height }),
+	m_framework(),
 	m_renderManager(m_framework),
 	m_textureHandler(m_framework),
 	m_modelHandler(m_framework, m_textureHandler),
 	m_spriteHandler(m_framework, m_textureHandler),
 	m_sceneManager(),
 	m_collisionManager(),
-	m_camera(65.f, (float)m_windowHandler.GetWindowData().m_width / (float)m_windowHandler.GetWindowData().m_height),
+	m_camera(65.f, (float)m_windowHandler.WindowData().m_w / (float)m_windowHandler.WindowData().m_h),
 	m_skybox(m_textureHandler),
 	m_deltaTime(0.f)
 {
@@ -91,18 +96,16 @@ Engine::Impl::Impl(unsigned int width, unsigned int height) :
 	m_spriteHandler.CreateSpriteSheet(L"Sprites/testSpriteSheet.dds", 4, 4);
 	//m_spriteHandler.LoadFont("Config/Fonts/ChiliFont.json");
 	
-	m_framework.ExecuteCommandList();
-	m_framework.WaitForPreviousFrame();
+	m_sceneManager.Init(m_camera);
 
 	//m_framework.ExecuteCommandList();
 	//m_framework.WaitForPreviousFrame();
 	//Camera camera(65.f, (float)m_windowHandler.GetWindowData().m_width / (float)m_windowHandler.GetWindowData().m_height);
-	m_sceneManager.Init(m_camera);
 }
 
 Engine::Impl::~Impl()
 {
-	m_framework.~DirectX12Framework();
+	m_framework.~D3D12Framework();
 	m_sceneManager.~SceneManager();
 	m_renderManager.~RenderManager();
 	m_windowHandler.~WindowHandler();
@@ -119,30 +122,35 @@ Engine::Engine(unsigned int width, unsigned int height)
 }
 Engine::~Engine(){}
 
-void Engine::Impl::Update()
+void Engine::Impl::BeginUpdate()
 {
 	m_frameTimer.Update();
 	const float deltaTime = m_frameTimer.GetRealDeltaTime();
 
 	m_renderManager.BeginFrame();
+}
 
-	ImGui::NewFrame();
-	ImGui_ImplDX12_NewFrame();
-	ImGui_ImplWin32_NewFrame();
-
+void Engine::Impl::MidUpdate()
+{
+	const float deltaTime = m_frameTimer.GetRealDeltaTime();
 	m_skybox.Update(deltaTime);
 
 	//m_sceneManager.GetCurrentScene()->UpdateAllObjectsInScene(deltaTime);
 	//m_collisionManager.UpdateCollisions(m_sceneManager.GetCurrentScene()->GetObjects());
+	m_sceneManager.GetCurrentScene().UpdateTransforms();
+	m_renderManager.RenderFrame(m_textureHandler, m_modelHandler, m_spriteHandler, m_skybox, m_sceneManager.GetCurrentScene());
 }
 
 void Engine::Impl::LateUpdate()
 {
-	m_sceneManager.GetCurrentScene().UpdateTransforms();
-	m_renderManager.RenderFrame(m_textureHandler, m_modelHandler, m_spriteHandler, m_skybox, m_sceneManager.GetCurrentScene());
-	
+	m_framework.ExecuteCommandList();
 	m_framework.GetSwapChain()->Present(1, 0);
-	m_framework.WaitForPreviousFrame();
+	m_framework.WaitForGPU();
+}
+
+void Engine::Impl::EndInitFrame()
+{
+	m_framework.EndInitFrame();
 }
 
 bool Engine::StartEngine(bool editor)
@@ -155,13 +163,22 @@ bool Engine::StartEngine(bool editor)
 	return true;
 }
 
-void Engine::Update()
+void Engine::BeginUpdate()
 {
-	m_Impl->Update();
+	m_Impl->BeginUpdate();
+}
+
+void Engine::MidUpdate()
+{
+	m_Impl->MidUpdate();
 }
 void Engine::LateUpdate()
 {
 	m_Impl->LateUpdate();
+}
+void Engine::EndInitFrame()
+{
+	m_Impl->EndInitFrame();
 }
 const float Engine::GetFPS() const noexcept
 {
@@ -187,7 +204,7 @@ RenderManager& Engine::GetRenderManager() const noexcept
 {
 	return m_Impl->GetRenderManager();
 }
-DirectX12Framework& Engine::GetFramework() const noexcept
+D3D12Framework& Engine::GetFramework() const noexcept
 {
 	return m_Impl->GetFramework();
 }
@@ -227,7 +244,7 @@ RenderManager& Engine::Impl::GetRenderManager() noexcept
 {
 	return m_renderManager;
 }
-DirectX12Framework& Engine::Impl::GetFramework() noexcept
+D3D12Framework& Engine::Impl::GetFramework() noexcept
 {
 	return m_framework;
 }

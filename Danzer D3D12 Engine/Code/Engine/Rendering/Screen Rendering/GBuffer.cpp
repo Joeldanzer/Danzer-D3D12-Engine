@@ -2,13 +2,12 @@
 #include "GBuffer.h"
 
 #include "Core/WindowHandler.h"
+#include "Core/DesriptorHeapWrapper.h"
+#include "Core/D3D12Framework.h"
 
-#include "Core/DirectX12Framework.h"
 
-
-GBuffer::GBuffer(DirectX12Framework& framework)
+GBuffer::GBuffer(D3D12Framework& framework)
 {
-	framework.ResetCommandListAndAllocator(nullptr, L"GBuffer: Line 11");
 	InitializeGBuffers(framework);
 }
 GBuffer::~GBuffer(){}
@@ -22,9 +21,10 @@ std::array<ID3D12Resource*, GBUFFER_COUNT> GBuffer::GetGbufferResources()
 	return resources;
 }
 
-std::array<CD3DX12_CPU_DESCRIPTOR_HANDLE, GBUFFER_COUNT> GBuffer::GetRTVDescriptorHandles()
+std::array<CD3DX12_CPU_DESCRIPTOR_HANDLE, GBUFFER_COUNT> GBuffer::GetRTVDescriptorHandles(DescriptorHeapWrapper& rtvDesc)
 {
-	CD3DX12_CPU_DESCRIPTOR_HANDLE handle(m_rtvDescriptor->GetCPUDescriptorHandleForHeapStart());
+	CD3DX12_CPU_DESCRIPTOR_HANDLE handle(rtvDesc.GET_CPU_DESCRIPTOR(0));
+	handle.Offset(m_rtvOffsetID * m_rtvDescSize);
 	std::array<CD3DX12_CPU_DESCRIPTOR_HANDLE, GBUFFER_COUNT> rtvHandles;
 	for (UINT i = 0; i < GBUFFER_COUNT; i++)
 	{
@@ -37,19 +37,19 @@ std::array<CD3DX12_CPU_DESCRIPTOR_HANDLE, GBUFFER_COUNT> GBuffer::GetRTVDescript
 
 
 
-void GBuffer::ClearRenderTargets(ID3D12GraphicsCommandList* cmdList, Vect4f clearColor, UINT numberOfRects, const D3D12_RECT* rect)
+void GBuffer::ClearRenderTargets(DescriptorHeapWrapper& rtvDesc, ID3D12GraphicsCommandList* cmdList, UINT numberOfRects, const D3D12_RECT* rect)
 {
-	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvDescriptor->GetCPUDescriptorHandleForHeapStart());
+	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(rtvDesc.GET_CPU_DESCRIPTOR(0));
+	rtvHandle.Offset(m_rtvOffsetID * m_rtvDescSize);
 	for (UINT i = 0; i < GBUFFER_COUNT; i++)
 	{
-		cmdList->ClearRenderTargetView(rtvHandle, &clearColor.x, numberOfRects, rect);
+		cmdList->ClearRenderTargetView(rtvHandle, ClearColor, numberOfRects, rect);
 		rtvHandle.Offset(m_rtvDescSize);
 	}
 }
 
 void GBuffer::AssignSRVSlots(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper* srvWrapper, UINT& startLocation)
 {
-
 	D3D12_GPU_DESCRIPTOR_HANDLE cbvSrvHeapStart = srvWrapper->GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
 	const UINT cbvSrvDescSize = srvWrapper->DESCRIPTOR_SIZE();
 
@@ -60,7 +60,7 @@ void GBuffer::AssignSRVSlots(ID3D12GraphicsCommandList* cmdList, DescriptorHeapW
 	}
 }
 
-void GBuffer::InitializeGBuffers(DirectX12Framework& framework)
+void GBuffer::InitializeGBuffers(D3D12Framework& framework)
 {
 	HRESULT result;
 
@@ -68,8 +68,8 @@ void GBuffer::InitializeGBuffers(DirectX12Framework& framework)
 	IDXGISwapChain* swapChain = framework.GetSwapChain();
 
 	UINT width, height;
-	width  = WindowHandler::GetWindowData().m_width;
-	height = WindowHandler::GetWindowData().m_height;
+	width  = WindowHandler::WindowData().m_w;
+	height = WindowHandler::WindowData().m_h;
 
 	std::array<DXGI_FORMAT, GBUFFER_COUNT> formats = {
 		DXGI_FORMAT_R8G8B8A8_UNORM_SRGB, //* ALBEDO
@@ -88,30 +88,24 @@ void GBuffer::InitializeGBuffers(DirectX12Framework& framework)
 		L"Vertex_Normal_Gbuffer",
 		L"World_Position_Gbuffer"
 	};
-
-	CD3DX12_HEAP_PROPERTIES heapProperties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
 	
-	D3D12_DESCRIPTOR_HEAP_DESC rtvDesc = {  };
-	rtvDesc.NumDescriptors = GBUFFER_COUNT;
-	rtvDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-	rtvDesc.Type  = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
-	
-	result = device->CreateDescriptorHeap(&rtvDesc, IID_PPV_ARGS(m_rtvDescriptor.GetAddressOf()));
-	CHECK_HR(result);
-	
-	m_rtvDescriptor->SetName(L"Gbuffer RTV Descriptor");
 
 	m_rtvDescSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 	m_srvDescSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-	   
-	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvDescriptor->GetCPUDescriptorHandleForHeapStart());
-	CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(framework.GetCbvSrvUavWrapper().GetDescriptorHeap()->GetCPUDescriptorHandleForHeapStart());
-
-	DescriptorHeapWrapper* srvWrapper = &framework.GetCbvSrvUavWrapper();
-
-	srvHandle.Offset(srvWrapper->m_handleCurrentOffset * srvWrapper->DESCRIPTOR_SIZE());
 	
-	float clearColor[4] = {0.f, 0.f, 0.f, 0.f};
+	CD3DX12_HEAP_PROPERTIES heapProperties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
+	
+	DescriptorHeapWrapper& srvWrapper = framework.CbvSrvHeap();
+	DescriptorHeapWrapper& rtvWrapper = framework.RTVHeap();
+
+	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(rtvWrapper.GET_CPU_DESCRIPTOR(0));
+	CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(framework.CbvSrvHeap().GET_CPU_DESCRIPTOR(0));
+
+	srvHandle.Offset(srvWrapper.m_handleCurrentOffset * srvWrapper.DESCRIPTOR_SIZE());
+	rtvHandle.Offset(rtvWrapper.m_handleCurrentOffset * rtvWrapper.DESCRIPTOR_SIZE());
+
+	m_rtvOffsetID = rtvWrapper.m_handleCurrentOffset;
+
 	for (UINT i = 0; i < GBUFFER_COUNT; i++)
 	{
 		D3D12_RESOURCE_DESC resourceDesc = CD3DX12_RESOURCE_DESC::Tex2D(
@@ -119,7 +113,7 @@ void GBuffer::InitializeGBuffers(DirectX12Framework& framework)
 			1, 1, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET
 		);
 		D3D12_CLEAR_VALUE clearValue;
-		memcpy(&clearValue.Color[0], &clearColor[0], sizeof(float) * 4);
+		memcpy(&clearValue.Color[0], &ClearColor[0], sizeof(float) * 4);
 		clearValue.Format = formats[i];
 
 		result = device->CreateCommittedResource(
@@ -134,11 +128,13 @@ void GBuffer::InitializeGBuffers(DirectX12Framework& framework)
 		device->CreateRenderTargetView(m_resources[i].m_resource.Get(), nullptr, rtvHandle);
 		rtvHandle.Offset(1, m_rtvDescSize);
 
-		m_resources[i].m_offsetID = srvWrapper->m_handleCurrentOffset;
+		m_resources[i].m_offsetID = srvWrapper.m_handleCurrentOffset;
 		device->CreateShaderResourceView(m_resources[i].m_resource.Get(), nullptr, srvHandle);
-		srvWrapper->m_handleCurrentOffset++;
+		srvWrapper.m_handleCurrentOffset++;
 		srvHandle.Offset(m_srvDescSize);
 
 		m_resources[i].m_resource->SetName((LPCWSTR)bufferNames[i].c_str());
+
+		rtvWrapper.m_handleCurrentOffset++;
 	}
 }

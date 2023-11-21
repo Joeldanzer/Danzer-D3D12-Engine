@@ -3,11 +3,12 @@
 #include "DirectX12Framework.h"
 #include "WindowHandler.h"
 #include "Engine.h"
+#include "Rendering/Screen Rendering/GBuffer.h"
 
 #include "../3rdParty/imgui-master/backends/imgui_impl_dx12.h"
 #include "../3rdParty/imgui-master/backends/imgui_impl_win32.h"
 
-DirectX12Framework::DirectX12Framework() :
+DirectX12FrameworkOLD::DirectX12FrameworkOLD() :
 	m_rtvDescripterSize(0),
 	m_frameIndex(0),
 	m_fenceEvent(HANDLE()),
@@ -18,7 +19,7 @@ DirectX12Framework::DirectX12Framework() :
 {
 	InitFramework();
 }
-DirectX12Framework::~DirectX12Framework(){
+DirectX12FrameworkOLD::~DirectX12FrameworkOLD(){
 	ExecuteCommandList();
 	WaitForPreviousFrame();
 
@@ -39,11 +40,11 @@ DirectX12Framework::~DirectX12Framework(){
 	}
 }
 
-void DirectX12Framework::InitFramework()
+void DirectX12FrameworkOLD::InitFramework()
 {
 	HRESULT result;
 	
-	SetViewport(WindowHandler::GetWindowData().m_width, WindowHandler::GetWindowData().m_height);
+	SetViewport(WindowHandler::WindowData().m_w, WindowHandler::WindowData().m_h);
 	
 	ComPtr<IDXGIFactory4> factory;
 #ifdef _DEBUG
@@ -86,8 +87,8 @@ void DirectX12Framework::InitFramework()
 
 	DXGI_SWAP_CHAIN_DESC swapChainDesc = {};
 	swapChainDesc.BufferCount		= FrameCount;
-	swapChainDesc.BufferDesc.Width  = WindowHandler::GetWindowData().m_width;
-	swapChainDesc.BufferDesc.Height = WindowHandler::GetWindowData().m_height;
+	swapChainDesc.BufferDesc.Width  = WindowHandler::WindowData().m_w;
+	swapChainDesc.BufferDesc.Height = WindowHandler::WindowData().m_h;
 	swapChainDesc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 	swapChainDesc.BufferUsage	    = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 	swapChainDesc.SwapEffect	    = DXGI_SWAP_EFFECT_FLIP_DISCARD;
@@ -107,8 +108,8 @@ void DirectX12Framework::InitFramework()
 
 	m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
 
-	//Create descriptor heap
-	m_rtvWrapper.CreateDescriptorHeap(m_device.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_RTV, FrameCount, false);
+	// RTV's, GBUFFER, ShadowMapping
+	m_rtvWrapper.CreateDescriptorHeap(m_device.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_RTV, FrameCount + (GBUFFER_COUNT) + 1, false);
 
 	CreateDepthStencilView();
 	InitImgui();
@@ -119,6 +120,7 @@ void DirectX12Framework::InitFramework()
 		result = m_swapChain->GetBuffer(i, IID_PPV_ARGS(&m_renderTarget[i]));
 		CHECK_HR(result);
 		m_device->CreateRenderTargetView(m_renderTarget[i].Get(), nullptr, rtvHandle);
+		m_rtvWrapper.m_handleCurrentOffset++;
 	
 		std::wstring name(std::to_wstring(i));
 		m_renderTarget[i]->SetName((LPCWSTR)name.c_str());
@@ -142,7 +144,6 @@ void DirectX12Framework::InitFramework()
 	ID3D12CommandList* commandLists[] = { m_commandList.Get() };
 	m_commandQeueu->ExecuteCommandLists(_countof(commandLists), commandLists);
 
-
 	// Creates the descriptor heap used for all the information that gets sent to the GPU before rendering.
 	m_cbvSrvUavWrapper.CreateDescriptorHeap(m_device.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, FrameCount + MAX_NUMBER_OF_DESCTRIPTORS + 2, true);
 
@@ -158,7 +159,7 @@ void DirectX12Framework::InitFramework()
 	WaitForSingleObject(m_fenceEvent, INFINITE);
 }
 
-void DirectX12Framework::InitImgui()
+void DirectX12FrameworkOLD::InitImgui()
 {
 	HRESULT result;
 
@@ -179,7 +180,7 @@ void DirectX12Framework::InitImgui()
 		m_imguiDescriptor->GetCPUDescriptorHandleForHeapStart(), m_imguiDescriptor->GetGPUDescriptorHandleForHeapStart());
 }
 
-void DirectX12Framework::ExecuteCommandList()
+void DirectX12FrameworkOLD::ExecuteCommandList()
 {
 	assert(m_cmdIsRecording, "Trying to close a already closed CommandList");
 	m_cmdIsRecording = false;
@@ -197,7 +198,7 @@ void DirectX12Framework::ExecuteCommandList()
 }
 
 
-void DirectX12Framework::ResetCommandListAndAllocator(ID3D12PipelineState* pipeline, std::wstring debugText)
+void DirectX12FrameworkOLD::ResetCommandListAndAllocator(ID3D12PipelineState* pipeline, std::wstring debugText)
 {
 	debugText += L"\n";
 	OutputDebugString(debugText.c_str());
@@ -215,7 +216,7 @@ void DirectX12Framework::ResetCommandListAndAllocator(ID3D12PipelineState* pipel
 	}
 }
 
-void DirectX12Framework::WaitForPreviousFrame()
+void DirectX12FrameworkOLD::WaitForPreviousFrame()
 {
 	m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
 	
@@ -231,7 +232,7 @@ void DirectX12Framework::WaitForPreviousFrame()
 	m_fenceValue++;
 }
 
-void DirectX12Framework::TransitionRenderTarget(D3D12_RESOURCE_STATES present, D3D12_RESOURCE_STATES newState)
+void DirectX12FrameworkOLD::TransitionRenderTarget(D3D12_RESOURCE_STATES present, D3D12_RESOURCE_STATES newState)
 {
 	CD3DX12_RESOURCE_BARRIER beginTransition = CD3DX12_RESOURCE_BARRIER::Transition(
 		m_renderTarget[m_frameIndex].Get(),
@@ -242,7 +243,7 @@ void DirectX12Framework::TransitionRenderTarget(D3D12_RESOURCE_STATES present, D
 	m_commandList->ResourceBarrier(1, &beginTransition);
 }
 
-void DirectX12Framework::TransitionMultipleRTV(ID3D12Resource** resources, UINT numberOfresources, D3D12_RESOURCE_STATES present, D3D12_RESOURCE_STATES newState)
+void DirectX12FrameworkOLD::TransitionMultipleRTV(ID3D12Resource** resources, UINT numberOfresources, D3D12_RESOURCE_STATES present, D3D12_RESOURCE_STATES newState)
 {
 	std::vector<CD3DX12_RESOURCE_BARRIER> transitions;
 	for (UINT i = 0; i < numberOfresources; i++)
@@ -252,7 +253,7 @@ void DirectX12Framework::TransitionMultipleRTV(ID3D12Resource** resources, UINT 
 	m_commandList->ResourceBarrier(numberOfresources, &transitions[0]);
 }
 
-void DirectX12Framework::QeueuResourceTransition(ID3D12Resource** resources, UINT numberOfresources, D3D12_RESOURCE_STATES present, D3D12_RESOURCE_STATES newState)
+void DirectX12FrameworkOLD::QeueuResourceTransition(ID3D12Resource** resources, UINT numberOfresources, D3D12_RESOURCE_STATES present, D3D12_RESOURCE_STATES newState)
 {
 	for (UINT i = 0; i < numberOfresources; i++)
 	{
@@ -263,7 +264,7 @@ void DirectX12Framework::QeueuResourceTransition(ID3D12Resource** resources, UIN
 	}
 }
 
-void DirectX12Framework::TransitionAllResources()
+void DirectX12FrameworkOLD::TransitionAllResources()
 {
 	std::vector<CD3DX12_RESOURCE_BARRIER> transitionList;
 	for (UINT i = 0; i < m_transitionQeueu.size(); i++)
@@ -279,7 +280,7 @@ void DirectX12Framework::TransitionAllResources()
 	m_transitionQeueu.clear();
 }
 
-void DirectX12Framework::SetViewport(UINT w, UINT h)
+void DirectX12FrameworkOLD::SetViewport(UINT w, UINT h)
 {
 	s_engineState = EngineState::ENGINE_STATE_GAME;
 	switch (s_engineState)
@@ -321,7 +322,7 @@ void DirectX12Framework::SetViewport(UINT w, UINT h)
 	}
 }
 
-void DirectX12Framework::CreateDepthStencilView()
+void DirectX12FrameworkOLD::CreateDepthStencilView()
 {
 	HRESULT result;
 
@@ -341,8 +342,8 @@ void DirectX12Framework::CreateDepthStencilView()
 	CD3DX12_RESOURCE_DESC tex2D = CD3DX12_RESOURCE_DESC(
 		D3D12_RESOURCE_DIMENSION_TEXTURE2D,
 		0,
-		WindowHandler::GetWindowData().m_width, 
-		WindowHandler::GetWindowData().m_height,
+		WindowHandler::WindowData().m_w, 
+		WindowHandler::WindowData().m_h,
 		1, 
 		1, 
 		DXGI_FORMAT_D32_FLOAT,
@@ -367,7 +368,7 @@ void DirectX12Framework::CreateDepthStencilView()
 	}
 }
 
-void DirectX12Framework::ScanAdapter(IDXGIAdapter1* adapter, IDXGIFactory4* factory)
+void DirectX12FrameworkOLD::ScanAdapter(IDXGIAdapter1* adapter, IDXGIFactory4* factory)
 {
 	HRESULT result;
 	for (UINT i = 0; DXGI_ERROR_NOT_FOUND != factory->EnumAdapters1(i, &adapter); i++)
@@ -393,7 +394,7 @@ void DirectX12Framework::ScanAdapter(IDXGIAdapter1* adapter, IDXGIFactory4* fact
 #endif // 
 }
 
-D3D_FEATURE_LEVEL DirectX12Framework::GetFeatureLevel()
+D3D_FEATURE_LEVEL DirectX12FrameworkOLD::GetFeatureLevel()
 {
 	static const D3D_FEATURE_LEVEL s_featureLevel[] = {
 		D3D_FEATURE_LEVEL_12_1,
@@ -416,7 +417,7 @@ D3D_FEATURE_LEVEL DirectX12Framework::GetFeatureLevel()
 	return featureLevel;
 }
 
-CD3DX12_CPU_DESCRIPTOR_HANDLE DirectX12Framework::GetCurrentRTVHandle()
+CD3DX12_CPU_DESCRIPTOR_HANDLE DirectX12FrameworkOLD::GetCurrentRTVHandle()
 {
 	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvWrapper.GET_CPU_DESCRIPTOR(m_frameIndex));
 	return rtvHandle;

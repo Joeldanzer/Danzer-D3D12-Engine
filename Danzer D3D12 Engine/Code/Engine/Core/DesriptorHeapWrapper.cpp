@@ -9,23 +9,19 @@ DescriptorHeapWrapper::DescriptorHeapWrapper() :
 {
 }
 
-HRESULT DescriptorHeapWrapper::CreateDescriptorHeap(ID3D12Device* device, D3D12_DESCRIPTOR_HEAP_TYPE type, UINT numberOfDescriptors, bool shaderVisible)
+void DescriptorHeapWrapper::CreateDescriptorHeap(ID3D12Device* device, D3D12_DESCRIPTOR_HEAP_TYPE type, UINT numberOfDescriptors, bool shaderVisible)
 {
-	HRESULT result;
-	
 	m_desc = { };
 	m_desc.Type = type;
 	m_desc.NumDescriptors = numberOfDescriptors;
 	m_desc.Flags = (shaderVisible ? D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE : D3D12_DESCRIPTOR_HEAP_FLAG_NONE);
 
-	result = device->CreateDescriptorHeap(&m_desc, IID_PPV_ARGS(&m_desctiptorHeap));
+	CHECK_HR(device->CreateDescriptorHeap(&m_desc, IID_PPV_ARGS(&m_desctiptorHeap)));
 
 	m_cpuHeapStart = m_desctiptorHeap->GetCPUDescriptorHandleForHeapStart();
 	if(shaderVisible) m_gpuHeapStart = m_desctiptorHeap->GetGPUDescriptorHandleForHeapStart();
 
 	m_handleIncrementSize = device->GetDescriptorHandleIncrementSize(type);
-
-	return result;
 }
 
 CD3DX12_CPU_DESCRIPTOR_HANDLE DescriptorHeapWrapper::GET_CPU_DESCRIPTOR(const UINT offset)

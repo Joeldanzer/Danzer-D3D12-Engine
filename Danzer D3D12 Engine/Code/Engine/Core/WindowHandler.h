@@ -8,8 +8,8 @@ public:
 	struct Data {
 		int m_x = 0;
 		int m_y = 0;
-		unsigned int m_width = 1920;
-		unsigned int m_height = 1080;
+		unsigned int m_w = 1920;
+		unsigned int m_h = 1080;
 	};
 
 	static LRESULT CALLBACK WinProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -19,7 +19,7 @@ public:
 	~WindowHandler();
 
 	static HWND GetHWND() { return s_hwnd; }
-	static Data GetWindowData() { return s_data; }
+	static Data WindowData() { return s_data; }
 
 private:
 	static HWND s_hwnd;

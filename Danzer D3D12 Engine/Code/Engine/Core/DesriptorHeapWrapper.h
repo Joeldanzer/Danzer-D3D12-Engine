@@ -12,7 +12,7 @@ class DescriptorHeapWrapper
 public:
 	DescriptorHeapWrapper();
 
-	HRESULT CreateDescriptorHeap(ID3D12Device* device,
+	void CreateDescriptorHeap(ID3D12Device* device,
 							    D3D12_DESCRIPTOR_HEAP_TYPE type,
 							    UINT numberOfDescriptors,
 							    bool shaderVisible);

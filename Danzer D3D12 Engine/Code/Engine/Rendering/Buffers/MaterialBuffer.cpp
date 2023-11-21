@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "MaterialBuffer.h"
 
-#include "../../Core/DirectX12Framework.h"
+#include "../../Core/D3D12Framework.h"
 
 MaterialBuffer::MaterialBuffer() : m_materialBufferData(){}
 MaterialBuffer::~MaterialBuffer(){}

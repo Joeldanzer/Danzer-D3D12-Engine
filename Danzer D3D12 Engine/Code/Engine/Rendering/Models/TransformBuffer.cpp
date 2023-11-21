@@ -2,7 +2,7 @@
 #include "TransformBuffer.h"
 #include "Core/MathDefinitions.h"
 
-#include "Core/DirectX12Framework.h"
+#include "Core/D3D12Framework.h"
 
 TransformBuffer::TransformBuffer()
 {
@@ -28,8 +28,7 @@ void TransformBuffer::Init(ID3D12Device* device)
 void TransformBuffer::UpdateBuffer(UINT8* transforms, UINT size, UINT frameIndex)
 {
 	CD3DX12_RANGE readRange(0, 0); // Don't intend to read this resource on the CPU
-	HRESULT result = m_vertexBuffer[frameIndex]->Map(0, &readRange, reinterpret_cast<void**>(&m_data[frameIndex]));//ZeroMemory(m_data, sizeof(Mat4f) * MAX_INSTANCES_PER_MODEL);
-	CHECK_HR(result);
+	CHECK_HR(m_vertexBuffer[frameIndex]->Map(0, &readRange, reinterpret_cast<void**>(&m_data[frameIndex])));//ZeroMemory(m_data, sizeof(Mat4f) * MAX_INSTANCES_PER_MODEL);
 	memcpy(m_data[frameIndex], transforms, size * sizeof(Mat4f));
 	m_vertexBuffer[frameIndex]->Unmap(0, nullptr);
 }

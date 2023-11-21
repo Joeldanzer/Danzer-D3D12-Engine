@@ -10,16 +10,16 @@
 #include <unordered_map>
 #include <array>
 
-class DirectX12Framework;
+class D3D12Framework;
 
 class TextureHandler
 {
 public:
 	TextureHandler() = delete;
-	TextureHandler(DirectX12Framework& framework);
+	TextureHandler(D3D12Framework& framework);
 	~TextureHandler();
 
-	void Init(DirectX12Framework& framework, bool loadAllTexures = false);
+	void Init(D3D12Framework& framework, bool loadAllTexures = false);
 
 	struct Texture {
 		std::wstring m_texturePath;
@@ -55,6 +55,6 @@ private:
 	std::vector<Texture> m_tempTextures;
 
 	std::vector<CD3DX12_RESOURCE_BARRIER> m_resourceBarriers;	
-	DirectX12Framework& m_framework;
+	D3D12Framework& m_framework;
 };
 

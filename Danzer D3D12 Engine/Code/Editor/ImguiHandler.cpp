@@ -7,10 +7,12 @@
 #include "Rendering/2D/SpriteHandler.h"
 #include "SceneManager.h"
 #include "Rendering/Models/ModelData.h"
-#include "Core/DirectX12Framework.h"
+#include "Core/D3D12Framework.h"
 #include "Rendering/Models/ModelHandler.h"
 #include "Components/DirectionalLight.h"
 #include "Rendering/TextureHandler.h"
+
+#include "FrameResource.h"
 
 #include "Components/Text.h"
 #include "Components/Object.h"
@@ -53,12 +55,12 @@ ImguiHandler::~ImguiHandler()
 
 void ImguiHandler::Init()
 {
-	m_rightWindow.m_height = WindowHandler::GetWindowData().m_height;
+	m_rightWindow.m_height = WindowHandler::WindowData().m_h;
 	m_rightWindow.m_width = 400;
-	m_rightWindow.m_positon.x = WindowHandler::GetWindowData().m_width - (m_rightWindow.m_width/2);
+	m_rightWindow.m_positon.x = WindowHandler::WindowData().m_w - (m_rightWindow.m_width/2);
 	m_rightWindow.m_positon.y = (m_rightWindow.m_height / 2) + 19;
 
-	m_leftWindow.m_height = WindowHandler::GetWindowData().m_height / 2;
+	m_leftWindow.m_height = WindowHandler::WindowData().m_h / 2;
 	m_leftWindow.m_width = 400;
 	m_leftWindow.m_positon.x = m_leftWindow.m_width / 2;
 	m_leftWindow.m_positon.y = (m_leftWindow.m_height / 2) + 19;
@@ -73,7 +75,7 @@ void ImguiHandler::Update(const float dt)
 
 	//ImGui::NewFrame();
 
-	DirectX12Framework& framework = m_engine.GetFramework();
+	D3D12Framework& framework = m_engine.GetFramework();
 	Scene& scene = m_engine.GetSceneManager().GetCurrentScene();
 	entt::registry& reg = scene.Registry();
 	if (ImGui::BeginMainMenuBar()) {
@@ -569,13 +571,13 @@ CD3DX12_GPU_DESCRIPTOR_HANDLE ImguiHandler::AddImguiImage(std::wstring path)
 			return m_imguiTextures[i].m_srvGpuHandle;
 	}
 
-	if(!m_engine.GetFramework().CmdListIsRecording())
-		m_engine.GetFramework().ResetCommandListAndAllocator(nullptr, L"ImguiHandler: Line 570");
+	//if(!m_engine.GetFramework().CmdListIsRecording())
+	//	m_engine.GetFramework().ResetCommandListAndAllocator(nullptr, L"ImguiHandler: Line 570");
 
 	ImguiTexture texture;
 
 	ID3D12Device* device = m_engine.GetFramework().GetDevice();
-	ID3D12GraphicsCommandList* cmdList = m_engine.GetFramework().GetCommandList();
+	ID3D12GraphicsCommandList* cmdList = m_engine.GetFramework().CurrentFrameResource()->CmdList();
 
 	CD3DX12_RESOURCE_BARRIER barrier = LoadATextures(
 		path,
@@ -586,7 +588,7 @@ CD3DX12_GPU_DESCRIPTOR_HANDLE ImguiHandler::AddImguiImage(std::wstring path)
 
 	cmdList->ResourceBarrier(1, &barrier);
 	m_engine.GetFramework().ExecuteCommandList();
-	m_engine.GetFramework().WaitForPreviousFrame();
+	m_engine.GetFramework().WaitForGPU();
 
 	ID3D12DescriptorHeap* imguiDesc = m_engine.GetFramework().GetImguiHeap();
 

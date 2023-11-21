@@ -32,7 +32,7 @@ float4 main(VertexToPixel input) : SV_TARGET
     float3 specualrcolor = lerp((float3) 0.04, albedo, metallic);
     float3 diffusecolor  = lerp((float3) 0.00, albedo, 1 - metallic);
        
-    float3 ambience         = EvaluateAmbience(skyboxTexture, defaultSample, normal.rgb, vertexNormal, toEye, roughness, metallic, albedo, ao, albedo, specualrcolor, AmbientColor);
+    float3 ambience         = EvaluateAmbience(skyboxTexture, defaultSample, normal.rgb, vertexNormal, toEye, roughness, metallic, albedo, ao, diffusecolor, specualrcolor, AmbientColor);
     float3 directionalLight = EvaluateDirectionalLight(diffusecolor, specualrcolor, normal.rgb, roughness, LightColor.rgb * LightColor.w, LightDirection.xyz, toEye.xyz);
     //if (shadowData > 0.0f)
     //{
@@ -76,7 +76,7 @@ float4 main(VertexToPixel input) : SV_TARGET
             color.rgb = albedo;
             break;
         case 2:
-            color.rgb = normal.rgb * 2 - 1.0f;
+            color.rgb = normal.rgb;
             break;
         case 3:
             color.rgb = vertexNormal;
