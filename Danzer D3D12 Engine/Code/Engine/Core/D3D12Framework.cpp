@@ -67,9 +67,10 @@ D3D12Framework::D3D12Framework() :
 
 	// Create Descriptor Heaps
 	{
-		// Main RTV's, GBUFFER and ShadowMapping
+		// Main RTV's, GBUFFER
 		m_rtvHeap.CreateDescriptorHeap(m_device.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_RTV, FrameCount + GBUFFER_COUNT + 1, false);
 		
+		// DepthStencil and ShadowMapping
 		m_dsvHeap.CreateDescriptorHeap(m_device.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1 + FrameCount + 1, false);
 
 		m_cbvSrvHeap.CreateDescriptorHeap(m_device.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, MAX_NUMBER_OF_DESCTRIPTORS, true);
@@ -241,6 +242,7 @@ void D3D12Framework::LoadAssets()
 		
 		m_device->CreateDepthStencilView(m_depthStencil.Get(), nullptr, m_dsvHeap.GET_CPU_DESCRIPTOR(0));	
 		m_depthStencil->SetName(L"Depth Stencil");
+		m_dsvHeap.m_handleCurrentOffset++;
 	}
 
 	// Frame Resource Creation

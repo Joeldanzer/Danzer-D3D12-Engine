@@ -4,8 +4,8 @@
 
 #define MAX_NUMBER_OF_DESCTRIPTORS 200000
 
-struct ID3D12DescriptorHeap;
-struct ID3D12Device;
+//struct ID3D12DescriptorHeap;
+//struct ID3D12Device;
 
 class DescriptorHeapWrapper
 {
@@ -13,9 +13,9 @@ public:
 	DescriptorHeapWrapper();
 
 	void CreateDescriptorHeap(ID3D12Device* device,
-							    D3D12_DESCRIPTOR_HEAP_TYPE type,
-							    UINT numberOfDescriptors,
-							    bool shaderVisible);
+							  D3D12_DESCRIPTOR_HEAP_TYPE type,
+							  UINT numberOfDescriptors,
+							  bool shaderVisible);
 
 	CD3DX12_CPU_DESCRIPTOR_HANDLE GET_CPU_DESCRIPTOR(const UINT offset); //{ return m_cpuHeapStart; }
 	CD3DX12_GPU_DESCRIPTOR_HANDLE GET_GPU_DESCRIPTOR(const UINT offset); //{ return m_gpuHeapStart; }

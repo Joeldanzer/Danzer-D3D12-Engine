@@ -155,7 +155,7 @@
     <ClInclude Include="Components\Script.h" />
     <ClInclude Include="Core\DesriptorHeapWrapper.h" />
     <ClInclude Include="Core\D3D12Framework.h" />
-    <ClInclude Include="DirectionalShadowMapping.h" />
+    <ClInclude Include="Rendering\Screen Rendering\DirectionalShadowMapping.h" />
     <ClInclude Include="FrameResource.h" />
     <ClInclude Include="Rendering\Screen Rendering\FullScreenShaderHandler.h" />
     <ClInclude Include="Rendering\Screen Rendering\FullscreenShader.h" />
@@ -218,7 +218,7 @@
     <ClCompile Include="Core\input.cpp" />
     <ClCompile Include="Core\DesriptorHeapWrapper.cpp" />
     <ClCompile Include="Core\D3D12Framework.cpp" />
-    <ClCompile Include="DirectionalShadowMapping.cpp" />
+    <ClCompile Include="Rendering\Screen Rendering\DirectionalShadowMapping.cpp" />
     <ClCompile Include="FrameResource.cpp" />
     <ClCompile Include="Rendering\Buffers\CBVBuffer.cpp" />
     <ClCompile Include="Rendering\Screen Rendering\FullScreenShaderHandler.cpp" />

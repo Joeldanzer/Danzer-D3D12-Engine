@@ -15,6 +15,7 @@ enum PIPELINE_STATES {
 	PIPELINE_STATE_UI,
 	PIPELINE_STATE_FONT,
 	PIPELINE_STATE_SKYBOX,
+	PIPELINE_STATE_SHADOW,
 	// Only visible in Debug
 	PIPELINE_STATE_AABB_WIREFRAME,
 	PIPELINE_STATE_RAY_WIREFRAME,
@@ -72,7 +73,8 @@ private:
 	void CreateAABBWireframePSO(ID3D12Device* device);
 	void CreateRayWireframePSO(ID3D12Device* device);
 	void CreateDirectionalLightPSO(ID3D12Device* device);
-	void CreateModelPSO(ID3D12Device* framework); 
+	void CreateModelPSO(ID3D12Device* device); 
+	void CreateShadowMapPSO(ID3D12Device* device);
 	
 
 	void InitializeSamplerDescs();

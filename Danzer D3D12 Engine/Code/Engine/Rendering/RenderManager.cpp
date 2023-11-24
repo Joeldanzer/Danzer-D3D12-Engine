@@ -18,8 +18,9 @@
 #include "Components/Transform2D.h"
 #include "Components/DirectionalLight.h"
 
-
 #include "Screen Rendering/GBuffer.h"
+#include "Screen Rendering/DirectionalShadowMapping.h"
+
 #include "Camera.h"
 
 #include "SkyBox.h"
@@ -56,6 +57,7 @@ private:
 	void ClearAllInstances(ModelHandler& modelHandler, SpriteHandler& spriteHandler);
 
 	PipelineStateHandler m_pipeLineHandler;
+	DirectionalShadowMapping m_shadowMap;
 	Renderer			 m_mainRenderer;
 	Renderer2D			 m_2dRenderer;
 	GBuffer				 m_gBuffer;
@@ -77,7 +79,15 @@ private:
 
 RenderManager::Impl::Impl::Impl(D3D12Framework& framework) : 
 	m_framework(framework),
-	m_gBuffer(framework)
+	m_gBuffer(framework),
+	m_shadowMap(
+		framework.GetDevice(),
+		&framework.CbvSrvHeap(),
+		&framework.DSVHeap(),
+		1920,
+		1080,
+		DXGI_FORMAT_R32_TYPELESS
+	)
 {
 	m_2dRenderer.Init(framework);
 	m_mainRenderer.Init(framework);
@@ -106,38 +116,51 @@ void RenderManager::Impl::BeginFrame()
 	ImGui_ImplDX12_NewFrame();
 	ImGui_ImplWin32_NewFrame();
 
-	m_framework.InitiateCommandList(nullptr, L"RenderManager Line " + __LINE__);
+	m_framework.InitiateCommandList(nullptr, L"RenderManager Line " + std::to_wstring(__LINE__) + L"\n");
 	
 	ID3D12GraphicsCommandList* cmdList = m_framework.CurrentFrameResource()->CmdList();
-
-	cmdList->RSSetViewports(1, &m_framework.m_viewport);
-	cmdList->RSSetScissorRects(1, &m_framework.m_scissorRect);
-	cmdList->ClearDepthStencilView(
-		m_framework.DSVHeap().GetDescriptorHeap()->GetCPUDescriptorHandleForHeapStart(),
-		D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 1, &m_framework.m_scissorRect
-	);
 	
-	m_framework.QeueuResourceTransition(&m_gBuffer.GetGbufferResources()[0], GBUFFER_COUNT, 
-		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET);
+	// Transition resources for the correct usage
+	{
+		m_framework.QeueuResourceTransition(&m_gBuffer.GetGbufferResources()[0], GBUFFER_COUNT, 
+			D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
-	ID3D12Resource* resources[] = { m_framework.GetCurrentRTV() };
-	m_framework.QeueuResourceTransition(&resources[0], 1,
-		D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET
-	);
+		ID3D12Resource* rtv[] = { m_framework.GetCurrentRTV() };
+		m_framework.QeueuResourceTransition(&rtv[0], 1,
+			D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET
+		);
+		ID3D12Resource* shadow[] = { m_shadowMap.GetResource(m_framework.m_frameIndex) };
+		m_framework.QeueuResourceTransition(&shadow[0], 1,
+			D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_DEPTH_WRITE);
+		
+		m_framework.TransitionAllResources();
+	}
 
-	m_framework.TransitionAllResources();
-
+	// Clear DepthStencil and ShadowDepthStencil
+	{ 
+		cmdList->RSSetViewports(1, &m_framework.m_viewport);
+		cmdList->RSSetScissorRects(1, &m_framework.m_scissorRect);
+		CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle = m_framework.DSVHeap().GET_CPU_DESCRIPTOR(0);
+		cmdList->ClearDepthStencilView(
+			dsvHandle,
+			D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 1, &m_framework.m_scissorRect
+		);
+		dsvHandle.Offset((m_shadowMap.DSVOffsetID() + m_framework.m_frameIndex) * m_framework.DSVHeap().DESCRIPTOR_SIZE());
+		cmdList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 1, &m_framework.m_scissorRect);
+	}
+	
 	// Clear all RenderTargets
-	m_gBuffer.ClearRenderTargets(m_framework.RTVHeap(), cmdList, 1, &m_framework.m_scissorRect);
-	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle = m_framework.RTVHeap().GET_CPU_DESCRIPTOR(0);
-	rtvHandle.Offset(m_framework.m_frameIndex * m_framework.RTVHeap().DESCRIPTOR_SIZE());
-	cmdList->ClearRenderTargetView(
-		rtvHandle,
-		&ClearColor[0], 
-		1,
-		&m_framework.m_scissorRect
-	);
-
+	{
+		m_gBuffer.ClearRenderTargets(m_framework.RTVHeap(), cmdList, 1, &m_framework.m_scissorRect);
+		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle = m_framework.RTVHeap().GET_CPU_DESCRIPTOR(0);
+		rtvHandle.Offset(m_framework.m_frameIndex * m_framework.RTVHeap().DESCRIPTOR_SIZE());
+		cmdList->ClearRenderTargetView(
+			rtvHandle,
+			&ClearColor[0], 
+			1,
+			&m_framework.m_scissorRect
+		);
+	}
 }
 
 // DirectX12Framework pipeline needs to be fully reworked it seems >:(
@@ -163,17 +186,36 @@ void RenderManager::Impl::RenderScene(TextureHandler& textureHandler, SpriteHand
 	Camera& cam = reg.get<Camera>(scene.GetMainCamera());
 	Transform& camTransform = reg.get<Transform>(scene.GetMainCamera());
 
+	auto list = scene.Registry().view<DirectionalLight, Transform>();
+	DirectionalLight directionalLight;
+	Transform dirLightTransform;
+	Vect4f directionaLightdir = { 0.f, 0.f, 0.f, 1.f };
+	for (auto entity : list) {
+		directionalLight = reg.get<DirectionalLight>(entity);
+		dirLightTransform = reg.get<Transform>(entity);
+		Vect3f dir = dirLightTransform.m_world.Forward();
+		directionaLightdir = { dir.x, dir.y, dir.z, 1.0f };
+	}
+
+	
+	//Vect3f dirPos = dirLightTransform.m_position;
+	//float scale = 200.0f;
+	//m_shadowMap.GetProjectionMatrix() = DirectX::XMMatrixOrthographicOffCenterLH(dirPos.x - scale, dirPos.x + scale, dirPos.y - scale, dirPos.y + scale, dirPos.z - scale, dirPos.z + scale);
+
+	//dirLightTransform.World() =  DirectX::XMMatrixLookAtLH(dirLightTransform.m_position, { 0.0f, 0.0f, 0.0f }, {1.0f, 0.0f, 0.0f});
+	//dirLightTransform.World() *= DirectX::XMMatrixTranslationFromVector(dirLightTransform.m_position);
+
+	cmdList->SetDescriptorHeaps(1, &cbvSrvHeap);
+	
 	{ //* Scene to Gbuffer start
 		Update3DInstances(scene, modelHandler);
 
-
-		CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(m_framework.DSVHeap().GetDescriptorHeap()->GetCPUDescriptorHandleForHeapStart());
+		CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(m_framework.DSVHeap().GET_CPU_DESCRIPTOR(0));
 		std::array<CD3DX12_CPU_DESCRIPTOR_HANDLE, GBUFFER_COUNT> rtvHandle = m_gBuffer.GetRTVDescriptorHandles(m_framework.RTVHeap());
 		cmdList->OMSetRenderTargets(GBUFFER_COUNT, &rtvHandle[0], false, &dsvHandle);
-		
+				
 		cmdList->SetGraphicsRootSignature(m_pipeLineHandler.GetRootSignature(ROOTSIGNATURE_STATE_GBUFFER));
 		cmdList->SetPipelineState(m_pipeLineHandler.GetPSO(PIPELINE_STATE_GBUFFER));
-		cmdList->SetDescriptorHeaps(1, &cbvSrvHeap);
 
 		UINT startLocation = 0;
 
@@ -194,8 +236,27 @@ void RenderManager::Impl::RenderScene(TextureHandler& textureHandler, SpriteHand
 		m_framework.QeueuResourceTransition(
 			&m_gBuffer.GetGbufferResources()[0], GBUFFER_COUNT,
 			D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-		m_framework.TransitionAllResources();
 	} //* Scene to Gbuffer end
+
+	{ //* Draw Shadow Data
+		CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle = m_framework.DSVHeap().GET_CPU_DESCRIPTOR(0);
+		dsvHandle.Offset((m_shadowMap.DSVOffsetID() + frameIndex) * m_framework.DSVHeap().DESCRIPTOR_SIZE());
+
+		cmdList->SetPipelineState(m_pipeLineHandler.GetPSO(PIPELINE_STATE_SHADOW));
+		cmdList->SetGraphicsRootSignature(m_pipeLineHandler.GetRootSignature(ROOTSIGNATURE_STATE_GBUFFER));
+		cmdList->OMSetRenderTargets(0, nullptr, false, &dsvHandle);
+
+		CD3DX12_GPU_DESCRIPTOR_HANDLE shadowBuffer = m_mainRenderer.UpdateShadowMapBuffer(m_shadowMap.GetProjectionMatrix(), dirLightTransform, frameIndex);
+		cmdList->SetGraphicsRootDescriptorTable(0, shadowBuffer);
+
+		m_mainRenderer.DrawShadowMap(cmdList, modelHandler.GetAllModels(), frameIndex);
+		
+		ID3D12Resource* shadow[] = { m_shadowMap.GetResource(frameIndex) };
+		m_framework.QeueuResourceTransition(&shadow[0], 1,
+			D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+
+		m_framework.TransitionAllResources();
+	} 
 
 	{ //* Render Skybox & Ligth start
 		cmdList->SetGraphicsRootSignature(m_pipeLineHandler.GetRootSignature(ROOTSIGNATURE_STATE_DEFAULT));
@@ -228,17 +289,8 @@ void RenderManager::Impl::RenderScene(TextureHandler& textureHandler, SpriteHand
 		cmdList->SetGraphicsRootSignature(m_pipeLineHandler.GetRootSignature(ROOTSIGNATURE_STATE_LIGHT));
 		cmdList->SetPipelineState(m_pipeLineHandler.GetPSO(PIPELINE_STATE_DIRECTIONAL_LIGHT));
 
-		auto list = scene.Registry().view<DirectionalLight, Transform>();
-		DirectionalLight directionalLight;
-		Vect4f directionaLightdir = { 0.f, 0.f, 0.f, 1.f };
-		for (auto entity : list) {
-			directionalLight = reg.get<DirectionalLight>(entity);
-			Transform& transform = reg.get<Transform>(entity);
-			Vect3f dir = transform.m_world.Down();
-			directionaLightdir = { dir.x, dir.y, dir.z, 1.0f };
-		}
-
-		D3D12_GPU_DESCRIPTOR_HANDLE lightHandle = m_mainRenderer.UpdateLightBuffer(directionalLight, directionaLightdir, m_framework.GetFrameIndex());
+		D3D12_GPU_DESCRIPTOR_HANDLE lightHandle = m_mainRenderer.UpdateLightBuffer(m_shadowMap.GetProjectionMatrix(),
+		 dirLightTransform	,directionalLight, directionaLightdir, m_framework.GetFrameIndex());
 		cmdList->SetGraphicsRootDescriptorTable(startLocation, lightHandle);
 		startLocation++;
 
@@ -246,6 +298,7 @@ void RenderManager::Impl::RenderScene(TextureHandler& textureHandler, SpriteHand
 		m_mainRenderer.RenderDirectionalLight(
 			cmdList,
 			textureHandler.GetTextures()[skybox.GetCurrentActiveSkybox()[1] - 1],
+			m_shadowMap,
 			m_framework.GetFrameIndex(),
 			startLocation
 		);
@@ -255,8 +308,8 @@ void RenderManager::Impl::RenderScene(TextureHandler& textureHandler, SpriteHand
 		cmdList->SetGraphicsRootSignature(m_pipeLineHandler.GetRootSignature(ROOTSIGNATURE_STATE_UI));
 		cmdList->SetPipelineState(m_pipeLineHandler.GetPSO(PIPELINE_STATE_UI));
 
-		ID3D12DescriptorHeap* cbvSrvHeap = m_framework.CbvSrvHeap().GetDescriptorHeap();
-		cmdList->SetDescriptorHeaps(1, &cbvSrvHeap);
+		//ID3D12DescriptorHeap* cbvSrvHeap = m_framework.CbvSrvHeap().GetDescriptorHeap();
+		//cmdList->SetDescriptorHeaps(1, &cbvSrvHeap);
 
 		Update2DInstances(scene, spriteHandler);
 		m_2dRenderer.RenderUI(
@@ -339,8 +392,6 @@ void RenderManager::Impl::Update2DInstances(Scene& scene, SpriteHandler& spriteH
 		if(obj.m_state == Object::STATE::ACTIVE){
 			Sprite& sprite = reg.get<Sprite>(entity);
 			AddSpriteSheetInstance(sprite, reg.get<Transform2D>(entity), spriteHandler);
-			//if (sprite.m_spriteSheet != 0) {
-			//}
 		}
 	}
 
@@ -385,7 +436,6 @@ void RenderManager::Impl::AddFontInstance(Text& data, Transform2D& transform, Sp
 	for (UINT j = 0; j < text.size(); j++)
 	{
 		char chr = text[j];
-		//else {
 		Font::Letter letterData = fonts[data.m_fontID - 1].GetData().m_letters[chr];
 
 		Font::Instance inst;

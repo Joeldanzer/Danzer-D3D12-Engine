@@ -12,6 +12,8 @@ public:
 
 	// Camera Buffer Data
 	struct Data {
+		Mat4f  m_projection;
+		Mat4f  m_transform;
 		Vect4f m_lightColor;
 		Vect4f m_ambientColor;
 		Vect4f m_lightDirection;

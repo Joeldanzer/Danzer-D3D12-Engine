@@ -1,6 +1,4 @@
-#include "../Light/LightHeader.hlsli"
 #include "../Fullscreen/FullscreenHeader.hlsli"
-
 #include "LightFunctionsHeader.hlsli"
 
 float4 main(VertexToPixel input) : SV_TARGET
@@ -25,7 +23,7 @@ float4 main(VertexToPixel input) : SV_TARGET
     
     float3 toEye = normalize(CameraPosition.xyz - worldPosition);
   
-    //float shadowData = PixelShader_Shadow(float4(worldposition, 1.0f));
+    float shadowData = ShadowCalculation(float4(worldPosition, 1.0f));
     
     //float3 r = reflect(toEye, normalize(normal));
     
@@ -33,18 +31,10 @@ float4 main(VertexToPixel input) : SV_TARGET
     float3 diffusecolor  = lerp((float3) 0.00, albedo, 1 - metallic);
        
     float3 ambience         = EvaluateAmbience(skyboxTexture, defaultSample, normal.rgb, vertexNormal, toEye, roughness, metallic, albedo, ao, diffusecolor, specualrcolor, AmbientColor);
-    float3 directionalLight = EvaluateDirectionalLight(diffusecolor, specualrcolor, normal.rgb, roughness, LightColor.rgb * LightColor.w, LightDirection.xyz, toEye.xyz);
-    //if (shadowData > 0.0f)
-    //{
-    //}
-    //else
-    //{
-    //    directionalLight = shadowColor.rgb * shadowColor.w;
-    //}
+    float3 directionalLight = EvaluateDirectionalLight(diffusecolor, specualrcolor, normal.rgb, roughness, LightColor.rgb * LightColor.w, LightDirection.xyz, toEye.xyz) * shadowData;    
     //float3 directionallight = EvaluateDirectionalLight(diffusecolor, specualrcolor, normal, perceptualroughness, myLightColor.rgb * myLightColor.w, myLightDirection.xyz, toEye.xyz);
-
     float3 emissive = albedo * emissiveData;
-    float3 radiance = ambience + directionalLight + emissive;
+    float3 radiance = ambience + directionalLight;
     
     // Fog that i want to get in!
     //float4 oldWorldPos = worldPositionTexture.Sample(defaultSample, input.m_uv).xyzw - CameraPosition.xyzw;
@@ -73,13 +63,13 @@ float4 main(VertexToPixel input) : SV_TARGET
             color.rgb = radiance;    
             break;
         case 1:
-            color.rgb = albedo;
+            color.rgb = shadowData.rrr;
             break;
         case 2:
-            color.rgb = normal.rgb;
+            color.rgb = ambience; //normal.rgb * 0.5 + 0.5f;
             break;
         case 3:
-            color.rgb = vertexNormal;
+            color.rgb = directionalLight;
             break;
         case 4:
             color.rgb = float3(metallic, metallic, metallic);

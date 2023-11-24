@@ -3,6 +3,8 @@
 
 #include "DirectX-Headers-main/include/directx/d3d12.h"
 
+#include <string>
+
 FrameResource::FrameResource(ID3D12Device* device, const UINT index) :
 	m_cmdIndex(index)
 {
@@ -10,7 +12,7 @@ FrameResource::FrameResource(ID3D12Device* device, const UINT index) :
 	device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_cmdAllocator.Get(), nullptr, IID_PPV_ARGS(&m_cmdList));
 	m_cmdList->Close(); // Close CommandList, Don't want to record into it now
 
-	m_cmdList->SetName(L"CmdList " + index);
+	m_cmdList->SetName(std::wstring(L"CmdList " + std::to_wstring(index)).c_str());
 }
 
 void FrameResource::Initiate(ID3D12PipelineState* pso)

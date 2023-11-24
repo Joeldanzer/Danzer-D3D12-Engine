@@ -39,6 +39,7 @@
     <FxCompile Include="Gbuffer\GbufferVS.hlsl" />
     <FxCompile Include="Fullscreen\FullscreenVS.hlsl" />
     <FxCompile Include="Light\DirectionalLightPS.hlsl" />
+    <FxCompile Include="ShadowDepthVS.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="UI\UIstructs.hlsli">

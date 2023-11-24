@@ -7,11 +7,13 @@
 #include "Components/DirectionalLight.h"
 #include "SkyBox.h"
 #include "Rendering/Screen Rendering/GBuffer.h"
+#include "Screen Rendering/DirectionalShadowMapping.h"
 
 #include "Camera.h"
 
 #include "RenderUtility.h"
 #include "FrameResource.h"
+
 
 #include "Core/D3D12Framework.h"
 
@@ -31,6 +33,7 @@ void Renderer::Init(D3D12Framework& framework)
 	m_framework = &framework;
 	//m_commandList = framework.InitCmdList();
 	
+	m_shadowBuffer.Init(framework.GetDevice(),   &framework.CbvSrvHeap(), m_shadowBuffer.FetchData(),   sizeof(CameraBuffer::Data));
 	m_cameraBuffer.Init(framework.GetDevice(),   &framework.CbvSrvHeap(), m_cameraBuffer.FetchData(),   sizeof(CameraBuffer::Data));
 	m_lightBuffer.Init(framework.GetDevice(),    &framework.CbvSrvHeap(), m_lightBuffer.FetchData(),    sizeof(LightBuffer::Data));
 	m_materialBuffer.Init(framework.GetDevice(), &framework.CbvSrvHeap(), m_materialBuffer.FetchData(), sizeof(MaterialBuffer::Data));
@@ -58,6 +61,42 @@ CD3DX12_GPU_DESCRIPTOR_HANDLE Renderer::UpdateDefaultBuffers(Camera& camera, Tra
 	CD3DX12_GPU_DESCRIPTOR_HANDLE cbvHandle(cbvSrvHeapStart, m_cameraBuffer.OffsetID() + frameIndex, m_framework->CbvSrvHeap().DESCRIPTOR_SIZE());
 	return cbvHandle;
 	//m_commandList->SetGraphicsRootDescriptorTable(0, cbvHandle);
+}
+
+CD3DX12_GPU_DESCRIPTOR_HANDLE Renderer::UpdateShadowMapBuffer(Mat4f& projection, Transform& transform, UINT frameIndex)
+{
+	CameraBuffer::Data bufferData;
+	bufferData.m_transform = transform.World().Invert();
+	bufferData.m_transform = DirectX::XMMatrixTranspose(bufferData.m_transform);
+	bufferData.m_projection = DirectX::XMMatrixTranspose(projection);
+	bufferData.m_position = { transform.m_position.x, transform.m_position.y, transform.m_position.z, 0.0f };
+	Vect4f eye = { bufferData.m_transform.Forward() };
+	eye.w = 1.f;
+	bufferData.m_direction = eye;
+
+	m_shadowBuffer.UpdateBuffer(&bufferData, frameIndex);
+
+	CD3DX12_GPU_DESCRIPTOR_HANDLE cbvHandle = m_framework->CbvSrvHeap().GET_GPU_DESCRIPTOR(0);
+	cbvHandle.Offset((m_shadowBuffer.OffsetID() + frameIndex) * m_framework->CbvSrvHeap().DESCRIPTOR_SIZE());
+	return cbvHandle;
+}
+
+CD3DX12_GPU_DESCRIPTOR_HANDLE Renderer::UpdateLightBuffer(Mat4f& projection, Transform& transform, const DirectionalLight& light, const Vect4f& direction, UINT frameIndex)
+{
+	D3D12_GPU_DESCRIPTOR_HANDLE cbvSrvHeapStart = m_framework->CbvSrvHeap().GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
+	const UINT cbvSrvDescSize = m_framework->CbvSrvHeap().DESCRIPTOR_SIZE();
+
+	LightBuffer::Data lightData;
+	lightData.m_projection     = DirectX::XMMatrixTranspose(projection);
+	lightData.m_transform      = transform.World().Invert();
+	lightData.m_transform	   = DirectX::XMMatrixTranspose(lightData.m_transform);
+	lightData.m_ambientColor   = light.m_ambientColor;
+	lightData.m_lightColor     = light.m_lightColor;
+	lightData.m_lightDirection = direction;
+
+	m_lightBuffer.UpdateBuffer(&lightData, frameIndex);
+	CD3DX12_GPU_DESCRIPTOR_HANDLE cbvHandle(cbvSrvHeapStart, m_lightBuffer.OffsetID() + frameIndex, cbvSrvDescSize);
+	return cbvHandle;
 }
 
 void Renderer::RenderSkybox(ID3D12GraphicsCommandList* cmdList, Transform& cameraTransform, TextureHandler::Texture& textures, ModelData& model, Skybox& skybox, UINT frameIndex, UINT startLocation)
@@ -91,13 +130,17 @@ void Renderer::RenderSkybox(ID3D12GraphicsCommandList* cmdList, Transform& camer
 	cmdList->DrawIndexedInstanced(mesh.m_numIndices, 1, 0, 0, 0);
 }
 
-void Renderer::RenderDirectionalLight(ID3D12GraphicsCommandList* cmdList, TextureHandler::Texture& skyboxTexture, UINT frameIndex, UINT& startLocation)
+void Renderer::RenderDirectionalLight(ID3D12GraphicsCommandList* cmdList, TextureHandler::Texture& skyboxTexture, DirectionalShadowMapping& shadowMap, UINT frameIndex, UINT& startLocation)
 {
 	D3D12_GPU_DESCRIPTOR_HANDLE cbvSrvHeapStart = m_framework->CbvSrvHeap().GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
 	const UINT cbvSrvDescSize = m_framework->CbvSrvHeap().DESCRIPTOR_SIZE();
 
 	CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle(cbvSrvHeapStart, skyboxTexture.m_offsetID, cbvSrvDescSize);
 	cmdList->SetGraphicsRootDescriptorTable(startLocation, srvHandle);
+	startLocation++;
+
+	CD3DX12_GPU_DESCRIPTOR_HANDLE shadowHandle(cbvSrvHeapStart, shadowMap.SRVOffsetID(), cbvSrvDescSize);
+	cmdList->SetGraphicsRootDescriptorTable(startLocation, shadowHandle);
 
 	cmdList->IASetVertexBuffers(0, 0, nullptr);
 	cmdList->IASetIndexBuffer(nullptr);
@@ -152,6 +195,33 @@ void Renderer::RenderToGbuffer(ID3D12GraphicsCommandList* cmdList, std::vector<M
 						for (UINT i = 0; i < _countof(srvHandles); i++)
 							cmdList->SetGraphicsRootDescriptorTable(2 + i, srvHandles[i]);
 
+						D3D12_VERTEX_BUFFER_VIEW vBufferViews[2] = {
+							mesh.m_vertexBufferView, model.GetTransformInstanceBuffer().GetBufferView(frameIndex)
+						};
+						cmdList->IASetVertexBuffers(0, 2, &vBufferViews[0]);
+						cmdList->IASetIndexBuffer(&mesh.m_indexBufferView);
+						cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+						cmdList->DrawIndexedInstanced(mesh.m_numIndices, numberOfTransforms, 0, 0, 0);
+					}
+				}
+			}
+		}
+	}
+}
+void Renderer::DrawShadowMap(ID3D12GraphicsCommandList* cmdList, std::vector<ModelData>& models, UINT frameIndex)
+{
+	for (UINT i = 0; i < models.size(); i++)
+	{
+		if (!models[i].IsTransparent()) {
+			ModelData& model = models[i];
+			UINT numberOfTransforms = ((UINT)model.GetInstanceTransforms().size() < MAX_INSTANCES_PER_MODEL) ? (UINT)model.GetInstanceTransforms().size() : MAX_INSTANCES_PER_MODEL;
+
+			if (numberOfTransforms > 0) {
+				for (UINT j = 0; j < model.GetMeshes().size(); j++)
+				{
+					ModelData::Mesh& mesh = model.GetMeshes()[j];
+					if (mesh.m_renderMesh) {
 						D3D12_VERTEX_BUFFER_VIEW vBufferViews[2] = {
 							mesh.m_vertexBufferView, model.GetTransformInstanceBuffer().GetBufferView(frameIndex)
 						};
@@ -234,17 +304,3 @@ void Renderer::RenderToGbuffer(ID3D12GraphicsCommandList* cmdList, std::vector<M
 //	m_commandList->DrawInstanced(1, (UINT)aabb.size(), 0, 0);
 //}
 
-CD3DX12_GPU_DESCRIPTOR_HANDLE Renderer::UpdateLightBuffer(const DirectionalLight& light, const Vect4f& direction, UINT frameIndex)
-{
-	D3D12_GPU_DESCRIPTOR_HANDLE cbvSrvHeapStart = m_framework->CbvSrvHeap().GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
-	const UINT cbvSrvDescSize = m_framework->CbvSrvHeap().DESCRIPTOR_SIZE();
-
-	LightBuffer::Data lightData;
-	lightData.m_ambientColor   = light.m_ambientColor;
-	lightData.m_lightColor     = light.m_lightColor;
-	lightData.m_lightDirection = direction;
-
-	m_lightBuffer.UpdateBuffer(&lightData, frameIndex);
-	CD3DX12_GPU_DESCRIPTOR_HANDLE cbvHandle(cbvSrvHeapStart, m_lightBuffer.OffsetID() + frameIndex, cbvSrvDescSize);
-	return cbvHandle;
-}

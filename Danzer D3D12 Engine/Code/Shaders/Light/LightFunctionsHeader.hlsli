@@ -1,7 +1,101 @@
+#include "../Light/LightHeader.hlsli"
+
 #define PI_MACRO 3.14159265359f;
 #define FLT_EPSILON 1.192092896e-07f
 #define nMipOffset 3
+#define SHADOW_DEPTH_BIAS 0.00005f;
+
+float invLerp(float a, float b, float c)
+{
+    return (c - a) / (b - a);
+}
+
+float ShadowCalculation(float4 worldPos)
+{ 
     
+    
+    //float4x4 lightSpaceMatrix   = mul(LightProjection, LightTransform);
+    //float4   projectionPos      = mul(worldPos,       lightSpaceMatrix);
+    
+    //const float4 viewPos = mul(worldPos, LightTransform);
+    //float4 projectionPos = mul(viewPos,  LightProjection);
+    //float total = 0.0f;
+    //
+    //float3 viewCoords = projectionPos.xyz / projectionPos.w;
+    //
+    //float2 uvCoords = projectionPos.xy;
+    //uvCoords *= float2(0.5f, 0.5f);
+    //uvCoords += float2(0.5f, 0.5f);
+    //float returnValue = -1.0f;
+    //
+    //if (uvCoords.x >= 0.0f && uvCoords.x <= 1.0f && uvCoords.y >= 0.0f && uvCoords.y <= 1.0f)
+    //{
+    //    float nonLinearDepth = shadowMap.Sample(defaultSample, uvCoords).r;
+    //    float oob = 1.0f;
+    //    if (projectionPos.x > 1.0f || projectionPos.x < -1.0f || projectionPos.y > 1.0f || projectionPos.y < -1.0f)
+    //    {
+    //        oob = 0.0f;
+    //    }
+    //
+    //    float a = nonLinearDepth * oob;
+    //    float b = projectionPos.z;
+    //    b = invLerp(-0.5f, 0.5f, b) * oob;
+    //
+    //    b *= oob;
+    //
+    //    if (b - a < 0.49999f)
+    //    {
+    //        returnValue = 1.0f;
+    //    }
+    //    else
+    //    {
+    //        returnValue = 0.0f;
+    //    }
+    //}
+    //  
+    //return returnValue;
+    
+    //////float4x4 lightSpaceMatrix   = mul(LightTransform, LightProjection);
+    float4 lightSpacePos = mul(worldPos,      LightTransform);
+    lightSpacePos        = mul(lightSpacePos, LightProjection);
+    //
+    lightSpacePos.xyz /= lightSpacePos.w;
+    
+    
+    float2 shadowTexCoord = 0.5f * lightSpacePos.xy + 0.5f;
+    shadowTexCoord.y = 1.0f - shadowTexCoord.y;
+    
+    float closestDepth = shadowMap.Sample(defaultSample, shadowTexCoord.xy).r;
+    
+    float currentDepth = lightSpacePos.z - SHADOW_DEPTH_BIAS;
+    
+    float  shadow = currentDepth < closestDepth ? 1.0f : 0.0f;
+    return shadow;
+     
+
+    //float2 shadowTexCoord = 0.5f + lightSpacePos.xy + 0.5f;
+    //shadowTexCoord.y = 1.0f - shadowTexCoord.y;
+    //
+    //float lightSpaceDepth = lightSpacePos.z - SHADOW_DEPTH_BIAS;
+    //
+    //float2 shadowMapDimms = float2(1920.0f, 1080.0f);
+    //float4 subPixelCoords = float4(1.0f, 1.0f, 1.0f, 1.0f);
+    //
+    //subPixelCoords.xy = frac(shadowMapDimms * shadowTexCoord);
+    //subPixelCoords.zw = 1.0f - subPixelCoords.xy;
+    //float4 bilinearWeights = subPixelCoords.zxzx * subPixelCoords.wwyy;
+    //
+    //float2 texelUnits = 1.0f / shadowMapDimms;
+    //float4 shadowDepth;
+    //shadowDepth.x = shadowMap.Sample(defaultSample, shadowTexCoord);
+    //shadowDepth.y = shadowMap.Sample(defaultSample, shadowTexCoord + float2(texelUnits.x, 0.0f));
+    //shadowDepth.z = shadowMap.Sample(defaultSample, shadowTexCoord + float2(0.0f, texelUnits.y));
+    //shadowDepth.w = shadowMap.Sample(defaultSample, shadowTexCoord + texelUnits);
+    //
+    //float4 shadowTest = (shadowDepth >= lightSpaceDepth) ? 1.0f : 0.0f;
+    //return dot(bilinearWeights, shadowTest);
+}
+
 float3 LinearToGamma(float3 aColor)
 {
     return pow(abs(aColor), 1.0 / 2.2);
@@ -194,7 +288,7 @@ float3 EvaluateAmbience(TextureCube cubeMap, SamplerState defaultSampler, float3
     float3 specRad = cubeMap.SampleLevel(defaultSampler, vR, numMips).rgb;
     float3 diffRad = cubeMap.SampleLevel(defaultSampler, vN, (float) (nrBrdfMips - 1)).rgb;
     
-    ambientStr.rgb *= ambientStr.w;
+   
     if (length(specRad) == 0.f && length(diffRad) == 0.f)
     {
         diffRad = ambientStr.rgb;
@@ -205,6 +299,7 @@ float3 EvaluateAmbience(TextureCube cubeMap, SamplerState defaultSampler, float3
         diffRad *= ambientStr.rgb;
         specRad *= ambientStr.rgb;
     }
+   
     
     float fT = 1.0 - RdotNsat;
     float fT5 = fT * fT;
@@ -217,7 +312,7 @@ float3 EvaluateAmbience(TextureCube cubeMap, SamplerState defaultSampler, float3
     
     float3 ambientdiffuse = ao * dfcol * diffRad;
     float3 ambientspecular = fFade * spccol * specRad;
-    return ambientdiffuse + ambientspecular;
+    return (ambientdiffuse + ambientspecular) * ambientStr.w;
 }
 
 float3 EvaluateDirectionalLight(float3 albedoColor, float3 specularColor, float3 normal, float roughness, float3 lightColor, float3 lightDir, float3 viewDir)

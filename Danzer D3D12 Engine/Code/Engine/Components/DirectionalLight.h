@@ -3,9 +3,8 @@
 
 
 
-class DirectionalLight
+struct DirectionalLight
 {
-public:
 	DirectionalLight(){}
 	DirectionalLight(Vect4f light, Vect4f ambient) :
 		m_lightColor(light),
@@ -14,9 +13,5 @@ public:
 
 	Vect4f m_lightColor;
 	Vect4f m_ambientColor;
-
-private:
-	// Used for shadows, will use later on
-	Mat4f m_lightProjection;
 };
 

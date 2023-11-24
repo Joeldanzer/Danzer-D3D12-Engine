@@ -16,6 +16,7 @@ class Object;
 class Skybox;
 class DirectionalLight;
 class D3D12Framework;
+class DirectionalShadowMapping;
 
 class Transform;
 
@@ -35,15 +36,17 @@ public:
 	void Init(D3D12Framework& framework);
 
 	CD3DX12_GPU_DESCRIPTOR_HANDLE UpdateDefaultBuffers(Camera& camera, Transform&, UINT frameIndex);
-	void RenderSkybox(ID3D12GraphicsCommandList* cmdList, Transform& cameraTransform, TextureHandler::Texture& textures, ModelData& model, Skybox& skybox, UINT frameIndex, UINT StartLocation);
-	void RenderDirectionalLight(ID3D12GraphicsCommandList* cmdList, TextureHandler::Texture& skyboxTexture, UINT frameIndex, UINT& startLocation);
-	//void TransparentRender(Scene* scene, std::vector<ModelData>& transparentModels, UINT frameIndex, std::vector<TextureHandler::Texture> textures);
+	CD3DX12_GPU_DESCRIPTOR_HANDLE UpdateShadowMapBuffer(Mat4f& projection, Transform& transform, UINT frameIndex);
+	CD3DX12_GPU_DESCRIPTOR_HANDLE UpdateLightBuffer(Mat4f& projection, Transform& transform, const DirectionalLight& light, const Vect4f& direction, UINT frameIndex);
+	
 	void RenderToGbuffer(ID3D12GraphicsCommandList* cmdList, std::vector<ModelData>& models, UINT frameIndex, std::vector<TextureHandler::Texture>& textures, bool renderTransparency, UINT startLocation);
+	void DrawShadowMap(ID3D12GraphicsCommandList* cmdList, std::vector<ModelData>& models, UINT frameIndex);
+	void RenderSkybox(ID3D12GraphicsCommandList* cmdList, Transform& cameraTransform, TextureHandler::Texture& textures, ModelData& model, Skybox& skybox, UINT frameIndex, UINT StartLocation);
+	void RenderDirectionalLight(ID3D12GraphicsCommandList* cmdList, TextureHandler::Texture& skyboxTexture, DirectionalShadowMapping& shadowMap, UINT frameIndex, UINT& startLocation);
 
+	//void TransparentRender(Scene* scene, std::vector<ModelData>& transparentModels, UINT frameIndex, std::vector<TextureHandler::Texture> textures);
 	//void RayRendering(std::vector<RayBuffer::RayInstance>& rays, UINT frameIndex);
 	//void AABBRendering(std::vector<AABBBuffer::AABBInstance>& aabb, UINT frameIndex);
-
-	CD3DX12_GPU_DESCRIPTOR_HANDLE UpdateLightBuffer(const DirectionalLight& light, const Vect4f& direction, UINT frameIndex);
 
 private:
 	UINT m_descriptorIndex;
@@ -53,6 +56,7 @@ private:
 	AABBBuffer m_aabbBuffer;
 	RayBuffer m_rayBuffer;
 	CameraBuffer m_cameraBuffer;
+	CameraBuffer m_shadowBuffer;
 	TransformBuffer m_transformBuffer;
 	LightBuffer m_lightBuffer;
 	MaterialBuffer  m_materialBuffer;

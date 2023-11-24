@@ -26,19 +26,20 @@ void PipelineStateHandler::Init(D3D12Framework& framework)
 {
 	InitializeInputLayouts();
 	InitializeSamplerDescs();
-
-	CreateUIRootSignature(framework.GetDevice());
-	CreateLightRootSignature(framework.GetDevice());
-	CreateDefaultRootSingature(framework.GetDevice());
-	CreateGBufferRootSingature(framework.GetDevice());
-
+	
 	ID3D12Device* device = framework.GetDevice();
+
+	CreateUIRootSignature(device);
+	CreateLightRootSignature(device);
+	CreateDefaultRootSingature(device);
+	CreateGBufferRootSingature(device);
 
 	CreateUIPSO(device);
 	CreateFontPSO(device);
 	CreateModelPSO(device);
 	CreateSkyboxPSO(device);
 	CreateGBufferPSO(device);
+	CreateShadowMapPSO(device);
 	CreateTransparentPSO(device);
 	CreateRayWireframePSO(device);
 	CreateAABBWireframePSO(device);
@@ -48,16 +49,15 @@ void PipelineStateHandler::Init(D3D12Framework& framework)
 //* Light Root Signature
 void PipelineStateHandler::CreateLightRootSignature(ID3D12Device* device)
 {
-	CD3DX12_ROOT_PARAMETER rootParameter[9] = {};
+	CD3DX12_ROOT_PARAMETER rootParameter[10] = {};
 	
 	//* Camera & Light Buffer
 	CD3DX12_DESCRIPTOR_RANGE cameraLightBuffer(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
 	rootParameter[0].InitAsDescriptorTable(1, &cameraLightBuffer, D3D12_SHADER_VISIBILITY_PIXEL);
-
 	CD3DX12_DESCRIPTOR_RANGE lightBuffer(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);
 	rootParameter[1].InitAsDescriptorTable(1, &lightBuffer, D3D12_SHADER_VISIBILITY_PIXEL);
 
-	//* Albedo, Normal, Material, VertexColor, VertexNormal, WorldPosition, Skybox 
+	//* Albedo, Normal, Material, VertexColor, VertexNormal, WorldPosition, Skybox, Shadow
 	CD3DX12_DESCRIPTOR_RANGE albedo(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
 	rootParameter[2].InitAsDescriptorTable(1, &albedo, D3D12_SHADER_VISIBILITY_PIXEL);
 	CD3DX12_DESCRIPTOR_RANGE normal(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1);
@@ -72,9 +72,11 @@ void PipelineStateHandler::CreateLightRootSignature(ID3D12Device* device)
 	rootParameter[7].InitAsDescriptorTable(1, &worldPosition, D3D12_SHADER_VISIBILITY_PIXEL);
 	CD3DX12_DESCRIPTOR_RANGE skybox(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 6);
 	rootParameter[8].InitAsDescriptorTable(1, &skybox, D3D12_SHADER_VISIBILITY_PIXEL);
+	CD3DX12_DESCRIPTOR_RANGE shadow(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 7);
+	rootParameter[9].InitAsDescriptorTable(1, &shadow, D3D12_SHADER_VISIBILITY_PIXEL);
 
 	CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc;
-	rootSignatureDesc.Init(_countof(rootParameter), &rootParameter[0], 1, &m_samplerDescs[SAMPLER_DESC_WRAP], 
+	rootSignatureDesc.Init(_countof(rootParameter), &rootParameter[0], 1, &m_samplerDescs[SAMPLER_DESC_CLAMP], 
 		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
 		D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS     |
 		D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS       |
@@ -481,6 +483,54 @@ void PipelineStateHandler::CreateModelPSO(ID3D12Device* device)
 	CHECK_HR(result);
 
 	m_PSObjects[PIPELINE_STATE_MODELS]->SetName(L"Model PSO");
+}
+void PipelineStateHandler::CreateShadowMapPSO(ID3D12Device* device)
+{
+	D3D12_BLEND_DESC blendDesc = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+
+	CD3DX12_DEPTH_STENCIL_DESC depthStencilDesc(D3D12_DEFAULT);
+	depthStencilDesc.DepthEnable = true;
+	depthStencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+	depthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
+	depthStencilDesc.StencilEnable = false;
+
+	//CD3DX12_RASTERIZER_DESC rastDesc(D3D12_FILL_MODE_SOLID,
+	//	D3D12_CULL_MODE_NONE, FALSE,
+	//	D3D12_DEFAULT_DEPTH_BIAS, D3D12_DEFAULT_DEPTH_BIAS_CLAMP,
+	//	D3D12_DEFAULT_SLOPE_SCALED_DEPTH_BIAS, TRUE, TRUE, FALSE,
+	//	0, D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF);
+
+	DXGI_SAMPLE_DESC sample = { 1, 0 };
+	sample.Count = 1;
+	sample.Quality = 0;
+
+	ID3DBlob* vs;
+	CHECK_HR(D3DReadFileToBlob(L"Shaders/ShadowDepthVS.cso", &vs));
+
+	D3D12_SHADER_BYTECODE vsByte = {};
+	vsByte.BytecodeLength = vs->GetBufferSize();
+	vsByte.pShaderBytecode = vs->GetBufferPointer();
+
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
+	psoDesc.RTVFormats[0] = DXGI_FORMAT_UNKNOWN;
+	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
+	psoDesc.SampleDesc = sample;
+	psoDesc.SampleMask = 0xffffffff;
+	psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+	psoDesc.BlendState = blendDesc;
+	psoDesc.DepthStencilState = depthStencilDesc;
+	psoDesc.NumRenderTargets = 0;
+	psoDesc.pRootSignature = m_rootSignatures[ROOTSIGNATURE_STATE_GBUFFER].Get();
+	psoDesc.VS = vsByte;
+	psoDesc.PS = CD3DX12_SHADER_BYTECODE(0, 0);
+	psoDesc.InputLayout.pInputElementDescs = m_inputLayouts[INPUT_LAYOUT_INSTANCE_GBUFFER].data();
+	psoDesc.InputLayout.NumElements = m_inputLayouts[INPUT_LAYOUT_INSTANCE_GBUFFER].size();
+	psoDesc.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
+
+	CHECK_HR(device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_PSObjects[PIPELINE_STATE_SHADOW])));
+
+	m_PSObjects[PIPELINE_STATE_SHADOW]->SetName(L"Shadow Map PSO");
 }
 void PipelineStateHandler::CreateUIPSO(ID3D12Device* device)
 {
