@@ -23,7 +23,7 @@ float4 main(VertexToPixel input) : SV_TARGET
     
     float3 toEye = normalize(CameraPosition.xyz - worldPosition);
   
-    float shadowData = ShadowCalculation(float4(worldPosition, 1.0f));
+    float shadowData = ShadowCalculation(float4(worldPosition, 1.0f), normal.xyz);
     
     //float3 r = reflect(toEye, normalize(normal));
     

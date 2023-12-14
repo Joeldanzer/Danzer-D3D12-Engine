@@ -84,8 +84,8 @@ RenderManager::Impl::Impl::Impl(D3D12Framework& framework) :
 		framework.GetDevice(),
 		&framework.CbvSrvHeap(),
 		&framework.DSVHeap(),
-		1920,
-		1080,
+		8192,
+		8192,
 		DXGI_FORMAT_R32_TYPELESS
 	)
 {
@@ -143,15 +143,17 @@ void RenderManager::Impl::BeginFrame()
 		CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle = m_framework.DSVHeap().GET_CPU_DESCRIPTOR(0);
 		cmdList->ClearDepthStencilView(
 			dsvHandle,
-			D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 1, &m_framework.m_scissorRect
+			D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr
 		);
 		dsvHandle.Offset((m_shadowMap.DSVOffsetID() + m_framework.m_frameIndex) * m_framework.DSVHeap().DESCRIPTOR_SIZE());
-		cmdList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 1, &m_framework.m_scissorRect);
+		cmdList->RSSetViewports(1, &m_shadowMap.GetViewPort());
+		cmdList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 	}
 	
 	// Clear all RenderTargets
 	{
-		m_gBuffer.ClearRenderTargets(m_framework.RTVHeap(), cmdList, 1, &m_framework.m_scissorRect);
+		cmdList->RSSetViewports(1, &m_framework.m_viewport);
+		m_gBuffer.ClearRenderTargets(m_framework.RTVHeap(), cmdList, 0, nullptr);
 		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle = m_framework.RTVHeap().GET_CPU_DESCRIPTOR(0);
 		rtvHandle.Offset(m_framework.m_frameIndex * m_framework.RTVHeap().DESCRIPTOR_SIZE());
 		cmdList->ClearRenderTargetView(
@@ -244,6 +246,8 @@ void RenderManager::Impl::RenderScene(TextureHandler& textureHandler, SpriteHand
 
 		cmdList->SetPipelineState(m_pipeLineHandler.GetPSO(PIPELINE_STATE_SHADOW));
 		cmdList->SetGraphicsRootSignature(m_pipeLineHandler.GetRootSignature(ROOTSIGNATURE_STATE_GBUFFER));
+		
+		cmdList->RSSetViewports(1, &m_shadowMap.GetViewPort());
 		cmdList->OMSetRenderTargets(0, nullptr, false, &dsvHandle);
 
 		CD3DX12_GPU_DESCRIPTOR_HANDLE shadowBuffer = m_mainRenderer.UpdateShadowMapBuffer(m_shadowMap.GetProjectionMatrix(), dirLightTransform, frameIndex);
@@ -265,6 +269,7 @@ void RenderManager::Impl::RenderScene(TextureHandler& textureHandler, SpriteHand
 		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle = m_framework.m_rtvHeap.GET_CPU_DESCRIPTOR(0);
 		rtvHandle.Offset(frameIndex * m_framework.RTVHeap().DESCRIPTOR_SIZE());
 
+		cmdList->RSSetViewports(1, &m_framework.m_viewport);
 		cmdList->OMSetRenderTargets(1, &rtvHandle, false, nullptr);
 
 		//ID3D12DescriptorHeap* cbvSrvHeap = m_framework.GetCbvSrvUavWrapper().GetDescriptorHeap();

@@ -13,7 +13,7 @@ D3D12Framework::D3D12Framework() :
 	m_frameIndex(0),
 	m_fenceValue(0),
 	m_viewport(0.0f, 0.0f, static_cast<float>(WindowHandler::WindowData().m_w), static_cast<float>(WindowHandler::WindowData().m_h)),
-	m_scissorRect(0, 0,    static_cast<LONG>(WindowHandler::WindowData().m_w),  static_cast<LONG>(WindowHandler::WindowData().m_h))
+	m_scissorRect(0, 0,    static_cast<LONG>(8192),  static_cast<LONG>(8192))
 {
 	ComPtr<IDXGIFactory4> factory;
 #ifdef _DEBUG

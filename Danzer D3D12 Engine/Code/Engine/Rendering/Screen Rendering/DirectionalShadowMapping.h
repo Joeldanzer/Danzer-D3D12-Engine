@@ -33,9 +33,15 @@ public:
 		return m_projectionMatrix;
 	}
 
+	const D3D12_VIEWPORT& GetViewPort() {
+		return m_viewPort;
+	}
+
 private:
 	UINT m_dsvOffsetID;
 	UINT m_srvOffsetID; //DescriptorHeapWrapper
+	
+	D3D12_VIEWPORT m_viewPort;
 
 	Mat4f m_projectionMatrix;
 

@@ -77,4 +77,6 @@ DirectionalShadowMapping::DirectionalShadowMapping(
 	float projectionScale = 32.f;
 	float increase = 8.f;
 	m_projectionMatrix = DirectX::XMMatrixOrthographicLH(projectionScale, projectionScale, -(projectionScale * increase), projectionScale * increase);
+	
+	m_viewPort = CD3DX12_VIEWPORT(0.0f, 0.0f, width, height);
 }

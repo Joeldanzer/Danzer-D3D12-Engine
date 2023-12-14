@@ -3,73 +3,48 @@
 #define PI_MACRO 3.14159265359f;
 #define FLT_EPSILON 1.192092896e-07f
 #define nMipOffset 3
-#define SHADOW_DEPTH_BIAS 0.00005f;
+#define MIN_SHADOW_DEPTH_BIAS 0.005f
+#define MAX_SHADOW_DEPTH_BIAS 0.0005f
 
 float invLerp(float a, float b, float c)
 {
     return (c - a) / (b - a);
 }
 
-float ShadowCalculation(float4 worldPos)
+float ShadowCalculation(float4 worldPos, float3 normal)
 { 
-    
-    
-    //float4x4 lightSpaceMatrix   = mul(LightProjection, LightTransform);
-    //float4   projectionPos      = mul(worldPos,       lightSpaceMatrix);
-    
-    //const float4 viewPos = mul(worldPos, LightTransform);
-    //float4 projectionPos = mul(viewPos,  LightProjection);
-    //float total = 0.0f;
-    //
-    //float3 viewCoords = projectionPos.xyz / projectionPos.w;
-    //
-    //float2 uvCoords = projectionPos.xy;
-    //uvCoords *= float2(0.5f, 0.5f);
-    //uvCoords += float2(0.5f, 0.5f);
-    //float returnValue = -1.0f;
-    //
-    //if (uvCoords.x >= 0.0f && uvCoords.x <= 1.0f && uvCoords.y >= 0.0f && uvCoords.y <= 1.0f)
-    //{
-    //    float nonLinearDepth = shadowMap.Sample(defaultSample, uvCoords).r;
-    //    float oob = 1.0f;
-    //    if (projectionPos.x > 1.0f || projectionPos.x < -1.0f || projectionPos.y > 1.0f || projectionPos.y < -1.0f)
-    //    {
-    //        oob = 0.0f;
-    //    }
-    //
-    //    float a = nonLinearDepth * oob;
-    //    float b = projectionPos.z;
-    //    b = invLerp(-0.5f, 0.5f, b) * oob;
-    //
-    //    b *= oob;
-    //
-    //    if (b - a < 0.49999f)
-    //    {
-    //        returnValue = 1.0f;
-    //    }
-    //    else
-    //    {
-    //        returnValue = 0.0f;
-    //    }
-    //}
-    //  
-    //return returnValue;
-    
-    //////float4x4 lightSpaceMatrix   = mul(LightTransform, LightProjection);
     float4 lightSpacePos = mul(worldPos,      LightTransform);
     lightSpacePos        = mul(lightSpacePos, LightProjection);
-    //
+    
     lightSpacePos.xyz /= lightSpacePos.w;
     
+    //if(lightSpacePos.z > 1.0f)
+    //    return 0.0f;
     
     float2 shadowTexCoord = 0.5f * lightSpacePos.xy + 0.5f;
-    shadowTexCoord.y = 1.0f - shadowTexCoord.y;
+    shadowTexCoord.y      = 1.0f - shadowTexCoord.y;
+    
+    float bias = max(MIN_SHADOW_DEPTH_BIAS * (1.0f - dot(normal, LightDirection.xyz)), MAX_SHADOW_DEPTH_BIAS);
+    float currentDepth = lightSpacePos.z - bias;
     
     float closestDepth = shadowMap.Sample(defaultSample, shadowTexCoord.xy).r;
     
-    float currentDepth = lightSpacePos.z - SHADOW_DEPTH_BIAS;
+    float shadow = 0.0f;
+    float2 texelSize;
+    shadowMap.GetDimensions(texelSize.x, texelSize.y);
+    texelSize = 1.0f / texelSize;
+     
+    for (int x = -1; x <= 1; x++)
+    {
+        for (int y = -1; y <= 1; y++)
+        {
+            float pcfDepth = shadowMap.Sample(defaultSample, shadowTexCoord.xy + float2(x, y) * texelSize).r;
+            shadow += currentDepth > pcfDepth ? 0.0f : 1.0f;
+        }
+    }
     
-    float  shadow = currentDepth < closestDepth ? 1.0f : 0.0f;
+    shadow /= 9.0f;
+    //float  shadow = currentDepth < closestDepth ? 1.0f : 0.0f;
     return shadow;
      
 

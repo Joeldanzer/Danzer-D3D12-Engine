@@ -500,6 +500,8 @@ void PipelineStateHandler::CreateShadowMapPSO(ID3D12Device* device)
 	//	D3D12_DEFAULT_SLOPE_SCALED_DEPTH_BIAS, TRUE, TRUE, FALSE,
 	//	0, D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF);
 
+	
+
 	DXGI_SAMPLE_DESC sample = { 1, 0 };
 	sample.Count = 1;
 	sample.Quality = 0;
