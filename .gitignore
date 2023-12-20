@@ -399,7 +399,7 @@ FodyWeavers.xsd
 
 ### VisualStudio Patch ###
 # Additional files built by Visual Studio
-Danzer D3D12 Engine\Bin\Shaders\
+# Danzer D3D12 Engine\Bin\Shaders\
 *.ini
 *.cso
 
