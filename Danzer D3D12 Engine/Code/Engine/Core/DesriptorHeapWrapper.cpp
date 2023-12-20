@@ -9,6 +9,13 @@ DescriptorHeapWrapper::DescriptorHeapWrapper() :
 {
 }
 
+DescriptorHeapWrapper::~DescriptorHeapWrapper()
+{
+	m_gpuHeapStart.ptr = 0;
+	m_cpuHeapStart.ptr = 0;
+	m_desctiptorHeap.~ComPtr();
+}
+
 void DescriptorHeapWrapper::CreateDescriptorHeap(ID3D12Device* device, D3D12_DESCRIPTOR_HEAP_TYPE type, UINT numberOfDescriptors, bool shaderVisible)
 {
 	m_desc = { };

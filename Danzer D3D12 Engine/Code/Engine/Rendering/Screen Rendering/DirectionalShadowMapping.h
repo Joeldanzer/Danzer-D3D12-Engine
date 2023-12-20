@@ -1,50 +1,31 @@
 #pragma once
-#include "DirectX-Headers-main/include/directx/d3dx12.h"
-#include "Core/MathDefinitions.h"
-#include "Core/D3D12Header.h"
+#include "FullscreenTexture.h"
 
-class D3D12Framework;
-class DescriptorHeapWrapper;
+#include "Rendering/Models/ModelData.h"
 
-class DirectionalShadowMapping
+class DirectionalShadowMapping : public FullscreenTexture
 {
-public:
-	DirectionalShadowMapping(
-		ID3D12Device* device,
-		DescriptorHeapWrapper* cbvSrvHeap,
-		DescriptorHeapWrapper* dsvHeap,
-		const UINT width,
-		const UINT height,
-		DXGI_FORMAT format
-	);
-
-	ID3D12Resource* GetResource(const UINT frameIndex) {
-		return m_resource[frameIndex].Get();
-	}
-
-	const UINT SRVOffsetID(){
-		return m_srvOffsetID;
-	}
-	const UINT DSVOffsetID() {
-		return m_dsvOffsetID;
-	}
-
+public:	
+	DirectionalShadowMapping() :
+		m_models(nullptr), modelCount(0), m_projectionMatrix({}) 
+	{}
+	
+	void RenderTexture(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper& handle, const UINT frameIndex) override;
+	
+	void CreateProjection(float projectionScale, float increase);
 	Mat4f& GetProjectionMatrix() {
 		return m_projectionMatrix;
 	}
 
-	const D3D12_VIEWPORT& GetViewPort() {
-		return m_viewPort;
+	void SetModelsData(std::vector<ModelData>& models) {
+		m_models = &models[0];
+		modelCount = models.size();
 	}
 
 private:
-	UINT m_dsvOffsetID;
-	UINT m_srvOffsetID; //DescriptorHeapWrapper
-	
-	D3D12_VIEWPORT m_viewPort;
+	UINT modelCount;
+	ModelData* m_models;
 
-	Mat4f m_projectionMatrix;
-
-	ComPtr<ID3D12Resource> m_resource[FrameCount];
+ 	Mat4f m_projectionMatrix;
 };
 

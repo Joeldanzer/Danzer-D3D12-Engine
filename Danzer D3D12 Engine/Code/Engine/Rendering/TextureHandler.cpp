@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "TextureHandler.h"
-#include "FrameResource.h"
+#include "Core/FrameResource.h"
 #include "Core/D3D12Framework.h"
 
 #include "../3rdParty/DirectXTK12-main/Inc/DDSTextureLoader.h"

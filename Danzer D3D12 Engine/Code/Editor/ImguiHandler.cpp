@@ -12,7 +12,7 @@
 #include "Components/DirectionalLight.h"
 #include "Rendering/TextureHandler.h"
 
-#include "FrameResource.h"
+#include "Core/FrameResource.h"
 
 #include "Components/Text.h"
 #include "Components/Object.h"

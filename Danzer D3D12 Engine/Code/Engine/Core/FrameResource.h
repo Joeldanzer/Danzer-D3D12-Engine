@@ -9,7 +9,8 @@ struct ID3D12Device;
 class FrameResource{
 public:
 	FrameResource(ID3D12Device* device, const UINT index);
-	
+	~FrameResource();
+
 	ID3D12GraphicsCommandList* CmdList() {
 		return m_cmdList.Get();
 	}	

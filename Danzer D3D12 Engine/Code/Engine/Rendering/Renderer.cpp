@@ -12,7 +12,7 @@
 #include "Camera.h"
 
 #include "RenderUtility.h"
-#include "FrameResource.h"
+#include "Core/FrameResource.h"
 
 
 #include "Core/D3D12Framework.h"
@@ -228,7 +228,6 @@ void Renderer::DrawShadowMap(ID3D12GraphicsCommandList* cmdList, std::vector<Mod
 						cmdList->IASetVertexBuffers(0, 2, &vBufferViews[0]);
 						cmdList->IASetIndexBuffer(&mesh.m_indexBufferView);
 						cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
 						cmdList->DrawIndexedInstanced(mesh.m_numIndices, numberOfTransforms, 0, 0, 0);
 					}
 				}

@@ -9,7 +9,7 @@
 #include "Core/WindowHandler.h"
 #include "Models/ModelHandler.h"
 #include "2D/SpriteHandler.h"
-#include "FrameResource.h"
+#include "Core/FrameResource.h"
 
 #include "Components/Sprite.h"
 #include "Components/Text.h"
@@ -57,13 +57,14 @@ private:
 	void ClearAllInstances(ModelHandler& modelHandler, SpriteHandler& spriteHandler);
 
 	PipelineStateHandler m_pipeLineHandler;
-	DirectionalShadowMapping m_shadowMap;
 	Renderer			 m_mainRenderer;
 	Renderer2D			 m_2dRenderer;
 	GBuffer				 m_gBuffer;
-
+	
 	D3D12Framework& m_framework;
 
+	DirectionalShadowMapping* m_shadowMap;
+	
 
 	//std::priority_queue<TransparentObject, std::vector<TransparentObject>, >
 	//struct TransparentObject {
@@ -79,19 +80,26 @@ private:
 
 RenderManager::Impl::Impl::Impl(D3D12Framework& framework) : 
 	m_framework(framework),
-	m_gBuffer(framework),
-	m_shadowMap(
+	m_gBuffer(framework)
+{
+	m_2dRenderer.Init(framework);
+	m_mainRenderer.Init(framework);
+	m_pipeLineHandler.Init(framework);
+
+	m_shadowMap = new DirectionalShadowMapping();
+	m_shadowMap->InitTexture(
 		framework.GetDevice(),
 		&framework.CbvSrvHeap(),
 		&framework.DSVHeap(),
 		8192,
 		8192,
-		DXGI_FORMAT_R32_TYPELESS
-	)
-{
-	m_2dRenderer.Init(framework);
-	m_mainRenderer.Init(framework);
-	m_pipeLineHandler.Init(framework);
+		DXGI_FORMAT_R32_TYPELESS,
+		DXGI_FORMAT_R32_FLOAT,
+		D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL,
+		L"Shadow Map Buffer: "
+	);
+	m_shadowMap->CreateProjection(32.0f, 8.f);
+
 }
 RenderManager::Impl::Impl::~Impl(){
 
@@ -129,7 +137,7 @@ void RenderManager::Impl::BeginFrame()
 		m_framework.QeueuResourceTransition(&rtv[0], 1,
 			D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET
 		);
-		ID3D12Resource* shadow[] = { m_shadowMap.GetResource(m_framework.m_frameIndex) };
+		ID3D12Resource* shadow[] = { m_shadowMap->GetResource(m_framework.m_frameIndex) };
 		m_framework.QeueuResourceTransition(&shadow[0], 1,
 			D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_DEPTH_WRITE);
 		
@@ -145,8 +153,8 @@ void RenderManager::Impl::BeginFrame()
 			dsvHandle,
 			D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr
 		);
-		dsvHandle.Offset((m_shadowMap.DSVOffsetID() + m_framework.m_frameIndex) * m_framework.DSVHeap().DESCRIPTOR_SIZE());
-		cmdList->RSSetViewports(1, &m_shadowMap.GetViewPort());
+		dsvHandle.Offset((m_shadowMap->DSVOffsetID() + m_framework.m_frameIndex) * m_framework.DSVHeap().DESCRIPTOR_SIZE());
+		cmdList->RSSetViewports(1, &m_shadowMap->GetViewPort());
 		cmdList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 	}
 	
@@ -241,21 +249,16 @@ void RenderManager::Impl::RenderScene(TextureHandler& textureHandler, SpriteHand
 	} //* Scene to Gbuffer end
 
 	{ //* Draw Shadow Data
-		CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle = m_framework.DSVHeap().GET_CPU_DESCRIPTOR(0);
-		dsvHandle.Offset((m_shadowMap.DSVOffsetID() + frameIndex) * m_framework.DSVHeap().DESCRIPTOR_SIZE());
-
+		CD3DX12_GPU_DESCRIPTOR_HANDLE shadowBuffer = m_mainRenderer.UpdateShadowMapBuffer(m_shadowMap->GetProjectionMatrix(), dirLightTransform, frameIndex);
+		cmdList->SetGraphicsRootDescriptorTable(0, shadowBuffer);
+		
 		cmdList->SetPipelineState(m_pipeLineHandler.GetPSO(PIPELINE_STATE_SHADOW));
 		cmdList->SetGraphicsRootSignature(m_pipeLineHandler.GetRootSignature(ROOTSIGNATURE_STATE_GBUFFER));
 		
-		cmdList->RSSetViewports(1, &m_shadowMap.GetViewPort());
-		cmdList->OMSetRenderTargets(0, nullptr, false, &dsvHandle);
-
-		CD3DX12_GPU_DESCRIPTOR_HANDLE shadowBuffer = m_mainRenderer.UpdateShadowMapBuffer(m_shadowMap.GetProjectionMatrix(), dirLightTransform, frameIndex);
-		cmdList->SetGraphicsRootDescriptorTable(0, shadowBuffer);
-
-		m_mainRenderer.DrawShadowMap(cmdList, modelHandler.GetAllModels(), frameIndex);
+		m_shadowMap->SetModelsData(modelHandler.GetAllModels());
+		m_shadowMap->RenderTexture(cmdList, m_framework.DSVHeap(), frameIndex);
 		
-		ID3D12Resource* shadow[] = { m_shadowMap.GetResource(frameIndex) };
+		ID3D12Resource* shadow[] = { m_shadowMap->GetResource(frameIndex) };
 		m_framework.QeueuResourceTransition(&shadow[0], 1,
 			D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 
@@ -294,7 +297,7 @@ void RenderManager::Impl::RenderScene(TextureHandler& textureHandler, SpriteHand
 		cmdList->SetGraphicsRootSignature(m_pipeLineHandler.GetRootSignature(ROOTSIGNATURE_STATE_LIGHT));
 		cmdList->SetPipelineState(m_pipeLineHandler.GetPSO(PIPELINE_STATE_DIRECTIONAL_LIGHT));
 
-		D3D12_GPU_DESCRIPTOR_HANDLE lightHandle = m_mainRenderer.UpdateLightBuffer(m_shadowMap.GetProjectionMatrix(),
+		D3D12_GPU_DESCRIPTOR_HANDLE lightHandle = m_mainRenderer.UpdateLightBuffer(m_shadowMap->GetProjectionMatrix(),
 		 dirLightTransform	,directionalLight, directionaLightdir, m_framework.GetFrameIndex());
 		cmdList->SetGraphicsRootDescriptorTable(startLocation, lightHandle);
 		startLocation++;
@@ -303,7 +306,7 @@ void RenderManager::Impl::RenderScene(TextureHandler& textureHandler, SpriteHand
 		m_mainRenderer.RenderDirectionalLight(
 			cmdList,
 			textureHandler.GetTextures()[skybox.GetCurrentActiveSkybox()[1] - 1],
-			m_shadowMap,
+			*m_shadowMap,
 			m_framework.GetFrameIndex(),
 			startLocation
 		);

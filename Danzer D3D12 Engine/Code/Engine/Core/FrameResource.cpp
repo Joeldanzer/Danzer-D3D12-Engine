@@ -15,6 +15,12 @@ FrameResource::FrameResource(ID3D12Device* device, const UINT index) :
 	m_cmdList->SetName(std::wstring(L"CmdList " + std::to_wstring(index)).c_str());
 }
 
+FrameResource::~FrameResource()
+{
+	m_cmdAllocator.~ComPtr();
+	m_cmdList.~ComPtr();
+}
+
 void FrameResource::Initiate(ID3D12PipelineState* pso)
 {
 	CHECK_HR(m_cmdAllocator->Reset());

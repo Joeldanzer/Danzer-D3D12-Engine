@@ -68,9 +68,10 @@
     <ClCompile Include="Core\DesriptorHeapWrapper.cpp" />
     <ClCompile Include="Rendering\Buffers\CBVBuffer.cpp" />
     <ClCompile Include="Core\D3D12Framework.cpp" />
-    <ClCompile Include="FrameResource.cpp" />
+    <ClCompile Include="Core\FrameResource.cpp" />
     <ClCompile Include="Rendering\Screen Rendering\DirectionalShadowMapping.cpp" />
     <ClCompile Include="ShaderEffectRenderer.cpp" />
+    <ClCompile Include="FullscreenTexture.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Core\DirectX12Framework.h">
@@ -158,8 +159,9 @@
     <ClInclude Include="Components\Script.h" />
     <ClInclude Include="Core\DesriptorHeapWrapper.h" />
     <ClInclude Include="Core\D3D12Framework.h" />
-    <ClInclude Include="FrameResource.h" />
+    <ClInclude Include="Core\FrameResource.h" />
     <ClInclude Include="Rendering\Screen Rendering\DirectionalShadowMapping.h" />
     <ClInclude Include="ShaderEffectRenderer.h" />
+    <ClInclude Include="FullscreenTexture.h" />
   </ItemGroup>
 </Project>

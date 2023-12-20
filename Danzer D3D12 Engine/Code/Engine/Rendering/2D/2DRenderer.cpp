@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "2DRenderer.h"
 
-#include "FrameResource.h"
+#include "Core/FrameResource.h"
 #include "../VertexAndTextures.h"
 #include "../../Core/WindowHandler.h"
 #include "../../Core/D3D12Framework.h"

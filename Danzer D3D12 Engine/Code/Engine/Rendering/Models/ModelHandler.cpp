@@ -8,7 +8,7 @@
 #include "../RenderUtility.h"
 #include "../../Core/D3D12Framework.h"
 
-#include "FrameResource.h"
+#include "Core/FrameResource.h"
 #include "Scene.h"
 
 #include <iostream>

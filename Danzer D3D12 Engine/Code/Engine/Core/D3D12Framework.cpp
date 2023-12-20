@@ -86,6 +86,28 @@ D3D12Framework::D3D12Framework() :
 
 D3D12Framework::~D3D12Framework()
 {
+	m_rtvHeap.~DescriptorHeapWrapper();
+	m_dsvHeap.~DescriptorHeapWrapper();
+	m_cbvSrvHeap.~DescriptorHeapWrapper();
+
+	m_swapChain.~ComPtr();
+	m_device.~ComPtr();
+	
+	m_commandAllocator.~ComPtr();
+	m_commandQueue.~ComPtr();
+	m_initCmdList.~ComPtr();
+
+	m_depthStencil.~ComPtr();
+	m_fence.~ComPtr();
+
+	for (UINT i = 0; i < FrameCount; i++)
+	{
+		m_frameResources[i]->~FrameResource();
+		delete m_frameResources[i];
+
+		m_renderTargets[i].~ComPtr();
+	}
+	delete m_imguiDesc;
 }
 
 void D3D12Framework::InitiateCommandList(ID3D12PipelineState* pso, std::wstring message)

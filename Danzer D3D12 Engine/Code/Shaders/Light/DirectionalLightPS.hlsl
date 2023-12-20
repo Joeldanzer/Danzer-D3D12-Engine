@@ -32,7 +32,6 @@ float4 main(VertexToPixel input) : SV_TARGET
        
     float3 ambience         = EvaluateAmbience(skyboxTexture, defaultSample, normal.rgb, vertexNormal, toEye, roughness, metallic, albedo, ao, diffusecolor, specualrcolor, AmbientColor);
     float3 directionalLight = EvaluateDirectionalLight(diffusecolor, specualrcolor, normal.rgb, roughness, LightColor.rgb * LightColor.w, LightDirection.xyz, toEye.xyz) * shadowData;    
-    //float3 directionallight = EvaluateDirectionalLight(diffusecolor, specualrcolor, normal, perceptualroughness, myLightColor.rgb * myLightColor.w, myLightDirection.xyz, toEye.xyz);
     float3 emissive = albedo * emissiveData;
     float3 radiance = ambience + directionalLight;
     
@@ -63,10 +62,10 @@ float4 main(VertexToPixel input) : SV_TARGET
             color.rgb = radiance;    
             break;
         case 1:
-            color.rgb = shadowData.rrr;
+            color.rgb = normal.rgb * 0.5 + 0.5f;
             break;
         case 2:
-            color.rgb = ambience; //normal.rgb * 0.5 + 0.5f;
+            color.rgb = vertexNormal.rgb;
             break;
         case 3:
             color.rgb = directionalLight;
