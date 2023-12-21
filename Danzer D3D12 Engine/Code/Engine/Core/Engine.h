@@ -10,6 +10,7 @@ class TextureHandler;
 class CollisionManager;
 class Skybox;
 class D3D12Framework;
+class ModelEffectHandler;
 
 class Engine
 {
@@ -26,15 +27,16 @@ public:
 
 	void EndInitFrame();
 
-	const float			GetFPS()			  const noexcept;
-	const float		    GetDeltaTime()		  const noexcept;
-	SceneManager&	    GetSceneManager()	  const noexcept;
-	ModelHandler&		GetModelHandler()	  const noexcept;
-	SpriteHandler&		GetSpriteHandler()	  const noexcept;
-	RenderManager&	    GetRenderManager()	  const noexcept;
-	D3D12Framework&		GetFramework()		  const noexcept;
-	TextureHandler&		GetTextureHandler()	  const noexcept;
-	CollisionManager&	GetCollisionManager() const noexcept;
+	const float			GetFPS()			    const noexcept;
+	const float		    GetDeltaTime()		    const noexcept;
+	SceneManager&	    GetSceneManager()	    const noexcept;
+	ModelHandler&		GetModelHandler()	    const noexcept;
+	SpriteHandler&		GetSpriteHandler()	    const noexcept;
+	RenderManager&	    GetRenderManager()	    const noexcept;
+	D3D12Framework&		GetFramework()		    const noexcept;
+	TextureHandler&		GetTextureHandler()	    const noexcept;
+	CollisionManager&	GetCollisionManager()   const noexcept;
+	ModelEffectHandler& GetModelEffectHandler() const noexcept;
 	
 
 private:

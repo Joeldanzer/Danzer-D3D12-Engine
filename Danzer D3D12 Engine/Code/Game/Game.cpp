@@ -1,6 +1,8 @@
 #include "Game.h"
 #include "Engine/Core/Engine.h"
 
+#include "Rendering/Models/ModelEffectHandler.h"
+
 #include "Engine/Core/input.hpp"
 
 #include "SceneManager.h"
@@ -57,23 +59,23 @@ Game::Impl::Impl(Engine& engine) :
 	sponzaObj.m_name = "Sponza Atrium";
 
     reg.emplace<Model>(entity, engine.GetModelHandler().LoadModel(L"Models/BlenderSponzaAtriumOld.fbx", "Sponza Atrium"));
+	
+	auto waterPlane = engine.GetSceneManager().GetCurrentScene().CreateBasicEntity("WaterPlane");
+	Model waterModel = reg.emplace<Model>(waterPlane, engine.GetModelHandler().LoadModel(L"Models/WaterPlane.fbx", "Water Plane"));
+	std::vector<UINT> textures = {
+		engine.GetTextureHandler().GetTexture(L"Sprites/WaterNoiseVertex.dds"),
+		engine.GetTextureHandler().GetTexture(L"Sprites/WaterNoiseNormalOne.dds"),
+		engine.GetTextureHandler().GetTexture(L"Sprites/WaterNoiseNormalTwo.dds")
+	};
+	reg.emplace<ModelEffect>(waterPlane, engine.GetModelEffectHandler().CreateModelEffect(L"WaterPlane", waterModel.m_modelID, 1, textures, true));
+}	
+
 }
 Game::Impl::~Impl(){}
 
 void Game::Impl::Update(const float dt)
 {
 	entt::registry& reg = m_engine.GetSceneManager().GetCurrentScene().Registry();
-
-	//Sprite& sprite = reg.get<Sprite>(m_entity);
-	//m_currentTime -= dt;
-	//if (m_currentTime < 0.f) {
-	//	sprite.m_frame++;
-	//	if (sprite.m_frame > 15)
-	//		sprite.m_frame = 0;
-	//
-	//	m_currentTime = m_time;
-	//}
-
 	Transform& transform = reg.get<Transform>(m_engine.GetSceneManager().GetCurrentScene().GetMainCamera());
 	
 	float speed = 5.0f;

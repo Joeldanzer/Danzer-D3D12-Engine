@@ -131,7 +131,7 @@ private:
 
 	UINT m_ID;	
 
-	std::string m_name;
+	std::string  m_name;
 	std::wstring m_modelPath;
 
 	bool m_renderModel;

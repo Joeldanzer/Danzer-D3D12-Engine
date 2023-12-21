@@ -3,6 +3,7 @@
 // D3D12.h is intended to have useful includes for DirectX12
 
 #include <wrl\client.h>
+#include <string>
 
 // Check HRESULT for DX12 and throws program if it fails
 #define CHECK_HR(hr) if(FAILED(hr)){throw hr;} \

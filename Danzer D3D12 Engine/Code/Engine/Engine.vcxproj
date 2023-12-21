@@ -152,10 +152,13 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Components\Collision\Collider.h" />
+    <ClInclude Include="Components\ModelEffect.h" />
     <ClInclude Include="Components\Script.h" />
     <ClInclude Include="Core\DesriptorHeapWrapper.h" />
     <ClInclude Include="Core\D3D12Framework.h" />
-    <ClInclude Include="FullscreenTexture.h" />
+    <ClInclude Include="Rendering\Models\ModelEffectData.h" />
+    <ClInclude Include="Rendering\Models\ModelEffectHandler.h" />
+    <ClInclude Include="Rendering\Screen Rendering\FullscreenTexture.h" />
     <ClInclude Include="Rendering\Screen Rendering\DirectionalShadowMapping.h" />
     <ClInclude Include="Core\FrameResource.h" />
     <ClInclude Include="Rendering\Screen Rendering\FullScreenShaderHandler.h" />
@@ -219,7 +222,8 @@
     <ClCompile Include="Core\input.cpp" />
     <ClCompile Include="Core\DesriptorHeapWrapper.cpp" />
     <ClCompile Include="Core\D3D12Framework.cpp" />
-    <ClCompile Include="FullscreenTexture.cpp" />
+    <ClCompile Include="Rendering\Models\ModelEffectHandler.cpp" />
+    <ClCompile Include="Rendering\Screen Rendering\FullscreenTexture.cpp" />
     <ClCompile Include="Rendering\Screen Rendering\DirectionalShadowMapping.cpp" />
     <ClCompile Include="Core\FrameResource.cpp" />
     <ClCompile Include="Rendering\Buffers\CBVBuffer.cpp" />

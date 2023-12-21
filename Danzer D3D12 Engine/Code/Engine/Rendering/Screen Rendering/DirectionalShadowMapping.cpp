@@ -1,6 +1,8 @@
 #include "stdafx.h"
 #include "DirectionalShadowMapping.h"
 
+
+
 #include "Core/DesriptorHeapWrapper.h"
 
 void DirectionalShadowMapping::RenderTexture(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper& handle, const UINT frameIndex)

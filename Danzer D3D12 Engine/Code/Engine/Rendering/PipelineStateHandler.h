@@ -40,10 +40,9 @@ public:
 
 	ID3D12PipelineState* GetPSO(PIPELINE_STATES state) { return m_PSObjects[state].Get(); }
 	ID3D12RootSignature* GetRootSignature(ROOTSINGATURE_STATES state) { return m_rootSignatures[state].Get(); }
-
-private:
-	// Pre made InputLayouts. 
-	enum INPUT_LAYOUTS {
+	
+	// These objects are fetchable anywhere 
+	static enum INPUT_LAYOUTS {
 		INPUT_LAYOUT_INSTANCE_MODEL,
 		INPUT_LAYOUT_INSTANCE_GBUFFER,
 		INPUT_LAYOUT_INSTANCE_SPRITE_2D,
@@ -53,12 +52,18 @@ private:
 		INPUT_LAYOUT_COUNT
 	};
 
-	enum SAMPLER_DESCS {
+	static enum SAMPLER_DESCS {
 		SAMPLER_DESC_WRAP,
 		SAMPLER_DESC_BORDER,
 		SAMPLER_DESC_CLAMP,
 		SAMPLER_DESC_COUNT
+	
 	};
+	static std::array<std::vector<D3D12_INPUT_ELEMENT_DESC>, INPUT_LAYOUT_COUNT> s_inputLayouts;
+	static std::array<D3D12_STATIC_SAMPLER_DESC, SAMPLER_DESC_COUNT>             s_samplerDescs;
+
+private:
+	// Pre made InputLayouts. 
 
 	void CreateLightRootSignature(ID3D12Device* device);
 	void CreateGBufferRootSingature(ID3D12Device* device);
@@ -83,7 +88,5 @@ private:
 	std::array<ComPtr<ID3D12PipelineState>, PIPELINE_COUNT> m_PSObjects;
 	std::array<ComPtr<ID3D12RootSignature>, ROOTSIGNATURE_COUNT> m_rootSignatures;
 
-	std::array<std::vector<D3D12_INPUT_ELEMENT_DESC>, INPUT_LAYOUT_COUNT> m_inputLayouts;
-	std::array<D3D12_STATIC_SAMPLER_DESC, SAMPLER_DESC_COUNT> m_samplerDescs;
 };
 

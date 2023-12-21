@@ -206,8 +206,6 @@ void RenderManager::Impl::RenderScene(TextureHandler& textureHandler, SpriteHand
 		Vect3f dir = dirLightTransform.m_world.Forward();
 		directionaLightdir = { dir.x, dir.y, dir.z, 1.0f };
 	}
-
-	
 	//Vect3f dirPos = dirLightTransform.m_position;
 	//float scale = 200.0f;
 	//m_shadowMap.GetProjectionMatrix() = DirectX::XMMatrixOrthographicOffCenterLH(dirPos.x - scale, dirPos.x + scale, dirPos.y - scale, dirPos.y + scale, dirPos.z - scale, dirPos.z + scale);

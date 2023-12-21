@@ -76,7 +76,7 @@ void PipelineStateHandler::CreateLightRootSignature(ID3D12Device* device)
 	rootParameter[9].InitAsDescriptorTable(1, &shadow, D3D12_SHADER_VISIBILITY_PIXEL);
 
 	CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc;
-	rootSignatureDesc.Init(_countof(rootParameter), &rootParameter[0], 1, &m_samplerDescs[SAMPLER_DESC_CLAMP], 
+	rootSignatureDesc.Init(_countof(rootParameter), &rootParameter[0], 1, &s_samplerDescs[SAMPLER_DESC_CLAMP], 
 		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
 		D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS     |
 		D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS       |
@@ -130,7 +130,7 @@ void PipelineStateHandler::CreateGBufferRootSingature(ID3D12Device* device)
 	rootParameter[7].InitAsDescriptorTable(1, &aoDescRange, D3D12_SHADER_VISIBILITY_PIXEL);
 
 	CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc;
-	rootSignatureDesc.Init(_countof(rootParameter), &rootParameter[0], 1, &m_samplerDescs[SAMPLER_DESC_WRAP],
+	rootSignatureDesc.Init(_countof(rootParameter), &rootParameter[0], 1, &s_samplerDescs[SAMPLER_DESC_WRAP],
 		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
 		D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
 		D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS);
@@ -159,7 +159,7 @@ void PipelineStateHandler::CreateDefaultRootSingature(ID3D12Device* device)
 	rootParameter[2].InitAsDescriptorTable(1, &srvDescriptorRange2, D3D12_SHADER_VISIBILITY_PIXEL);
 
 	CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc;
-	rootSignatureDesc.Init(_countof(rootParameter), &rootParameter[0], 1, &m_samplerDescs[SAMPLER_DESC_WRAP],
+	rootSignatureDesc.Init(_countof(rootParameter), &rootParameter[0], 1, &s_samplerDescs[SAMPLER_DESC_WRAP],
 		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
 		D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS	 |
 		D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS);
@@ -191,7 +191,7 @@ void PipelineStateHandler::CreateUIRootSignature(ID3D12Device* device)
 	// end of SRV
 
 	CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc;
-	rootSignatureDesc.Init(_countof(rootParameter), rootParameter, 1, &m_samplerDescs[SAMPLER_DESC_CLAMP],
+	rootSignatureDesc.Init(_countof(rootParameter), rootParameter, 1, &s_samplerDescs[SAMPLER_DESC_CLAMP],
 		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
 		D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS	 |
 		D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS);
@@ -262,8 +262,8 @@ void PipelineStateHandler::CreateTransparentPSO(ID3D12Device* device)
 	psoDesc.pRootSignature = m_rootSignatures[ROOTSIGNATURE_STATE_DEFAULT].Get();
 	psoDesc.VS = vsByte;
 	psoDesc.PS = psByte;
-	psoDesc.InputLayout.pInputElementDescs = m_inputLayouts[INPUT_LAYOUT_INSTANCE_MODEL].data();
-	psoDesc.InputLayout.NumElements = m_inputLayouts[INPUT_LAYOUT_INSTANCE_MODEL].size();
+	psoDesc.InputLayout.pInputElementDescs = s_inputLayouts[INPUT_LAYOUT_INSTANCE_MODEL].data();
+	psoDesc.InputLayout.NumElements = s_inputLayouts[INPUT_LAYOUT_INSTANCE_MODEL].size();
 	psoDesc.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
 
 	result = device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_PSObjects[PIPELINE_STATE_TRANSPARENT]));
@@ -320,8 +320,8 @@ void PipelineStateHandler::CreateAABBWireframePSO(ID3D12Device* device)
 	psoDesc.VS = vsByte;
 	psoDesc.GS = gsByte;
 	psoDesc.PS = psByte;
-	psoDesc.InputLayout.pInputElementDescs = m_inputLayouts[INPUT_LAYOUT_INSTANCE_AABB].data();
-	psoDesc.InputLayout.NumElements = m_inputLayouts[INPUT_LAYOUT_INSTANCE_AABB].size();
+	psoDesc.InputLayout.pInputElementDescs = s_inputLayouts[INPUT_LAYOUT_INSTANCE_AABB].data();
+	psoDesc.InputLayout.NumElements = s_inputLayouts[INPUT_LAYOUT_INSTANCE_AABB].size();
 	psoDesc.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
 
 	result = device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_PSObjects[PIPELINE_STATE_AABB_WIREFRAME]));
@@ -378,8 +378,8 @@ void PipelineStateHandler::CreateRayWireframePSO(ID3D12Device* device)
 	psoDesc.VS = vsByte;
 	psoDesc.GS = gsByte;
 	psoDesc.PS = psByte;
-	psoDesc.InputLayout.pInputElementDescs = m_inputLayouts[INPUT_LAYOUT_INSTANCE_RAY].data();
-	psoDesc.InputLayout.NumElements = m_inputLayouts[INPUT_LAYOUT_INSTANCE_RAY].size();
+	psoDesc.InputLayout.pInputElementDescs = s_inputLayouts[INPUT_LAYOUT_INSTANCE_RAY].data();
+	psoDesc.InputLayout.NumElements = s_inputLayouts[INPUT_LAYOUT_INSTANCE_RAY].size();
 	psoDesc.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
 
 	result = device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_PSObjects[PIPELINE_STATE_RAY_WIREFRAME]));
@@ -475,8 +475,8 @@ void PipelineStateHandler::CreateModelPSO(ID3D12Device* device)
 	psoDesc.pRootSignature = m_rootSignatures[ROOTSIGNATURE_STATE_DEFAULT].Get();
 	psoDesc.VS = vsByte;
 	psoDesc.PS = psByte;
-	psoDesc.InputLayout.pInputElementDescs = m_inputLayouts[INPUT_LAYOUT_INSTANCE_MODEL].data();
-	psoDesc.InputLayout.NumElements = m_inputLayouts[INPUT_LAYOUT_INSTANCE_MODEL].size();
+	psoDesc.InputLayout.pInputElementDescs = s_inputLayouts[INPUT_LAYOUT_INSTANCE_MODEL].data();
+	psoDesc.InputLayout.NumElements = s_inputLayouts[INPUT_LAYOUT_INSTANCE_MODEL].size();
 	psoDesc.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
 
 	result = device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_PSObjects[PIPELINE_STATE_MODELS]));
@@ -526,8 +526,8 @@ void PipelineStateHandler::CreateShadowMapPSO(ID3D12Device* device)
 	psoDesc.pRootSignature = m_rootSignatures[ROOTSIGNATURE_STATE_GBUFFER].Get();
 	psoDesc.VS = vsByte;
 	psoDesc.PS = CD3DX12_SHADER_BYTECODE(0, 0);
-	psoDesc.InputLayout.pInputElementDescs = m_inputLayouts[INPUT_LAYOUT_INSTANCE_GBUFFER].data();
-	psoDesc.InputLayout.NumElements = m_inputLayouts[INPUT_LAYOUT_INSTANCE_GBUFFER].size();
+	psoDesc.InputLayout.pInputElementDescs = s_inputLayouts[INPUT_LAYOUT_INSTANCE_GBUFFER].data();
+	psoDesc.InputLayout.NumElements = s_inputLayouts[INPUT_LAYOUT_INSTANCE_GBUFFER].size();
 	psoDesc.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
 
 	CHECK_HR(device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_PSObjects[PIPELINE_STATE_SHADOW])));
@@ -584,8 +584,8 @@ void PipelineStateHandler::CreateUIPSO(ID3D12Device* device)
 	psoDesc.pRootSignature = m_rootSignatures[ROOTSIGNATURE_STATE_UI].Get();
 	psoDesc.VS = vsByte;
 	psoDesc.PS = psByte;
-	psoDesc.InputLayout.pInputElementDescs = m_inputLayouts[INPUT_LAYOUT_INSTANCE_SPRITE_2D].data();
-	psoDesc.InputLayout.NumElements = m_inputLayouts[INPUT_LAYOUT_INSTANCE_SPRITE_2D].size();
+	psoDesc.InputLayout.pInputElementDescs = s_inputLayouts[INPUT_LAYOUT_INSTANCE_SPRITE_2D].data();
+	psoDesc.InputLayout.NumElements = s_inputLayouts[INPUT_LAYOUT_INSTANCE_SPRITE_2D].size();
 	psoDesc.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
 
 	result = device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_PSObjects[PIPELINE_STATE_UI]));
@@ -654,8 +654,8 @@ void PipelineStateHandler::CreateFontPSO(ID3D12Device* device)
 	psoDesc.VS = vsByte;
 	psoDesc.GS = gsByte;
 	psoDesc.PS = psByte;
-	psoDesc.InputLayout.pInputElementDescs = m_inputLayouts[INPUT_LAYOUT_INSTANCE_FONT_2D].data();
-	psoDesc.InputLayout.NumElements = m_inputLayouts[INPUT_LAYOUT_INSTANCE_FONT_2D].size();
+	psoDesc.InputLayout.pInputElementDescs = s_inputLayouts[INPUT_LAYOUT_INSTANCE_FONT_2D].data();
+	psoDesc.InputLayout.NumElements = s_inputLayouts[INPUT_LAYOUT_INSTANCE_FONT_2D].size();
 	psoDesc.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
 
 	result = device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_PSObjects[PIPELINE_STATE_FONT]));
@@ -709,8 +709,8 @@ void PipelineStateHandler::CreateSkyboxPSO(ID3D12Device* device)
 	psoDesc.pRootSignature = m_rootSignatures[ROOTSIGNATURE_STATE_DEFAULT].Get();
 	psoDesc.VS = vsByte;
 	psoDesc.PS = psByte;
-	psoDesc.InputLayout.pInputElementDescs = m_inputLayouts[INPUT_LAYOUT_INSTANCE_MODEL].data();
-	psoDesc.InputLayout.NumElements = m_inputLayouts[INPUT_LAYOUT_INSTANCE_MODEL].size();
+	psoDesc.InputLayout.pInputElementDescs = s_inputLayouts[INPUT_LAYOUT_INSTANCE_MODEL].data();
+	psoDesc.InputLayout.NumElements = s_inputLayouts[INPUT_LAYOUT_INSTANCE_MODEL].size();
 	psoDesc.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
 
 	result = device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_PSObjects[PIPELINE_STATE_SKYBOX]));
@@ -782,8 +782,8 @@ void PipelineStateHandler::CreateGBufferPSO(ID3D12Device* device)
 	psoDesc.pRootSignature = m_rootSignatures[ROOTSIGNATURE_STATE_GBUFFER].Get();
 	psoDesc.VS = vsByte;
 	psoDesc.PS = psByte;
-	psoDesc.InputLayout.pInputElementDescs = m_inputLayouts[INPUT_LAYOUT_INSTANCE_GBUFFER].data();
-	psoDesc.InputLayout.NumElements = m_inputLayouts[INPUT_LAYOUT_INSTANCE_GBUFFER].size();
+	psoDesc.InputLayout.pInputElementDescs = s_inputLayouts[INPUT_LAYOUT_INSTANCE_GBUFFER].data();
+	psoDesc.InputLayout.NumElements = s_inputLayouts[INPUT_LAYOUT_INSTANCE_GBUFFER].size();
 	psoDesc.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
 
 	result = device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_PSObjects[PIPELINE_STATE_GBUFFER]));
@@ -809,7 +809,7 @@ void PipelineStateHandler::InitializeSamplerDescs()
 	samplerDesc.ShaderRegister = 0;
 	samplerDesc.RegisterSpace = 0;
 
-	m_samplerDescs[SAMPLER_DESC_CLAMP] = samplerDesc;
+	s_samplerDescs[SAMPLER_DESC_CLAMP] = samplerDesc;
 
 	samplerDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
 	samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
@@ -825,7 +825,7 @@ void PipelineStateHandler::InitializeSamplerDescs()
 	samplerDesc.ShaderRegister = 0;
 	samplerDesc.RegisterSpace = 0;
 
-	m_samplerDescs[SAMPLER_DESC_WRAP] = samplerDesc;
+	s_samplerDescs[SAMPLER_DESC_WRAP] = samplerDesc;
 
 	samplerDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
 	samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
@@ -841,11 +841,11 @@ void PipelineStateHandler::InitializeSamplerDescs()
 	samplerDesc.ShaderRegister = 0;
 	samplerDesc.RegisterSpace = 0;
 
-	m_samplerDescs[SAMPLER_DESC_BORDER] = samplerDesc;
+	s_samplerDescs[SAMPLER_DESC_BORDER] = samplerDesc;
 }
 void PipelineStateHandler::InitializeInputLayouts()
 {
-	m_inputLayouts[INPUT_LAYOUT_INSTANCE_SPRITE_2D] = {
+	s_inputLayouts[INPUT_LAYOUT_INSTANCE_SPRITE_2D] = {
 		// Per Vertex
 		{ "POSITION",   0, DXGI_FORMAT_R32G32B32A32_FLOAT,   0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
 		{ "UV",		    0, DXGI_FORMAT_R32G32_FLOAT,		 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
@@ -858,7 +858,7 @@ void PipelineStateHandler::InitializeInputLayouts()
 		{ "UI_SIZE",        0, DXGI_FORMAT_R32G32_FLOAT, 1, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
 	};
 
-	m_inputLayouts[INPUT_LAYOUT_INSTANCE_FONT_2D] = {
+	s_inputLayouts[INPUT_LAYOUT_INSTANCE_FONT_2D] = {
 		// Per Instance
 
 		{ "POSITION",      0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
@@ -870,7 +870,7 @@ void PipelineStateHandler::InitializeInputLayouts()
 		{ "COLOR",         0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
 	};
 
-	m_inputLayouts[INPUT_LAYOUT_INSTANCE_MODEL] = {
+	s_inputLayouts[INPUT_LAYOUT_INSTANCE_MODEL] = {
 		// Per Vertex
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT,  D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
 		{ "UV",		  0, DXGI_FORMAT_R32G32_FLOAT,		 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,  0 },
@@ -882,7 +882,7 @@ void PipelineStateHandler::InitializeInputLayouts()
 		{ "TRANSFORM",3, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
 	};
 
-	m_inputLayouts[INPUT_LAYOUT_INSTANCE_GBUFFER] = {
+	s_inputLayouts[INPUT_LAYOUT_INSTANCE_GBUFFER] = {
 		// Per Vertex
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT,  D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
 		{ "NORMAL",   0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT,  D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
@@ -899,12 +899,12 @@ void PipelineStateHandler::InitializeInputLayouts()
 	};
 
 	//Used for debugging Collision
-	m_inputLayouts[INPUT_LAYOUT_INSTANCE_AABB] = {
+	s_inputLayouts[INPUT_LAYOUT_INSTANCE_AABB] = {
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
 		{ "SIZE",	  0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 }
 	};
 
-	m_inputLayouts[INPUT_LAYOUT_INSTANCE_RAY] = {
+	s_inputLayouts[INPUT_LAYOUT_INSTANCE_RAY] = {
 		{ "POSITION",  0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
 		{ "DESTINATION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
 		//{ "DISTANCE",  0, DXGI_FORMAT_R32_FLOAT,       0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 }

@@ -2,7 +2,6 @@
 #include "Engine.h"
 #include "Level Loader/LevelLoaderCustom.h"
 
-
 #include "Components/Transform.h"
 #include "Core/input.hpp"
 #include "Rendering/TextureHandler.h"
@@ -11,6 +10,7 @@
 #include "SceneManager.h"
 #include "Rendering/RenderManager.h"
 #include "Rendering/Models/ModelHandler.h"
+#include "Rendering/Models/ModelEffectHandler.h"
 #include "Scene.h"
 #include "FrameTimer.h"
 #include "Rendering/2D/SpriteHandler.h"
@@ -35,15 +35,16 @@ public:
 
 	void EndInitFrame();
 
-	const float			GetFPS()			  noexcept;
-	const float		    GetDeltaTime()		  noexcept;
-	SceneManager&		GetSceneManager()	  noexcept;
-	ModelHandler&		GetModelFactory()	  noexcept;
-	SpriteHandler&		GetSpriteFactory()	  noexcept;
-	RenderManager&	    GetRenderManager()	  noexcept;
-	D3D12Framework&     GetFramework()		  noexcept;
-	TextureHandler&		GetTextureHandler()	  noexcept;
-	CollisionManager&   GetCollisionManager() noexcept;
+	const float			GetFPS()			    noexcept;
+	const float		    GetDeltaTime()		    noexcept;
+	SceneManager&		GetSceneManager()	    noexcept;
+	ModelHandler&		GetModelFactory()	    noexcept;
+	SpriteHandler&		GetSpriteFactory()	    noexcept;
+	RenderManager&	    GetRenderManager()	    noexcept;
+	D3D12Framework&     GetFramework()		    noexcept;
+	TextureHandler&		GetTextureHandler()	    noexcept;
+	CollisionManager&   GetCollisionManager()   noexcept;
+	ModelEffectHandler& GetModelEffectHandler() noexcept;
 
 private:
 	WindowHandler m_windowHandler;
@@ -55,6 +56,7 @@ private:
 	SceneManager m_sceneManager;
 	TextureHandler m_textureHandler;
 	CollisionManager m_collisionManager;
+	ModelEffectHandler m_modelEffectHandler;
 	FrameTimer m_frameTimer;
 	Skybox m_skybox;
 	
@@ -69,6 +71,7 @@ Engine::Impl::Impl(unsigned int width, unsigned int height) :
 	m_renderManager(m_framework),
 	m_textureHandler(m_framework),
 	m_modelHandler(m_framework, m_textureHandler),
+	m_modelEffectHandler(m_framework),
 	m_spriteHandler(m_framework, m_textureHandler),
 	m_sceneManager(),
 	m_collisionManager(),
@@ -220,6 +223,10 @@ CollisionManager& Engine::GetCollisionManager() const noexcept
 {
 	return m_Impl->GetCollisionManager();
 }
+ModelEffectHandler& Engine::GetModelEffectHandler() const noexcept
+{
+	return m_Impl->GetModelEffectHandler();
+}
 const float Engine::Impl::GetFPS() noexcept
 {
 	return m_frameTimer.GetRealFrameRate();
@@ -259,4 +266,9 @@ TextureHandler& Engine::Impl::GetTextureHandler() noexcept
 CollisionManager& Engine::Impl::GetCollisionManager() noexcept
 {
 	return m_collisionManager;
+}
+
+ModelEffectHandler& Engine::Impl::GetModelEffectHandler() noexcept
+{
+	return m_modelEffectHandler;
 }

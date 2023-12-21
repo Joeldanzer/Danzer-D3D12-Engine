@@ -71,7 +71,8 @@
     <ClCompile Include="Core\FrameResource.cpp" />
     <ClCompile Include="Rendering\Screen Rendering\DirectionalShadowMapping.cpp" />
     <ClCompile Include="ShaderEffectRenderer.cpp" />
-    <ClCompile Include="FullscreenTexture.cpp" />
+    <ClCompile Include="Rendering\Screen Rendering\FullscreenTexture.cpp" />
+    <ClCompile Include="Rendering\Models\ModelEffectHandler.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Core\DirectX12Framework.h">
@@ -162,6 +163,9 @@
     <ClInclude Include="Core\FrameResource.h" />
     <ClInclude Include="Rendering\Screen Rendering\DirectionalShadowMapping.h" />
     <ClInclude Include="ShaderEffectRenderer.h" />
-    <ClInclude Include="FullscreenTexture.h" />
+    <ClInclude Include="Rendering\Screen Rendering\FullscreenTexture.h" />
+    <ClInclude Include="Rendering\Models\ModelEffectHandler.h" />
+    <ClInclude Include="Components\ModelEffect.h" />
+    <ClInclude Include="Rendering\Models\ModelEffectData.h" />
   </ItemGroup>
 </Project>

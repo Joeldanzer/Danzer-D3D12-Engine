@@ -7,7 +7,7 @@ class DirectionalShadowMapping : public FullscreenTexture
 {
 public:	
 	DirectionalShadowMapping() :
-		m_models(nullptr), modelCount(0), m_projectionMatrix({}) 
+		m_models(nullptr), modelCount(0), m_projectionMatrix() 
 	{}
 	
 	void RenderTexture(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper& handle, const UINT frameIndex) override;
