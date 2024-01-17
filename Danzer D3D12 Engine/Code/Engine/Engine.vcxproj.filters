@@ -35,7 +35,7 @@
     <ClCompile Include="Rendering\Models\ModelHandler.cpp">
       <Filter>Objects</Filter>
     </ClCompile>
-    <ClCompile Include="Rendering\Models\TransformBuffer.cpp">
+    <ClCompile Include="Rendering\Buffers\TransformBuffer.cpp">
       <Filter>Buffers</Filter>
     </ClCompile>
     <ClCompile Include="Rendering\Models\ModelData.cpp" />
@@ -73,6 +73,7 @@
     <ClCompile Include="ShaderEffectRenderer.cpp" />
     <ClCompile Include="Rendering\Screen Rendering\FullscreenTexture.cpp" />
     <ClCompile Include="Rendering\Models\ModelEffectHandler.cpp" />
+    <ClCompile Include="Rendering\Buffers\EffectShaderBuffer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Core\DirectX12Framework.h">
@@ -112,7 +113,7 @@
     <ClInclude Include="Rendering\Models\ModelData.h">
       <Filter>Objects</Filter>
     </ClInclude>
-    <ClInclude Include="Rendering\Models\TransformBuffer.h">
+    <ClInclude Include="Rendering\Buffers\TransformBuffer.h">
       <Filter>Buffers</Filter>
     </ClInclude>
     <ClInclude Include="Rendering\Models\ModelLoaderCustom.h" />
@@ -167,5 +168,6 @@
     <ClInclude Include="Rendering\Models\ModelEffectHandler.h" />
     <ClInclude Include="Components\ModelEffect.h" />
     <ClInclude Include="Rendering\Models\ModelEffectData.h" />
+    <ClInclude Include="Rendering\Buffers\EffectShaderBuffer.h" />
   </ItemGroup>
 </Project>

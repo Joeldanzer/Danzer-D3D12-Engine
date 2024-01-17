@@ -232,11 +232,11 @@ void ModelLoaderCustom::LoadVerticiesWithTransform(std::vector<Vect3f>& v3Verts,
         }
 
         if (normals) 
-            verticies.PushVec4({ mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z, 1.f });
-        
-        if (binormTan) {
-            verticies.PushVec4({ mesh->mTangents[i].x,   mesh->mTangents[i].y,   mesh->mTangents[i].z,   1.f });
-            verticies.PushVec4({ mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z, 1.f });
+            verticies.PushVec4({ -1.0f * mesh->mNormals[i].x,    mesh->mNormals[i].y,       - 1.0f * mesh->mNormals[i].z, 1.f });
+                                                                 
+        if (binormTan) {                                         
+            verticies.PushVec4({ -1.0f * mesh->mTangents[i].x,   mesh->mTangents[i].y,   -1.0f * mesh->mTangents[i].z,   1.f });
+            verticies.PushVec4({ -1.0f * mesh->mBitangents[i].x, mesh->mBitangents[i].y, -1.0f * mesh->mBitangents[i].z, 1.f });
         }
 
         if (color) {     

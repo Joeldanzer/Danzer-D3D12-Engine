@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "Renderer.h"
 
+#include "Models/ModelHandler.h"
 #include "Scene.h"
 #include "Components/Transform.h";
 #include "Components/Object.h"
@@ -17,6 +18,7 @@
 
 #include "Core/D3D12Framework.h"
 
+#include <chrono>
 #include <string>
 
 Renderer::~Renderer()
@@ -25,6 +27,7 @@ Renderer::~Renderer()
 	//m_transformBuffer.~TransformBuffer();
 
 	//m_commandList = nullptr;
+	m_framework		= nullptr;
 	m_rootSignature = nullptr;
 }
 
@@ -54,7 +57,8 @@ CD3DX12_GPU_DESCRIPTOR_HANDLE Renderer::UpdateDefaultBuffers(Camera& camera, Tra
 	Vect4f eye = { bufferData.m_transform.Forward() };
 	eye.w = 1.f;
 	bufferData.m_direction = eye;
-
+	bufferData.m_time = clock() / 1000.0f;
+	
 	m_cameraBuffer.UpdateBuffer(&bufferData, frameIndex);
 
 	D3D12_GPU_DESCRIPTOR_HANDLE cbvSrvHeapStart = m_framework->CbvSrvHeap().GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
@@ -147,6 +151,57 @@ void Renderer::RenderDirectionalLight(ID3D12GraphicsCommandList* cmdList, Textur
 	cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	
 	cmdList->DrawInstanced(3, 1, 0, 0);
+}
+
+void Renderer::RenderForwardModelEffects(ID3D12GraphicsCommandList* cmdList, std::vector<ModelEffectData>& modelEffects, ModelHandler& modelHandler, std::vector<TextureHandler::Texture>& textures, const UINT frameIndex, Camera& cam, Transform& camTransform, UINT startLocation)
+{
+	D3D12_GPU_DESCRIPTOR_HANDLE cbvSrvHeapStart = m_framework->CbvSrvHeap().GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
+	const UINT cbvSrvDescSize = m_framework->CbvSrvHeap().DESCRIPTOR_SIZE();
+
+	for (UINT i = 0; i < modelEffects.size(); i++)
+	{
+		ModelEffectData& effectData = modelEffects[i];
+		
+		// Set the effects RootSignature and Pipelinestate 
+		cmdList->SetGraphicsRootSignature(effectData.GetEffectRSO());
+		cmdList->SetPipelineState(effectData.GetEffectPSO());
+
+		CD3DX12_GPU_DESCRIPTOR_HANDLE cbvHandle = UpdateDefaultBuffers(cam, camTransform, frameIndex);
+		cmdList->SetGraphicsRootDescriptorTable(0, cbvHandle);
+
+		ModelData& model = modelHandler.GetLoadedModelInformation(effectData.ModelID());
+		model.UpdateTransformInstanceBuffer(effectData.GetTransforms(), frameIndex);
+
+		for (UINT i = 0; i < model.GetMeshes().size(); i++)
+		{
+			ModelData::Mesh& mesh = model.GetSingleMesh(i);
+
+			if (mesh.m_renderMesh) {
+
+				std::vector<CD3DX12_GPU_DESCRIPTOR_HANDLE> srvHandles;
+				
+				for (UINT i = 0; i < effectData.GetTextures().size(); i++)
+					srvHandles.emplace_back(cbvSrvHeapStart, textures[effectData.GetTextures()[i]].m_offsetID, cbvSrvDescSize);
+
+				for (UINT i = 0; i < srvHandles.size(); i++)
+					cmdList->SetGraphicsRootDescriptorTable(2 + i, srvHandles[i]);
+
+				D3D12_VERTEX_BUFFER_VIEW vBufferViews[2] = {
+							mesh.m_vertexBufferView, model.GetTransformInstanceBuffer().GetBufferView(frameIndex)
+				};
+				cmdList->IASetVertexBuffers(0, 2, &vBufferViews[0]);
+				cmdList->IASetIndexBuffer(&mesh.m_indexBufferView);
+				cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+				
+				for (UINT i = 0; i < effectData.GetTransforms().size(); i++)
+				{
+					cmdList->DrawIndexedInstanced(mesh.m_numIndices, 1, 0, 0, i);
+				}
+			}
+		}
+
+		effectData.GetTransforms().clear();
+	}
 }
 
 void Renderer::RenderToGbuffer(ID3D12GraphicsCommandList* cmdList, std::vector<ModelData>& models, UINT frameIndex, std::vector<TextureHandler::Texture>& textures, bool renderTransparency, UINT startLocation)

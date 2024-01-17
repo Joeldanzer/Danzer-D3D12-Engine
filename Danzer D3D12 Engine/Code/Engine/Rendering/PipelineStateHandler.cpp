@@ -7,9 +7,11 @@
 #pragma comment(lib, "d3dcompiler.lib")
 #include <d3dcompiler.h>
 
+std::array<std::vector<D3D12_INPUT_ELEMENT_DESC>, INPUT_LAYOUT_COUNT> PipelineStateHandler::s_inputLayouts = {};
+std::array<D3D12_STATIC_SAMPLER_DESC, SAMPLER_DESC_COUNT>			  PipelineStateHandler::s_samplerDescs = {};
+
 PipelineStateHandler::PipelineStateHandler(){}
 PipelineStateHandler::~PipelineStateHandler(){
-
 	for (UINT i = 0; i < PIPELINE_COUNT; i++)
 	{
 		m_PSObjects[i].~ComPtr();
@@ -18,8 +20,7 @@ PipelineStateHandler::~PipelineStateHandler(){
 	for (UINT i = 0; i < ROOTSIGNATURE_COUNT; i++)
 	{
 		m_rootSignatures[i].~ComPtr();
-	}
-	
+	}	
 }
 
 void PipelineStateHandler::Init(D3D12Framework& framework)
@@ -262,8 +263,8 @@ void PipelineStateHandler::CreateTransparentPSO(ID3D12Device* device)
 	psoDesc.pRootSignature = m_rootSignatures[ROOTSIGNATURE_STATE_DEFAULT].Get();
 	psoDesc.VS = vsByte;
 	psoDesc.PS = psByte;
-	psoDesc.InputLayout.pInputElementDescs = s_inputLayouts[INPUT_LAYOUT_INSTANCE_MODEL].data();
-	psoDesc.InputLayout.NumElements = s_inputLayouts[INPUT_LAYOUT_INSTANCE_MODEL].size();
+	psoDesc.InputLayout.pInputElementDescs = s_inputLayouts[INPUT_LAYOUT_INSTANCE_FORWARD].data();
+	psoDesc.InputLayout.NumElements = s_inputLayouts[INPUT_LAYOUT_INSTANCE_FORWARD].size();
 	psoDesc.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
 
 	result = device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_PSObjects[PIPELINE_STATE_TRANSPARENT]));
@@ -392,6 +393,15 @@ void PipelineStateHandler::CreateDirectionalLightPSO(ID3D12Device* device)
 	HRESULT result;
 
 	D3D12_BLEND_DESC blendDesc = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+	//blendDesc.RenderTarget[0].BlendEnable = true;
+	//blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+	//blendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_COLOR;
+	//blendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_BLEND_FACTOR;
+	//blendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+	//blendDesc.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
+	//blendDesc.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
+	//blendDesc.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
+	//blendDesc.AlphaToCoverageEnable = false;
 	D3D12_DEPTH_STENCIL_DESC depthStencilDesc = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
 	D3D12_RASTERIZER_DESC rasterizerDesc = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
 
@@ -475,8 +485,8 @@ void PipelineStateHandler::CreateModelPSO(ID3D12Device* device)
 	psoDesc.pRootSignature = m_rootSignatures[ROOTSIGNATURE_STATE_DEFAULT].Get();
 	psoDesc.VS = vsByte;
 	psoDesc.PS = psByte;
-	psoDesc.InputLayout.pInputElementDescs = s_inputLayouts[INPUT_LAYOUT_INSTANCE_MODEL].data();
-	psoDesc.InputLayout.NumElements = s_inputLayouts[INPUT_LAYOUT_INSTANCE_MODEL].size();
+	psoDesc.InputLayout.pInputElementDescs = s_inputLayouts[INPUT_LAYOUT_INSTANCE_FORWARD].data();
+	psoDesc.InputLayout.NumElements = s_inputLayouts[INPUT_LAYOUT_INSTANCE_FORWARD].size();
 	psoDesc.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
 
 	result = device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_PSObjects[PIPELINE_STATE_MODELS]));
@@ -526,8 +536,8 @@ void PipelineStateHandler::CreateShadowMapPSO(ID3D12Device* device)
 	psoDesc.pRootSignature = m_rootSignatures[ROOTSIGNATURE_STATE_GBUFFER].Get();
 	psoDesc.VS = vsByte;
 	psoDesc.PS = CD3DX12_SHADER_BYTECODE(0, 0);
-	psoDesc.InputLayout.pInputElementDescs = s_inputLayouts[INPUT_LAYOUT_INSTANCE_GBUFFER].data();
-	psoDesc.InputLayout.NumElements = s_inputLayouts[INPUT_LAYOUT_INSTANCE_GBUFFER].size();
+	psoDesc.InputLayout.pInputElementDescs = s_inputLayouts[INPUT_LAYOUT_INSTANCE_DEFFERED].data();
+	psoDesc.InputLayout.NumElements = s_inputLayouts[INPUT_LAYOUT_INSTANCE_DEFFERED].size();
 	psoDesc.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
 
 	CHECK_HR(device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_PSObjects[PIPELINE_STATE_SHADOW])));
@@ -709,8 +719,8 @@ void PipelineStateHandler::CreateSkyboxPSO(ID3D12Device* device)
 	psoDesc.pRootSignature = m_rootSignatures[ROOTSIGNATURE_STATE_DEFAULT].Get();
 	psoDesc.VS = vsByte;
 	psoDesc.PS = psByte;
-	psoDesc.InputLayout.pInputElementDescs = s_inputLayouts[INPUT_LAYOUT_INSTANCE_MODEL].data();
-	psoDesc.InputLayout.NumElements = s_inputLayouts[INPUT_LAYOUT_INSTANCE_MODEL].size();
+	psoDesc.InputLayout.pInputElementDescs = s_inputLayouts[INPUT_LAYOUT_INSTANCE_FORWARD].data();
+	psoDesc.InputLayout.NumElements = s_inputLayouts[INPUT_LAYOUT_INSTANCE_FORWARD].size();
 	psoDesc.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
 
 	result = device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_PSObjects[PIPELINE_STATE_SKYBOX]));
@@ -732,7 +742,7 @@ void PipelineStateHandler::CreateGBufferPSO(ID3D12Device* device)
 	depthStencilDesc.StencilEnable = false;
 
 	CD3DX12_RASTERIZER_DESC rastDesc(D3D12_FILL_MODE_SOLID,
-		D3D12_CULL_MODE_NONE, FALSE,
+		D3D12_CULL_MODE_BACK, FALSE,
 		D3D12_DEFAULT_DEPTH_BIAS, D3D12_DEFAULT_DEPTH_BIAS_CLAMP,
 		D3D12_DEFAULT_SLOPE_SCALED_DEPTH_BIAS, TRUE, TRUE, FALSE,
 		0, D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF);
@@ -782,8 +792,8 @@ void PipelineStateHandler::CreateGBufferPSO(ID3D12Device* device)
 	psoDesc.pRootSignature = m_rootSignatures[ROOTSIGNATURE_STATE_GBUFFER].Get();
 	psoDesc.VS = vsByte;
 	psoDesc.PS = psByte;
-	psoDesc.InputLayout.pInputElementDescs = s_inputLayouts[INPUT_LAYOUT_INSTANCE_GBUFFER].data();
-	psoDesc.InputLayout.NumElements = s_inputLayouts[INPUT_LAYOUT_INSTANCE_GBUFFER].size();
+	psoDesc.InputLayout.pInputElementDescs = s_inputLayouts[INPUT_LAYOUT_INSTANCE_DEFFERED].data();
+	psoDesc.InputLayout.NumElements = s_inputLayouts[INPUT_LAYOUT_INSTANCE_DEFFERED].size();
 	psoDesc.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
 
 	result = device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_PSObjects[PIPELINE_STATE_GBUFFER]));
@@ -819,7 +829,7 @@ void PipelineStateHandler::InitializeSamplerDescs()
 	samplerDesc.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
 	samplerDesc.BorderColor = D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK;
 	samplerDesc.MipLODBias = 0;
-	samplerDesc.MaxAnisotropy = 1.f;
+	samplerDesc.MaxAnisotropy = 16.0f;
 	samplerDesc.MinLOD = 0.f;
 	samplerDesc.MaxLOD = D3D12_FLOAT32_MAX;
 	samplerDesc.ShaderRegister = 0;
@@ -870,10 +880,14 @@ void PipelineStateHandler::InitializeInputLayouts()
 		{ "COLOR",         0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
 	};
 
-	s_inputLayouts[INPUT_LAYOUT_INSTANCE_MODEL] = {
+	s_inputLayouts[INPUT_LAYOUT_INSTANCE_DEFFERED] = {
 		// Per Vertex
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT,  D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{ "UV",		  0, DXGI_FORMAT_R32G32_FLOAT,		 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,  0 },
+		{ "NORMAL",   0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT,  D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "TANGENT",  0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT,  D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "BINORMAL", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT,  D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "COLOR",    0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT,  D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "UV",		  0, DXGI_FORMAT_R32G32_FLOAT,		 0, D3D12_APPEND_ALIGNED_ELEMENT,  D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
 
 		// Per Instance
 		{ "TRANSFORM",0, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
@@ -882,7 +896,7 @@ void PipelineStateHandler::InitializeInputLayouts()
 		{ "TRANSFORM",3, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
 	};
 
-	s_inputLayouts[INPUT_LAYOUT_INSTANCE_GBUFFER] = {
+	s_inputLayouts[INPUT_LAYOUT_INSTANCE_FORWARD] = {
 		// Per Vertex
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT,  D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
 		{ "NORMAL",   0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT,  D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },

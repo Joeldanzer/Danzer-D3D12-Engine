@@ -10,11 +10,13 @@
 #include "Models/ModelHandler.h"
 #include "2D/SpriteHandler.h"
 #include "Core/FrameResource.h"
+#include "Models/ModelEffectHandler.h"
 
 #include "Components/Sprite.h"
 #include "Components/Text.h"
 #include "Components/Object.h"
 #include "Components/Transform.h"
+#include "Components/ModelEffect.h"
 #include "Components/Transform2D.h"
 #include "Components/DirectionalLight.h"
 
@@ -42,13 +44,13 @@ public:
 	void RenderImgui();
 
 	void BeginFrame();
-	void RenderFrame(TextureHandler& textureHandler, ModelHandler& modelHandler,
+	void RenderFrame(TextureHandler& textureHandler, ModelHandler& modelHandler, ModelEffectHandler& effectHandler,
 		SpriteHandler& SpriteHandler, Skybox& skybox, Scene& scene/*Camera, Ligthing, GameObjects, etc...*/);
 
 private:
-	void RenderScene(TextureHandler& textureHandler, SpriteHandler& spriteHandler, ModelHandler& modelHandler, Scene& scene, Skybox& skybox);
+	void RenderScene(TextureHandler& textureHandler, SpriteHandler& spriteHandler, ModelHandler& modelHandler, ModelEffectHandler& effectHandler, Scene& scene, Skybox& skybox);
 
-	void Update3DInstances(Scene& scene, ModelHandler& modelHandler);
+	void Update3DInstances(Scene& scene, ModelHandler& modelHandler, ModelEffectHandler& effectHandler);
 	void Update2DInstances(Scene& scene, SpriteHandler& spriteHandler);
 
 	void AddSpriteSheetInstance(Sprite& data, Transform2D& transform, SpriteHandler& spriteHandler);
@@ -175,16 +177,16 @@ void RenderManager::Impl::BeginFrame()
 
 // DirectX12Framework pipeline needs to be fully reworked it seems >:(
 
-void RenderManager::Impl::Impl::RenderFrame(TextureHandler& textureHandler, ModelHandler& modelHandler,
+void RenderManager::Impl::Impl::RenderFrame(TextureHandler& textureHandler, ModelHandler& modelHandler, ModelEffectHandler& effectHandler,
 	 SpriteHandler& spriteHandler, Skybox& skybox, Scene& scene)
 {	
 	ImGui::Render();
-	RenderScene(textureHandler, spriteHandler, modelHandler, scene, skybox);
+	RenderScene(textureHandler, spriteHandler, modelHandler, effectHandler, scene, skybox);
 
 	ClearAllInstances(modelHandler, spriteHandler);
 }
 
-void RenderManager::Impl::RenderScene(TextureHandler& textureHandler, SpriteHandler& spriteHandler, ModelHandler& modelHandler, Scene& scene, Skybox& skybox)
+void RenderManager::Impl::RenderScene(TextureHandler& textureHandler, SpriteHandler& spriteHandler, ModelHandler& modelHandler, ModelEffectHandler& effectHandler, Scene& scene, Skybox& skybox)
 {
 	ID3D12GraphicsCommandList* cmdList = m_framework.CurrentFrameResource()->CmdList();
 
@@ -216,7 +218,7 @@ void RenderManager::Impl::RenderScene(TextureHandler& textureHandler, SpriteHand
 	cmdList->SetDescriptorHeaps(1, &cbvSrvHeap);
 	
 	{ //* Scene to Gbuffer start
-		Update3DInstances(scene, modelHandler);
+		Update3DInstances(scene, modelHandler, effectHandler);
 
 		CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(m_framework.DSVHeap().GET_CPU_DESCRIPTOR(0));
 		std::array<CD3DX12_CPU_DESCRIPTOR_HANDLE, GBUFFER_COUNT> rtvHandle = m_gBuffer.GetRTVDescriptorHandles(m_framework.RTVHeap());
@@ -239,6 +241,16 @@ void RenderManager::Impl::RenderScene(TextureHandler& textureHandler, SpriteHand
 			textureHandler.GetTextures(),
 			false,
 			startLocation
+		);
+
+		m_mainRenderer.RenderForwardModelEffects(
+			cmdList, 
+			effectHandler.GetAllEffects(), 
+			modelHandler, textureHandler.GetTextures(), 
+			frameIndex, 
+			cam,
+			camTransform,
+			0
 		);
 
 		m_framework.QeueuResourceTransition(
@@ -331,7 +343,7 @@ void RenderManager::Impl::RenderScene(TextureHandler& textureHandler, SpriteHand
 	m_framework.TransitionRenderTarget(D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
 }
 
-void RenderManager::Impl::Update3DInstances(Scene& scene, ModelHandler& modelHandler)
+void RenderManager::Impl::Update3DInstances(Scene& scene, ModelHandler& modelHandler, ModelEffectHandler& effectHandler)
 {
 
 	entt::registry& reg = scene.Registry();
@@ -347,18 +359,25 @@ void RenderManager::Impl::Update3DInstances(Scene& scene, ModelHandler& modelHan
 			Model& model = reg.get<Model>(entity);
 			if (model.m_modelID != 0) {
 				Transform& transform = reg.get<Transform>(entity);
-				ModelData& modelData = modelHandler.GetLoadedModelInformation(model.m_modelID);
-
-				if (modelData.IsTransparent()) {
-					//Mat4f old = transform.GetWorld();
-					//obj->Translate(old); //* scene->GetLayer(obj->GetLayer()).m_layerTransform);
-					//obj->SetDistanceFromCam(cam.GetPosition(), cam.GetTransform().Forward());// * m_camera->GetTransform().Forward());
-					//obj->Translate(old);
-					//m_transparentObjects.emplace_back(obj);
+				if (!reg.try_get<ModelEffect>(entity)) {
+					ModelData& modelData = modelHandler.GetLoadedModelInformation(model.m_modelID);
+					if (modelData.IsTransparent()) {
+						//Mat4f old = transform.GetWorld();
+						//obj->Translate(old); //* scene->GetLayer(obj->GetLayer()).m_layerTransform);
+						//obj->SetDistanceFromCam(cam.GetPosition(), cam.GetTransform().Forward());// * m_camera->GetTransform().Forward());
+						//obj->Translate(old);
+						//m_transparentObjects.emplace_back(obj);
+					}
+					else {
+						modelData.AddInstanceTransform(DirectX::XMMatrixTranspose(transform.m_world)); 
+					}
 				}
 				else {
-					modelData.AddInstanceTransform(DirectX::XMMatrixTranspose(transform.m_world)); 
+					ModelEffect& effect = reg.get<ModelEffect>(entity);
+					ModelEffectData& effectData = effectHandler.GetModelEffectData(effect.m_effectID);
+					effectData.GetTransforms().emplace_back(DirectX::XMMatrixTranspose(transform.m_world));
 				}
+
 			}
 		}	
 	}	
@@ -497,9 +516,9 @@ void RenderManager::BeginFrame()
 	m_Impl->BeginFrame();
 }
 
-void RenderManager::RenderFrame(TextureHandler& textureHandler, ModelHandler& modelHandler, SpriteHandler& SpriteHandler, Skybox& skybox, Scene& scene)
+void RenderManager::RenderFrame(TextureHandler& textureHandler, ModelHandler& modelHandler, ModelEffectHandler& effectHandler, SpriteHandler& SpriteHandler, Skybox& skybox, Scene& scene)
 {
-	m_Impl->RenderFrame(textureHandler, modelHandler, SpriteHandler, skybox, scene);
+	m_Impl->RenderFrame(textureHandler, modelHandler, effectHandler, SpriteHandler, skybox, scene);
 }
 
 

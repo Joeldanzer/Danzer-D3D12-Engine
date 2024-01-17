@@ -20,6 +20,15 @@ public:
 		bool transparent
 	);
 	
+	ModelEffect GetModelEffect(std::wstring shaderName);
+	ModelEffectData& GetModelEffectData(UINT effectID) {
+		return m_modelEffects[effectID - 1];
+	}
+
+	std::vector<ModelEffectData>& GetAllEffects() {
+		return m_modelEffects;
+	}
+
 private:	
 	ID3D12Device* m_device;
 

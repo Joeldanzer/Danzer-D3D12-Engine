@@ -58,7 +58,7 @@ Game::Impl::Impl(Engine& engine) :
 	Object& sponzaObj = reg.emplace<Object>(entity);
 	sponzaObj.m_name = "Sponza Atrium";
 
-    reg.emplace<Model>(entity, engine.GetModelHandler().LoadModel(L"Models/BlenderSponzaAtriumOld.fbx", "Sponza Atrium"));
+    //reg.emplace<Model>(entity, engine.GetModelHandler().LoadModel(L"Models/BlenderSponzaAtriumOld.fbx", "Sponza Atrium"));
 	
 	auto waterPlane = engine.GetSceneManager().GetCurrentScene().CreateBasicEntity("WaterPlane");
 	Model waterModel = reg.emplace<Model>(waterPlane, engine.GetModelHandler().LoadModel(L"Models/WaterPlane.fbx", "Water Plane"));
@@ -68,9 +68,11 @@ Game::Impl::Impl(Engine& engine) :
 		engine.GetTextureHandler().GetTexture(L"Sprites/WaterNoiseNormalTwo.dds")
 	};
 	reg.emplace<ModelEffect>(waterPlane, engine.GetModelEffectHandler().CreateModelEffect(L"WaterPlane", waterModel.m_modelID, 1, textures, true));
+	Transform& waterTransform = reg.get<Transform>(waterPlane);
+	//waterTransform.m_position = { 0.0f, 10.0f, 0.0f };
+	//waterTransform.m_scale = { 10.0f , 1.0f, 10.0f };
 }	
 
-}
 Game::Impl::~Impl(){}
 
 void Game::Impl::Update(const float dt)

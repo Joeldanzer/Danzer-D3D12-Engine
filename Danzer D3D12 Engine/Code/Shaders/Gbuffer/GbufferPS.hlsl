@@ -1,5 +1,7 @@
 #include "GbufferFunctions.hlsli"
 
+
+
 struct GBufferOutput {
 	float4 m_Albedo        : SV_TARGET0;
 	float4 m_Normal        : SV_TARGET1;

@@ -318,8 +318,11 @@ std::vector<ModelData::Mesh> ModelHandler::LoadMeshFromLoaderModel(LoaderModel* 
 		mesh.m_numVerticies = loadedMesh->m_vertexCount;
 		mesh.m_vertexSize   = loadedMesh->m_vertexSize;
 
-		mesh.m_material = GetNewMaterialFromLoadedModel(loadedModel->m_textures[loadedMesh->m_textureIndex]);
-	
+		if (!loadedModel->m_textures.empty())
+			mesh.m_material = GetNewMaterialFromLoadedModel(loadedModel->m_textures[loadedMesh->m_textureIndex]);
+		else
+			mesh.m_material = {};
+		
 		// Add our newly created model mesh
 		meshes.emplace_back(mesh);
 	}

@@ -13,6 +13,7 @@ class ModelHandler;
 class SpriteHandler;
 class TextureHandler;
 class D3D12Framework;
+class ModelEffectHandler;
 
 struct Object;
 struct Sprite;
@@ -27,7 +28,7 @@ public:
 	~RenderManager();
 
 	void BeginFrame();
-	void RenderFrame(TextureHandler& textureHandler, ModelHandler& modelHandler,
+	void RenderFrame(TextureHandler& textureHandler, ModelHandler& modelHandler, ModelEffectHandler& effectHandler,
 		SpriteHandler& SpriteHandler, Skybox& skybox, Scene& scene/*Camera, Ligthing, GameObjects, etc...*/);
 
 

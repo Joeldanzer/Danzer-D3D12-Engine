@@ -16,6 +16,7 @@ public:
 		Mat4f  m_transform  = Mat4f::Identity;
 		Vect4f m_position   = Vect4f::Zero;
 		Vect4f m_direction  = Vect4f::Zero;
+		float  m_time = 0.0f;
 	};
 
 	Data* FetchData() {

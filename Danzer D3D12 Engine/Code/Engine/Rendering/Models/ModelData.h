@@ -1,6 +1,6 @@
 #pragma once
-#include "TransformBuffer.h"
 #include "../VertexAndTextures.h"
+#include "Rendering/Buffers/TransformBuffer.h"
 #include "Rendering/Buffers/MaterialBuffer.h"
 
 #include "Material.h"
@@ -79,6 +79,9 @@ public:
 	}
 	void UpdateTransformInstanceBuffer(UINT frameIndex) { 
 		m_transformBuffer.UpdateBuffer(reinterpret_cast<UINT8*>(&m_instanceTransforms[0]), (UINT)m_instanceTransforms.size(), frameIndex); 
+	}
+	void UpdateTransformInstanceBuffer(std::vector<Mat4f>& transform, const UINT frameIndex) {
+		m_transformBuffer.UpdateBuffer(reinterpret_cast<UINT8*>(&transform[0]), transform.size(), frameIndex);
 	}
 	void UpdatedMaterialBuffer(UINT frameIndex) {
 		//MaterialBuffer::Data data;

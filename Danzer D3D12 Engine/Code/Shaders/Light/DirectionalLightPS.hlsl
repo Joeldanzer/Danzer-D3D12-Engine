@@ -9,8 +9,11 @@ float4 main(VertexToPixel input) : SV_TARGET
     float3 worldPosition = worldPositionTexture.Sample(defaultSample, input.m_uv).xyz;
     if (!(length(worldPosition) > 0))
         discard;
+     
+    if (albedoTexture.Sample(defaultSample, input.m_uv).a <= 0.0f)
+        discard;
     
-    float3 albedo        = albedoTexture.Sample(defaultSample, input.m_uv).rgb;
+    float4 albedo        = albedoTexture.Sample(defaultSample, input.m_uv).rgba;
     float4 normal        = normalTexture.Sample(defaultSample, input.m_uv).rgba; 
     float4 material      = materialTexture.Sample(defaultSample, input.m_uv); 
     float3 vertexNormal  = vertexNormalTexture.Sample(defaultSample, input.m_uv).xyz; 
@@ -21,19 +24,31 @@ float4 main(VertexToPixel input) : SV_TARGET
     float height       = material.b;
     float ao           = material.w;
     
+    albedo.rgb = GammaToLinear(albedo.rgb);
     float3 toEye = normalize(CameraPosition.xyz - worldPosition);
   
-    float shadowData = ShadowCalculation(float4(worldPosition, 1.0f), normal.xyz);
     
-    //float3 r = reflect(toEye, normalize(normal));
+    float3 r = reflect(toEye, normalize(normal.xyz));
     
-    float3 specualrcolor = lerp((float3) 0.04, albedo, metallic);
-    float3 diffusecolor  = lerp((float3) 0.00, albedo, 1 - metallic);
+    float3 specualrcolor = lerp((float3) 0.04, albedo.rgb, metallic);
+    float3 diffusecolor  = lerp((float3) 0.00, albedo.rgb, 1 - metallic);
        
-    float3 ambience         = EvaluateAmbience(skyboxTexture, defaultSample, normal.rgb, vertexNormal, toEye, roughness, metallic, albedo, ao, diffusecolor, specualrcolor, AmbientColor);
-    float3 directionalLight = EvaluateDirectionalLight(diffusecolor, specualrcolor, normal.rgb, roughness, LightColor.rgb * LightColor.w, LightDirection.xyz, toEye.xyz) * shadowData;    
-    float3 emissive = albedo * emissiveData;
-    float3 radiance = ambience + directionalLight;
+    //float3 ambient = EvaluateAmbience(skyboxTexture, defaultSample, vertexNormal, normal.rgb, toEye, roughness, metallic, albedo.rgb, ao, diffusecolor, specualrcolor, AmbientColor);
+    float shadowData = ShadowCalculation(float4(worldPosition, 1.0f), normal.xyz);
+    float3 directionalLight = EvaluateDirectionalLight(diffusecolor, specualrcolor, normal.xyz, roughness, LightColor.rgb * LightColor.w, LightDirection.xyz, toEye.xyz, metallic) * shadowData;    
+    
+    float3 kS = FresnelSchlick(max(dot(normal.xyz, toEye.xyz), 0.0), specualrcolor);
+    float3 kD = 1.0 - kS;
+    kD *= 1.0 - metallic;
+    float3 newNormal = normal;
+    float3 irradiance = skyboxTexture.SampleLevel(defaultSample, newNormal.xxx, 0.0f).rgb * AmbientColor.a;
+    float3 diffuse = irradiance * (albedo.rgb * emissiveData);
+    float3 ambient = (kD * diffuse); // * ao 
+    
+    float3 radiance = ambient + directionalLight;
+
+   // radiance.rgb = radiance / (radiance + float3(1.0f, 1.0f, 1.0f));
+    radiance.rgb = LinearToGamma(radiance.rgb); 
     
     // Fog that i want to get in!
     //float4 oldWorldPos = worldPositionTexture.Sample(defaultSample, input.m_uv).xyzw - CameraPosition.xyzw;
@@ -62,19 +77,19 @@ float4 main(VertexToPixel input) : SV_TARGET
             color.rgb = radiance;    
             break;
         case 1:
-            color.rgb = normal.rgb * 0.5 + 0.5f;
+            color.rgb = albedo;
             break;
         case 2:
-            color.rgb = vertexNormal.rgb;
+            color.rgb = normal.xyz;
             break;
         case 3:
-            color.rgb = directionalLight;
+            color.rgb = vertexNormal;
             break;
         case 4:
-            color.rgb = float3(metallic, metallic, metallic);
+            color.rgb = float3(roughness, roughness, roughness);
             break;
         case 5:
-            color.rgb = float3(roughness, roughness, roughness);
+            color.rgb = float3(metallic, metallic, metallic);
             break;
         case 6:
             color.rgb = float3(height, height, height);
@@ -83,14 +98,14 @@ float4 main(VertexToPixel input) : SV_TARGET
             color.rgb = float3(ao, ao, ao);
             break;
         case 8:
-            color.rgb = worldPosition;
+            color.rgb = float3(1.0f, 1.0f, 1.0f) * shadowData;
             break; 
         default:
             color.rgb = radiance;
             break;
     }
     
-    color.a = 1.f;
+    color.a = albedo.a;
    
 	return color;
 }
