@@ -10,6 +10,7 @@
 #include "Buffers/RayBuffer.h"
 #include "Buffers/CameraBuffer.h"
 #include "Buffers/LightBuffer.h"
+#include "Buffers/EffectShaderBuffer.h"
 
 class Scene;
 class Camera; 
@@ -62,6 +63,7 @@ private:
 	TransformBuffer m_transformBuffer;
 	LightBuffer m_lightBuffer;
 	MaterialBuffer  m_materialBuffer;
+	EffectShaderBuffer m_effectBuffer;
 
 	//ID3D12GraphicsCommandList* m_commandList;
 	ID3D12RootSignature*       m_rootSignature;

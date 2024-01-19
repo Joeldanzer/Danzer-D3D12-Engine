@@ -3,6 +3,7 @@
 #include "Core/D3D12Header.h"
 #include "../3rdParty/DirectX-Headers-main/include/directx/d3d12.h"
 #include "Core/MathDefinitions.h"
+#include "../Buffers/EffectShaderBuffer.h"
 
 class ModelEffectData {
 public:
@@ -10,7 +11,7 @@ public:
 	~ModelEffectData() = default;
 	explicit ModelEffectData(const ModelEffectData&) = default;
 	explicit ModelEffectData(const UINT model, std::vector<UINT> textures) : 
-		m_model(model), m_textures(textures), m_bufferData(nullptr), m_sizeOfData(0)
+		m_model(model), m_textures(textures), m_bufferData({}), m_sizeOfData(0)
 	{}
 
 	ID3D12PipelineState* GetEffectPSO(){
@@ -21,6 +22,13 @@ public:
 	}
 	const UINT ModelID() {
 		return m_model;
+	}
+
+	EffectShaderBuffer::Data* GetBufferData() {
+		return &m_bufferData;
+	}
+	const UINT GetSizeOfData() {
+		return m_sizeOfData;
 	}
 
 	const std::vector<UINT>& GetTextures() {
@@ -37,8 +45,8 @@ private:
 	std::vector<UINT> m_textures;
 	std::vector<Mat4f> m_transforms;
 
-	void* m_bufferData;
-	UINT  m_sizeOfData;
+	EffectShaderBuffer::Data m_bufferData;
+	UINT m_sizeOfData;
 
 	ComPtr<ID3D12PipelineState> m_pipelineState; // Holds all the information that will be sent to shader
 	ComPtr<ID3D12RootSignature> m_rootSignature;

@@ -24,10 +24,8 @@ float4 GetNormal(VertexToPixel input, float4 normal)
 
 float EdgeDetection(float depth)
 {
-    float near = 1.0f;
-    float far = 1000.0f;
     depth = 2.0f * depth - 1.0f;
-    return near * far / (far + depth * (near - far));
+    return Near * Far / (Far + depth * (Near - Far));
 }
 
 struct WaterPlaneOutput {
@@ -47,9 +45,6 @@ float Fresnel(float amount, float3 normal, float3 view)
 
 WaterPlaneOutput main(VertexToPixel input)
 {	
-    float edgeScale = 5.0f;
-    float3 edgeColor = float3(1.0f, 1.0f, 1.0f);
-   
 	WaterPlaneOutput output;
  
     float3 svPos = input.m_position.xyz;
@@ -59,25 +54,25 @@ WaterPlaneOutput main(VertexToPixel input)
     float zPos   = EdgeDetection(svPos.z);
     float zDif   = zDepth - zPos;
     
-    float2 dirOne = (Time * float2(1.0f,  0.2f)) ;
-    float2 dirTwo = (Time * float2(-0.5f, -1.0f));
+    float2 dirOne = (Time * WaterDirectionOne) ;
+    float2 dirTwo = (Time * WaterDirectionTwo);
     
-    float4 normalOne = GetNormal(input, noiseNormalOne.Sample(effectSampler, (input.m_noiseWorldPos.xz * 6.0f + dirOne) * 0.1f));
-    float4 normalTwo = GetNormal(input, noiseNormalTwo.Sample(effectSampler, (input.m_noiseWorldPos.xz * 6.0f + dirTwo) * 0.1f));
+    float4 normalOne = GetNormal(input, noiseNormalOne.Sample(effectSampler, (input.m_noiseWorldPos.xz * TextureScale + dirOne) * Speed));
+    float4 normalTwo = GetNormal(input, noiseNormalTwo.Sample(effectSampler, (input.m_noiseWorldPos.xz * TextureScale + dirTwo) * Speed));
     
     float3 normalBlend = lerp(normalOne.rgb, normalTwo.rgb, 0.5f);
     output.m_Normal    = float4(normalBlend, 1.0f);
     
     float fresnel = Fresnel(5.0f, input.m_normal.xyz, Eye.xyz);
     
-    float3 albedoOne = float3(0.1f, 0.5f, 0.95f);
-    float3 albedoTwo = float3(0.2f, 0.6, 1.0f);
+    float3 albedoOne = WaterColorOne;
+    float3 albedoTwo = WaterColorTwo;
     
     float3 surfaceColor = lerp(albedoOne, albedoTwo, fresnel);
      
-    output.m_Albedo.rgb = lerp(edgeColor, surfaceColor, step(edgeScale, zDif));
+    output.m_Albedo.rgb = lerp(EdgeColor, surfaceColor, step(EdgeScale, zDif));
     output.m_Albedo.a   = 1.0f;
-    output.m_Material   = float4(0.1f, 0.1f, 0.5f, 0.5f);
+    output.m_Material   = float4(Metallic, Roughness, 0.5f, 0.5f);
     
     output.m_Normal.a   = 1.0f;
     output.m_Material.a = 1.0f;

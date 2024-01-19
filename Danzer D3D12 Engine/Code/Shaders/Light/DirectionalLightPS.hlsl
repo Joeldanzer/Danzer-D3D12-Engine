@@ -36,13 +36,12 @@ float4 main(VertexToPixel input) : SV_TARGET
     float shadowData = ShadowCalculation(float4(worldPosition, 1.0f), normal.xyz);
     float3 directionalLight = EvaluateDirectionalLight(diffusecolor, specualrcolor, normal.xyz, roughness, LightColor.rgb * LightColor.w, LightDirection.xyz, toEye.xyz, metallic) * shadowData;    
     
-    float3 kS = FresnelSchlick(max(dot(normal.xyz, toEye.xyz), 0.0), specualrcolor);
-    float3 kD = 1.0 - kS;
-    kD *= 1.0 - metallic;
-    float3 newNormal = normal;
-    float3 irradiance = skyboxTexture.SampleLevel(defaultSample, normal.yyy, 0.0f).rgb * AmbientColor.a;
+    //float3 kS = FresnelSchlick(max(dot(normal.xyz, toEye.xyz), 0.0), specualrcolor);
+    //float3 kD = 1.0 - kS;
+    //kD *= 1.0 - metallic;
+    float3 irradiance = skyboxTexture.Sample(defaultSample, normal.xyz).rgb * AmbientColor.a;
     float3 diffuse = irradiance * (albedo.rgb);
-    float3 ambient = (kD * diffuse); // * ao 
+    float3 ambient = (diffusecolor * diffuse); // * ao 
     
     float3 radiance = ambient + directionalLight;
 

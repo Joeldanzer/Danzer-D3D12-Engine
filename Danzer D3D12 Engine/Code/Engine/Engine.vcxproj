@@ -154,6 +154,7 @@
     <ClInclude Include="Components\Collision\Collider.h" />
     <ClInclude Include="Components\ModelEffect.h" />
     <ClInclude Include="Components\Script.h" />
+    <ClInclude Include="Components\WaterPlaneBufferData.h" />
     <ClInclude Include="Core\DesriptorHeapWrapper.h" />
     <ClInclude Include="Core\D3D12Framework.h" />
     <ClInclude Include="Rendering\Buffers\EffectShaderBuffer.h" />

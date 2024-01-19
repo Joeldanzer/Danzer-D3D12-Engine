@@ -5,12 +5,10 @@ VertexToPixel main(InputToVertex input)
 {
 	VertexToPixel output;
     
-    float noiseScale   = 100.f;
-    float heightScale  = 0.75f;
     float3 worldPos    = mul(input.m_position, input.m_transform).xyz;
-    float  height      = vertexNoise.SampleLevel(effectSampler, worldPos.xz / noiseScale + Time * 0.01f, 0.0f).r;
+    float  height      = vertexNoise.SampleLevel(effectSampler, worldPos.xz / NoiseScale + Time * Speed, 0.0f).r;
     
-    input.m_position.y += height * heightScale;
+    input.m_position.y += height * HeightScale;
     
     float4 toWorld = mul(input.m_position, input.m_transform);
      

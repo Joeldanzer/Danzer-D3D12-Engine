@@ -9,6 +9,7 @@
 #include "Rendering/Models/ModelHandler.h"
 #include "Rendering/TextureHandler.h"
 #include "Rendering/2D/SpriteHandler.h"
+#include "Components/WaterPlaneBufferData.h"
 
 #include "Components/Transform2D.h"
 #include "Components/Model.h"
@@ -58,7 +59,7 @@ Game::Impl::Impl(Engine& engine) :
 	Object& sponzaObj = reg.emplace<Object>(entity);
 	sponzaObj.m_name = "Sponza Atrium";
 
-   // reg.emplace<Model>(entity, engine.GetModelHandler().LoadModel(L"Models/BlenderSponzaAtriumOld.fbx", "Sponza Atrium"));
+    reg.emplace<Model>(entity, engine.GetModelHandler().LoadModel(L"Models/BlenderSponzaAtriumOld.fbx", "Sponza Atrium"));
 	
 	auto waterPlane = engine.GetSceneManager().GetCurrentScene().CreateBasicEntity("WaterPlane");
 	Model waterModel = reg.emplace<Model>(waterPlane, engine.GetModelHandler().LoadModel(L"Models/WaterPlane.fbx", "Water Plane"));
@@ -71,10 +72,25 @@ Game::Impl::Impl(Engine& engine) :
 	//std::vector<float> bufferData = {
 	//					// Water Color 
 	//}
-	reg.emplace<ModelEffect>(waterPlane, engine.GetModelEffectHandler().CreateModelEffect(L"WaterPlane", waterModel.m_modelID, nullptr, 0, textures, true));
+	WaterPlaneData waterData;
+	waterData.m_waterColorOne	  = { 0.1f, 0.5f, 0.95f };
+	waterData.m_waterColorTwo	  = { 0.2f, 0.7f, 1.0f };
+	waterData.m_roughness		  = 0.1f;
+	waterData.m_metallic		  = 0.1f;
+	waterData.m_waterDirectionOne = { 1.0f,  0.2f };
+	waterData.m_waterDirectionTwo = {-0.5f, -1.0f };
+	waterData.m_speed			  = 0.1f;
+	waterData.m_textureScale	  = 6.0f;
+	waterData.m_noiseScale		  = 100.f;
+	waterData.m_heightScale		  = 0.75f;
+	waterData.m_near			  = 0.1f;
+	waterData.m_far				  = 1000.0f;
+	waterData.m_edgeScale	      = 5.0f;
+	waterData.m_edgeColor	      = { 1.0f, 1.0f, 1.0f };
+	reg.emplace<ModelEffect>(waterPlane, engine.GetModelEffectHandler().CreateModelEffect(L"WaterPlane", waterModel.m_modelID, &waterData, sizeof(WaterPlaneData), textures, true));
 	Transform& waterTransform = reg.get<Transform>(waterPlane);
-	waterTransform.m_position = { 0.0f, 5.0f, 0.0f };
-	waterTransform.m_scale = { 1.0f, 1.0f, 1.5f };
+	waterTransform.m_position = { 0.0f, 4.0f, 0.0f };
+	waterTransform.m_scale	  = { 1.0f, 1.0f, 1.5f };
 }	
 
 Game::Impl::~Impl(){}

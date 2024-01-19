@@ -67,6 +67,8 @@ ModelEffect ModelEffectHandler::CreateModelEffect(std::wstring shaderName, const
 	rootParameter[rootParameter.size() - 1].InitAsDescriptorTable(1, &cbvDescriptorRange);
 
 	if (bufferData) { 
+		memcpy(&effectData.m_bufferData, bufferData, sizeOfData); // Copy the buffer data, perhaps want to save this as a pointer instead to freely change in runtime
+		effectData.m_sizeOfData = sizeOfData;
 		rootParameter.emplace_back(CD3DX12_ROOT_PARAMETER());
 		CD3DX12_DESCRIPTOR_RANGE bufferDescRanger(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);
 		rootParameter[rootParameter.size() - 1].InitAsDescriptorTable(1, &bufferDescRanger);

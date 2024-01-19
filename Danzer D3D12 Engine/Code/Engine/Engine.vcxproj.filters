@@ -169,5 +169,6 @@
     <ClInclude Include="Components\ModelEffect.h" />
     <ClInclude Include="Rendering\Models\ModelEffectData.h" />
     <ClInclude Include="Rendering\Buffers\EffectShaderBuffer.h" />
+    <ClInclude Include="Components\WaterPlaneBufferData.h" />
   </ItemGroup>
 </Project>

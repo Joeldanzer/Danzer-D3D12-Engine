@@ -41,7 +41,7 @@ void Renderer::Init(D3D12Framework& framework)
 	m_cameraBuffer.Init(framework.GetDevice(),   &framework.CbvSrvHeap(), m_cameraBuffer.FetchData(),   sizeof(CameraBuffer::Data));
 	m_lightBuffer.Init(framework.GetDevice(),    &framework.CbvSrvHeap(), m_lightBuffer.FetchData(),    sizeof(LightBuffer::Data));
 	m_materialBuffer.Init(framework.GetDevice(), &framework.CbvSrvHeap(), m_materialBuffer.FetchData(), sizeof(MaterialBuffer::Data));
-
+	m_effectBuffer.Init(framework.GetDevice(),   &framework.CbvSrvHeap(), m_effectBuffer.FetchData(),   sizeof(EffectShaderBuffer::Data));
 }
 
 //* Default Buffers for all existing 3D models. Should only be updated once per frame!
@@ -174,7 +174,6 @@ void Renderer::RenderForwardModelEffects(ID3D12GraphicsCommandList* cmdList, con
 		cmdList->SetGraphicsRootDescriptorTable(0, cbvHandle);
 
 		CD3DX12_GPU_DESCRIPTOR_HANDLE depthHandle(cbvSrvHeapStart, depthOffset, cbvSrvDescSize);
-		//cmdList->SetGraphicsRootDescriptorTable(0, cbvHandle);
 
 		ModelData& model = modelHandler.GetLoadedModelInformation(effectData.ModelID());
 		model.UpdateTransformInstanceBuffer(effectData.GetTransforms(), frameIndex);
@@ -185,6 +184,16 @@ void Renderer::RenderForwardModelEffects(ID3D12GraphicsCommandList* cmdList, con
 
 			if (mesh.m_renderMesh) {
 
+				int slot = 1;
+
+				if (effectData.GetBufferData()) {	
+					m_effectBuffer.SetDataSize(effectData.GetSizeOfData());
+					m_effectBuffer.UpdateBuffer(effectData.GetBufferData(), frameIndex);
+					CD3DX12_GPU_DESCRIPTOR_HANDLE effectHandle(cbvSrvHeapStart, m_effectBuffer.OffsetID(), cbvSrvDescSize);
+					cmdList->SetGraphicsRootDescriptorTable(slot, effectHandle);
+					slot++;
+				}
+
 				std::vector<CD3DX12_GPU_DESCRIPTOR_HANDLE> srvHandles;
 				srvHandles.emplace_back(depthHandle);
 
@@ -192,7 +201,7 @@ void Renderer::RenderForwardModelEffects(ID3D12GraphicsCommandList* cmdList, con
 					srvHandles.emplace_back(cbvSrvHeapStart, textures[effectData.GetTextures()[i]].m_offsetID, cbvSrvDescSize);
 
 				for (UINT i = 0; i < srvHandles.size(); i++)
-					cmdList->SetGraphicsRootDescriptorTable(1 + i, srvHandles[i]);
+					cmdList->SetGraphicsRootDescriptorTable(slot + i, srvHandles[i]);
 
 				D3D12_VERTEX_BUFFER_VIEW vBufferViews[2] = {
 							mesh.m_vertexBufferView, model.GetTransformInstanceBuffer().GetBufferView(frameIndex)
@@ -202,12 +211,9 @@ void Renderer::RenderForwardModelEffects(ID3D12GraphicsCommandList* cmdList, con
 				cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 				
 				for (UINT i = 0; i < effectData.GetTransforms().size(); i++)
-				{
-					cmdList->DrawIndexedInstanced(mesh.m_numIndices, 1, 0, 0, i);
-				}
+					cmdList->DrawIndexedInstanced(mesh.m_numIndices, 1, 0, 0, i);	
 			}
 		}
-
 		effectData.GetTransforms().clear();
 	}
 }

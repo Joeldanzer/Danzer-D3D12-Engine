@@ -1,6 +1,10 @@
 #include "stdafx.h"
 #include "EffectShaderBuffer.h"
 
+EffectShaderBuffer::EffectShaderBuffer()
+{
+}
+
 EffectShaderBuffer::~EffectShaderBuffer()
 { 
 }

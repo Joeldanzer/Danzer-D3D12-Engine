@@ -1,6 +1,7 @@
 cbuffer WaterPlane : register(b1)
 {
-    float3 WaterColor;
+    float3 WaterColorOne;
+    float3 WaterColorTwo;
     float Metallic;
     float Roughness;
     
@@ -8,9 +9,14 @@ cbuffer WaterPlane : register(b1)
     float2 WaterDirectionTwo;
     float  Speed;
     
-    float noiseScale;
-    float heightScale;
-    float textureScale;
+    float NoiseScale;
+    float HeightScale;
+    float TextureScale;
+    
+    float  Far;
+    float  Near;
+    float  EdgeScale;
+    float3 EdgeColor;
 }
 
 Texture2D vertexNoise    : register(t1);
