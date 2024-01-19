@@ -29,10 +29,14 @@ cbuffer MainCamera : register(b0)
     float4 Eye;
     
     float Time;
-
+    float ScreenWidth;
+    float ScreenHeight;
+    
     // Needs to be 256-byte alligned
-    float3 trashOne;
+    float  trashOne;
     float4 trashTwo[5];
 }
 
 SamplerState effectSampler : register(s0);
+Texture2D    depthTexture  : register(t0);
+

@@ -3,6 +3,7 @@
 #include "Core/D3D12Framework.h"
 #include "Rendering/PipelineStateHandler.h"
 #include "Rendering/Screen Rendering/GBuffer.h"
+#include "Core/WindowHandler.h"
 
 #include "../3rdParty/DirectX-Headers-main/include/directx/d3dx12.h"
 #pragma comment(lib, "dxguid.lib")
@@ -13,13 +14,47 @@
 ModelEffectHandler::ModelEffectHandler(D3D12Framework& framework)
 {
 	m_device = framework.GetDevice();
+
+	CD3DX12_RESOURCE_DESC dtDesc(
+		D3D12_RESOURCE_DIMENSION_TEXTURE2D,
+		0,
+		WindowHandler::WindowData().m_w,
+		WindowHandler::WindowData().m_h,
+		1,
+		1,
+		DXGI_FORMAT_R32_FLOAT,
+		1,
+		0,
+		D3D12_TEXTURE_LAYOUT_UNKNOWN,
+		D3D12_RESOURCE_FLAG_NONE
+	);
+
+	CD3DX12_HEAP_PROPERTIES heap(D3D12_HEAP_TYPE_DEFAULT);
+
+	CHECK_HR(m_device->CreateCommittedResource(
+		&heap,
+		D3D12_HEAP_FLAG_NONE,
+		&dtDesc,
+		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+		nullptr,
+		IID_PPV_ARGS(&m_depthTexture)
+	));
+
+	//framework.CbvSrvHeap().GET_CPU_DESCRIPTOR() 
+	CD3DX12_CPU_DESCRIPTOR_HANDLE handle(framework.CbvSrvHeap().GetDescriptorHeap()->GetCPUDescriptorHandleForHeapStart());
+	handle.Offset(framework.CbvSrvHeap().m_handleCurrentOffset * framework.CbvSrvHeap().DESCRIPTOR_SIZE());
+	m_device->CreateShaderResourceView(m_depthTexture.Get(), nullptr, handle);
+	//m_device->CreateDepthStencilView(m_depthTexture.Get(), nullptr, handle);
+	m_depthTexture->SetName(L"Model Effect Depth Texture");
+	m_depthTextureOffset = framework.CbvSrvHeap().m_handleCurrentOffset;
+	framework.CbvSrvHeap().m_handleCurrentOffset++;
 }
 ModelEffectHandler::~ModelEffectHandler(){
 	m_device = nullptr;
 	m_modelEffects.clear();
 }
 
-ModelEffect ModelEffectHandler::CreateModelEffect(std::wstring shaderName, const UINT model, const UINT numberOfBuffers, std::vector<UINT> textures, bool transparent)
+ModelEffect ModelEffectHandler::CreateModelEffect(std::wstring shaderName, const UINT model, void* bufferData, const UINT sizeOfData, std::vector<UINT> textures, bool transparent)
 {
 	m_modelEffects.emplace_back(ModelEffectData(model, textures));
 	ModelEffectData& effectData = m_modelEffects[m_modelEffects.size() - 1];
@@ -31,20 +66,17 @@ ModelEffect ModelEffectHandler::CreateModelEffect(std::wstring shaderName, const
 	CD3DX12_DESCRIPTOR_RANGE cbvDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
 	rootParameter[rootParameter.size() - 1].InitAsDescriptorTable(1, &cbvDescriptorRange);
 
-	for (UINT i = 0; i < numberOfBuffers; i++)
-	{
+	if (bufferData) { 
 		rootParameter.emplace_back(CD3DX12_ROOT_PARAMETER());
-		CD3DX12_DESCRIPTOR_RANGE bufferDescRanger(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1 + i);
+		CD3DX12_DESCRIPTOR_RANGE bufferDescRanger(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);
 		rootParameter[rootParameter.size() - 1].InitAsDescriptorTable(1, &bufferDescRanger);
 	}
-	
-	std::array<CD3DX12_DESCRIPTOR_RANGE, 10> descriptorRanges;
 
-	for (UINT i = 0; i < textures.size(); i++)
+	std::array<CD3DX12_DESCRIPTOR_RANGE, 10> descriptorRanges;
+	for (UINT i = 0; i < textures.size() + 1; i++)
 	{
 		rootParameter.emplace_back(CD3DX12_ROOT_PARAMETER());
-		descriptorRanges[i].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, i); //= CD3DX12_DESCRIPTOR_RANGE(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, i);
-		//CD3DX12_DESCRIPTOR_RANGE srvDescriptorRange1(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, i);
+		descriptorRanges[i].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, i); 
 		rootParameter[rootParameter.size() - 1].InitAsDescriptorTable(1, &descriptorRanges[i], D3D12_SHADER_VISIBILITY_ALL); // Shader visibility will be set to all
 	}
 
@@ -68,22 +100,23 @@ ModelEffect ModelEffectHandler::CreateModelEffect(std::wstring shaderName, const
 		DXGI_FORMAT_R8G8B8A8_UNORM_SRGB, //* VERTEX COLOR
 		DXGI_FORMAT_R16G16B16A16_SNORM,  //* VERTEX NORMAL
 		DXGI_FORMAT_R32G32B32A32_FLOAT,  //* WORLD POSITION
+		DXGI_FORMAT_R32_FLOAT			 //* DEPTH TEXTURE
 	};
 
 	// Create PipelineState for Model effect
 	D3D12_BLEND_DESC blendDesc		  = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
-	//for (UINT i = 0; i < formats.size(); i++)
-	//{
-		//blendDesc.RenderTarget[0].BlendEnable = true;
-		//blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
-		//blendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_COLOR;
-		//blendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_BLEND_FACTOR;
-		//blendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
-		//blendDesc.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
-		//blendDesc.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
-		//blendDesc.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
-		//blendDesc.AlphaToCoverageEnable = false;
-	//}
+	for (UINT i = 3; i < formats.size(); i++)
+	{
+		blendDesc.RenderTarget[i].BlendEnable = true;
+		blendDesc.RenderTarget[i].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+		blendDesc.RenderTarget[i].SrcBlend = D3D12_BLEND_SRC_ALPHA;
+		blendDesc.RenderTarget[i].DestBlend = D3D12_BLEND_BLEND_FACTOR;
+		blendDesc.RenderTarget[i].BlendOp = D3D12_BLEND_OP_ADD;
+		blendDesc.RenderTarget[i].SrcBlendAlpha = D3D12_BLEND_ONE;
+		blendDesc.RenderTarget[i].DestBlendAlpha = D3D12_BLEND_ZERO;
+		blendDesc.RenderTarget[i].BlendOpAlpha = D3D12_BLEND_OP_ADD;
+		blendDesc.AlphaToCoverageEnable = false;
+	}
 
 	D3D12_RASTERIZER_DESC    rasterizerDesc   = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
 	D3D12_DEPTH_STENCIL_DESC depthStencilDesc = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
@@ -127,7 +160,7 @@ ModelEffect ModelEffectHandler::CreateModelEffect(std::wstring shaderName, const
 
 	CHECK_HR(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&effectData.m_pipelineState)));
 
-	effectData.m_pipelineState->SetName(L"Model PSO");
+	effectData.m_pipelineState->SetName(L"Effect Model PSO");
 
 	return ModelEffect(m_modelEffects.size());
 }

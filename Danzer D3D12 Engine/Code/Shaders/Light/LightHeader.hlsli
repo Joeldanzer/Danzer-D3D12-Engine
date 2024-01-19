@@ -28,5 +28,6 @@ Texture2D materialTexture      : register(t2);
 Texture2D vertexColorTexture   : register(t3);
 Texture2D vertexNormalTexture  : register(t4);
 Texture2D worldPositionTexture : register(t5);
-TextureCube skyboxTexture      : register(t6);
-Texture2D shadowMap            : register(t7);
+Texture2D depthTexture         : register(t6);
+TextureCube skyboxTexture      : register(t7);
+Texture2D shadowMap            : register(t8);

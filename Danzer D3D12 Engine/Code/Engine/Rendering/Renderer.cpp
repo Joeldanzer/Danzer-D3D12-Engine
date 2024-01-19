@@ -9,6 +9,7 @@
 #include "SkyBox.h"
 #include "Rendering/Screen Rendering/GBuffer.h"
 #include "Screen Rendering/DirectionalShadowMapping.h"
+#include "Core/WindowHandler.h"
 
 #include "Camera.h"
 
@@ -58,6 +59,8 @@ CD3DX12_GPU_DESCRIPTOR_HANDLE Renderer::UpdateDefaultBuffers(Camera& camera, Tra
 	eye.w = 1.f;
 	bufferData.m_direction = eye;
 	bufferData.m_time = clock() / 1000.0f;
+	bufferData.m_width  = static_cast<float>(WindowHandler::WindowData().m_w);
+	bufferData.m_height = static_cast<float>(WindowHandler::WindowData().m_h);
 	
 	m_cameraBuffer.UpdateBuffer(&bufferData, frameIndex);
 
@@ -153,10 +156,11 @@ void Renderer::RenderDirectionalLight(ID3D12GraphicsCommandList* cmdList, Textur
 	cmdList->DrawInstanced(3, 1, 0, 0);
 }
 
-void Renderer::RenderForwardModelEffects(ID3D12GraphicsCommandList* cmdList, std::vector<ModelEffectData>& modelEffects, ModelHandler& modelHandler, std::vector<TextureHandler::Texture>& textures, const UINT frameIndex, Camera& cam, Transform& camTransform, UINT startLocation)
+void Renderer::RenderForwardModelEffects(ID3D12GraphicsCommandList* cmdList, const UINT depthOffset, std::vector<ModelEffectData>& modelEffects, ModelHandler& modelHandler, std::vector<TextureHandler::Texture>& textures, const UINT frameIndex, Camera& cam, Transform& camTransform, UINT startLocation)
 {
 	D3D12_GPU_DESCRIPTOR_HANDLE cbvSrvHeapStart = m_framework->CbvSrvHeap().GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
 	const UINT cbvSrvDescSize = m_framework->CbvSrvHeap().DESCRIPTOR_SIZE();
+
 
 	for (UINT i = 0; i < modelEffects.size(); i++)
 	{
@@ -169,6 +173,9 @@ void Renderer::RenderForwardModelEffects(ID3D12GraphicsCommandList* cmdList, std
 		CD3DX12_GPU_DESCRIPTOR_HANDLE cbvHandle = UpdateDefaultBuffers(cam, camTransform, frameIndex);
 		cmdList->SetGraphicsRootDescriptorTable(0, cbvHandle);
 
+		CD3DX12_GPU_DESCRIPTOR_HANDLE depthHandle(cbvSrvHeapStart, depthOffset, cbvSrvDescSize);
+		//cmdList->SetGraphicsRootDescriptorTable(0, cbvHandle);
+
 		ModelData& model = modelHandler.GetLoadedModelInformation(effectData.ModelID());
 		model.UpdateTransformInstanceBuffer(effectData.GetTransforms(), frameIndex);
 
@@ -179,12 +186,13 @@ void Renderer::RenderForwardModelEffects(ID3D12GraphicsCommandList* cmdList, std
 			if (mesh.m_renderMesh) {
 
 				std::vector<CD3DX12_GPU_DESCRIPTOR_HANDLE> srvHandles;
-				
+				srvHandles.emplace_back(depthHandle);
+
 				for (UINT i = 0; i < effectData.GetTextures().size(); i++)
 					srvHandles.emplace_back(cbvSrvHeapStart, textures[effectData.GetTextures()[i]].m_offsetID, cbvSrvDescSize);
 
 				for (UINT i = 0; i < srvHandles.size(); i++)
-					cmdList->SetGraphicsRootDescriptorTable(2 + i, srvHandles[i]);
+					cmdList->SetGraphicsRootDescriptorTable(1 + i, srvHandles[i]);
 
 				D3D12_VERTEX_BUFFER_VIEW vBufferViews[2] = {
 							mesh.m_vertexBufferView, model.GetTransformInstanceBuffer().GetBufferView(frameIndex)

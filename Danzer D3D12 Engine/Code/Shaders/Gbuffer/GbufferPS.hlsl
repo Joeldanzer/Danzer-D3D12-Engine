@@ -9,6 +9,7 @@ struct GBufferOutput {
 	float4 m_VertexColor   : SV_TARGET3;
 	float4 m_VertexNormal  : SV_TARGET4;
 	float4 m_WorldPosition : SV_TARGET5;
+    float4 m_Depth         : SV_TARGET6;
 };
 
 GBufferOutput main(VertexToPixel input)
@@ -22,6 +23,7 @@ GBufferOutput main(VertexToPixel input)
     output.m_VertexNormal  = float4(input.m_normal.xyz, 1.f);
     output.m_VertexColor   = input.m_tangent;
     output.m_WorldPosition = input.m_worldPosition;
+    output.m_Depth         = float4(input.m_position.z, input.m_position.z, input.m_position.z, 1.0f);
     
 	return output;
 }

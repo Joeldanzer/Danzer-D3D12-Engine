@@ -15,7 +15,8 @@ public:
 	ModelEffect CreateModelEffect(
 		std::wstring shaderNames,
 		const UINT model, 
-		const UINT numberOfBuffers, 
+		void* bufferData,
+		const UINT sizeOfData,
 		std::vector<UINT> textures, 
 		bool transparent
 	);
@@ -29,8 +30,18 @@ public:
 		return m_modelEffects;
 	}
 
+	ID3D12Resource* GetDepthCopyTexture() {
+		return m_depthTexture.Get();
+	}
+
+	const UINT GetDepthTextureOffset() {
+		return m_depthTextureOffset;
+	}
+
 private:	
 	ID3D12Device* m_device;
+	ComPtr<ID3D12Resource> m_depthTexture;
+	UINT m_depthTextureOffset;
 
 	std::vector<ModelEffectData> m_modelEffects;
 };

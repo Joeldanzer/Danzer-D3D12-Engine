@@ -10,7 +10,7 @@ public:
 	~ModelEffectData() = default;
 	explicit ModelEffectData(const ModelEffectData&) = default;
 	explicit ModelEffectData(const UINT model, std::vector<UINT> textures) : 
-		m_model(model), m_textures(textures)
+		m_model(model), m_textures(textures), m_bufferData(nullptr), m_sizeOfData(0)
 	{}
 
 	ID3D12PipelineState* GetEffectPSO(){
@@ -36,6 +36,9 @@ private:
 	UINT m_model;
 	std::vector<UINT> m_textures;
 	std::vector<Mat4f> m_transforms;
+
+	void* m_bufferData;
+	UINT  m_sizeOfData;
 
 	ComPtr<ID3D12PipelineState> m_pipelineState; // Holds all the information that will be sent to shader
 	ComPtr<ID3D12RootSignature> m_rootSignature;

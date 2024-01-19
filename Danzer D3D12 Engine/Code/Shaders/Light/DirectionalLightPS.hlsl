@@ -18,7 +18,7 @@ float4 main(VertexToPixel input) : SV_TARGET
     float4 material      = materialTexture.Sample(defaultSample, input.m_uv); 
     float3 vertexNormal  = vertexNormalTexture.Sample(defaultSample, input.m_uv).xyz; 
     
-    float emissiveData = normal.w;
+    //float emissiveData = normal.w;
     float metallic     = material.r;
     float roughness    = material.g;
     float height       = material.b;
@@ -27,7 +27,6 @@ float4 main(VertexToPixel input) : SV_TARGET
     albedo.rgb = GammaToLinear(albedo.rgb);
     float3 toEye = normalize(CameraPosition.xyz - worldPosition);
   
-    
     float3 r = reflect(toEye, normalize(normal.xyz));
     
     float3 specualrcolor = lerp((float3) 0.04, albedo.rgb, metallic);
@@ -41,13 +40,13 @@ float4 main(VertexToPixel input) : SV_TARGET
     float3 kD = 1.0 - kS;
     kD *= 1.0 - metallic;
     float3 newNormal = normal;
-    float3 irradiance = skyboxTexture.SampleLevel(defaultSample, newNormal.xxx, 0.0f).rgb * AmbientColor.a;
-    float3 diffuse = irradiance * (albedo.rgb * emissiveData);
+    float3 irradiance = skyboxTexture.SampleLevel(defaultSample, normal.yyy, 0.0f).rgb * AmbientColor.a;
+    float3 diffuse = irradiance * (albedo.rgb);
     float3 ambient = (kD * diffuse); // * ao 
     
     float3 radiance = ambient + directionalLight;
 
-   // radiance.rgb = radiance / (radiance + float3(1.0f, 1.0f, 1.0f));
+    //radiance.rgb = radiance / (radiance + float3(1.0f, 1.0f, 1.0f));
     radiance.rgb = LinearToGamma(radiance.rgb); 
     
     // Fog that i want to get in!
@@ -77,7 +76,7 @@ float4 main(VertexToPixel input) : SV_TARGET
             color.rgb = radiance;    
             break;
         case 1:
-            color.rgb = albedo;
+            color.rgb = albedo.rgb;
             break;
         case 2:
             color.rgb = normal.xyz;

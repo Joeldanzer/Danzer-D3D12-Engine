@@ -50,7 +50,7 @@ void PipelineStateHandler::Init(D3D12Framework& framework)
 //* Light Root Signature
 void PipelineStateHandler::CreateLightRootSignature(ID3D12Device* device)
 {
-	CD3DX12_ROOT_PARAMETER rootParameter[10] = {};
+	CD3DX12_ROOT_PARAMETER rootParameter[11] = {};
 	
 	//* Camera & Light Buffer
 	CD3DX12_DESCRIPTOR_RANGE cameraLightBuffer(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
@@ -71,10 +71,12 @@ void PipelineStateHandler::CreateLightRootSignature(ID3D12Device* device)
 	rootParameter[6].InitAsDescriptorTable(1, &vertexNormal, D3D12_SHADER_VISIBILITY_PIXEL);
 	CD3DX12_DESCRIPTOR_RANGE worldPosition(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 5);
 	rootParameter[7].InitAsDescriptorTable(1, &worldPosition, D3D12_SHADER_VISIBILITY_PIXEL);
-	CD3DX12_DESCRIPTOR_RANGE skybox(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 6);
-	rootParameter[8].InitAsDescriptorTable(1, &skybox, D3D12_SHADER_VISIBILITY_PIXEL);
-	CD3DX12_DESCRIPTOR_RANGE shadow(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 7);
-	rootParameter[9].InitAsDescriptorTable(1, &shadow, D3D12_SHADER_VISIBILITY_PIXEL);
+	CD3DX12_DESCRIPTOR_RANGE depth(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 6);
+	rootParameter[8].InitAsDescriptorTable(1, &depth, D3D12_SHADER_VISIBILITY_PIXEL);
+	CD3DX12_DESCRIPTOR_RANGE skybox(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 7);
+	rootParameter[9].InitAsDescriptorTable(1, &skybox, D3D12_SHADER_VISIBILITY_PIXEL);
+	CD3DX12_DESCRIPTOR_RANGE shadow(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 8);
+	rootParameter[10].InitAsDescriptorTable(1, &shadow, D3D12_SHADER_VISIBILITY_PIXEL);
 
 	CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc;
 	rootSignatureDesc.Init(_countof(rootParameter), &rootParameter[0], 1, &s_samplerDescs[SAMPLER_DESC_CLAMP], 
@@ -97,7 +99,7 @@ void PipelineStateHandler::CreateLightRootSignature(ID3D12Device* device)
 //* GBuffer Root signature
 void PipelineStateHandler::CreateGBufferRootSingature(ID3D12Device* device)
 {
-	CD3DX12_ROOT_PARAMETER rootParameter[8] = {};
+	CD3DX12_ROOT_PARAMETER rootParameter[2 + GBUFFER_COUNT] = {};
 
 	//* Camera Buffer
 	CD3DX12_DESCRIPTOR_RANGE cbvCamera(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
@@ -106,29 +108,36 @@ void PipelineStateHandler::CreateGBufferRootSingature(ID3D12Device* device)
 	CD3DX12_DESCRIPTOR_RANGE cbvMaterial(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);
 	rootParameter[1].InitAsDescriptorTable(1, &cbvMaterial, D3D12_SHADER_VISIBILITY_PIXEL);
 
-	//* Albedo texture
-	CD3DX12_DESCRIPTOR_RANGE albedoDescRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
-	rootParameter[2].InitAsDescriptorTable(1, &albedoDescRange, D3D12_SHADER_VISIBILITY_PIXEL);
+	std::array<CD3DX12_DESCRIPTOR_RANGE, GBUFFER_COUNT> gbufferTextures;
+	for (UINT i = 0; i < GBUFFER_COUNT; i++)
+	{
+		gbufferTextures[i] = CD3DX12_DESCRIPTOR_RANGE(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, i);
+		rootParameter[2 + i].InitAsDescriptorTable(1, &gbufferTextures[i], D3D12_SHADER_VISIBILITY_PIXEL);
+	}
 
-	//* Normal texture
-	CD3DX12_DESCRIPTOR_RANGE normalDescRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1);
-	rootParameter[3].InitAsDescriptorTable(1, &normalDescRange, D3D12_SHADER_VISIBILITY_PIXEL);
-	
-	//* Metallic texture
-	CD3DX12_DESCRIPTOR_RANGE metallicDescRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 2);
-	rootParameter[4].InitAsDescriptorTable(1, &metallicDescRange, D3D12_SHADER_VISIBILITY_PIXEL);
-
-	//* Roughness texture
-	CD3DX12_DESCRIPTOR_RANGE roguhnessDescRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 3);
-	rootParameter[5].InitAsDescriptorTable(1, &roguhnessDescRange, D3D12_SHADER_VISIBILITY_PIXEL);
-
-	//* Height texture
-	CD3DX12_DESCRIPTOR_RANGE heightDescRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 4);
-	rootParameter[6].InitAsDescriptorTable(1, &heightDescRange, D3D12_SHADER_VISIBILITY_PIXEL);
-
-	//* Height texture
-	CD3DX12_DESCRIPTOR_RANGE aoDescRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 5);
-	rootParameter[7].InitAsDescriptorTable(1, &aoDescRange, D3D12_SHADER_VISIBILITY_PIXEL);
+	////* Albedo texture
+	//CD3DX12_DESCRIPTOR_RANGE albedoDescRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
+	//rootParameter[2].InitAsDescriptorTable(1, &albedoDescRange, D3D12_SHADER_VISIBILITY_PIXEL);
+	//
+	////* Normal texture
+	//CD3DX12_DESCRIPTOR_RANGE normalDescRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1);
+	//rootParameter[3].InitAsDescriptorTable(1, &normalDescRange, D3D12_SHADER_VISIBILITY_PIXEL);
+	//
+	////* Metallic texture
+	//CD3DX12_DESCRIPTOR_RANGE metallicDescRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 2);
+	//rootParameter[4].InitAsDescriptorTable(1, &metallicDescRange, D3D12_SHADER_VISIBILITY_PIXEL);
+	//
+	////* Roughness texture
+	//CD3DX12_DESCRIPTOR_RANGE roguhnessDescRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 3);
+	//rootParameter[5].InitAsDescriptorTable(1, &roguhnessDescRange, D3D12_SHADER_VISIBILITY_PIXEL);
+	//
+	////* Height texture
+	//CD3DX12_DESCRIPTOR_RANGE heightDescRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 4);
+	//rootParameter[6].InitAsDescriptorTable(1, &heightDescRange, D3D12_SHADER_VISIBILITY_PIXEL);
+	//
+	////* Height texture
+	//CD3DX12_DESCRIPTOR_RANGE aoDescRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 5);
+	//rootParameter[7].InitAsDescriptorTable(1, &aoDescRange, D3D12_SHADER_VISIBILITY_PIXEL);
 
 	CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc;
 	rootSignatureDesc.Init(_countof(rootParameter), &rootParameter[0], 1, &s_samplerDescs[SAMPLER_DESC_WRAP],
@@ -775,6 +784,7 @@ void PipelineStateHandler::CreateGBufferPSO(ID3D12Device* device)
 		DXGI_FORMAT_R8G8B8A8_UNORM_SRGB, //* VERTEX COLOR
 		DXGI_FORMAT_R16G16B16A16_SNORM,  //* VERTEX NORMAL
 		DXGI_FORMAT_R32G32B32A32_FLOAT,  //* WORLD POSITION
+		DXGI_FORMAT_R32_FLOAT,			 //* DEPTH
 	};
 
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
@@ -788,7 +798,7 @@ void PipelineStateHandler::CreateGBufferPSO(ID3D12Device* device)
 	psoDesc.RasterizerState = rastDesc;
 	psoDesc.BlendState = blendDesc;
 	psoDesc.DepthStencilState = depthStencilDesc;
-	psoDesc.NumRenderTargets = 6;
+	psoDesc.NumRenderTargets = GBUFFER_COUNT;
 	psoDesc.pRootSignature = m_rootSignatures[ROOTSIGNATURE_STATE_GBUFFER].Get();
 	psoDesc.VS = vsByte;
 	psoDesc.PS = psByte;

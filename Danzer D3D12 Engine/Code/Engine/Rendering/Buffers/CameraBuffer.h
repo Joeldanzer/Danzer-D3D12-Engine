@@ -17,6 +17,8 @@ public:
 		Vect4f m_position   = Vect4f::Zero;
 		Vect4f m_direction  = Vect4f::Zero;
 		float  m_time = 0.0f;
+		float  m_width = 0.0f;
+		float  m_height = 0.0f;
 	};
 
 	Data* FetchData() {

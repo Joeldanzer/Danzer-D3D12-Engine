@@ -78,6 +78,7 @@ void GBuffer::InitializeGBuffers(D3D12Framework& framework)
 		DXGI_FORMAT_R8G8B8A8_UNORM_SRGB, //* VERTEX COLOR
 		DXGI_FORMAT_R16G16B16A16_SNORM,  //* VERTEX NORMAL
 		DXGI_FORMAT_R32G32B32A32_FLOAT,  //* WORLD POSITION
+		DXGI_FORMAT_R32_FLOAT			 //* DEPTH
 	};
 
 	std::array<std::wstring, GBUFFER_COUNT> bufferNames = {
@@ -86,7 +87,8 @@ void GBuffer::InitializeGBuffers(D3D12Framework& framework)
 		L"Material_Gbuffer",
 		L"Vertex_Color_Gbuffer",
 		L"Vertex_Normal_Gbuffer",
-		L"World_Position_Gbuffer"
+		L"World_Position_Gbuffer",
+		L"Depth_GBuffer"
 	};
 	
 

@@ -10,9 +10,9 @@ cbuffer WaterPlane : register(b1)
     
     float noiseScale;
     float heightScale;
+    float textureScale;
 }
 
-
-Texture2D vertexNoise    : register(t0);
-Texture2D noiseNormalOne : register(t1);
-Texture2D noiseNormalTwo : register(t2);
+Texture2D vertexNoise    : register(t1);
+Texture2D noiseNormalOne : register(t2);
+Texture2D noiseNormalTwo : register(t3);

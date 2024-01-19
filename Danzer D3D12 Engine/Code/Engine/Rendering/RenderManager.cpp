@@ -157,7 +157,10 @@ void RenderManager::Impl::BeginFrame()
 		);
 		dsvHandle.Offset((m_shadowMap->DSVOffsetID() + m_framework.m_frameIndex) * m_framework.DSVHeap().DESCRIPTOR_SIZE());
 		cmdList->RSSetViewports(1, &m_shadowMap->GetViewPort());
-		cmdList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+		cmdList->ClearDepthStencilView(
+			dsvHandle, 
+			D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr
+		);
 	}
 	
 	// Clear all RenderTargets
@@ -243,8 +246,24 @@ void RenderManager::Impl::RenderScene(TextureHandler& textureHandler, SpriteHand
 			startLocation
 		);
 
+
+		{ // Copy over Depth buffer data to a depth texture to be used in pixel shader
+			ID3D12Resource* depthCopy[]     = { m_framework.m_depthStencil.Get() };
+			ID3D12Resource* depthDest[]     = { effectHandler.GetDepthCopyTexture() };
+			m_framework.QeueuResourceTransition(&depthCopy[0], 1, D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_COPY_SOURCE);
+			m_framework.QeueuResourceTransition(&depthDest[0], 1, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COPY_DEST);
+			m_framework.TransitionAllResources();
+
+			cmdList->CopyResource(effectHandler.GetDepthCopyTexture(), m_framework.m_depthStencil.Get());
+
+			m_framework.QeueuResourceTransition(&depthCopy[0], 1, D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_DEPTH_WRITE);
+			m_framework.QeueuResourceTransition(&depthDest[0], 1, D3D12_RESOURCE_STATE_COPY_DEST,   D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+			m_framework.TransitionAllResources();
+		}
+
 		m_mainRenderer.RenderForwardModelEffects(
-			cmdList, 
+			cmdList,
+			effectHandler.GetDepthTextureOffset(),
 			effectHandler.GetAllEffects(), 
 			modelHandler, textureHandler.GetTextures(), 
 			frameIndex, 

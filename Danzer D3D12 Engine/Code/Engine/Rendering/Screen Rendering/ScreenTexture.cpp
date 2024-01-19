@@ -3,7 +3,6 @@
 
 #include "Core\D3D12Framework.h"
 
-
 ScreenTexture::ScreenTexture(D3D12Framework& framework, DXGI_FORMAT format, UINT width, UINT height, std::wstring name)
 {
 	HRESULT result;

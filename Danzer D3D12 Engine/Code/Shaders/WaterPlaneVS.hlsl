@@ -19,15 +19,17 @@ VertexToPixel main(InputToVertex input)
    
     output.m_position = toProj;
     
-    output.m_normal  = normalize(mul(float4(input.m_normal.xyz, 1.f),  input.m_transform));
-    output.m_tangent = normalize(mul(float4(input.m_tangent.xyz, 1.f), input.m_transform));
+    //output.m_normal  = normalize(mul(float4(input.m_normal.xyz, 1.f),  input.m_transform));
+    //output.m_tangent = normalize(mul(float4(input.m_tangent.xyz, 1.f), input.m_transform));
+    //output.m_biNormal = normalize(mul(float4(input.m_biNormal.xyz, 1.0f), input.m_transform));
     //output.m_normal  = float4(input.m_normal.xyz, 1.f);
     //output.m_tangent = float4(input.m_tangent.xyz, 1.f);
     //output.m_tangent = normalize(output.m_tangent - dot(output.m_tangent, output.m_normal) * output.m_normal);
-    output.m_biNormal.xyz = input.m_biNormal.xyz; //cross(output.m_tangent.xyz, output.m_normal.xyz);
-    output.m_biNormal.w = 0;
-    output.m_color = input.m_color;
-    output.m_uv = input.m_uv;
+    output.m_normal        = float4(input.m_normal.xyz, 1.f);
+    output.m_tangent       = float4(input.m_tangent.xyz, 1.f);
+    output.m_biNormal      = float4(input.m_biNormal.xyz, 0.0f);
+    output.m_color         = input.m_color;
+    output.m_uv            = input.m_uv;
     output.m_worldPosition = toWorld;
     output.m_noiseWorldPos = worldPos;
     return output;
