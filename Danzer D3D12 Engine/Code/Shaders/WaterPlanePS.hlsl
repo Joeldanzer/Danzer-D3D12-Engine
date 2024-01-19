@@ -54,8 +54,7 @@ WaterPlaneOutput main(VertexToPixel input)
  
     float3 svPos = input.m_position.xyz;
     svPos.xy /= float2(ScreenWidth, ScreenHeight);
-    //svPos.xy = 0.5f * svPos.xy + 0.5f;
-    //svPos.y =  1.0f - svPos.y;
+
     float zDepth = EdgeDetection(depthTexture.Sample(effectSampler, svPos.xy).x);
     float zPos   = EdgeDetection(svPos.z);
     float zDif   = zDepth - zPos;
