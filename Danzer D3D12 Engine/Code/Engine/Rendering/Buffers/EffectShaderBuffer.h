@@ -14,7 +14,7 @@ public:
 	}
 
 	struct Data {
-		Vect4f m_randomData[16]; // 256 bytes alligned
+		float m_randomData[64]; // 256 bytes alligned
 	};
 
 	Data* FetchData() {

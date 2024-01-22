@@ -10,8 +10,7 @@ VertexToPixel main(InputToVertex input)
     
     input.m_position.y += height * HeightScale;
     
-    float4 toWorld = mul(input.m_position, input.m_transform);
-     
+    float4 toWorld = mul(input.m_position, input.m_transform); 
     float4 toCamera = mul(toWorld, CameraTransform);
     float4 toProj   = mul(toCamera, CameraProjection);
    
@@ -23,8 +22,8 @@ VertexToPixel main(InputToVertex input)
     //output.m_normal  = float4(input.m_normal.xyz, 1.f);
     //output.m_tangent = float4(input.m_tangent.xyz, 1.f);
     //output.m_tangent = normalize(output.m_tangent - dot(output.m_tangent, output.m_normal) * output.m_normal);
-    output.m_normal        = float4(input.m_normal.xyz, 1.f);
-    output.m_tangent       = float4(input.m_tangent.xyz, 1.f);
+    output.m_normal        = float4(input.m_normal.xyz,   1.f);
+    output.m_tangent       = float4(input.m_tangent.xyz,  1.f);
     output.m_biNormal      = float4(input.m_biNormal.xyz, 0.0f);
     output.m_color         = input.m_color;
     output.m_uv            = input.m_uv;

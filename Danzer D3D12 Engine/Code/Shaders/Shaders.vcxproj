@@ -258,6 +258,12 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
     </FxCompile>
+    <FxCompile Include="Light\PointLightPS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+    </FxCompile>
     <FxCompile Include="UI\uiPixelShader.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
@@ -329,12 +335,14 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="EffectShaderHeader.hlsli" />
+    <None Include="Light\DirectionalLightHeader.hlsli" />
     <None Include="Light\LightFunctionsHeader.hlsli" />
     <None Include="Light\LightHeader.hlsli" />
     <None Include="Font\FontStructs.hlsli" />
     <None Include="Fullscreen\FullscreenHeader.hlsli" />
     <None Include="Gbuffer\GbufferFunctions.hlsli" />
     <None Include="Gbuffer\GbufferHeader.hlsli" />
+    <None Include="Light\PointLightHeader.hlsli" />
     <None Include="UI\UIstructs.hlsli" />
     <None Include="Colliders\AABB\AABBStructs.hlsli" />
     <None Include="Colliders\Ray\RayStructs.hlsli" />

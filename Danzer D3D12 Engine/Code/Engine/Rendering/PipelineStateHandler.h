@@ -11,6 +11,7 @@ enum PIPELINE_STATES {
 	PIPELINE_STATE_MODELS,
 	PIPELINE_STATE_GBUFFER,
 	PIPELINE_STATE_DIRECTIONAL_LIGHT,
+	PIPELINE_STATE_POINT_LIGHT,
 	PIPELINE_STATE_TRANSPARENT,
 	PIPELINE_STATE_UI,
 	PIPELINE_STATE_FONT,
@@ -79,6 +80,7 @@ private:
 	void CreateAABBWireframePSO(ID3D12Device* device);
 	void CreateRayWireframePSO(ID3D12Device* device);
 	void CreateDirectionalLightPSO(ID3D12Device* device);
+	void CreatePointLightPSO(ID3D12Device* device);
 	void CreateModelPSO(ID3D12Device* device); 
 	void CreateShadowMapPSO(ID3D12Device* device);
 	

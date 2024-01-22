@@ -69,12 +69,18 @@ WaterPlaneOutput main(VertexToPixel input)
     float3 albedoTwo = WaterColorTwo;
     
     float3 surfaceColor = lerp(albedoOne, albedoTwo, fresnel);
-     
+    
+    float alpha = lerp(0.90f, 1.0f, zDif/25.0f);
+    float isEdge = step(EdgeScale, zDif);
+    
     output.m_Albedo.rgb = lerp(EdgeColor, surfaceColor, step(EdgeScale, zDif));
-    output.m_Albedo.a   = 1.0f;
+    if(isEdge <= 0.0f)
+        output.m_Albedo.a = 1.0f;
+    else 
+        output.m_Albedo.a = alpha;
     output.m_Material   = float4(Metallic, Roughness, 0.5f, 0.5f);
     
-    output.m_Normal.a   = 1.0f;
+    output.m_Normal.a = 1.0f;
     output.m_Material.a = 1.0f;
     
     output.m_VertexNormal  = input.m_normal;

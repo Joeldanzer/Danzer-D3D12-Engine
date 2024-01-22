@@ -246,6 +246,7 @@ void RenderManager::Impl::RenderScene(TextureHandler& textureHandler, SpriteHand
 			startLocation
 		);
 
+		// Render non Transparent effects
 
 		{ // Copy over Depth buffer data to a depth texture to be used in pixel shader
 			ID3D12Resource* depthCopy[]     = { m_framework.m_depthStencil.Get() };
@@ -260,6 +261,8 @@ void RenderManager::Impl::RenderScene(TextureHandler& textureHandler, SpriteHand
 			m_framework.QeueuResourceTransition(&depthDest[0], 1, D3D12_RESOURCE_STATE_COPY_DEST,   D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 			m_framework.TransitionAllResources();
 		}
+
+		// Render 
 
 		m_mainRenderer.RenderForwardModelEffects(
 			cmdList,
@@ -327,11 +330,10 @@ void RenderManager::Impl::RenderScene(TextureHandler& textureHandler, SpriteHand
 		cmdList->SetPipelineState(m_pipeLineHandler.GetPSO(PIPELINE_STATE_DIRECTIONAL_LIGHT));
 
 		D3D12_GPU_DESCRIPTOR_HANDLE lightHandle = m_mainRenderer.UpdateLightBuffer(m_shadowMap->GetProjectionMatrix(),
-		 dirLightTransform	,directionalLight, directionaLightdir, m_framework.GetFrameIndex());
+		 dirLightTransform, directionalLight, directionaLightdir, m_framework.GetFrameIndex());
 		cmdList->SetGraphicsRootDescriptorTable(startLocation, lightHandle);
-		startLocation++;
 
-		m_gBuffer.AssignSRVSlots(cmdList, &m_framework.CbvSrvHeap(), startLocation);
+		m_gBuffer.AssignSRVSlots(cmdList, &m_framework.CbvSrvHeap(), startLocation += 1);
 		m_mainRenderer.RenderDirectionalLight(
 			cmdList,
 			textureHandler.GetTextures()[skybox.GetCurrentActiveSkybox()[1] - 1],
@@ -339,6 +341,10 @@ void RenderManager::Impl::RenderScene(TextureHandler& textureHandler, SpriteHand
 			m_framework.GetFrameIndex(),
 			startLocation
 		);
+
+		cmdList->SetPipelineState(m_pipeLineHandler.GetPSO(PIPELINE_STATE_POINT_LIGHT));
+		m_mainRenderer.RenderPointLights(cmdList, scene.Registry(), frameIndex, startLocation += 1);
+
 	} //* Render scene Ligthing end
 
 	{ //* Render 2D Scene

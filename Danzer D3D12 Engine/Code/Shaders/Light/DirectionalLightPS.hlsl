@@ -1,5 +1,6 @@
 #include "../Fullscreen/FullscreenHeader.hlsli"
 #include "LightFunctionsHeader.hlsli"
+#include "DirectionalLightHeader.hlsli"
 
 float4 main(VertexToPixel input) : SV_TARGET
 {
@@ -33,7 +34,7 @@ float4 main(VertexToPixel input) : SV_TARGET
     float3 diffusecolor  = lerp((float3) 0.00, albedo.rgb, 1 - metallic);
        
     //float3 ambient = EvaluateAmbience(skyboxTexture, defaultSample, vertexNormal, normal.rgb, toEye, roughness, metallic, albedo.rgb, ao, diffusecolor, specualrcolor, AmbientColor);
-    float shadowData = ShadowCalculation(float4(worldPosition, 1.0f), normal.xyz);
+    float shadowData = ShadowCalculation(float4(worldPosition, 1.0f), normal.xyz, LightDirection.xyz, LightTransform, LightProjection);
     float3 directionalLight = EvaluateDirectionalLight(diffusecolor, specualrcolor, normal.xyz, roughness, LightColor.rgb * LightColor.w, LightDirection.xyz, toEye.xyz, metallic) * shadowData;    
     
     //float3 kS = FresnelSchlick(max(dot(normal.xyz, toEye.xyz), 0.0), specualrcolor);

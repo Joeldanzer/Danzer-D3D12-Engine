@@ -11,17 +11,17 @@ float invLerp(float a, float b, float c)
     return (c - a) / (b - a);
 }
 
-float ShadowCalculation(float4 worldPos, float3 normal)
+float ShadowCalculation(float4 worldPos, float3 normal, float3 dir, float4x4 transform, float4x4 projection)
 { 
-    float4 lightSpacePos = mul(worldPos,      LightTransform);
-    lightSpacePos        = mul(lightSpacePos, LightProjection);
+    float4 lightSpacePos = mul(worldPos, transform);
+    lightSpacePos        = mul(lightSpacePos, projection);
     
     lightSpacePos.xyz /= lightSpacePos.w;
     
     float2 shadowTexCoord = 0.5f * lightSpacePos.xy + 0.5f;
     shadowTexCoord.y      = 1.0f - shadowTexCoord.y;
     
-    float bias = max(MIN_SHADOW_DEPTH_BIAS * (1.0f - dot(normal, LightDirection.xyz)), MAX_SHADOW_DEPTH_BIAS);
+    float bias = max(MIN_SHADOW_DEPTH_BIAS * (1.0f - dot(normal, dir.xyz)), MAX_SHADOW_DEPTH_BIAS);
     float currentDepth = lightSpacePos.z - bias;
     
     float closestDepth = shadowMap.Sample(defaultSample, shadowTexCoord.xy).r;
@@ -303,22 +303,4 @@ float3 EvaluateDirectionalLight(float3 albedoColor, float3 specularColor, float3
     float3 value = float3(0.0f, 0.0f, 0.0f);
     value = (kD * albedoColor / PI + specular) * lightColor.rgb * NdL;
     return value;
-    
-
-    //float NdL = saturate(dot(normal, lightDir));
-    //float lambert = NdL;
-    //float3 h = normalize(viewDir + lightDir);
-    //float NdH = saturate(dot(normal, h));
-    //
-    //float cosTheta = dot(lightDir, normal);
-    //
-    //float D = DistributionGGX(NdH, roughness);
-    //float G = GeometrySmith(normal, viewDir, lightDir, roughness);
-    //float3 F = FresnelSchlick(cosTheta, specularColor);
-  
-//    //float3 specular = ((D * G * F) / 4.f * dot(normal, lightDir) * dot(normal, viewDir));
-    //float3 diffuse = max(dot(normal, lightDir), 0.0f) * albedoColor;
-    //diffuse *= 1.f / PI;
-    //
-    //return lightColor * lambert * (diffuse * (1.0f - specular) + specular) * PI;
 }

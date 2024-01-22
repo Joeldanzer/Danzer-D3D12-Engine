@@ -38,8 +38,8 @@ Game::Impl::Impl(Engine& engine) :
 {
 	entt::registry& reg = engine.GetSceneManager().GetCurrentScene().Registry();
 
-	engine.GetSpriteHandler().CreateSpriteSheet(L"Sprites/RunTestAnimation.dds", 8, 8);
-
+	//engine.GetSpriteHandler().CreateSpriteSheet(L"Sprites/RunTestAnimation.dds", 8, 8);
+	//
 	//m_entity = reg.create();
 	//Transform2D& transform = reg.emplace<Transform2D>(m_entity);
 	//Object& obj			   = reg.emplace<Object>(m_entity);
@@ -69,9 +69,6 @@ Game::Impl::Impl(Engine& engine) :
 		engine.GetTextureHandler().GetTexture(L"Sprites/WaterNoiseNormalTwo.dds")
 	};
 
-	//std::vector<float> bufferData = {
-	//					// Water Color 
-	//}
 	WaterPlaneData waterData;
 	waterData.m_waterColorOne	  = { 0.1f, 0.5f, 0.95f };
 	waterData.m_waterColorTwo	  = { 0.2f, 0.7f, 1.0f };
@@ -79,13 +76,13 @@ Game::Impl::Impl(Engine& engine) :
 	waterData.m_metallic		  = 0.1f;
 	waterData.m_waterDirectionOne = { 1.0f,  0.2f };
 	waterData.m_waterDirectionTwo = {-0.5f, -1.0f };
-	waterData.m_speed			  = 0.1f;
-	waterData.m_textureScale	  = 6.0f;
+	waterData.m_speed			  = 0.01f;
+	waterData.m_textureScale	  = 5.0f;
 	waterData.m_noiseScale		  = 100.f;
 	waterData.m_heightScale		  = 0.75f;
 	waterData.m_near			  = 0.1f;
 	waterData.m_far				  = 1000.0f;
-	waterData.m_edgeScale	      = 5.0f;
+	waterData.m_edgeScale	      = 1.0f;
 	waterData.m_edgeColor	      = { 1.0f, 1.0f, 1.0f };
 	reg.emplace<ModelEffect>(waterPlane, engine.GetModelEffectHandler().CreateModelEffect(L"WaterPlane", waterModel.m_modelID, &waterData, sizeof(WaterPlaneData), textures, true));
 	Transform& waterTransform = reg.get<Transform>(waterPlane);

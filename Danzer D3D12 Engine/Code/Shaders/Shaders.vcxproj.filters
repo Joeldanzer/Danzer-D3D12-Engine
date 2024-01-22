@@ -49,6 +49,7 @@
     <FxCompile Include="WaterPlanePS.hlsl">
       <Filter>EffectShaders</Filter>
     </FxCompile>
+    <FxCompile Include="Light\PointLightPS.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="UI\UIstructs.hlsli">
@@ -69,5 +70,7 @@
     <None Include="WaterPlaneHeader.hlsli">
       <Filter>EffectShaders</Filter>
     </None>
+    <None Include="Light\DirectionalLightHeader.hlsli" />
+    <None Include="Light\PointLightHeader.hlsli" />
   </ItemGroup>
 </Project>

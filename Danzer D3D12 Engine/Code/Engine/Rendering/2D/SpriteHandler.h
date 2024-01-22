@@ -62,6 +62,6 @@ private:
 	std::vector<Font>		m_fonts;
 
 	D3D12Framework& m_framework;
-	TextureHandler&     m_textureHandler;
+	TextureHandler& m_textureHandler;
 };
 

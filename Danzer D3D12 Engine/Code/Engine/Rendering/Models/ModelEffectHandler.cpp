@@ -105,18 +105,18 @@ ModelEffect ModelEffectHandler::CreateModelEffect(std::wstring shaderName, const
 		DXGI_FORMAT_R32_FLOAT			 //* DEPTH TEXTURE
 	};
 
-	// Create PipelineState for Model effect
+	// Blend for Albedo & Normal
 	D3D12_BLEND_DESC blendDesc		  = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
-	for (UINT i = 3; i < formats.size(); i++)
+	for (UINT i = 0; i < 1; i++)
 	{
 		blendDesc.RenderTarget[i].BlendEnable = true;
+		blendDesc.RenderTarget[i].SrcBlend				= D3D12_BLEND_SRC_ALPHA;
+		blendDesc.RenderTarget[i].DestBlend				= D3D12_BLEND_INV_SRC_ALPHA;
+		blendDesc.RenderTarget[i].BlendOp				= D3D12_BLEND_OP_ADD;
+		blendDesc.RenderTarget[i].SrcBlendAlpha			= D3D12_BLEND_ONE;
+		blendDesc.RenderTarget[i].DestBlendAlpha		= D3D12_BLEND_ONE;
+		blendDesc.RenderTarget[i].BlendOpAlpha			= D3D12_BLEND_OP_MAX;
 		blendDesc.RenderTarget[i].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
-		blendDesc.RenderTarget[i].SrcBlend = D3D12_BLEND_SRC_ALPHA;
-		blendDesc.RenderTarget[i].DestBlend = D3D12_BLEND_BLEND_FACTOR;
-		blendDesc.RenderTarget[i].BlendOp = D3D12_BLEND_OP_ADD;
-		blendDesc.RenderTarget[i].SrcBlendAlpha = D3D12_BLEND_ONE;
-		blendDesc.RenderTarget[i].DestBlendAlpha = D3D12_BLEND_ZERO;
-		blendDesc.RenderTarget[i].BlendOpAlpha = D3D12_BLEND_OP_ADD;
 		blendDesc.AlphaToCoverageEnable = false;
 	}
 

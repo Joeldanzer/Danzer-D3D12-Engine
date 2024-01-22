@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "Renderer.h"
 
+#include "Components/PointLight.h"
 #include "Models/ModelHandler.h"
 #include "Scene.h"
 #include "Components/Transform.h";
@@ -37,11 +38,12 @@ void Renderer::Init(D3D12Framework& framework)
 	m_framework = &framework;
 	//m_commandList = framework.InitCmdList();
 	
-	m_shadowBuffer.Init(framework.GetDevice(),   &framework.CbvSrvHeap(), m_shadowBuffer.FetchData(),   sizeof(CameraBuffer::Data));
-	m_cameraBuffer.Init(framework.GetDevice(),   &framework.CbvSrvHeap(), m_cameraBuffer.FetchData(),   sizeof(CameraBuffer::Data));
-	m_lightBuffer.Init(framework.GetDevice(),    &framework.CbvSrvHeap(), m_lightBuffer.FetchData(),    sizeof(LightBuffer::Data));
-	m_materialBuffer.Init(framework.GetDevice(), &framework.CbvSrvHeap(), m_materialBuffer.FetchData(), sizeof(MaterialBuffer::Data));
-	m_effectBuffer.Init(framework.GetDevice(),   &framework.CbvSrvHeap(), m_effectBuffer.FetchData(),   sizeof(EffectShaderBuffer::Data));
+	m_shadowBuffer.Init(framework.GetDevice(),	   &framework.CbvSrvHeap(),	m_shadowBuffer.FetchData(),		sizeof(CameraBuffer::Data));
+	m_cameraBuffer.Init(framework.GetDevice(),	   &framework.CbvSrvHeap(),	m_cameraBuffer.FetchData(),		sizeof(CameraBuffer::Data));
+	m_lightBuffer.Init(framework.GetDevice(),	   &framework.CbvSrvHeap(),	m_lightBuffer.FetchData(),		sizeof(LightBuffer::Data));
+	m_materialBuffer.Init(framework.GetDevice(),   &framework.CbvSrvHeap(),	m_materialBuffer.FetchData(),   sizeof(MaterialBuffer::Data));
+	m_effectBuffer.Init(framework.GetDevice(),	   &framework.CbvSrvHeap(),	m_effectBuffer.FetchData(),		sizeof(EffectShaderBuffer::Data));
+	m_pointLightBuffer.Init(framework.GetDevice(), &framework.CbvSrvHeap(), m_pointLightBuffer.FetchData(), sizeof(PointLightBuffer::Data));
 }
 
 //* Default Buffers for all existing 3D models. Should only be updated once per frame!
@@ -137,7 +139,7 @@ void Renderer::RenderSkybox(ID3D12GraphicsCommandList* cmdList, Transform& camer
 	cmdList->DrawIndexedInstanced(mesh.m_numIndices, 1, 0, 0, 0);
 }
 
-void Renderer::RenderDirectionalLight(ID3D12GraphicsCommandList* cmdList, TextureHandler::Texture& skyboxTexture, DirectionalShadowMapping& shadowMap, UINT frameIndex, UINT& startLocation)
+void Renderer::RenderDirectionalLight(ID3D12GraphicsCommandList* cmdList, TextureHandler::Texture& skyboxTexture, DirectionalShadowMapping& shadowMap, UINT frameIndex, UINT startLocation)
 {
 	D3D12_GPU_DESCRIPTOR_HANDLE cbvSrvHeapStart = m_framework->CbvSrvHeap().GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
 	const UINT cbvSrvDescSize = m_framework->CbvSrvHeap().DESCRIPTOR_SIZE();
@@ -154,6 +156,38 @@ void Renderer::RenderDirectionalLight(ID3D12GraphicsCommandList* cmdList, Textur
 	cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	
 	cmdList->DrawInstanced(3, 1, 0, 0);
+}
+
+void Renderer::RenderPointLights(ID3D12GraphicsCommandList* cmdList, const entt::registry& registry, const UINT frameIndex, UINT startLocation)
+{
+	D3D12_GPU_DESCRIPTOR_HANDLE cbvSrvHeapStart = m_framework->CbvSrvHeap().GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
+	const UINT cbvSrvDescSize = m_framework->CbvSrvHeap().DESCRIPTOR_SIZE();
+
+	auto view = registry.view<PointLight, Transform, Object>();
+	for (auto i : view)
+	{
+		const Object& obj = registry.get<Object>(i);
+		if (obj.m_state != Object::STATE::ACTIVE)
+			continue;
+
+		const PointLight& light    = registry.get<PointLight>(i);
+		const Transform& transform = registry.get<Transform>(i);
+		
+		PointLightBuffer::Data lightData; 
+		lightData.m_color	 = light.m_color;
+		lightData.m_range	 = light.m_range;
+		lightData.m_position = transform.m_position + light.m_offsetPosition;
+		m_pointLightBuffer.UpdateBuffer(&lightData, frameIndex);
+
+		CD3DX12_GPU_DESCRIPTOR_HANDLE cbvHandle(cbvSrvHeapStart, m_pointLightBuffer.OffsetID(), cbvSrvDescSize);
+		cmdList->SetGraphicsRootDescriptorTable(startLocation, cbvHandle);
+
+		cmdList->IASetVertexBuffers(0, 0, nullptr);
+		cmdList->IASetIndexBuffer(nullptr);
+		cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+		cmdList->DrawInstanced(3, 1, 0, 0);
+	}
 }
 
 void Renderer::RenderForwardModelEffects(ID3D12GraphicsCommandList* cmdList, const UINT depthOffset, std::vector<ModelEffectData>& modelEffects, ModelHandler& modelHandler, std::vector<TextureHandler::Texture>& textures, const UINT frameIndex, Camera& cam, Transform& camTransform, UINT startLocation)

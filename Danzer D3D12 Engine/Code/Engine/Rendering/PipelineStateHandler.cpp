@@ -41,6 +41,7 @@ void PipelineStateHandler::Init(D3D12Framework& framework)
 	CreateSkyboxPSO(device);
 	CreateGBufferPSO(device);
 	CreateShadowMapPSO(device);
+	CreatePointLightPSO(device);
 	CreateTransparentPSO(device);
 	CreateRayWireframePSO(device);
 	CreateAABBWireframePSO(device);
@@ -114,30 +115,6 @@ void PipelineStateHandler::CreateGBufferRootSingature(ID3D12Device* device)
 		gbufferTextures[i] = CD3DX12_DESCRIPTOR_RANGE(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, i);
 		rootParameter[2 + i].InitAsDescriptorTable(1, &gbufferTextures[i], D3D12_SHADER_VISIBILITY_PIXEL);
 	}
-
-	////* Albedo texture
-	//CD3DX12_DESCRIPTOR_RANGE albedoDescRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
-	//rootParameter[2].InitAsDescriptorTable(1, &albedoDescRange, D3D12_SHADER_VISIBILITY_PIXEL);
-	//
-	////* Normal texture
-	//CD3DX12_DESCRIPTOR_RANGE normalDescRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1);
-	//rootParameter[3].InitAsDescriptorTable(1, &normalDescRange, D3D12_SHADER_VISIBILITY_PIXEL);
-	//
-	////* Metallic texture
-	//CD3DX12_DESCRIPTOR_RANGE metallicDescRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 2);
-	//rootParameter[4].InitAsDescriptorTable(1, &metallicDescRange, D3D12_SHADER_VISIBILITY_PIXEL);
-	//
-	////* Roughness texture
-	//CD3DX12_DESCRIPTOR_RANGE roguhnessDescRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 3);
-	//rootParameter[5].InitAsDescriptorTable(1, &roguhnessDescRange, D3D12_SHADER_VISIBILITY_PIXEL);
-	//
-	////* Height texture
-	//CD3DX12_DESCRIPTOR_RANGE heightDescRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 4);
-	//rootParameter[6].InitAsDescriptorTable(1, &heightDescRange, D3D12_SHADER_VISIBILITY_PIXEL);
-	//
-	////* Height texture
-	//CD3DX12_DESCRIPTOR_RANGE aoDescRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 5);
-	//rootParameter[7].InitAsDescriptorTable(1, &aoDescRange, D3D12_SHADER_VISIBILITY_PIXEL);
 
 	CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc;
 	rootSignatureDesc.Init(_countof(rootParameter), &rootParameter[0], 1, &s_samplerDescs[SAMPLER_DESC_WRAP],
@@ -402,15 +379,6 @@ void PipelineStateHandler::CreateDirectionalLightPSO(ID3D12Device* device)
 	HRESULT result;
 
 	D3D12_BLEND_DESC blendDesc = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
-	//blendDesc.RenderTarget[0].BlendEnable = true;
-	//blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
-	//blendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_COLOR;
-	//blendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_BLEND_FACTOR;
-	//blendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
-	//blendDesc.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
-	//blendDesc.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
-	//blendDesc.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
-	//blendDesc.AlphaToCoverageEnable = false;
 	D3D12_DEPTH_STENCIL_DESC depthStencilDesc = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
 	D3D12_RASTERIZER_DESC rasterizerDesc = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
 
@@ -453,6 +421,54 @@ void PipelineStateHandler::CreateDirectionalLightPSO(ID3D12Device* device)
 	CHECK_HR(result);
 
 	m_PSObjects[PIPELINE_STATE_DIRECTIONAL_LIGHT]->SetName(L"Directional Light PSO");
+}
+void PipelineStateHandler::CreatePointLightPSO(ID3D12Device* device)
+{
+	HRESULT result;
+
+	D3D12_BLEND_DESC blendDesc = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+	D3D12_DEPTH_STENCIL_DESC depthStencilDesc = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
+	D3D12_RASTERIZER_DESC rasterizerDesc = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+
+	DXGI_SAMPLE_DESC sample = { 1, 0 };
+
+	ID3DBlob* vs;
+	ID3DBlob* ps;
+
+	result = D3DReadFileToBlob(L"Shaders/FullscreenVS.cso", &vs);
+	CHECK_HR(result);
+
+	result = D3DReadFileToBlob(L"Shaders/PointLightPS.cso", &ps);
+	CHECK_HR(result);
+
+	D3D12_SHADER_BYTECODE vsByte = {};
+	vsByte.BytecodeLength = vs->GetBufferSize();
+	vsByte.pShaderBytecode = vs->GetBufferPointer();
+
+	D3D12_SHADER_BYTECODE psByte = {};
+	psByte.BytecodeLength = ps->GetBufferSize();
+	psByte.pShaderBytecode = ps->GetBufferPointer();
+
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
+	psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
+	psoDesc.SampleDesc = sample;
+	psoDesc.SampleMask = 0xffffffff;
+	psoDesc.RasterizerState = rasterizerDesc;
+	psoDesc.BlendState = blendDesc;
+	psoDesc.DepthStencilState = depthStencilDesc;
+	psoDesc.DepthStencilState.DepthEnable = false;
+	psoDesc.NumRenderTargets = 1;
+	psoDesc.pRootSignature = m_rootSignatures[ROOTSIGNATURE_STATE_LIGHT].Get();
+	psoDesc.VS = vsByte;
+	psoDesc.PS = psByte;
+	psoDesc.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
+
+	result = device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_PSObjects[PIPELINE_STATE_POINT_LIGHT]));
+	CHECK_HR(result);
+
+	m_PSObjects[PIPELINE_STATE_POINT_LIGHT]->SetName(L"Point Light PSO");
 }
 void PipelineStateHandler::CreateModelPSO(ID3D12Device* device)
 {
@@ -558,14 +574,15 @@ void PipelineStateHandler::CreateUIPSO(ID3D12Device* device)
 	HRESULT result;
 
 	D3D12_BLEND_DESC blendDesc = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
-	blendDesc.RenderTarget->BlendEnable = true;
-	blendDesc.RenderTarget->RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
-	blendDesc.RenderTarget->SrcBlend = D3D12_BLEND_SRC_COLOR;
-	blendDesc.RenderTarget->DestBlend = D3D12_BLEND_BLEND_FACTOR;
-	blendDesc.RenderTarget->BlendOp = D3D12_BLEND_OP_ADD;
-	blendDesc.RenderTarget->BlendOpAlpha = D3D12_BLEND_OP_ADD;
-	blendDesc.RenderTarget->SrcBlendAlpha = D3D12_BLEND_ONE;
-	blendDesc.RenderTarget->DestBlendAlpha = D3D12_BLEND_ZERO;
+	blendDesc.RenderTarget[0].BlendEnable = true;
+	blendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
+	blendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
+	blendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+	blendDesc.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
+	blendDesc.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ONE;
+	blendDesc.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_MAX;
+	blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+	blendDesc.AlphaToCoverageEnable = false;
 
 	D3D12_RASTERIZER_DESC rasterizerDesc = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
 	rasterizerDesc.CullMode = D3D12_CULL_MODE_BACK;
