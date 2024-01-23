@@ -76,7 +76,7 @@ float4 main(VertexToPixel input) : SV_TARGET
             color.rgb = radiance;    
             break;
         case 1:
-            color.rgb = albedo.rgb;
+            color.rgb = worldPosition.xyz;
             break;
         case 2:
             color.rgb = normal.xyz;

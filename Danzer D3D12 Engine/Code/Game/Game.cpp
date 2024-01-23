@@ -11,6 +11,7 @@
 #include "Rendering/2D/SpriteHandler.h"
 #include "Components/WaterPlaneBufferData.h"
 
+#include "Components/PointLight.h"
 #include "Components/Transform2D.h"
 #include "Components/Model.h"
 #include "Components/Transform.h"
@@ -59,7 +60,7 @@ Game::Impl::Impl(Engine& engine) :
 	Object& sponzaObj = reg.emplace<Object>(entity);
 	sponzaObj.m_name = "Sponza Atrium";
 
-    reg.emplace<Model>(entity, engine.GetModelHandler().LoadModel(L"Models/BlenderSponzaAtriumOld.fbx", "Sponza Atrium"));
+    //reg.emplace<Model>(entity, engine.GetModelHandler().LoadModel(L"Models/BlenderSponzaAtriumOld.fbx", "Sponza Atrium"));
 	
 	auto waterPlane = engine.GetSceneManager().GetCurrentScene().CreateBasicEntity("WaterPlane");
 	Model waterModel = reg.emplace<Model>(waterPlane, engine.GetModelHandler().LoadModel(L"Models/WaterPlane.fbx", "Water Plane"));
@@ -88,6 +89,18 @@ Game::Impl::Impl(Engine& engine) :
 	Transform& waterTransform = reg.get<Transform>(waterPlane);
 	waterTransform.m_position = { 0.0f, 4.0f, 0.0f };
 	waterTransform.m_scale	  = { 1.0f, 1.0f, 1.5f };
+
+	for (UINT i = 1; i < 11; i++)
+	{
+		entt::entity point = m_engine.GetSceneManager().GetCurrentScene().CreateBasicEntity("PointLight");
+		PointLight& light = reg.emplace<PointLight>(point);
+		light.m_color = { 1.0f - (i/10.0f), 0.0f, 0.0f + (i /10.f), 1.0f };
+		light.m_range = 10.0f;
+
+		Transform& lightTransform = reg.get<Transform>(point);
+		lightTransform.m_position = { 0.0f, 5.0f, -5.0f + i };
+	}
+
 }	
 
 Game::Impl::~Impl(){}

@@ -12,6 +12,8 @@ public:
 		Vect4f m_color;
 		float  m_range;
 		Vect3f m_position;
+
+		Vect4f trash[14];
 	};
 
 	Data* FetchData() {

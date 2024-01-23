@@ -326,14 +326,19 @@ void RenderManager::Impl::RenderScene(TextureHandler& textureHandler, SpriteHand
 			startLocation
 		);
 
+		startLocation = 0;
+
 		cmdList->SetGraphicsRootSignature(m_pipeLineHandler.GetRootSignature(ROOTSIGNATURE_STATE_LIGHT));
 		cmdList->SetPipelineState(m_pipeLineHandler.GetPSO(PIPELINE_STATE_DIRECTIONAL_LIGHT));
 
-		D3D12_GPU_DESCRIPTOR_HANDLE lightHandle = m_mainRenderer.UpdateLightBuffer(m_shadowMap->GetProjectionMatrix(),
-		 dirLightTransform, directionalLight, directionaLightdir, m_framework.GetFrameIndex());
-		cmdList->SetGraphicsRootDescriptorTable(startLocation, lightHandle);
+		cmdList->SetGraphicsRootDescriptorTable(startLocation, defaultHandle);
+		startLocation++;
 
-		m_gBuffer.AssignSRVSlots(cmdList, &m_framework.CbvSrvHeap(), startLocation += 1);
+		D3D12_GPU_DESCRIPTOR_HANDLE lightHandle = m_mainRenderer.UpdateLightBuffer(m_shadowMap->GetProjectionMatrix(),
+		dirLightTransform, directionalLight, directionaLightdir, m_framework.GetFrameIndex());
+		cmdList->SetGraphicsRootDescriptorTable(startLocation, lightHandle);
+		startLocation++;
+		m_gBuffer.AssignSRVSlots(cmdList, &m_framework.CbvSrvHeap(), startLocation);
 		m_mainRenderer.RenderDirectionalLight(
 			cmdList,
 			textureHandler.GetTextures()[skybox.GetCurrentActiveSkybox()[1] - 1],
@@ -341,9 +346,10 @@ void RenderManager::Impl::RenderScene(TextureHandler& textureHandler, SpriteHand
 			m_framework.GetFrameIndex(),
 			startLocation
 		);
-
-		cmdList->SetPipelineState(m_pipeLineHandler.GetPSO(PIPELINE_STATE_POINT_LIGHT));
-		m_mainRenderer.RenderPointLights(cmdList, scene.Registry(), frameIndex, startLocation += 1);
+		
+		//cmdList->SetPipelineState(m_pipeLineHandler.GetPSO(PIPELINE_STATE_POINT_LIGHT));
+		//cmdList->SetGraphicsRootDescriptorTable(0, defaultHandle);
+		//m_mainRenderer.RenderPointLights(cmdList, scene.Registry(), frameIndex, startLocation += 1);
 
 	} //* Render scene Ligthing end
 

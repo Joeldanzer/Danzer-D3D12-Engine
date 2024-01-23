@@ -180,7 +180,7 @@ void Renderer::RenderPointLights(ID3D12GraphicsCommandList* cmdList, const entt:
 		m_pointLightBuffer.UpdateBuffer(&lightData, frameIndex);
 
 		CD3DX12_GPU_DESCRIPTOR_HANDLE cbvHandle(cbvSrvHeapStart, m_pointLightBuffer.OffsetID(), cbvSrvDescSize);
-		cmdList->SetGraphicsRootDescriptorTable(startLocation, cbvHandle);
+		cmdList->SetGraphicsRootDescriptorTable(1, cbvHandle);
 
 		cmdList->IASetVertexBuffers(0, 0, nullptr);
 		cmdList->IASetIndexBuffer(nullptr);

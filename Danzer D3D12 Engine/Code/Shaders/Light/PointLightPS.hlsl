@@ -1,6 +1,6 @@
-#include "Fullscreen/FullscreenHeader.hlsli"
-#include "Light/LightFunctionsHeader.hlsli"
-#include "Light/PointLightHeader.hlsli"
+#include "../Fullscreen/FullscreenHeader.hlsli"
+#include "LightFunctionsHeader.hlsli"
+#include "PointLightHeader.hlsli"
 
 float Distance(float3 pos1, float3 pos2)
 {
@@ -13,9 +13,6 @@ float4 main(VertexToPixel input) : SV_TARGET
     float PI = PI_MACRO;
     
     float3 worldPosition = worldPositionTexture.Sample(defaultSample, input.m_uv).xyz;
-    if (!(length(worldPosition) > 0))
-        discard;
-     
     float distanceCheck = Distance(worldPosition, LightPosition);
     if (distanceCheck > LightRange)
         discard;
@@ -41,14 +38,13 @@ float4 main(VertexToPixel input) : SV_TARGET
    
     // calculate per-light radiance
     float3 lightDir   = normalize(LightPosition.xyz - worldPosition.xyz);
-    float3 H          = normalize(toEye + lightDir);
-    float distance    = length(LightPosition.xyz - worldPosition.xyz);
-    float attenuation = 1.0 / (distance * distance);
+    float  distance    = length(LightPosition.xyz - worldPosition.xyz);
+    float  attenuation = 1.0 / (distance * distance);
     float3 radiance   = LightColor.xyz * attenuation;
     
     float3 pointLight = EvaluateDirectionalLight(diffusecolor, specualrcolor, normal.xyz, roughness, radiance * LightColor.w, lightDir.xyz, toEye.xyz, metallic);
    
-    color.rgb = pointLight + albedo.rgb;
+    color.rgb = pointLight;
     color.rgb = LinearToGamma(color.rgb);
     
     color.a = 1.0f;
