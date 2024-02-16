@@ -10,15 +10,14 @@ float Distance(float3 pos1, float3 pos2)
 float4 main(VertexToPixel input) : SV_TARGET
 {
     float4 color;
-    float PI = PI_MACRO;
-    
+
     float3 worldPosition = worldPositionTexture.Sample(defaultSample, input.m_uv).xyz;
     float distanceCheck = Distance(worldPosition, LightPosition);
-    if (distanceCheck > LightRange)
-        discard;
-    
-    if (albedoTexture.Sample(defaultSample, input.m_uv).a <= 0.0f)
-        discard;
+    //if (distanceCheck > LightRange)
+    //    discard;
+    //
+    //if (albedoTexture.Sample(defaultSample, input.m_uv).a <= 0.0f)
+    //    discard;
     
     float4 albedo = albedoTexture.Sample(defaultSample, input.m_uv).rgba;
     float4 normal = normalTexture.Sample(defaultSample, input.m_uv).rgba;
@@ -39,7 +38,7 @@ float4 main(VertexToPixel input) : SV_TARGET
     // calculate per-light radiance
     float3 lightDir   = normalize(LightPosition.xyz - worldPosition.xyz);
     float  distance    = length(LightPosition.xyz - worldPosition.xyz);
-    float  attenuation = 1.0 / (distance * distance);
+    float attenuation = (1.0 / (distance * distance)) * LightRange;
     float3 radiance   = LightColor.xyz * attenuation;
     
     float3 pointLight = EvaluateDirectionalLight(diffusecolor, specualrcolor, normal.xyz, roughness, radiance * LightColor.w, lightDir.xyz, toEye.xyz, metallic);

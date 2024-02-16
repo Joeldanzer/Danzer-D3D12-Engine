@@ -163,6 +163,9 @@ void Renderer::RenderPointLights(ID3D12GraphicsCommandList* cmdList, const entt:
 	D3D12_GPU_DESCRIPTOR_HANDLE cbvSrvHeapStart = m_framework->CbvSrvHeap().GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
 	const UINT cbvSrvDescSize = m_framework->CbvSrvHeap().DESCRIPTOR_SIZE();
 
+
+	PointLightBuffer::Data lightData;
+
 	auto view = registry.view<PointLight, Transform, Object>();
 	for (auto i : view)
 	{
@@ -170,14 +173,14 @@ void Renderer::RenderPointLights(ID3D12GraphicsCommandList* cmdList, const entt:
 		if (obj.m_state != Object::STATE::ACTIVE)
 			continue;
 
-		const PointLight& light    = registry.get<PointLight>(i);
-		const Transform& transform = registry.get<Transform>(i);
-		
-		PointLightBuffer::Data lightData; 
+		const PointLight& light     = registry.get<PointLight>(i);
+		const Transform&  transform = registry.get<Transform>(i);
+	
 		lightData.m_color	 = light.m_color;
 		lightData.m_range	 = light.m_range;
 		lightData.m_position = transform.m_position + light.m_offsetPosition;
 		m_pointLightBuffer.UpdateBuffer(&lightData, frameIndex);
+		
 
 		CD3DX12_GPU_DESCRIPTOR_HANDLE cbvHandle(cbvSrvHeapStart, m_pointLightBuffer.OffsetID(), cbvSrvDescSize);
 		cmdList->SetGraphicsRootDescriptorTable(1, cbvHandle);

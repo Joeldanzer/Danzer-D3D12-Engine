@@ -347,18 +347,15 @@ void RenderManager::Impl::RenderScene(TextureHandler& textureHandler, SpriteHand
 			startLocation
 		);
 		
-		//cmdList->SetPipelineState(m_pipeLineHandler.GetPSO(PIPELINE_STATE_POINT_LIGHT));
-		//cmdList->SetGraphicsRootDescriptorTable(0, defaultHandle);
-		//m_mainRenderer.RenderPointLights(cmdList, scene.Registry(), frameIndex, startLocation += 1);
+		cmdList->SetPipelineState(m_pipeLineHandler.GetPSO(PIPELINE_STATE_POINT_LIGHT));
+		cmdList->SetGraphicsRootDescriptorTable(0, defaultHandle);
+		m_mainRenderer.RenderPointLights(cmdList, scene.Registry(), frameIndex, startLocation += 1);
 
 	} //* Render scene Ligthing end
 
 	{ //* Render 2D Scene
 		cmdList->SetGraphicsRootSignature(m_pipeLineHandler.GetRootSignature(ROOTSIGNATURE_STATE_UI));
 		cmdList->SetPipelineState(m_pipeLineHandler.GetPSO(PIPELINE_STATE_UI));
-
-		//ID3D12DescriptorHeap* cbvSrvHeap = m_framework.CbvSrvHeap().GetDescriptorHeap();
-		//cmdList->SetDescriptorHeaps(1, &cbvSrvHeap);
 
 		Update2DInstances(scene, spriteHandler);
 		m_2dRenderer.RenderUI(

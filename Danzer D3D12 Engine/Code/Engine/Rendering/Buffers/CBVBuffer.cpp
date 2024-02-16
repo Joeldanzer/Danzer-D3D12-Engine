@@ -4,9 +4,7 @@
 #include "../../Core/D3D12Framework.h"
 
 void CBVBuffer::Init(ID3D12Device* device, DescriptorHeapWrapper* cbvWrapper, void* data, UINT sizeOfData)
-{
-	HRESULT result;
-	
+{	
 	UINT size = (sizeOfData + 255) & ~255;
 	m_offsetID = 0;
 
@@ -17,15 +15,14 @@ void CBVBuffer::Init(ID3D12Device* device, DescriptorHeapWrapper* cbvWrapper, vo
 	{
 		CD3DX12_HEAP_PROPERTIES uploadHeap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
 		CD3DX12_RESOURCE_DESC   buffer     = CD3DX12_RESOURCE_DESC::Buffer(size);
-		result = device->CreateCommittedResource(
+		CHECK_HR(device->CreateCommittedResource(
 			&uploadHeap,
 			D3D12_HEAP_FLAG_NONE,
 			&buffer,
 			D3D12_RESOURCE_STATE_GENERIC_READ,
 			nullptr,
 			IID_PPV_ARGS(&m_bufferUpload[i])
-		);
-		CHECK_HR(result);
+		));
 
 		D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
 		cbvDesc.BufferLocation = m_bufferUpload[i]->GetGPUVirtualAddress();
@@ -38,8 +35,9 @@ void CBVBuffer::Init(ID3D12Device* device, DescriptorHeapWrapper* cbvWrapper, vo
 
 		ZeroMemory(&data, sizeOfData);
 		CD3DX12_RANGE readRange(0, 0); // Don't intend to read this resource on the CPU
-		result = m_bufferUpload[i]->Map(0, &readRange, reinterpret_cast<void**>(&m_bufferGPUAddress[i]));
-		CHECK_HR(result);
+		CHECK_HR(m_bufferUpload[i]->Map(0, &readRange, reinterpret_cast<void**>(&m_bufferGPUAddress[i])));
 		memcpy(m_bufferGPUAddress[i], &data, sizeOfData);
+		m_bufferUpload[i]->Unmap(0, &readRange);
+		//m_bufferUpload[i]->Unmap(0, nullptr);
 	}
 }

@@ -60,7 +60,7 @@ Game::Impl::Impl(Engine& engine) :
 	Object& sponzaObj = reg.emplace<Object>(entity);
 	sponzaObj.m_name = "Sponza Atrium";
 
-    //reg.emplace<Model>(entity, engine.GetModelHandler().LoadModel(L"Models/BlenderSponzaAtriumOld.fbx", "Sponza Atrium"));
+    reg.emplace<Model>(entity, engine.GetModelHandler().LoadModel(L"Models/BlenderSponzaAtriumOld.fbx", "Sponza Atrium"));
 	
 	auto waterPlane = engine.GetSceneManager().GetCurrentScene().CreateBasicEntity("WaterPlane");
 	Model waterModel = reg.emplace<Model>(waterPlane, engine.GetModelHandler().LoadModel(L"Models/WaterPlane.fbx", "Water Plane"));
@@ -95,7 +95,7 @@ Game::Impl::Impl(Engine& engine) :
 		entt::entity point = m_engine.GetSceneManager().GetCurrentScene().CreateBasicEntity("PointLight");
 		PointLight& light = reg.emplace<PointLight>(point);
 		light.m_color = { 1.0f - (i/10.0f), 0.0f, 0.0f + (i /10.f), 1.0f };
-		light.m_range = 10.0f;
+		light.m_range = 0.1f;
 
 		Transform& lightTransform = reg.get<Transform>(point);
 		lightTransform.m_position = { 0.0f, 5.0f, -5.0f + i };
