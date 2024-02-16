@@ -21,6 +21,7 @@
 #include "Components/DirectionalLight.h"
 
 #include "Screen Rendering/GBuffer.h"
+#include "Screen Rendering/LightHandler.h"
 #include "Screen Rendering/DirectionalShadowMapping.h"
 
 #include "Camera.h"
@@ -44,11 +45,11 @@ public:
 	void RenderImgui();
 
 	void BeginFrame();
-	void RenderFrame(TextureHandler& textureHandler, ModelHandler& modelHandler, ModelEffectHandler& effectHandler,
+	void RenderFrame(LightHandler& lightHandler, TextureHandler& textureHandler, ModelHandler& modelHandler, ModelEffectHandler& effectHandler,
 		SpriteHandler& SpriteHandler, Skybox& skybox, Scene& scene/*Camera, Ligthing, GameObjects, etc...*/);
 
 private:
-	void RenderScene(TextureHandler& textureHandler, SpriteHandler& spriteHandler, ModelHandler& modelHandler, ModelEffectHandler& effectHandler, Scene& scene, Skybox& skybox);
+	void RenderScene(LightHandler& lightHandler, TextureHandler& textureHandler, SpriteHandler& spriteHandler, ModelHandler& modelHandler, ModelEffectHandler& effectHandler, Scene& scene, Skybox& skybox);
 
 	void Update3DInstances(Scene& scene, ModelHandler& modelHandler, ModelEffectHandler& effectHandler);
 	void Update2DInstances(Scene& scene, SpriteHandler& spriteHandler);
@@ -180,16 +181,16 @@ void RenderManager::Impl::BeginFrame()
 
 // DirectX12Framework pipeline needs to be fully reworked it seems >:(
 
-void RenderManager::Impl::Impl::RenderFrame(TextureHandler& textureHandler, ModelHandler& modelHandler, ModelEffectHandler& effectHandler,
+void RenderManager::Impl::Impl::RenderFrame(LightHandler& lightHandler, TextureHandler& textureHandler, ModelHandler& modelHandler, ModelEffectHandler& effectHandler,
 	 SpriteHandler& spriteHandler, Skybox& skybox, Scene& scene)
 {	
 	ImGui::Render();
-	RenderScene(textureHandler, spriteHandler, modelHandler, effectHandler, scene, skybox);
+	RenderScene(lightHandler, textureHandler, spriteHandler, modelHandler, effectHandler, scene, skybox);
 
 	ClearAllInstances(modelHandler, spriteHandler);
 }
 
-void RenderManager::Impl::RenderScene(TextureHandler& textureHandler, SpriteHandler& spriteHandler, ModelHandler& modelHandler, ModelEffectHandler& effectHandler, Scene& scene, Skybox& skybox)
+void RenderManager::Impl::RenderScene(LightHandler& lightHandler, TextureHandler& textureHandler, SpriteHandler& spriteHandler, ModelHandler& modelHandler, ModelEffectHandler& effectHandler, Scene& scene, Skybox& skybox)
 {
 	ID3D12GraphicsCommandList* cmdList = m_framework.CurrentFrameResource()->CmdList();
 
@@ -349,7 +350,7 @@ void RenderManager::Impl::RenderScene(TextureHandler& textureHandler, SpriteHand
 		
 		cmdList->SetPipelineState(m_pipeLineHandler.GetPSO(PIPELINE_STATE_POINT_LIGHT));
 		cmdList->SetGraphicsRootDescriptorTable(0, defaultHandle);
-		m_mainRenderer.RenderPointLights(cmdList, scene.Registry(), frameIndex, startLocation += 1);
+		m_mainRenderer.RenderPointLights(cmdList, lightHandler, scene.Registry(), frameIndex, startLocation += 1);
 
 	} //* Render scene Ligthing end
 
@@ -544,9 +545,9 @@ void RenderManager::BeginFrame()
 	m_Impl->BeginFrame();
 }
 
-void RenderManager::RenderFrame(TextureHandler& textureHandler, ModelHandler& modelHandler, ModelEffectHandler& effectHandler, SpriteHandler& SpriteHandler, Skybox& skybox, Scene& scene)
+void RenderManager::RenderFrame(LightHandler& lightHandler, TextureHandler& textureHandler, ModelHandler& modelHandler, ModelEffectHandler& effectHandler, SpriteHandler& SpriteHandler, Skybox& skybox, Scene& scene)
 {
-	m_Impl->RenderFrame(textureHandler, modelHandler, effectHandler, SpriteHandler, skybox, scene);
+	m_Impl->RenderFrame(lightHandler, textureHandler, modelHandler, effectHandler, SpriteHandler, skybox, scene);
 }
 
 

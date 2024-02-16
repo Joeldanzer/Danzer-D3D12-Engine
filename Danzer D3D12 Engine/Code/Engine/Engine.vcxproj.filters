@@ -75,6 +75,7 @@
     <ClCompile Include="Rendering\Models\ModelEffectHandler.cpp" />
     <ClCompile Include="Rendering\Buffers\EffectShaderBuffer.cpp" />
     <ClCompile Include="Rendering\Buffers\PointLightBuffer.cpp" />
+    <ClCompile Include="Rendering\Screen Rendering\LightHandler.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Core\DirectX12Framework.h">
@@ -173,5 +174,6 @@
     <ClInclude Include="Components\WaterPlaneBufferData.h" />
     <ClInclude Include="Components\PointLight.h" />
     <ClInclude Include="Rendering\Buffers\PointLightBuffer.h" />
+    <ClInclude Include="Rendering\Screen Rendering\LightHandler.h" />
   </ItemGroup>
 </Project>

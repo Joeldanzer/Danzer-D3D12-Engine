@@ -158,6 +158,7 @@
     <ClInclude Include="Components\WaterPlaneBufferData.h" />
     <ClInclude Include="Core\DesriptorHeapWrapper.h" />
     <ClInclude Include="Core\D3D12Framework.h" />
+    <ClInclude Include="Rendering\Screen Rendering\LightHandler.h" />
     <ClInclude Include="Rendering\Buffers\PointLightBuffer.h" />
     <ClInclude Include="Rendering\Buffers\EffectShaderBuffer.h" />
     <ClInclude Include="Rendering\Models\ModelEffectData.h" />
@@ -226,6 +227,7 @@
     <ClCompile Include="Core\input.cpp" />
     <ClCompile Include="Core\DesriptorHeapWrapper.cpp" />
     <ClCompile Include="Core\D3D12Framework.cpp" />
+    <ClCompile Include="Rendering\Screen Rendering\LightHandler.cpp" />
     <ClCompile Include="Rendering\Buffers\PointLightBuffer.cpp" />
     <ClCompile Include="Rendering\Buffers\EffectShaderBuffer.cpp" />
     <ClCompile Include="Rendering\Models\ModelEffectHandler.cpp" />

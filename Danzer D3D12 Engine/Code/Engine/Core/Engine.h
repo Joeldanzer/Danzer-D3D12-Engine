@@ -11,6 +11,7 @@ class CollisionManager;
 class Skybox;
 class D3D12Framework;
 class ModelEffectHandler;
+class LightHandler;
 
 class Engine
 {
@@ -37,6 +38,7 @@ public:
 	TextureHandler&		GetTextureHandler()	    const noexcept;
 	CollisionManager&	GetCollisionManager()   const noexcept;
 	ModelEffectHandler& GetModelEffectHandler() const noexcept;
+	LightHandler&		GetLightHandler()       const noexcept;
 	
 
 private:

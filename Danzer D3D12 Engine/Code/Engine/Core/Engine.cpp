@@ -11,6 +11,7 @@
 #include "Rendering/RenderManager.h"
 #include "Rendering/Models/ModelHandler.h"
 #include "Rendering/Models/ModelEffectHandler.h"
+#include "Rendering/Screen Rendering/LightHandler.h"
 #include "Scene.h"
 #include "FrameTimer.h"
 #include "Rendering/2D/SpriteHandler.h"
@@ -45,6 +46,7 @@ public:
 	TextureHandler&		GetTextureHandler()	    noexcept;
 	CollisionManager&   GetCollisionManager()   noexcept;
 	ModelEffectHandler& GetModelEffectHandler() noexcept;
+	LightHandler&		GetLightHandler()	    noexcept;
 
 private:
 	WindowHandler m_windowHandler;
@@ -57,6 +59,7 @@ private:
 	TextureHandler m_textureHandler;
 	CollisionManager m_collisionManager;
 	ModelEffectHandler m_modelEffectHandler;
+	LightHandler m_lightHandler;
 	FrameTimer m_frameTimer;
 	Skybox m_skybox;
 	
@@ -73,6 +76,7 @@ Engine::Impl::Impl(unsigned int width, unsigned int height) :
 	m_modelHandler(m_framework, m_textureHandler),
 	m_modelEffectHandler(m_framework),
 	m_spriteHandler(m_framework, m_textureHandler),
+	m_lightHandler(m_framework),
 	m_sceneManager(),
 	m_collisionManager(),
 	m_camera(65.f, (float)m_windowHandler.WindowData().m_w / (float)m_windowHandler.WindowData().m_h),
@@ -141,7 +145,7 @@ void Engine::Impl::MidUpdate()
 	//m_sceneManager.GetCurrentScene()->UpdateAllObjectsInScene(deltaTime);
 	//m_collisionManager.UpdateCollisions(m_sceneManager.GetCurrentScene()->GetObjects());
 	m_sceneManager.GetCurrentScene().UpdateTransforms();
-	m_renderManager.RenderFrame(m_textureHandler, m_modelHandler, m_modelEffectHandler, m_spriteHandler, m_skybox, m_sceneManager.GetCurrentScene());
+	m_renderManager.RenderFrame(m_lightHandler, m_textureHandler, m_modelHandler, m_modelEffectHandler, m_spriteHandler, m_skybox, m_sceneManager.GetCurrentScene());
 }
 
 void Engine::Impl::LateUpdate()
@@ -227,6 +231,10 @@ ModelEffectHandler& Engine::GetModelEffectHandler() const noexcept
 {
 	return m_Impl->GetModelEffectHandler();
 }
+LightHandler& Engine::GetLightHandler() const noexcept
+{
+	return m_Impl->GetLightHandler();
+}
 const float Engine::Impl::GetFPS() noexcept
 {
 	return m_frameTimer.GetRealFrameRate();
@@ -271,4 +279,9 @@ CollisionManager& Engine::Impl::GetCollisionManager() noexcept
 ModelEffectHandler& Engine::Impl::GetModelEffectHandler() noexcept
 {
 	return m_modelEffectHandler;
+}
+
+LightHandler& Engine::Impl::GetLightHandler() noexcept
+{
+	return m_lightHandler;
 }

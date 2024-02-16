@@ -1,6 +1,5 @@
 #include "stdafx.h"
 #include "ModelEffectHandler.h"
-#include "Core/D3D12Framework.h"
 #include "Rendering/PipelineStateHandler.h"
 #include "Rendering/Screen Rendering/GBuffer.h"
 #include "Core/WindowHandler.h"
@@ -12,9 +11,11 @@
 
 
 ModelEffectHandler::ModelEffectHandler(D3D12Framework& framework)
+	//: m_cbvWrapper(&framework.CbvSrvHeap())
 {
-	m_device = framework.GetDevice();
-
+	//m_device     = framework.GetDevice();
+	
+	m_framework = &framework;
 	CD3DX12_RESOURCE_DESC dtDesc(
 		D3D12_RESOURCE_DIMENSION_TEXTURE2D,
 		0,
@@ -31,7 +32,7 @@ ModelEffectHandler::ModelEffectHandler(D3D12Framework& framework)
 
 	CD3DX12_HEAP_PROPERTIES heap(D3D12_HEAP_TYPE_DEFAULT);
 
-	CHECK_HR(m_device->CreateCommittedResource(
+	CHECK_HR(m_framework->GetDevice()->CreateCommittedResource(
 		&heap,
 		D3D12_HEAP_FLAG_NONE,
 		&dtDesc,
@@ -43,20 +44,21 @@ ModelEffectHandler::ModelEffectHandler(D3D12Framework& framework)
 	//framework.CbvSrvHeap().GET_CPU_DESCRIPTOR() 
 	CD3DX12_CPU_DESCRIPTOR_HANDLE handle(framework.CbvSrvHeap().GetDescriptorHeap()->GetCPUDescriptorHandleForHeapStart());
 	handle.Offset(framework.CbvSrvHeap().m_handleCurrentOffset * framework.CbvSrvHeap().DESCRIPTOR_SIZE());
-	m_device->CreateShaderResourceView(m_depthTexture.Get(), nullptr, handle);
+	m_framework->GetDevice()->CreateShaderResourceView(m_depthTexture.Get(), nullptr, handle);
 	//m_device->CreateDepthStencilView(m_depthTexture.Get(), nullptr, handle);
 	m_depthTexture->SetName(L"Model Effect Depth Texture");
 	m_depthTextureOffset = framework.CbvSrvHeap().m_handleCurrentOffset;
 	framework.CbvSrvHeap().m_handleCurrentOffset++;
 }
 ModelEffectHandler::~ModelEffectHandler(){
-	m_device = nullptr;
+	m_framework = nullptr;
+	//m_device = nullptr;
 	m_modelEffects.clear();
 }
 
 ModelEffect ModelEffectHandler::CreateModelEffect(std::wstring shaderName, const UINT model, void* bufferData, const UINT sizeOfData, std::vector<UINT> textures, bool transparent)
-{
-	m_modelEffects.emplace_back(ModelEffectData(model, textures));
+{	
+	m_modelEffects.emplace_back(ModelEffectData(model, textures, bufferData ? true : false, *m_framework));
 	ModelEffectData& effectData = m_modelEffects[m_modelEffects.size() - 1];
 
 	// Create rootsignature and the buffers/textures that will be used for this effect
@@ -66,9 +68,9 @@ ModelEffect ModelEffectHandler::CreateModelEffect(std::wstring shaderName, const
 	CD3DX12_DESCRIPTOR_RANGE cbvDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
 	rootParameter[rootParameter.size() - 1].InitAsDescriptorTable(1, &cbvDescriptorRange);
 
-	if (bufferData) { 
-		memcpy(&effectData.m_bufferData, bufferData, sizeOfData); // Copy the buffer data, perhaps want to save this as a pointer instead to freely change in runtime
-		effectData.m_sizeOfData = sizeOfData;
+	if (bufferData) {
+		//effectData.m_buffer.Init(m_framework->GetDevice(), &m_framework->CbvSrvHeap(), effectData.m_buffer.FetchData(), sizeof(EffectShaderBuffer::Data));
+		memcpy(&effectData.m_bufferData, bufferData, sizeOfData);
 		rootParameter.emplace_back(CD3DX12_ROOT_PARAMETER());
 		CD3DX12_DESCRIPTOR_RANGE bufferDescRanger(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);
 		rootParameter[rootParameter.size() - 1].InitAsDescriptorTable(1, &bufferDescRanger);
@@ -91,7 +93,7 @@ ModelEffect ModelEffectHandler::CreateModelEffect(std::wstring shaderName, const
 
 	HRESULT result = D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error);
 	CHECK_HR(result);
-	CHECK_HR(m_device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&effectData.m_rootSignature)));
+	CHECK_HR(m_framework->GetDevice()->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&effectData.m_rootSignature)));
 
 	effectData.m_rootSignature->SetName(std::wstring(shaderName + L" Root Signature").c_str());
 
@@ -106,7 +108,7 @@ ModelEffect ModelEffectHandler::CreateModelEffect(std::wstring shaderName, const
 	};
 
 	// Blend for Albedo & Normal
-	D3D12_BLEND_DESC blendDesc		  = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+	D3D12_BLEND_DESC blendDesc = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
 	for (UINT i = 0; i < 1; i++)
 	{
 		blendDesc.RenderTarget[i].BlendEnable = true;
@@ -160,7 +162,7 @@ ModelEffect ModelEffectHandler::CreateModelEffect(std::wstring shaderName, const
 	psoDesc.InputLayout.NumElements        = PipelineStateHandler::s_inputLayouts[INPUT_LAYOUT_INSTANCE_FORWARD].size();
 	psoDesc.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
 
-	CHECK_HR(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&effectData.m_pipelineState)));
+	CHECK_HR(m_framework->GetDevice()->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&effectData.m_pipelineState)));
 
 	effectData.m_pipelineState->SetName(L"Effect Model PSO");
 

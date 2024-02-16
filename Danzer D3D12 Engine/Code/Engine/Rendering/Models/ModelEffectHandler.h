@@ -5,6 +5,7 @@
 #include <vector>
 
 class D3D12Framework;
+class DescriptorHeapWrapper;
 
 class ModelEffectHandler
 {	
@@ -39,7 +40,7 @@ public:
 	}
 
 private:	
-	ID3D12Device* m_device;
+	D3D12Framework* m_framework;
 	ComPtr<ID3D12Resource> m_depthTexture;
 	UINT m_depthTextureOffset;
 

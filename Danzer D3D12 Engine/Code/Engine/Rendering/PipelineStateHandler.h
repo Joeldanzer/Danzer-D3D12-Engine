@@ -90,6 +90,5 @@ private:
 
 	std::array<ComPtr<ID3D12PipelineState>, PIPELINE_COUNT> m_PSObjects;
 	std::array<ComPtr<ID3D12RootSignature>, ROOTSIGNATURE_COUNT> m_rootSignatures;
-
 };
 
