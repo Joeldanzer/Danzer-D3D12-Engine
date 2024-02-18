@@ -88,19 +88,19 @@ Game::Impl::Impl(Engine& engine) :
 	waterData.m_edgeColor	      = { 1.0f, 1.0f, 1.0f };
 	reg.emplace<ModelEffect>(waterPlane, engine.GetModelEffectHandler().CreateModelEffect(L"WaterPlane", waterModel.m_modelID, &waterData, sizeof(WaterPlaneData), textures, true));
 	Transform& waterTransform = reg.get<Transform>(waterPlane);
-	waterTransform.m_position = { 0.0f, 4.0f, 0.0f };
+	waterTransform.m_position = { 0.0f, 0.5f, 0.0f };
 	waterTransform.m_scale	  = { 1.0f, 1.0f, 1.5f };
 
-	for (UINT i = 1; i < 12; i++)
-	{
-		entt::entity point = m_engine.GetSceneManager().GetCurrentScene().CreateBasicEntity("PointLight");
-		PointLight& light = reg.emplace<PointLight>(point, m_engine.GetLightHandler().CreatePointLight());
-		light.m_color = { 1.0f - (i/10.0f), 0.0f, (i /10.f), 1.0f };
-		light.m_range = 1.0f;
-		
-		Transform& lightTransform = reg.get<Transform>(point);
-		lightTransform.m_position = { 0.0f, 5.0f, -5.0f + i };
-	}
+	//for (UINT i = 1; i < 12; i++)
+	//{
+	//	entt::entity point = m_engine.GetSceneManager().GetCurrentScene().CreateBasicEntity("PointLight");
+	//	PointLight& light = reg.emplace<PointLight>(point, m_engine.GetLightHandler().CreatePointLight());
+	//	light.m_color = { 1.0f - (i/10.0f), 0.0f, (i /10.f), 1.0f };
+	//	light.m_range = 1.0f;
+	//	
+	//	Transform& lightTransform = reg.get<Transform>(point);
+	//	lightTransform.m_position = { 0.0f, 5.0f, -5.0f + i };
+	//}
 }	
 
 Game::Impl::~Impl(){}

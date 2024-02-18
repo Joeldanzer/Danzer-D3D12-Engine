@@ -2,7 +2,9 @@
 
 float GetAmbientOcclusion(VertexToPixel input)
 {
-    return aoTexture.Sample(defaultSampler, input.m_uv).r;
+    float4 ao = aoTexture.Sample(defaultSampler, input.m_uv);
+    ao.r = ao.w == 0.0f ? 1.0f : ao.r;
+    return ao.r;
 }
 
 float GetEmissive(VertexToPixel input)
@@ -28,17 +30,13 @@ float GetHeight(VertexToPixel input)
 
 float4 GetNormal(VertexToPixel input)
 {
-    float4 normal = normalTexture.Sample(defaultSampler, input.m_uv);
+    float4 normal = normalTexture.Sample(defaultSampler, input.m_uv.xy);
+    float3 normalAO = float3(normal.xy, 0.0f);
+    normalAO.xy = (normalAO * 2.f) - 1.f;
+    normalAO.z = sqrt(1 - saturate(normalAO.x * normalAO.x + normalAO.y * normalAO.y));
+    
     float3x3 tangentspacematrix = float3x3(normalize(input.m_tangent.xyz), normalize(input.m_biNormal.xyz), normalize(input.m_normal.xyz));
-    tangentspacematrix = transpose(tangentspacematrix);
-    
-    //float3 normalAO = (normal.xy, 0.f);
-    //normalAO.z = sqrt(1 - saturate(normalAO.x * normalAO.x + normalAO.y * normalAO.y));
-    //normalAO = normalize(normalAO);
-    
-    float3 normalAO = normal.xyz;
-    normalAO.xyz = normalAO * 2.f - 1.f; 
-    normalAO = mul(tangentspacematrix, normalAO.xyz);
+    normalAO = mul(normalAO.xyz, tangentspacematrix);
     normalAO = normalize(normalAO);
     
     float4 output;

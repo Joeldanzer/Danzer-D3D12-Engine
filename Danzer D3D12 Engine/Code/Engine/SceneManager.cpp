@@ -19,7 +19,7 @@ void SceneManager::Init(Camera& cam)
 
 	SetScene("default", entity, false);
 	entt::entity dirLight = scene.CreateBasicEntity("DirectionalLight", "Light");
-	scene.Registry().emplace<DirectionalLight>(dirLight, DirectionalLight({ 1.f, 1.f, 1.f, 5.0f }, {1.f, 1.0f, 1.f, 2.0f}));	
+	scene.Registry().emplace<DirectionalLight>(dirLight, DirectionalLight({ 1.f, 1.f, 1.0f, 2.0f }, {1.0f, 1.0f, 1.0f, 1.0f}));	
 	Transform& lightTransform  = scene.Registry().get<Transform>(dirLight);
 	lightTransform.m_rotation  = Quat4f::CreateFromAxisAngle({ 1.0f, 0.0f, 0.0f },  ToRadians(70.0f));//Quat4f::CreateFromYawPitchRoll({ -65.0f, 40.0f, 0.0f });
 	lightTransform.m_rotation *= Quat4f::CreateFromAxisAngle({ 0.0f, 1.0f, 0.0f },  ToRadians(45.0f));//Quat4f::CreateFromYawPitchRoll({ -65.0f, 40.0f, 0.0f });

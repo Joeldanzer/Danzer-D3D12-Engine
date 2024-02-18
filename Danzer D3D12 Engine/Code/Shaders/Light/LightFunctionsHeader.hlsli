@@ -247,7 +247,6 @@ float GeometrySmith(float3 N, float3 V, float3 L, float k)
     return ggx1 * ggx2;
 }
 
-
 float3 EvaluateAmbience(TextureCube cubeMap, SamplerState defaultSampler, float3 vN, float3 org_normal, float3 to_cam, float perceptualRoughness, float metalness, float3 albedo, float ao, float3 dfcol, float3 spccol, float4 ambientStr)
 {
     int numMips = GetNumMips(cubeMap);
@@ -259,9 +258,8 @@ float3 EvaluateAmbience(TextureCube cubeMap, SamplerState defaultSampler, float3
     float RdotNsat = saturate(dot(vN, vR));
     
     float l = BurleyToMip(perceptualRoughness, numMips, RdotNsat);
-    
-    float3 specRad = cubeMap.SampleLevel(defaultSampler, vR, l).rgb * ambientStr.w;
-    float3 diffRad = cubeMap.SampleLevel(defaultSampler, vN, (float) (nrBrdfMips - 1)).rgb * ambientStr.w;
+    float3 specRad = cubeMap.SampleLevel(defaultSampler, vR, numMips).rgb * ambientStr.w;
+    float3 diffRad = cubeMap.SampleLevel(defaultSampler, vN, numMips).rgb * ambientStr.w;
     
     specRad *= ambientStr.rgb;
     diffRad *= ambientStr.rgb;
@@ -275,32 +273,49 @@ float3 EvaluateAmbience(TextureCube cubeMap, SamplerState defaultSampler, float3
     fFade *= EmpiricalSpecularAO(ao, perceptualRoughness);
     fFade *= ApproximateSpecularSelfOcclusion(vR, org_normal);
     
-    float3 ambientdiffuse = ao * dfcol * diffRad;
-    float3 ambientspecular = fFade * spccol * specRad;
+    float3 ambientdiffuse = dfcol * diffRad;
+    float3 ambientspecular = ao * fFade * spccol * specRad;
     return ambientdiffuse + ambientspecular;
 }
 
 float3 EvaluateDirectionalLight(float3 albedoColor, float3 specularColor, float3 normal, float roughness, float3 lightColor, float3 lightDir, float3 viewDir, float metallic)
 {
     float PI = PI_MACRO;
-    float NdL = saturate(max(dot(normal, lightDir), 0.0f));
+    float NdL = saturate(dot(normal, lightDir));
     float lambert = NdL;
     float3 h = normalize(viewDir + lightDir);
     float NdH = saturate(dot(normal, h));
-   
-    float  D = DistributionGGX(NdH, roughness);
-    float  G = GeometrySmith(normal, viewDir, lightDir, roughness);
-    float3 F = FresnelSchlick(max(dot(h, viewDir), 0.0f), specularColor);
     
-    float3 kS = F;
-    float3 kD = float3(1.0f, 1.0f, 1.0f) - kS;
-    kD *= 1.0f - metallic;
+    float cosTheta = dot(lightDir, normal);
     
-    float3 numerator = D * G * F;
-    float denominator = 4.0f * max(dot(normal, viewDir), 0.0f) * max(dot(normal, lightDir), 0.0f) + 0.0001f;
-    float specular = numerator / denominator;
+    float D = DistributionGGX(NdH, roughness);
+    float G = GeometrySmith(normal, viewDir, lightDir, roughness);
+    float3 F = FresnelSchlick(cosTheta, specularColor);
+  
+    float3 specular = ((D * G * F) / 4.f * dot(normal, lightDir) * dot(normal, viewDir));
+    float3 diffuse = max(dot(normal, lightDir), 0.0f) * albedoColor;
+    diffuse *= 1.f / PI;
     
-    float3 value = float3(0.0f, 0.0f, 0.0f);
-    value = (kD * albedoColor / PI + specular) * lightColor.rgb * NdL;
-    return value;
+    return lightColor * lambert * (diffuse * (1.0f - specular) + specular) * PI;
+    
+    //float NdL = saturate(max(dot(normal, lightDir), 0.0f));
+    //float lambert = NdL;
+    //float3 h = normalize(viewDir + lightDir);
+    //float NdH = saturate(dot(normal, h));
+    //
+    //float  D = DistributionGGX(NdH, roughness);
+    //float  G = GeometrySmith(normal, viewDir, lightDir, roughness);
+    //float3 F = FresnelSchlick(max(dot(h, viewDir), 0.0f), specularColor);
+    //
+    //float3 kS = F;
+    //float3 kD = float3(1.0f, 1.0f, 1.0f) - kS;
+    //kD *= 1.0f - metallic;
+    //
+    //float3 numerator = D * G * F;
+    //float denominator = 4.0f * max(dot(normal, viewDir), 0.0f) * max(dot(normal, lightDir), 0.0f) + 0.0001f;
+    //float specular = numerator / denominator;
+    //
+    //float3 value = float3(0.0f, 0.0f, 0.0f);
+    //value = (kD * albedoColor / PI + specular) * lightColor.rgb * NdL;
+    //return value;
 }
