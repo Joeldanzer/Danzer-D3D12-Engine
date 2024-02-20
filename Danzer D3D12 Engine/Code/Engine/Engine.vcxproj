@@ -214,6 +214,8 @@
     <ClInclude Include="Components\Collision\SphereCollider.h" />
     <ClInclude Include="Rendering\Screen Rendering\ScreenTexture.h" />
     <ClInclude Include="ShaderEffectRenderer.h" />
+    <ClInclude Include="Rendering\Screen Rendering\SSAOTexture.h" />
+    <ClInclude Include="Rendering\Buffers\SSAOBuffer.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="Rendering\Buffers\TransformBuffer.h" />
     <ClInclude Include="Rendering\Buffers\VertexBuffer.h" />
@@ -264,6 +266,8 @@
     <ClCompile Include="SceneManager.cpp" />
     <ClCompile Include="Rendering\Screen Rendering\ScreenTexture.cpp" />
     <ClCompile Include="ShaderEffectRenderer.cpp" />
+    <ClCompile Include="Rendering\Screen Rendering\SSAOTexture.cpp" />
+    <ClCompile Include="Rendering\Buffers\SSAOBuffer.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>

@@ -76,6 +76,8 @@
     <ClCompile Include="Rendering\Buffers\EffectShaderBuffer.cpp" />
     <ClCompile Include="Rendering\Buffers\PointLightBuffer.cpp" />
     <ClCompile Include="Rendering\Screen Rendering\LightHandler.cpp" />
+    <ClCompile Include="Rendering\Screen Rendering\SSAOTexture.cpp" />
+    <ClCompile Include="Rendering\Buffers\SSAOBuffer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Core\DirectX12Framework.h">
@@ -175,5 +177,7 @@
     <ClInclude Include="Components\PointLight.h" />
     <ClInclude Include="Rendering\Buffers\PointLightBuffer.h" />
     <ClInclude Include="Rendering\Screen Rendering\LightHandler.h" />
+    <ClInclude Include="Rendering\Screen Rendering\SSAOTexture.h" />
+    <ClInclude Include="Rendering\Buffers\SSAOBuffer.h" />
   </ItemGroup>
 </Project>

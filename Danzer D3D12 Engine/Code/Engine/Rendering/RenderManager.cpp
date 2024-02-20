@@ -23,6 +23,7 @@
 #include "Screen Rendering/GBuffer.h"
 #include "Screen Rendering/LightHandler.h"
 #include "Screen Rendering/DirectionalShadowMapping.h"
+#include "Screen Rendering/SSAOTexture.h"
 
 #include "Camera.h"
 
@@ -36,7 +37,7 @@
 
 class RenderManager::Impl {
 public:
-	Impl(D3D12Framework& framework);
+	Impl(D3D12Framework& framework, TextureHandler& TextureHandler);
 	~Impl();
 
 	D3D12Framework& GetFramework() { return m_framework; }
@@ -66,7 +67,9 @@ private:
 	
 	D3D12Framework& m_framework;
 
-	DirectionalShadowMapping* m_shadowMap;
+	DirectionalShadowMapping m_shadowMap;
+	SSAOTexture m_ssao;
+
 	
 
 	//std::priority_queue<TransparentObject, std::vector<TransparentObject>, >
@@ -81,16 +84,17 @@ private:
 };
 
 
-RenderManager::Impl::Impl::Impl(D3D12Framework& framework) : 
+RenderManager::Impl::Impl(D3D12Framework& framework, TextureHandler& textureHandler) :
 	m_framework(framework),
-	m_gBuffer(framework)
+	m_gBuffer(framework),
+	m_shadowMap(),
+	m_ssao()
 {
 	m_2dRenderer.Init(framework);
 	m_mainRenderer.Init(framework);
 	m_pipeLineHandler.Init(framework);
 
-	m_shadowMap = new DirectionalShadowMapping();
-	m_shadowMap->InitTexture(
+	m_shadowMap.InitAsDepth(
 		framework.GetDevice(),
 		&framework.CbvSrvHeap(),
 		&framework.DSVHeap(),
@@ -101,16 +105,28 @@ RenderManager::Impl::Impl::Impl(D3D12Framework& framework) :
 		D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL,
 		L"Shadow Map Buffer: "
 	);
-	m_shadowMap->CreateProjection(32.0f, 8.f);
+	m_shadowMap.CreateProjection(32.0f, 8.f);
 
+	m_ssao.InitAsTexture(
+		framework.GetDevice(),
+		&framework.CbvSrvHeap(),
+		&framework.RTVHeap(),
+		WindowHandler::WindowData().m_w, 
+		WindowHandler::WindowData().m_h, 
+		DXGI_FORMAT_R16G16B16A16_FLOAT,
+		DXGI_FORMAT_R16G16B16A16_FLOAT,
+		D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET,
+		L"SSAO Texture Buffer"
+	);
+	m_ssao.InitializeSSAO(framework, textureHandler, 64, 64);
 }
-RenderManager::Impl::Impl::~Impl(){
+RenderManager::Impl::~Impl(){
 
 	m_mainRenderer.~Renderer();
 	m_pipeLineHandler.~PipelineStateHandler();
 }
 
-void RenderManager::Impl::Impl::RenderImgui()
+void RenderManager::Impl::RenderImgui()
 {
 	ID3D12DescriptorHeap* descHeaps[] = { m_framework.m_imguiDesc };
 	m_framework.m_frameResources[m_framework.m_frameIndex]->CmdList()->SetDescriptorHeaps(
@@ -135,15 +151,18 @@ void RenderManager::Impl::BeginFrame()
 	{
 		m_framework.QeueuResourceTransition(&m_gBuffer.GetGbufferResources()[0], GBUFFER_COUNT, 
 			D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET);
-
+	
 		ID3D12Resource* rtv[] = { m_framework.GetCurrentRTV() };
 		m_framework.QeueuResourceTransition(&rtv[0], 1,
 			D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET
 		);
-		ID3D12Resource* shadow[] = { m_shadowMap->GetResource(m_framework.m_frameIndex) };
+		ID3D12Resource* shadow[] = { m_shadowMap.GetResource(m_framework.m_frameIndex) };
 		m_framework.QeueuResourceTransition(&shadow[0], 1,
 			D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_DEPTH_WRITE);
 		
+		ID3D12Resource* srvToRTV[] = {m_ssao.GetResource(m_framework.m_frameIndex)};
+		m_framework.QeueuResourceTransition(&srvToRTV[0], _countof(srvToRTV), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET);
+
 		m_framework.TransitionAllResources();
 	}
 
@@ -156,8 +175,8 @@ void RenderManager::Impl::BeginFrame()
 			dsvHandle,
 			D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr
 		);
-		dsvHandle.Offset((m_shadowMap->DSVOffsetID() + m_framework.m_frameIndex) * m_framework.DSVHeap().DESCRIPTOR_SIZE());
-		cmdList->RSSetViewports(1, &m_shadowMap->GetViewPort());
+		dsvHandle.Offset((m_shadowMap.DSVOffsetID() + m_framework.m_frameIndex) * m_framework.DSVHeap().DESCRIPTOR_SIZE());
+		cmdList->RSSetViewports(1, &m_shadowMap.GetViewPort());
 		cmdList->ClearDepthStencilView(
 			dsvHandle, 
 			D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr
@@ -176,12 +195,17 @@ void RenderManager::Impl::BeginFrame()
 			1,
 			&m_framework.m_scissorRect
 		);
+
+		rtvHandle = m_framework.RTVHeap().GET_CPU_DESCRIPTOR(0);
+		rtvHandle.Offset((m_ssao.RTVOffsetID() + m_framework.m_frameIndex) * m_framework.RTVHeap().DESCRIPTOR_SIZE());
+		cmdList->ClearRenderTargetView(rtvHandle, &ClearColor[0], 0, nullptr);
+		
 	}
 }
 
 // DirectX12Framework pipeline needs to be fully reworked it seems >:(
 
-void RenderManager::Impl::Impl::RenderFrame(LightHandler& lightHandler, TextureHandler& textureHandler, ModelHandler& modelHandler, ModelEffectHandler& effectHandler,
+void RenderManager::Impl::RenderFrame(LightHandler& lightHandler, TextureHandler& textureHandler, ModelHandler& modelHandler, ModelEffectHandler& effectHandler,
 	 SpriteHandler& spriteHandler, Skybox& skybox, Scene& scene)
 {	
 	ImGui::Render();
@@ -212,13 +236,7 @@ void RenderManager::Impl::RenderScene(LightHandler& lightHandler, TextureHandler
 		Vect3f dir = dirLightTransform.m_world.Forward();
 		directionaLightdir = { dir.x, dir.y, dir.z, 1.0f };
 	}
-	//Vect3f dirPos = dirLightTransform.m_position;
-	//float scale = 200.0f;
-	//m_shadowMap.GetProjectionMatrix() = DirectX::XMMatrixOrthographicOffCenterLH(dirPos.x - scale, dirPos.x + scale, dirPos.y - scale, dirPos.y + scale, dirPos.z - scale, dirPos.z + scale);
-
-	//dirLightTransform.World() =  DirectX::XMMatrixLookAtLH(dirLightTransform.m_position, { 0.0f, 0.0f, 0.0f }, {1.0f, 0.0f, 0.0f});
-	//dirLightTransform.World() *= DirectX::XMMatrixTranslationFromVector(dirLightTransform.m_position);
-
+	
 	cmdList->SetDescriptorHeaps(1, &cbvSrvHeap);
 	
 	{ //* Scene to Gbuffer start
@@ -282,16 +300,16 @@ void RenderManager::Impl::RenderScene(LightHandler& lightHandler, TextureHandler
 	} //* Scene to Gbuffer end
 
 	{ //* Draw Shadow Data
-		CD3DX12_GPU_DESCRIPTOR_HANDLE shadowBuffer = m_mainRenderer.UpdateShadowMapBuffer(m_shadowMap->GetProjectionMatrix(), dirLightTransform, frameIndex);
+		CD3DX12_GPU_DESCRIPTOR_HANDLE shadowBuffer = m_mainRenderer.UpdateShadowMapBuffer(m_shadowMap.GetProjectionMatrix(), dirLightTransform, frameIndex);
 		cmdList->SetGraphicsRootDescriptorTable(0, shadowBuffer);
 		
 		cmdList->SetPipelineState(m_pipeLineHandler.GetPSO(PIPELINE_STATE_SHADOW));
 		cmdList->SetGraphicsRootSignature(m_pipeLineHandler.GetRootSignature(ROOTSIGNATURE_STATE_GBUFFER));
 		
-		m_shadowMap->SetModelsData(modelHandler.GetAllModels());
-		m_shadowMap->RenderTexture(cmdList, m_framework.DSVHeap(), frameIndex);
+		m_shadowMap.SetModelsData(modelHandler.GetAllModels());
+		m_shadowMap.RenderTexture(cmdList, m_framework.DSVHeap(), frameIndex);
 		
-		ID3D12Resource* shadow[] = { m_shadowMap->GetResource(frameIndex) };
+		ID3D12Resource* shadow[] = { m_shadowMap.GetResource(frameIndex) };
 		m_framework.QeueuResourceTransition(&shadow[0], 1,
 			D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 
@@ -327,6 +345,21 @@ void RenderManager::Impl::RenderScene(LightHandler& lightHandler, TextureHandler
 			startLocation
 		);
 
+		// SSAO Rendering
+		cmdList->SetGraphicsRootSignature(m_pipeLineHandler.GetRootSignature(ROOTSIGNATURE_STATE_SSAO));
+		cmdList->SetPipelineState(m_pipeLineHandler.GetPSO(PIPELINE_STATE_SSAO));
+		
+		cmdList->SetGraphicsRootDescriptorTable(0, m_mainRenderer.UpdateDefaultBuffers(cam, camTransform, frameIndex));
+		m_ssao.SetTextureAtSlot(cmdList, 3, m_gBuffer.GetGPUHandle(GBUFFER_WORLD_POSITION, &m_framework.CbvSrvHeap()));
+		m_ssao.SetTextureAtSlot(cmdList, 4, m_gBuffer.GetGPUHandle(GBUFFER_VERTEX_NORMAL,  &m_framework.CbvSrvHeap()));
+		m_ssao.SetTextureAtSlot(cmdList, 5, m_gBuffer.GetGPUHandle(GBUFFER_DEPTH,		   &m_framework.CbvSrvHeap()));
+		m_ssao.RenderSSAO(cmdList, m_framework.CbvSrvHeap(), textureHandler, frameIndex);
+		
+		ID3D12Resource* ssao[] = { m_ssao.GetResource(frameIndex) };
+		m_framework.QeueuResourceTransition(ssao, 1, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+		m_framework.TransitionAllResources();
+		// SSAO End
+
 		startLocation = 0;
 
 		cmdList->SetGraphicsRootSignature(m_pipeLineHandler.GetRootSignature(ROOTSIGNATURE_STATE_LIGHT));
@@ -335,7 +368,7 @@ void RenderManager::Impl::RenderScene(LightHandler& lightHandler, TextureHandler
 		cmdList->SetGraphicsRootDescriptorTable(startLocation, defaultHandle);
 		startLocation++;
 
-		D3D12_GPU_DESCRIPTOR_HANDLE lightHandle = m_mainRenderer.UpdateLightBuffer(m_shadowMap->GetProjectionMatrix(),
+		D3D12_GPU_DESCRIPTOR_HANDLE lightHandle = m_mainRenderer.UpdateLightBuffer(m_shadowMap.GetProjectionMatrix(),
 		dirLightTransform, directionalLight, directionaLightdir, m_framework.GetFrameIndex());
 		cmdList->SetGraphicsRootDescriptorTable(startLocation, lightHandle);
 		startLocation++;
@@ -343,7 +376,7 @@ void RenderManager::Impl::RenderScene(LightHandler& lightHandler, TextureHandler
 		m_mainRenderer.RenderDirectionalLight(
 			cmdList,
 			textureHandler.GetTextures()[skybox.GetCurrentActiveSkybox()[1] - 1],
-			*m_shadowMap,
+			m_shadowMap,
 			m_framework.GetFrameIndex(),
 			startLocation
 		);
@@ -530,9 +563,9 @@ void RenderManager::Impl::ClearAllInstances(ModelHandler& modelHandler, SpriteHa
 	m_rayInstances.clear();
 }
 
-RenderManager::RenderManager(D3D12Framework& framework)
+RenderManager::RenderManager(D3D12Framework& framework, TextureHandler& textureHandler)
 {
-	m_Impl = new Impl(framework);
+	m_Impl = new Impl(framework, textureHandler);
 }
 
 RenderManager::~RenderManager()

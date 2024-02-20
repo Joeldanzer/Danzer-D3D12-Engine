@@ -20,3 +20,4 @@ Texture2D worldPositionTexture : register(t5);
 Texture2D depthTexture         : register(t6);
 TextureCube skyboxTexture      : register(t7);
 Texture2D shadowMap            : register(t8);
+Texture2D ssaoTexture          : register(t9);

@@ -38,6 +38,8 @@ public:
 	void ClearRenderTargets(DescriptorHeapWrapper& rtvHeap, ID3D12GraphicsCommandList* cmdList, UINT numberOfRects, const D3D12_RECT* rect);
 	void AssignSRVSlots(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper* srvWrapper, UINT& startLocation);
 
+	CD3DX12_GPU_DESCRIPTOR_HANDLE GetGPUHandle(GBUFFER_TEXTURES texture, DescriptorHeapWrapper* srvWrapper);
+
 	struct Resource {
 		UINT m_offsetID = 0;
 		ComPtr<ID3D12Resource> m_resource;

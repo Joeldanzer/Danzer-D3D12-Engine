@@ -17,10 +17,12 @@ public:
 		return m_resource.Get();
 	}
 
-	CD3DX12_CPU_DESCRIPTOR_HANDLE GetRTVDescHandle() {
+	CD3DX12_CPU_DESCRIPTOR_HANDLE& GetCPUDescHandle() {
 		m_rtvDescriptor->GetCPUDescriptorHandleForHeapStart();
 	}
-
+	CD3DX12_GPU_DESCRIPTOR_HANDLE& GetGPUDescHandle() {
+		m_rtvDescriptor->GetGPUDescriptorHandleForHeapStart();
+	}
 
 private:
 
@@ -28,7 +30,5 @@ private:
 	ComPtr<ID3D12DescriptorHeap> m_srvDescriptor;
 
 	ComPtr<ID3D12Resource> m_resource;
-
-
 };
 

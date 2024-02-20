@@ -144,7 +144,6 @@ void Game::Impl::Update(const float dt)
 			cam.RenderTarget() = cam.RenderTarget() < 9 ? cam.RenderTarget() + 1 : 0;
 		}
 	}
-
 }
 
 Game::Game(Engine& engine) :

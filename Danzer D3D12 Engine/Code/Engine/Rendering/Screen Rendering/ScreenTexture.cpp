@@ -20,7 +20,6 @@ ScreenTexture::ScreenTexture(D3D12Framework& framework, DXGI_FORMAT format, UINT
 		result = device->CreateDescriptorHeap(&rtvDesc, IID_PPV_ARGS(&m_rtvDescriptor));
 		CHECK_HR(result);
 
-
 		D3D12_RESOURCE_DESC srvDesc = CD3DX12_RESOURCE_DESC::Tex2D(
 			format, width, height,
 			1, 1, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET
@@ -43,7 +42,6 @@ ScreenTexture::ScreenTexture(D3D12Framework& framework, DXGI_FORMAT format, UINT
 		UINT rtvDescSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 		UINT srvDescSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
-		//m_rtvHeapSize[i] = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvDescriptor->GetCPUDescriptorHandleForHeapStart());
 		CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(m_srvDescriptor->GetCPUDescriptorHandleForHeapStart());
 

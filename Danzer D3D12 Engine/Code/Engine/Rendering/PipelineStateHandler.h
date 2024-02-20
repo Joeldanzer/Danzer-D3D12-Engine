@@ -7,12 +7,17 @@
 class D3D12Framework;
 struct ID3D12Device;
 
+// NOTE: Pipelinestate handler needs to be reworked, It's gonna get bloated very fast
+// Current idea is that PipelineStateHandler works as any other Handler where it gives a id 
+// that we use to reference the specific pipeline being used. 
+
 enum PIPELINE_STATES {
 	PIPELINE_STATE_MODELS,
 	PIPELINE_STATE_GBUFFER,
 	PIPELINE_STATE_DIRECTIONAL_LIGHT,
 	PIPELINE_STATE_POINT_LIGHT,
 	PIPELINE_STATE_TRANSPARENT,
+	PIPELINE_STATE_SSAO,
 	PIPELINE_STATE_UI,
 	PIPELINE_STATE_FONT,
 	PIPELINE_STATE_SKYBOX,
@@ -26,6 +31,7 @@ enum PIPELINE_STATES {
 
 enum ROOTSINGATURE_STATES {
 	ROOTSIGNATURE_STATE_LIGHT,
+	ROOTSIGNATURE_STATE_SSAO,
 	ROOTSIGNATURE_STATE_GBUFFER,
 	ROOTSIGNATURE_STATE_DEFAULT,
 	ROOTSIGNATURE_STATE_UI,
@@ -71,6 +77,7 @@ private:
 	void CreateGBufferRootSingature(ID3D12Device* device);
 	void CreateDefaultRootSingature(ID3D12Device* device);
 	void CreateUIRootSignature(ID3D12Device* device);
+	void CreateSSAORootSignature(ID3D12Device* device);
 
 	void CreateUIPSO(ID3D12Device* device);
 	void CreateFontPSO(ID3D12Device* device);
@@ -83,6 +90,7 @@ private:
 	void CreatePointLightPSO(ID3D12Device* device);
 	void CreateModelPSO(ID3D12Device* device); 
 	void CreateShadowMapPSO(ID3D12Device* device);
+	void CreateSSAOPSO(ID3D12Device* device);
 	
 
 	void InitializeSamplerDescs();

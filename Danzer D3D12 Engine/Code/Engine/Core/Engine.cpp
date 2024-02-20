@@ -51,12 +51,12 @@ public:
 private:
 	WindowHandler m_windowHandler;
 	D3D12Framework m_framework;
+	TextureHandler m_textureHandler;
 	//DirectX12Framework m_framework;
 	RenderManager m_renderManager;
 	ModelHandler m_modelHandler;
 	SpriteHandler m_spriteHandler;
 	SceneManager m_sceneManager;
-	TextureHandler m_textureHandler;
 	CollisionManager m_collisionManager;
 	ModelEffectHandler m_modelEffectHandler;
 	LightHandler m_lightHandler;
@@ -71,10 +71,10 @@ private:
 Engine::Impl::Impl(unsigned int width, unsigned int height) :
 	m_windowHandler({ 0, 0, width, height }),
 	m_framework(),
-	m_renderManager(m_framework),
 	m_textureHandler(m_framework),
 	m_modelHandler(m_framework, m_textureHandler),
 	m_modelEffectHandler(m_framework),
+	m_renderManager(m_framework, m_textureHandler),
 	m_spriteHandler(m_framework, m_textureHandler),
 	m_lightHandler(m_framework),
 	m_sceneManager(),
@@ -92,22 +92,12 @@ Engine::Impl::Impl(unsigned int width, unsigned int height) :
 	io->DisplaySize = vec;
 	io->Fonts->Build();
 
-	//m_textureHandler.CreateTexture(L"Sprites/defaultTexture.dds");
-	//m_textureHandler.LoadAllCreatedTexuresToGPU();
-
-	//m_framework.ResetCommandListAndAllocator(nullptr, L"Line 87");
-
 	CustomModel skyboxCube = ModelData::GetCube();
 	skyboxCube.m_customModelName = "skybox";
 	m_skybox.Init(m_modelHandler.CreateCustomModel(skyboxCube).m_modelID, L"Sprites/defaultRedSkybox.dds", true);
 	m_spriteHandler.CreateSpriteSheet(L"Sprites/testSpriteSheet.dds", 4, 4);
-	//m_spriteHandler.LoadFont("Config/Fonts/ChiliFont.json");
 	
 	m_sceneManager.Init(m_camera);
-
-	//m_framework.ExecuteCommandList();
-	//m_framework.WaitForPreviousFrame();
-	//Camera camera(65.f, (float)m_windowHandler.GetWindowData().m_width / (float)m_windowHandler.GetWindowData().m_height);
 }
 
 Engine::Impl::~Impl()
@@ -142,8 +132,6 @@ void Engine::Impl::MidUpdate()
 	const float deltaTime = m_frameTimer.GetRealDeltaTime();
 	m_skybox.Update(deltaTime);
 
-	//m_sceneManager.GetCurrentScene()->UpdateAllObjectsInScene(deltaTime);
-	//m_collisionManager.UpdateCollisions(m_sceneManager.GetCurrentScene()->GetObjects());
 	m_sceneManager.GetCurrentScene().UpdateTransforms();
 	m_renderManager.RenderFrame(m_lightHandler, m_textureHandler, m_modelHandler, m_modelEffectHandler, m_spriteHandler, m_skybox, m_sceneManager.GetCurrentScene());
 }

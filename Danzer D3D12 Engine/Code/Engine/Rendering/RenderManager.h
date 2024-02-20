@@ -25,7 +25,7 @@ class RenderManager
 {
 public:
 	RenderManager() = delete;
-	RenderManager(D3D12Framework& framework);
+	RenderManager(D3D12Framework& framework, TextureHandler& textureHandler);
 	~RenderManager();
 
 	void BeginFrame();

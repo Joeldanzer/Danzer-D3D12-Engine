@@ -69,7 +69,7 @@ D3D12Framework::D3D12Framework() :
 	// Create Descriptor Heaps
 	{
 		// Main RTV's, GBUFFER
-		m_rtvHeap.CreateDescriptorHeap(m_device.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_RTV, FrameCount + GBUFFER_COUNT + 1, false);
+		m_rtvHeap.CreateDescriptorHeap(m_device.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_RTV, FrameCount + GBUFFER_COUNT + 200, false);
 		
 		// DepthStencil and ShadowMapping
 		m_dsvHeap.CreateDescriptorHeap(m_device.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1 + FrameCount + 1, false);

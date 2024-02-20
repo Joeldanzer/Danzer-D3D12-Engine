@@ -50,6 +50,7 @@
       <Filter>EffectShaders</Filter>
     </FxCompile>
     <FxCompile Include="Light\PointLightPS.hlsl" />
+    <FxCompile Include="Fullscreen\SSAOPS.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="UI\UIstructs.hlsli">
@@ -72,5 +73,6 @@
     </None>
     <None Include="Light\DirectionalLightHeader.hlsli" />
     <None Include="Light\PointLightHeader.hlsli" />
+    <None Include="Fullscreen\SSAOHeader.hlsli" />
   </ItemGroup>
 </Project>

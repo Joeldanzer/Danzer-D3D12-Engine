@@ -159,6 +159,25 @@ UINT TextureHandler::CreateTexture(std::wstring file, bool isCubeMap)
 	return m_textures.size() + m_tempTextures.size();
 }
 
+UINT TextureHandler::CreateCustomTexture(void* data, const UINT sizeOfData, std::wstring name)
+{
+	name = GetCorrectPathAndName(name);
+	for (UINT i = 0; i < m_textures.size(); i++)
+	{
+		if (name == m_textures[i].m_texturePath)
+			return i + 1;
+	}
+
+	Texture texture;
+	texture.m_texturePath = name;
+	texture.m_cubeMap = false;
+	CD3DX12_RESOURCE_BARRIER resource = LoadTextures(data, sizeOfData, &texture.m_textureBuffer);
+	m_resourceBarriers.emplace_back(resource);
+	m_tempTextures.emplace_back(texture);
+
+	return m_textures.size() + m_tempTextures.size();
+}
+
 
 UINT TextureHandler::GetTexture(std::wstring texturePath)
 {
@@ -232,6 +251,59 @@ CD3DX12_RESOURCE_BARRIER TextureHandler::LoadTextures(std::wstring file, ID3D12R
 		nullptr,
 		IID_PPV_ARGS(&uploadBuffer));
 	CHECK_HR(result);
+
+	UpdateSubresources(
+		m_framework.InitCmdList(),
+		*textureBuffer,
+		uploadBuffer,
+		0, 0,
+		static_cast<UINT>(subresourcedata.size()),
+		subresourcedata.data()
+	);
+
+	CD3DX12_RESOURCE_BARRIER transition = CD3DX12_RESOURCE_BARRIER::Transition(
+		*textureBuffer,
+		D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+
+	// Return resourc barrier so it's possible to upload multiple at the same time
+	return transition;
+}
+
+CD3DX12_RESOURCE_BARRIER TextureHandler::LoadTextures(void* data, const UINT sizeOfData, ID3D12Resource** textureBuffer)
+{
+	std::vector<D3D12_SUBRESOURCE_DATA> subresourcedata = {};
+	std::unique_ptr<UINT8[]> pointerData;
+	
+	bool cubeMap = false;
+	UINT8 uintData;
+	memcpy(&uintData, data, sizeof(sizeOfData));
+	
+	CHECK_HR(DirectX::LoadDDSTextureFromMemory(
+		m_framework.GetDevice(),
+		&uintData,
+		sizeOfData,
+		textureBuffer,
+		subresourcedata,
+		0,
+		nullptr,
+		&cubeMap)
+	);
+
+	const UINT64 uploadBufferSize = GetRequiredIntermediateSize(*textureBuffer, 0,
+		static_cast<UINT>(subresourcedata.size()));
+
+	CD3DX12_HEAP_PROPERTIES uploadHeap(D3D12_HEAP_TYPE_UPLOAD);
+	CD3DX12_RESOURCE_DESC buffer = CD3DX12_RESOURCE_DESC::Buffer(uploadBufferSize);
+
+	ID3D12Resource* uploadBuffer;
+	CHECK_HR(m_framework.GetDevice()->CreateCommittedResource(
+		&uploadHeap,
+		D3D12_HEAP_FLAG_NONE,
+		&buffer,
+		D3D12_RESOURCE_STATE_GENERIC_READ,
+		nullptr,
+		IID_PPV_ARGS(&uploadBuffer))
+	);
 
 	UpdateSubresources(
 		m_framework.InitCmdList(),

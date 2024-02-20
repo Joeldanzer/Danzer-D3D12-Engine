@@ -60,6 +60,14 @@ void GBuffer::AssignSRVSlots(ID3D12GraphicsCommandList* cmdList, DescriptorHeapW
 	}
 }
 
+CD3DX12_GPU_DESCRIPTOR_HANDLE GBuffer::GetGPUHandle(GBUFFER_TEXTURES texture, DescriptorHeapWrapper* srvWrapper)
+{
+	D3D12_GPU_DESCRIPTOR_HANDLE cbvSrvHeapStart = srvWrapper->GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
+	const UINT cbvSrvDescSize = srvWrapper->DESCRIPTOR_SIZE();
+
+	return CD3DX12_GPU_DESCRIPTOR_HANDLE(cbvSrvHeapStart, m_resources[texture].m_offsetID, cbvSrvDescSize);
+}
+
 void GBuffer::InitializeGBuffers(D3D12Framework& framework)
 {
 	HRESULT result;
@@ -128,15 +136,14 @@ void GBuffer::InitializeGBuffers(D3D12Framework& framework)
 		CHECK_HR(result);
 
 		device->CreateRenderTargetView(m_resources[i].m_resource.Get(), nullptr, rtvHandle);
-		rtvHandle.Offset(1, m_rtvDescSize);
+		rtvHandle.Offset(m_rtvDescSize);
+		rtvWrapper.m_handleCurrentOffset++;
 
 		m_resources[i].m_offsetID = srvWrapper.m_handleCurrentOffset;
 		device->CreateShaderResourceView(m_resources[i].m_resource.Get(), nullptr, srvHandle);
-		srvWrapper.m_handleCurrentOffset++;
 		srvHandle.Offset(m_srvDescSize);
+		srvWrapper.m_handleCurrentOffset++;
 
 		m_resources[i].m_resource->SetName((LPCWSTR)bufferNames[i].c_str());
-
-		rtvWrapper.m_handleCurrentOffset++;
 	}
 }
