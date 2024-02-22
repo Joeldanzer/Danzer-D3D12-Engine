@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "CameraBuffer.h"
 
-#include "../../Core/DirectX12Framework.h"
+#include "../../Core/D3D12Framework.h"
 
 CameraBuffer::CameraBuffer(){}
 CameraBuffer::~CameraBuffer(){}

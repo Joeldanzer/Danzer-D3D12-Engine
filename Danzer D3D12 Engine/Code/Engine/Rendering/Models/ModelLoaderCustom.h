@@ -14,13 +14,14 @@ struct aiScene;
 struct aiMaterial;
 
 struct LoaderMesh {
-	LoaderMesh() : 
+	LoaderMesh() :
 		m_indices(),
 		m_shaderType(0),
 		m_vertexSize(0),
 		m_vertexCount(0),
 		m_textureIndex(0),
-		m_verticies(nullptr)
+		m_verticies(nullptr),
+		m_name("##")
 	{}
 	~LoaderMesh() {
 		delete m_verticies;
@@ -34,6 +35,7 @@ struct LoaderMesh {
 	unsigned int m_vertexCount;
 	unsigned int m_vertexSize;
 	unsigned int m_shaderType;
+	std::string m_name;
 };
 
 struct LoaderModel {

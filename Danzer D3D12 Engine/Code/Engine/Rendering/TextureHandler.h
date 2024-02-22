@@ -10,33 +10,33 @@
 #include <unordered_map>
 #include <array>
 
-class DirectX12Framework;
+class D3D12Framework;
 
 class TextureHandler
 {
 public:
 	TextureHandler() = delete;
-	TextureHandler(DirectX12Framework& framework);
+	TextureHandler(D3D12Framework& framework);
 	~TextureHandler();
 
-	void Init(DirectX12Framework& framework, bool loadAllTexures = false);
+	void Init(D3D12Framework& framework, bool loadAllTexures = false);
 
 	struct Texture {
 		std::wstring m_texturePath;
 		bool m_cubeMap = false;
 		UINT m_offsetID = 0;
 
-		ComPtr<ID3D12Resource>		 m_textureBuffer;
+		ComPtr<ID3D12Resource> m_textureBuffer;
 	};
 
 	void LoadAllExistingTextures();
 	void LoadAllCreatedTexuresToGPU();
 
 	std::vector<UINT> CreateMultipleTextures(std::string* paths, UINT numOfTextures);
-	//std::array<UINT, 3> CreateMultipleTextures(std::string paths[3]);
 
 	Material CreateMaterial(std::string textures[3], float metallic, float m_roughness, float m_emissive, float color[4]);
 	UINT CreateTexture(std::wstring file, bool isCubeMap = false);
+	UINT CreateCustomTexture(void* data, const UINT sizeOfData, std::wstring name);
 	UINT GetTexture(std::wstring texturePath);
 
 	std::vector<Texture>& GetTextures() { return m_textures; }
@@ -48,13 +48,15 @@ public:
 	std::wstring GetCorrectPathAndName(std::wstring path);
 
 private:
+	//UINT TextureExists(std::wstring file);
 
 	CD3DX12_RESOURCE_BARRIER LoadTextures(std::wstring file, ID3D12Resource** textureBuffer, bool isCubeMap);
+	CD3DX12_RESOURCE_BARRIER LoadTextures(void* data, const UINT sizeOfData, ID3D12Resource** textureBuffer);
 
 	std::vector<Texture> m_textures;
 	std::vector<Texture> m_tempTextures;
 
 	std::vector<CD3DX12_RESOURCE_BARRIER> m_resourceBarriers;	
-	DirectX12Framework& m_framework;
+	D3D12Framework& m_framework;
 };
 

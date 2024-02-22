@@ -1,6 +1,6 @@
 #pragma once
-#include "TransformBuffer.h"
 #include "../VertexAndTextures.h"
+#include "Rendering/Buffers/TransformBuffer.h"
 #include "Rendering/Buffers/MaterialBuffer.h"
 
 #include "Material.h"
@@ -33,7 +33,7 @@ public:
 		ComPtr<ID3D12Resource>		 m_indexBuffer;
 		ComPtr<ID3D12Resource>		 m_vertexBuffer;
 		
-		Material m_material;
+		Material       m_material;
 		MaterialBuffer m_materialBuffer;
 
 		bool m_renderMesh = true;
@@ -79,6 +79,9 @@ public:
 	}
 	void UpdateTransformInstanceBuffer(UINT frameIndex) { 
 		m_transformBuffer.UpdateBuffer(reinterpret_cast<UINT8*>(&m_instanceTransforms[0]), (UINT)m_instanceTransforms.size(), frameIndex); 
+	}
+	void UpdateTransformInstanceBuffer(std::vector<Mat4f>& transform, const UINT frameIndex) {
+		m_transformBuffer.UpdateBuffer(reinterpret_cast<UINT8*>(&transform[0]), transform.size(), frameIndex);
 	}
 	void UpdatedMaterialBuffer(UINT frameIndex) {
 		//MaterialBuffer::Data data;
@@ -131,7 +134,7 @@ private:
 
 	UINT m_ID;	
 
-	std::string m_name;
+	std::string  m_name;
 	std::wstring m_modelPath;
 
 	bool m_renderModel;

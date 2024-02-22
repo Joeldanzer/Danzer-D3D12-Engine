@@ -5,14 +5,14 @@
 #include "Fonts/Font.h"
 #include "SpriteData.h"
 
-class DirectX12Framework;
+class D3D12Framework;
 class TextureHandler;
 
 class SpriteHandler
 {
 public:
 	SpriteHandler() = delete;
-	SpriteHandler(DirectX12Framework& framework, TextureHandler& textureHandler) :
+	SpriteHandler(D3D12Framework& framework, TextureHandler& textureHandler) :
 		m_framework(framework),
 		m_textureHandler(textureHandler)
 	{}
@@ -61,7 +61,7 @@ private:
 	std::vector<SpriteData> m_sprites;
 	std::vector<Font>		m_fonts;
 
-	DirectX12Framework& m_framework;
-	TextureHandler&     m_textureHandler;
+	D3D12Framework& m_framework;
+	TextureHandler& m_textureHandler;
 };
 

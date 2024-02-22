@@ -21,15 +21,16 @@ public:
 			//m_mainDescriptorHeap[i].~ComPtr();
 		}
 	}
-
+	
 	void Init(ID3D12Device* device, DescriptorHeapWrapper* cbvWrapper, void* data, UINT sizeOfData);
 	// Takes current frameIndex as well as Specific buffer Data(Check CameraBuffer for example)
 	virtual void UpdateBuffer(void* cbvData, unsigned int frame) = 0 { cbvData; frame; }
 
 	const UINT OffsetID() { return m_offsetID; }
 protected:
+	UINT AssignBufferSize(const UINT sizeOfData);
 	// Need buffer information for each back buffer available. 
 	ComPtr<ID3D12Resource>		  m_bufferUpload[FrameCount];
-	UINT8*						  m_bufferGPUAddress[FrameCount];
+	UINT16*						  m_bufferGPUAddress[FrameCount];
 	UINT						  m_offsetID = 0; 
 };

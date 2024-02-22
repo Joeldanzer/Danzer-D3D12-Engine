@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "LightBuffer.h"
-#include "../../Core/DirectX12Framework.h"
+#include "../../Core/D3D12Framework.h"
 
 LightBuffer::LightBuffer(){}
 LightBuffer::~LightBuffer(){}

@@ -130,7 +130,7 @@ inline CD3DX12_RESOURCE_BARRIER LoadATextures(std::wstring file, ID3D12Device* d
 		*resource,
 		D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 
-	// Return resourc barrier so it's possible to upload multiple at the same time
+	// Return resource barrier so it's possible to upload multiple at the same time
 	return transition;
 }
 

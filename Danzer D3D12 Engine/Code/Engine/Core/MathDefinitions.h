@@ -46,10 +46,10 @@ inline Vect4f Mul(Mat4f mat, Vect4f pos) {
 		pos.x * mat._12 + pos.y * mat._22 + pos.z * mat._32 + pos.w * mat._42,
 		pos.x * mat._13 + pos.y * mat._23 + pos.z * mat._33 + pos.w * mat._43,
 		pos.x * mat._14 + pos.y * mat._24 + pos.z * mat._34 + pos.w * mat._44,
-		//pos.x* mat._11 + pos.y * mat._12 + pos.z * mat._13 + pos.w * mat._14,
-		//pos.x* mat._21 + pos.y * mat._22 + pos.z * mat._23 + pos.w * mat._24,
-		//pos.x* mat._31 + pos.y * mat._32 + pos.z * mat._33 + pos.w * mat._34,
-		//pos.x* mat._41 + pos.y * mat._42 + pos.z * mat._43 + pos.w * mat._44,
+	    //pos.x* mat._11 + pos.y * mat._12 + pos.z * mat._13 + pos.w * mat._14,
+	    //pos.x* mat._21 + pos.y * mat._22 + pos.z * mat._23 + pos.w * mat._24,
+	    //pos.x* mat._31 + pos.y * mat._32 + pos.z * mat._33 + pos.w * mat._34,
+	    //pos.x* mat._41 + pos.y * mat._42 + pos.z * mat._43 + pos.w * mat._44,
 	};
 }
 

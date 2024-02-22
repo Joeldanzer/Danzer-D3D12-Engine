@@ -152,9 +152,20 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Components\Collision\Collider.h" />
+    <ClInclude Include="Components\ModelEffect.h" />
+    <ClInclude Include="Components\PointLight.h" />
     <ClInclude Include="Components\Script.h" />
+    <ClInclude Include="Components\WaterPlaneBufferData.h" />
     <ClInclude Include="Core\DesriptorHeapWrapper.h" />
     <ClInclude Include="Core\D3D12Framework.h" />
+    <ClInclude Include="Rendering\Screen Rendering\LightHandler.h" />
+    <ClInclude Include="Rendering\Buffers\PointLightBuffer.h" />
+    <ClInclude Include="Rendering\Buffers\EffectShaderBuffer.h" />
+    <ClInclude Include="Rendering\Models\ModelEffectData.h" />
+    <ClInclude Include="Rendering\Models\ModelEffectHandler.h" />
+    <ClInclude Include="Rendering\Screen Rendering\FullscreenTexture.h" />
+    <ClInclude Include="Rendering\Screen Rendering\DirectionalShadowMapping.h" />
+    <ClInclude Include="Core\FrameResource.h" />
     <ClInclude Include="Rendering\Screen Rendering\FullScreenShaderHandler.h" />
     <ClInclude Include="Rendering\Screen Rendering\FullscreenShader.h" />
     <ClInclude Include="Rendering\Models\Material.h" />
@@ -202,8 +213,11 @@
     <ClInclude Include="SceneManager.h" />
     <ClInclude Include="Components\Collision\SphereCollider.h" />
     <ClInclude Include="Rendering\Screen Rendering\ScreenTexture.h" />
+    <ClInclude Include="ShaderEffectRenderer.h" />
+    <ClInclude Include="Rendering\Screen Rendering\SSAOTexture.h" />
+    <ClInclude Include="Rendering\Buffers\SSAOBuffer.h" />
     <ClInclude Include="stdafx.h" />
-    <ClInclude Include="Rendering\Models\TransformBuffer.h" />
+    <ClInclude Include="Rendering\Buffers\TransformBuffer.h" />
     <ClInclude Include="Rendering\Buffers\VertexBuffer.h" />
     <ClInclude Include="Core\WindowHandler.h" />
     <ClInclude Include="Rendering\2D\2DRenderer.h" />
@@ -215,6 +229,13 @@
     <ClCompile Include="Core\input.cpp" />
     <ClCompile Include="Core\DesriptorHeapWrapper.cpp" />
     <ClCompile Include="Core\D3D12Framework.cpp" />
+    <ClCompile Include="Rendering\Screen Rendering\LightHandler.cpp" />
+    <ClCompile Include="Rendering\Buffers\PointLightBuffer.cpp" />
+    <ClCompile Include="Rendering\Buffers\EffectShaderBuffer.cpp" />
+    <ClCompile Include="Rendering\Models\ModelEffectHandler.cpp" />
+    <ClCompile Include="Rendering\Screen Rendering\FullscreenTexture.cpp" />
+    <ClCompile Include="Rendering\Screen Rendering\DirectionalShadowMapping.cpp" />
+    <ClCompile Include="Core\FrameResource.cpp" />
     <ClCompile Include="Rendering\Buffers\CBVBuffer.cpp" />
     <ClCompile Include="Rendering\Screen Rendering\FullScreenShaderHandler.cpp" />
     <ClCompile Include="Rendering\Screen Rendering\FullscreenShader.cpp" />
@@ -244,11 +265,14 @@
     <ClCompile Include="Scene.cpp" />
     <ClCompile Include="SceneManager.cpp" />
     <ClCompile Include="Rendering\Screen Rendering\ScreenTexture.cpp" />
+    <ClCompile Include="ShaderEffectRenderer.cpp" />
+    <ClCompile Include="Rendering\Screen Rendering\SSAOTexture.cpp" />
+    <ClCompile Include="Rendering\Buffers\SSAOBuffer.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="Rendering\Models\TransformBuffer.cpp" />
+    <ClCompile Include="Rendering\Buffers\TransformBuffer.cpp" />
     <ClCompile Include="Rendering\Buffers\VertexBuffer.cpp" />
     <ClCompile Include="Core\WindowHandler.cpp" />
     <ClCompile Include="Rendering\2D\2DRenderer.cpp" />

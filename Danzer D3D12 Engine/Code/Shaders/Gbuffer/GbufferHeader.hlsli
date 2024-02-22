@@ -22,8 +22,8 @@ struct VertexToPixel
 
 cbuffer MainCamera : register(b0)
 {
-    float4x4 CameraTransform;
     float4x4 CameraProjection;
+    float4x4 CameraTransform;
     float4 CameraPosition;
     float4 Eye;
 
@@ -48,4 +48,4 @@ Texture2D    normalTexture    : register(t1);
 Texture2D    metallicTexture  : register(t2);
 Texture2D    roughnessTexture : register(t3);
 Texture2D    heightTexture    : register(t4);
-Texture2D    aoTexrure        : register(t5);
+Texture2D    aoTexture        : register(t5);

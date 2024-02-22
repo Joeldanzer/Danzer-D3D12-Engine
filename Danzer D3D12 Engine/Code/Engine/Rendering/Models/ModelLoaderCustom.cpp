@@ -21,12 +21,11 @@ std::unique_ptr<LoaderModel> ModelLoaderCustom::LoadModelFromAssimp(std::string 
     auto flags = 0
         | aiProcessPreset_TargetRealtime_MaxQuality
         | aiProcess_ConvertToLeftHanded
-        | aiProcess_GenUVCoords
-        | aiProcess_FixInfacingNormals
+        //| aiProcess_FixInfacingNormals
+        | aiProcess_TransformUVCoords
         | aiProcess_CalcTangentSpace
         | aiProcess_GlobalScale
-        | aiProcess_GenBoundingBoxes
-        
+        | aiProcess_FindInstances
         ;
 
     const aiScene* scene = m_importer.ReadFile(fileName, flags);
@@ -43,7 +42,6 @@ std::unique_ptr<LoaderModel> ModelLoaderCustom::LoadModelFromAssimp(std::string 
         rootNode = rootNode->mParent;
 
     GetAllModelProperties(model.get(), rootNode, scene, ConvertToEngineMat4(rootNode->mTransformation), uvFlipped);
-
     LoadMaterials(scene, model.get());
 
     return model;
@@ -52,8 +50,7 @@ std::unique_ptr<LoaderModel> ModelLoaderCustom::LoadModelFromAssimp(std::string 
 std::unique_ptr<LoaderModel> ModelLoaderCustom::LoadModelFromAiNode(const aiScene* scene, aiNode* node, std::vector<UINT>& textures, bool uvFlipped)
 {
     std::unique_ptr<LoaderModel> model = std::make_unique<LoaderModel>();
- 
-    //model->m_name = FixModelName(node->mName.C_Str());
+
     model->m_name = node->mName.C_Str();
  
     for (UINT i = 0; i < node->mNumMeshes; i++)
@@ -81,11 +78,6 @@ std::unique_ptr<LoaderModel> ModelLoaderCustom::LoadModelFromAiNode(const aiScen
     if (model->m_meshes.empty())
         return std::unique_ptr<LoaderModel>(nullptr);
 
-    //for (UINT j = 0; j < model->m_meshes.size(); j++)
-    //{
-    //    model->m_textures.emplace_back(textures[model->m_meshes[j]->m_textureIndex]);
-    //}
-
     return model;
 }
 
@@ -105,19 +97,17 @@ void ModelLoaderCustom::GetAllModelProperties(LoaderModel* out, aiNode* currentN
         {
             aiMesh* assimpMesh = scene->mMeshes[child->mMeshes[j]];
             LoaderMesh* mesh = new LoaderMesh();
+            
+            mesh->m_name = assimpMesh->mName.C_Str();
 
             mesh->m_textureIndex = assimpMesh->mMaterialIndex;
             LoadVerticiesWithTransform(out->m_verticies, assimpMesh, mesh, transform, uvFlipped);
 
             mesh->m_indices.reserve(assimpMesh->mNumFaces * 3LL);
-            for (UINT j = 0; j < assimpMesh->mNumFaces; j++)
-            {
-                for (UINT k = 0; k < assimpMesh->mFaces[j].mNumIndices; k++)
-                {
-                    mesh->m_indices.emplace_back(assimpMesh->mFaces[j].mIndices[k]);
-                }
-            }
-
+            for (UINT p = 0; p < assimpMesh->mNumFaces; p++)
+                for (UINT k = 0; k < assimpMesh->mFaces[p].mNumIndices; k++)               
+                    mesh->m_indices.emplace_back(assimpMesh->mFaces[p].mIndices[k]);
+                
             out->m_meshes.emplace_back(mesh);
         }
 
@@ -158,6 +148,7 @@ void ModelLoaderCustom::LoadVerticies(std::vector<Vect3f>& v3Verts, aiMesh* mesh
     loaderMesh->m_vertexSize = vertexBufferSize;
     loaderMesh->m_vertexCount = mesh->mNumVertices;
     loaderMesh->m_verticies = new char[vertexBufferSize * mesh->mNumVertices];
+
     // Collect all the necessary vertex data from aiMesh 
     VertexCollector verticies;
     verticies.m_vertexInfo.reserve(mesh->mNumVertices);
@@ -172,7 +163,7 @@ void ModelLoaderCustom::LoadVerticies(std::vector<Vect3f>& v3Verts, aiMesh* mesh
         }
 
         if (binormTan) {
-            verticies.PushVec4({ mesh->mTangents[i].x,  mesh->mTangents[i].y, mesh->mTangents[i].z, 1.f });
+            verticies.PushVec4({ mesh->mTangents[i].x,    mesh->mTangents[i].y,   mesh->mTangents[i].z,   1.f });
             verticies.PushVec4({ mesh->mBitangents[i].x,  mesh->mBitangents[i].y, mesh->mBitangents[i].z, 1.f });
         }
 
@@ -197,13 +188,12 @@ void ModelLoaderCustom::LoadVerticies(std::vector<Vect3f>& v3Verts, aiMesh* mesh
 // *Load all verticies and vertex information with the meshes transform in mind.
 void ModelLoaderCustom::LoadVerticiesWithTransform(std::vector<Vect3f>& v3Verts, aiMesh* mesh, LoaderMesh* loaderMesh, Mat4f transform, bool uvFlipped)
 {
-  
-    bool position = mesh->HasPositions();
-    bool uv = mesh->HasTextureCoords(0);
-    bool normals = mesh->HasNormals();
+    bool position  = mesh->HasPositions();
+    bool uv        = mesh->HasTextureCoords(0);
+    bool normals   = mesh->HasNormals();
     bool binormTan = mesh->HasTangentsAndBitangents();
-    bool bones = mesh->HasBones();
-    bool color = mesh->HasVertexColors(0);
+    bool bones     = mesh->HasBones();
+    bool color     = mesh->HasVertexColors(0);
 
     unsigned int shaderType = 0;
 
@@ -230,6 +220,7 @@ void ModelLoaderCustom::LoadVerticiesWithTransform(std::vector<Vect3f>& v3Verts,
     loaderMesh->m_vertexSize = vertexBufferSize;
     loaderMesh->m_vertexCount = mesh->mNumVertices;
     loaderMesh->m_verticies = new char[vertexBufferSize * mesh->mNumVertices];
+
     // Collect all the necessary vertex data from aiMesh 
     VertexCollector verticies;
     verticies.m_vertexInfo.reserve(mesh->mNumVertices * vertexBufferSize);
@@ -241,28 +232,22 @@ void ModelLoaderCustom::LoadVerticiesWithTransform(std::vector<Vect3f>& v3Verts,
             verticies.PushVec4({ vertex.x, vertex.y, vertex.z, 1.f });
         }
 
-        if (normals) {
-            verticies.PushVec4({ mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z, 1.f });
+        if (normals) 
+            verticies.PushVec4({ -1.0f * mesh->mNormals[i].x,    mesh->mNormals[i].y,       - 1.0f * mesh->mNormals[i].z, 1.f });
+                                                                 
+        if (binormTan) {                                         
+            verticies.PushVec4({ -1.0f * mesh->mTangents[i].x,   mesh->mTangents[i].y,   -1.0f * mesh->mTangents[i].z,   1.f });
+            verticies.PushVec4({ -1.0f * mesh->mBitangents[i].x, mesh->mBitangents[i].y, -1.0f * mesh->mBitangents[i].z, 1.f });
         }
 
-        if (binormTan) {
-            verticies.PushVec4({ mesh->mTangents[i].x,  mesh->mTangents[i].y, mesh->mTangents[i].z, 1.f });
-            verticies.PushVec4({ mesh->mBitangents[i].x,  mesh->mBitangents[i].y, mesh->mBitangents[i].z, 1.f });
-        }
-
-        if (color) {         
-            verticies.PushVec4({ mesh->mColors[i]->r, mesh->mColors[i]->g, mesh->mColors[i]->b, mesh->mColors[i]->a });
+        if (color) {     
+               verticies.PushVec4({ mesh->mColors[i]->r, mesh->mColors[i]->g, mesh->mColors[i]->b, mesh->mColors[i]->a });
         }
         else
             verticies.PushVec4({ 1.f, 1.f, 1.f, 0.f });
 
-
-        if (uv) {
-            //if (uvFlipped) 
-            //    verticies.PushVec2({ fabs(mesh->mTextureCoords[0][i].x - 1), mesh->mTextureCoords[0][i].y });
-            //else   
-            verticies.PushVec2({ mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y });
-        }
+        if (uv) 
+            verticies.PushVec2({ mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y });        
     }
 
     memcpy(loaderMesh->m_verticies, &verticies.m_vertexInfo[0], vertexBufferSize * mesh->mNumVertices);
@@ -271,6 +256,7 @@ void ModelLoaderCustom::LoadVerticiesWithTransform(std::vector<Vect3f>& v3Verts,
 Mat4f ModelLoaderCustom::ConvertToEngineMat4(const aiMatrix4x4& assimpMatrix)
 {
     Mat4f mat;
+    
     mat(0, 0) = assimpMatrix.a1; mat(1, 0) = assimpMatrix.a2; mat(2, 0) = assimpMatrix.a3; mat(3, 0) = assimpMatrix.a4;
     mat(0, 1) = assimpMatrix.b1; mat(1, 1) = assimpMatrix.b2; mat(2, 1) = assimpMatrix.b3; mat(3, 1) = assimpMatrix.b4;
     mat(0, 2) = assimpMatrix.c1; mat(1, 2) = assimpMatrix.c2; mat(2, 2) = assimpMatrix.c3; mat(3, 2) = assimpMatrix.c4;
@@ -282,18 +268,18 @@ void ModelLoaderCustom::LoadMaterials(const aiScene* scene, LoaderModel* model)
 {
     for (unsigned int m = 0; m < scene->mNumMaterials; m++)
     {
-        LoadTexture(aiTextureType_DIFFUSE,      model->m_textures, scene->mMaterials[m]); // TEXTURE_DEFINITION_ALBEDO
-        LoadTexture(aiTextureType_UNKNOWN,      model->m_textures, scene->mMaterials[m]); // TEXTURE_DEFINITION_ALBEDO
-        LoadTexture(aiTextureType_SPECULAR,     model->m_textures, scene->mMaterials[m]); // TEXTURE_DEFINITION_ROUGHNESS
-        LoadTexture(aiTextureType_AMBIENT,      model->m_textures, scene->mMaterials[m]); // TEXTURE_DEFINITION_AMBIENTOCCLUSION
-        LoadTexture(aiTextureType_EMISSIVE,     model->m_textures, scene->mMaterials[m]); // TEXTURE_DEFINITION_EMISSIVE
+        LoadTexture(aiTextureType_DIFFUSE, model->m_textures, scene->mMaterials[m]); // TEXTURE_DEFINITION_ALBEDO
+        //LoadTexture(aiTextureType_UNKNOWN,      model->m_textures, scene->mMaterials[m]); // TEXTURE_DEFINITION_ALBEDO
+        //LoadTexture(aiTextureType_SPECULAR,     model->m_textures, scene->mMaterials[m]); // TEXTURE_DEFINITION_ROUGHNESS
+        //LoadTexture(aiTextureType_AMBIENT,      model->m_textures, scene->mMaterials[m]); // TEXTURE_DEFINITION_AMBIENTOCCLUSION
+        //LoadTexture(aiTextureType_EMISSIVE,     model->m_textures, scene->mMaterials[m]); // TEXTURE_DEFINITION_EMISSIVE
         //LoadTexture(aiTextureType_HEIGHT,       model->m_textures, scene->mMaterials[m]);
-        LoadTexture(aiTextureType_NORMALS,      model->m_textures, scene->mMaterials[m]); // TEXTURE_DEFINITION_NORMAL
+        //LoadTexture(aiTextureType_NORMALS,      model->m_textures, scene->mMaterials[m]); // TEXTURE_DEFINITION_NORMAL   
+        //LoadTexture(aiTextureType_METALNESS,    model->m_textures, scene->mMaterials[m]); // TEXTURE_DEFINITION_METALNESS
         //LoadTexture(aiTextureType_SHININESS,    model->m_textures, scene->mMaterials[m]);
         //LoadTexture(aiTextureType_OPACITY,      model->m_textures, scene->mMaterials[m]);
         //LoadTexture(aiTextureType_DISPLACEMENT, model->m_textures, scene->mMaterials[m]);
         //LoadTexture(aiTextureType_LIGHTMAP,     model->m_textures, scene->mMaterials[m]);
-        LoadTexture(aiTextureType_REFLECTION,   model->m_textures, scene->mMaterials[m]); // TEXTURE_DEFINITION_METALNESS
 
     }
 } 
@@ -314,6 +300,17 @@ void ModelLoaderCustom::LoadTexture(int type, std::vector<std::string>& textures
     const size_t lastSlashIdx = filePath.find_last_of("\\/");
     if (std::string::npos != lastSlashIdx) {
         filePath.erase(0, lastSlashIdx + 1);
+        const size_t replaceTextureType = filePath.find("_Diffuse");
+        
+        if (filePath.find("Fabric") != std::string::npos) { // Dum if check since the naming convention of this model is horrible
+            filePath.erase(replaceTextureType, 8);
+            const size_t removeExtension = filePath.find_first_of(".");
+            filePath.erase(filePath.begin() + removeExtension, filePath.end());
+        } 
+        else
+            filePath.erase(replaceTextureType, filePath.size() - replaceTextureType);
+       
+        filePath.insert(0, "Sprites/");
     }
 
     textures.push_back(filePath);

@@ -35,7 +35,7 @@
     <ClCompile Include="Rendering\Models\ModelHandler.cpp">
       <Filter>Objects</Filter>
     </ClCompile>
-    <ClCompile Include="Rendering\Models\TransformBuffer.cpp">
+    <ClCompile Include="Rendering\Buffers\TransformBuffer.cpp">
       <Filter>Buffers</Filter>
     </ClCompile>
     <ClCompile Include="Rendering\Models\ModelData.cpp" />
@@ -68,6 +68,16 @@
     <ClCompile Include="Core\DesriptorHeapWrapper.cpp" />
     <ClCompile Include="Rendering\Buffers\CBVBuffer.cpp" />
     <ClCompile Include="Core\D3D12Framework.cpp" />
+    <ClCompile Include="Core\FrameResource.cpp" />
+    <ClCompile Include="Rendering\Screen Rendering\DirectionalShadowMapping.cpp" />
+    <ClCompile Include="ShaderEffectRenderer.cpp" />
+    <ClCompile Include="Rendering\Screen Rendering\FullscreenTexture.cpp" />
+    <ClCompile Include="Rendering\Models\ModelEffectHandler.cpp" />
+    <ClCompile Include="Rendering\Buffers\EffectShaderBuffer.cpp" />
+    <ClCompile Include="Rendering\Buffers\PointLightBuffer.cpp" />
+    <ClCompile Include="Rendering\Screen Rendering\LightHandler.cpp" />
+    <ClCompile Include="Rendering\Screen Rendering\SSAOTexture.cpp" />
+    <ClCompile Include="Rendering\Buffers\SSAOBuffer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Core\DirectX12Framework.h">
@@ -107,7 +117,7 @@
     <ClInclude Include="Rendering\Models\ModelData.h">
       <Filter>Objects</Filter>
     </ClInclude>
-    <ClInclude Include="Rendering\Models\TransformBuffer.h">
+    <ClInclude Include="Rendering\Buffers\TransformBuffer.h">
       <Filter>Buffers</Filter>
     </ClInclude>
     <ClInclude Include="Rendering\Models\ModelLoaderCustom.h" />
@@ -155,5 +165,19 @@
     <ClInclude Include="Components\Script.h" />
     <ClInclude Include="Core\DesriptorHeapWrapper.h" />
     <ClInclude Include="Core\D3D12Framework.h" />
+    <ClInclude Include="Core\FrameResource.h" />
+    <ClInclude Include="Rendering\Screen Rendering\DirectionalShadowMapping.h" />
+    <ClInclude Include="ShaderEffectRenderer.h" />
+    <ClInclude Include="Rendering\Screen Rendering\FullscreenTexture.h" />
+    <ClInclude Include="Rendering\Models\ModelEffectHandler.h" />
+    <ClInclude Include="Components\ModelEffect.h" />
+    <ClInclude Include="Rendering\Models\ModelEffectData.h" />
+    <ClInclude Include="Rendering\Buffers\EffectShaderBuffer.h" />
+    <ClInclude Include="Components\WaterPlaneBufferData.h" />
+    <ClInclude Include="Components\PointLight.h" />
+    <ClInclude Include="Rendering\Buffers\PointLightBuffer.h" />
+    <ClInclude Include="Rendering\Screen Rendering\LightHandler.h" />
+    <ClInclude Include="Rendering\Screen Rendering\SSAOTexture.h" />
+    <ClInclude Include="Rendering\Buffers\SSAOBuffer.h" />
   </ItemGroup>
 </Project>

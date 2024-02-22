@@ -6,11 +6,11 @@
 #include "DesriptorHeapWrapper.h"
 #include <dxgi1_4.h>
 
-class DirectX12Framework
+class DirectX12FrameworkOLD
 {
 public:
-	DirectX12Framework();
-	~DirectX12Framework();
+	DirectX12FrameworkOLD();
+	~DirectX12FrameworkOLD();
 
 	void InitFramework();
 

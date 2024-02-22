@@ -22,8 +22,8 @@ public:
 
 		Vect2f m_position;
 
-		UINT m_width;
-		UINT m_height;
+		UINT m_width  = 0;
+		UINT m_height = 0;
 	};
 	
 	struct Instance {
@@ -39,9 +39,9 @@ public:
 	struct Data {
 		std::unordered_map<char, Letter> m_letters;
 
-		UINT m_width;
-		UINT m_height;
-		UINT m_texture;
+		UINT m_width   = 0;
+		UINT m_height  = 0;
+		UINT m_texture = 0;
 	};
 
 	Font()  = delete;

@@ -69,18 +69,18 @@ void Scene::UpdateTransforms()
 	for (auto entity : view)
 	{
 		Transform& transform = view.get<Transform>(entity);	
+		const Vector3& pos   = transform.m_position;
+		const Vector3& scale = transform.m_scale;
 
-		// Check if transform has been updated
-		//if (transform.m_world != transform.m_last) {
-			transform.m_last = transform.m_world;
-			Mat4f mat;
-			mat  = Mat4f::CreateFromQuaternion(transform.m_rotation);
-			mat  *= Mat4f::CreateScale(transform.m_scale); 
-			mat.Translation(transform.m_position);
-		
-			transform.m_local = mat;
+		transform.m_last = transform.m_world;
 
-			transform.m_world = !transform.Parent() ? transform.m_world = transform.m_local : transform.m_local * transform.Parent()->m_world;
+		Mat4f mat;
+		DirectX::XMVECTOR quatv = DirectX::XMLoadFloat4(&transform.m_rotation);
+		mat  = DirectX::XMMatrixRotationQuaternion(quatv);
+		mat *= DirectX::XMMatrixScaling(transform.m_scale.x, transform.m_scale.y, transform.m_scale.z);
+		mat *= DirectX::XMMatrixTranslation(pos.x, pos.y, pos.z);
+		transform.m_local = mat;
+		transform.m_world = !transform.Parent() ? transform.m_world = transform.m_local : transform.m_local * transform.Parent()->m_world;
 		//}
 	}
 }

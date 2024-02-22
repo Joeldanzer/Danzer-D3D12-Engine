@@ -2,7 +2,9 @@
 
 float GetAmbientOcclusion(VertexToPixel input)
 {
-    return aoTexrure.Sample(defaultSampler, input.m_uv).r;
+    float4 ao = aoTexture.Sample(defaultSampler, input.m_uv);
+    ao.r = ao.w == 0.0f ? 1.0f : ao.r;
+    return ao.r;
 }
 
 float GetEmissive(VertexToPixel input)
@@ -18,26 +20,23 @@ float GetMetallic(VertexToPixel input)
 
 float GetRoughness(VertexToPixel input)
 {
-    return metallicTexture.Sample(defaultSampler, input.m_uv).g;
+    return roughnessTexture.Sample(defaultSampler, input.m_uv).r;
 }
 
 float GetHeight(VertexToPixel input)
 {
-    return metallicTexture.Sample(defaultSampler, input.m_uv).b;
+    return heightTexture.Sample(defaultSampler, input.m_uv).r;
 }
 
 float4 GetNormal(VertexToPixel input)
 {
-    //float3 normalAO = normal.xyz;
-    //normalAO = normalAO * 2.f - 1.f; 
-    float4 normal = normalTexture.Sample(defaultSampler, input.m_uv);
-    float3 normalAO = (normal.wy, 0.f);
+    float4 normal = normalTexture.Sample(defaultSampler, input.m_uv.xy);
+    float3 normalAO = float3(normal.xy, 0.0f);
+    normalAO.xy = (normalAO * 2.f) - 1.f;
     normalAO.z = sqrt(1 - saturate(normalAO.x * normalAO.x + normalAO.y * normalAO.y));
-    normalAO = normalize(normalAO);
     
     float3x3 tangentspacematrix = float3x3(normalize(input.m_tangent.xyz), normalize(input.m_biNormal.xyz), normalize(input.m_normal.xyz));
-    tangentspacematrix = transpose(tangentspacematrix);
-    normalAO = mul(tangentspacematrix, normalAO.xyz);
+    normalAO = mul(normalAO.xyz, tangentspacematrix);
     normalAO = normalize(normalAO);
     
     float4 output;

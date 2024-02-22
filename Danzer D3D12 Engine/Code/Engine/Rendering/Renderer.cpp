@@ -1,20 +1,28 @@
 #include "stdafx.h"
 #include "Renderer.h"
 
+#include "Components/PointLight.h"
+#include "Models/ModelHandler.h"
 #include "Scene.h"
 #include "Components/Transform.h";
 #include "Components/Object.h"
 #include "Components/DirectionalLight.h"
 #include "SkyBox.h"
 #include "Rendering/Screen Rendering/GBuffer.h"
+#include "Rendering/Screen Rendering/LightHandler.h"
+#include "Screen Rendering/DirectionalShadowMapping.h"
+#include "Screen Rendering/SSAOTexture.h"
+#include "Core/WindowHandler.h"
 
 #include "Camera.h"
 
 #include "RenderUtility.h"
+#include "Core/FrameResource.h"
 
 
-#include "Core/DirectX12Framework.h"
+#include "Core/D3D12Framework.h"
 
+#include <chrono>
 #include <string>
 
 Renderer::~Renderer()
@@ -22,91 +30,239 @@ Renderer::~Renderer()
 	//m_cameraBuffer.~CameraBuffer();
 	//m_transformBuffer.~TransformBuffer();
 
-	m_commandList = nullptr;
+	//m_commandList = nullptr;
+	m_framework		= nullptr;
 	m_rootSignature = nullptr;
 }
 
-void Renderer::Init(DirectX12Framework& framework)
+void Renderer::Init(D3D12Framework& framework)
 {
 	m_framework = &framework;
-	m_commandList = framework.GetCommandList();
 	
-	m_cameraBuffer.Init(framework.GetDevice(),   &framework.GetCbvSrvUavWrapper(), m_cameraBuffer.FetchData(),   sizeof(CameraBuffer::Data));
-	m_lightBuffer.Init(framework.GetDevice(),    &framework.GetCbvSrvUavWrapper(), m_lightBuffer.FetchData(),    sizeof(LightBuffer::Data));
-	m_materialBuffer.Init(framework.GetDevice(), &framework.GetCbvSrvUavWrapper(), m_materialBuffer.FetchData(), sizeof(MaterialBuffer::Data));
-
+	m_shadowBuffer.Init(framework.GetDevice(),	   &framework.CbvSrvHeap(),	m_shadowBuffer.FetchData(),		sizeof(CameraBuffer::Data));
+	m_cameraBuffer.Init(framework.GetDevice(),	   &framework.CbvSrvHeap(),	m_cameraBuffer.FetchData(),		sizeof(CameraBuffer::Data));
+	m_lightBuffer.Init(framework.GetDevice(),	   &framework.CbvSrvHeap(),	m_lightBuffer.FetchData(),		sizeof(LightBuffer::Data));
+	m_materialBuffer.Init(framework.GetDevice(),   &framework.CbvSrvHeap(),	m_materialBuffer.FetchData(),   sizeof(MaterialBuffer::Data));
+	m_pointLightBuffer.Init(framework.GetDevice(), &framework.CbvSrvHeap(), m_pointLightBuffer.FetchData(), sizeof(PointLightBuffer::Data));
 }
 
 //* Default Buffers for all existing 3D models. Should only be updated once per frame!
-void Renderer::UpdateDefaultBuffers(Camera& camera, Transform& transform, UINT frameIndex)
+CD3DX12_GPU_DESCRIPTOR_HANDLE Renderer::UpdateDefaultBuffers(Camera& camera, Transform& transform, UINT frameIndex)
 {
 	// Reset descriptor index! 
 	m_descriptorIndex = 0;
 	
 	CameraBuffer::Data bufferData;
 	bufferData.m_transform  = transform.World().Invert();
-	bufferData.m_projection = camera.GetProjection();
+	bufferData.m_transform  = DirectX::XMMatrixTranspose(bufferData.m_transform);
+	bufferData.m_projection = DirectX::XMMatrixTranspose(camera.GetProjection());
 	bufferData.m_position = { transform.m_position.x, transform.m_position.y, transform.m_position.z, float(camera.m_renderTarget)};
 	Vect4f eye = { bufferData.m_transform.Forward() };
 	eye.w = 1.f;
 	bufferData.m_direction = eye;
-
+	bufferData.m_time = clock() / 1000.0f;
+	bufferData.m_width  = static_cast<float>(WindowHandler::WindowData().m_w);
+	bufferData.m_height = static_cast<float>(WindowHandler::WindowData().m_h);
+	
 	m_cameraBuffer.UpdateBuffer(&bufferData, frameIndex);
 
-	D3D12_GPU_DESCRIPTOR_HANDLE cbvSrvHeapStart = m_framework->GetCbvSrvUavWrapper().GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
-	CD3DX12_GPU_DESCRIPTOR_HANDLE cbvHandle(cbvSrvHeapStart, m_cameraBuffer.OffsetID() + frameIndex, m_framework->GetCbvSrvUavWrapper().DESCRIPTOR_SIZE());
-	m_commandList->SetGraphicsRootDescriptorTable(0, cbvHandle);
+	D3D12_GPU_DESCRIPTOR_HANDLE cbvSrvHeapStart = m_framework->CbvSrvHeap().GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
+	CD3DX12_GPU_DESCRIPTOR_HANDLE cbvHandle(cbvSrvHeapStart, m_cameraBuffer.OffsetID() + frameIndex, m_framework->CbvSrvHeap().DESCRIPTOR_SIZE());
+	return cbvHandle;
+	//m_commandList->SetGraphicsRootDescriptorTable(0, cbvHandle);
 }
 
-void Renderer::RenderSkybox(Transform& cameraTransform, TextureHandler::Texture& textures, ModelData& model, Skybox& skybox, UINT frameIndex)
+CD3DX12_GPU_DESCRIPTOR_HANDLE Renderer::UpdateShadowMapBuffer(Mat4f& projection, Transform& transform, UINT frameIndex)
 {
-	D3D12_GPU_DESCRIPTOR_HANDLE cbvSrvHeapStart = m_framework->GetCbvSrvUavWrapper().GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
-	const UINT cbvSrvDescSize					= m_framework->GetCbvSrvUavWrapper().DESCRIPTOR_SIZE();
+	CameraBuffer::Data bufferData;
+	bufferData.m_transform = transform.World().Invert();
+	bufferData.m_transform = DirectX::XMMatrixTranspose(bufferData.m_transform);
+	bufferData.m_projection = DirectX::XMMatrixTranspose(projection);
+	bufferData.m_position = { transform.m_position.x, transform.m_position.y, transform.m_position.z, 0.0f };
+	Vect4f eye = { bufferData.m_transform.Forward() };
+	eye.w = 1.f;
+	bufferData.m_direction = eye;
 
+	m_shadowBuffer.UpdateBuffer(&bufferData, frameIndex);
+
+	CD3DX12_GPU_DESCRIPTOR_HANDLE cbvHandle = m_framework->CbvSrvHeap().GET_GPU_DESCRIPTOR(0);
+	cbvHandle.Offset((m_shadowBuffer.OffsetID() + frameIndex) * m_framework->CbvSrvHeap().DESCRIPTOR_SIZE());
+	return cbvHandle;
+}
+
+CD3DX12_GPU_DESCRIPTOR_HANDLE Renderer::UpdateLightBuffer(Mat4f& projection, Transform& transform, const DirectionalLight& light, const Vect4f& direction, UINT frameIndex)
+{
+	D3D12_GPU_DESCRIPTOR_HANDLE cbvSrvHeapStart = m_framework->CbvSrvHeap().GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
+	const UINT cbvSrvDescSize = m_framework->CbvSrvHeap().DESCRIPTOR_SIZE();
+
+	LightBuffer::Data lightData;
+	lightData.m_projection     = DirectX::XMMatrixTranspose(projection);
+	lightData.m_transform      = transform.World().Invert();
+	lightData.m_transform	   = DirectX::XMMatrixTranspose(lightData.m_transform);
+	lightData.m_ambientColor   = light.m_ambientColor;
+	lightData.m_lightColor     = light.m_lightColor;
+	lightData.m_lightDirection = direction;
+
+	m_lightBuffer.UpdateBuffer(&lightData, frameIndex);
+	CD3DX12_GPU_DESCRIPTOR_HANDLE cbvHandle(cbvSrvHeapStart, m_lightBuffer.OffsetID() + frameIndex, cbvSrvDescSize);
+	return cbvHandle;
+}
+
+void Renderer::RenderSkybox(ID3D12GraphicsCommandList* cmdList, Transform& cameraTransform, TextureHandler::Texture& textures, ModelData& model, Skybox& skybox, UINT frameIndex, UINT startLocation)
+{
+	D3D12_GPU_DESCRIPTOR_HANDLE cbvSrvHeapStart = m_framework->CbvSrvHeap().GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
+	const UINT cbvSrvDescSize					= m_framework->CbvSrvHeap().DESCRIPTOR_SIZE();
+	
 	CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle(cbvSrvHeapStart, textures.m_offsetID, cbvSrvDescSize);
-	m_commandList->SetGraphicsRootDescriptorTable(1, srvHandle);
-
+	cmdList->SetGraphicsRootDescriptorTable(1, srvHandle);
+	
 	ModelData::Mesh& mesh = model.GetMeshes()[0];
 	
 	if (!model.GetInstanceTransforms().empty())
 		 model.ClearInstanceTransform();
 	
 	//* Add the rotation from the skybox and always place it a the cameras position
-	Mat4f transform = Mat4f::CreateScale({ 5.f, 5.f, 5.f });
-	transform *= Mat4f::CreateFromQuaternion(skybox.GetRotation());
-	transform.Translation(cameraTransform.m_position);   
-	
-	model.AddInstanceTransform(transform);
+	DirectX::XMVECTOR quatv = DirectX::XMLoadFloat4(&skybox.GetRotation());
+	Mat4f transform = DirectX::XMMatrixRotationQuaternion(quatv);
+	transform      *= DirectX::XMMatrixScaling(5.0f, 5.0f, 5.0f);
+	transform      *= DirectX::XMMatrixTranslation(cameraTransform.m_position.x, cameraTransform.m_position.y, cameraTransform.m_position.z);
+
+	model.AddInstanceTransform(DirectX::XMMatrixTranspose(transform));
 	model.UpdateTransformInstanceBuffer(frameIndex);
 	D3D12_VERTEX_BUFFER_VIEW vBufferViews[2] = {
 		mesh.m_vertexBufferView, model.GetTransformInstanceBuffer().GetBufferView(frameIndex)
 	};
-	m_commandList->IASetVertexBuffers(0, 2, &vBufferViews[0]);
-	m_commandList->IASetIndexBuffer(&mesh.m_indexBufferView);
-	m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	cmdList->IASetVertexBuffers(0, 2, &vBufferViews[0]);
+	cmdList->IASetIndexBuffer(&mesh.m_indexBufferView);
+	cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	
-	m_commandList->DrawIndexedInstanced(mesh.m_numIndices, 1, 0, 0, 0);
+	cmdList->DrawIndexedInstanced(mesh.m_numIndices, 1, 0, 0, 0);
 }
 
-void Renderer::RenderDirectionalLight(TextureHandler::Texture& skyboxTexture, UINT frameIndex, UINT& startLocation)
+void Renderer::RenderDirectionalLight(ID3D12GraphicsCommandList* cmdList, TextureHandler::Texture& skyboxTexture, DirectionalShadowMapping& shadowMap, SSAOTexture& ssao, UINT frameIndex, UINT startLocation)
 {
-	D3D12_GPU_DESCRIPTOR_HANDLE cbvSrvHeapStart = m_framework->GetCbvSrvUavWrapper().GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
-	const UINT cbvSrvDescSize = m_framework->GetCbvSrvUavWrapper().DESCRIPTOR_SIZE();
+	D3D12_GPU_DESCRIPTOR_HANDLE cbvSrvHeapStart = m_framework->CbvSrvHeap().GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
+	const UINT cbvSrvDescSize = m_framework->CbvSrvHeap().DESCRIPTOR_SIZE();
 
 	CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle(cbvSrvHeapStart, skyboxTexture.m_offsetID, cbvSrvDescSize);
-	m_commandList->SetGraphicsRootDescriptorTable(startLocation, srvHandle);
+	cmdList->SetGraphicsRootDescriptorTable(startLocation, srvHandle);
+	startLocation++;
 
-	m_commandList->IASetVertexBuffers(0, 0, nullptr);
-	m_commandList->IASetIndexBuffer(nullptr);
-	m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	CD3DX12_GPU_DESCRIPTOR_HANDLE shadowHandle(cbvSrvHeapStart, shadowMap.SRVOffsetID(), cbvSrvDescSize);
+	cmdList->SetGraphicsRootDescriptorTable(startLocation, shadowHandle);
+	startLocation++;
+
+	CD3DX12_GPU_DESCRIPTOR_HANDLE ssaoHandle(cbvSrvHeapStart, ssao.SRVOffsetID(), cbvSrvDescSize);
+	cmdList->SetGraphicsRootDescriptorTable(startLocation, ssaoHandle);
+	startLocation++;
+
+	cmdList->IASetVertexBuffers(0, 0, nullptr);
+	cmdList->IASetIndexBuffer(nullptr);
+	cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	
-	m_commandList->DrawInstanced(3, 1, 0, 0);
+	cmdList->DrawInstanced(3, 1, 0, 0);
 }
 
-void Renderer::RenderToGbuffer(std::vector<ModelData>& models, UINT frameIndex, std::vector<TextureHandler::Texture>& textures, bool renderTransparency)
+void Renderer::RenderPointLights(ID3D12GraphicsCommandList* cmdList, LightHandler& lightHandler, const entt::registry& registry, const UINT frameIndex, UINT startLocation)
 {
-	D3D12_GPU_DESCRIPTOR_HANDLE cbvSrvHeapStart = m_framework->GetCbvSrvUavWrapper().GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
-	const UINT cbvSrvDescSize					= m_framework->GetCbvSrvUavWrapper().DESCRIPTOR_SIZE();
+	D3D12_GPU_DESCRIPTOR_HANDLE cbvSrvHeapStart = m_framework->CbvSrvHeap().GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
+	const UINT cbvSrvDescSize = m_framework->CbvSrvHeap().DESCRIPTOR_SIZE();
+
+
+	auto view = registry.view<PointLight, Transform, Object>();
+	for (auto i : view)
+	{
+		const Object& obj = registry.get<Object>(i);
+		if (obj.m_state != Object::STATE::ACTIVE)
+			continue;
+	
+		const PointLight& light = registry.get<PointLight>(i);
+		const Transform&  transform = registry.get<Transform>(i);
+		
+		PointLightBuffer::Data lightData;
+		lightData.m_color	 = light.m_color;
+		lightData.m_range	 = light.m_range;
+		lightData.m_position = transform.m_position + light.m_offsetPosition;
+		PointLightBuffer& buffer = lightHandler.GetLightBuffer(light);
+		buffer.UpdateBuffer(&lightData, frameIndex);
+
+		CD3DX12_GPU_DESCRIPTOR_HANDLE cbvHandle(cbvSrvHeapStart, buffer.OffsetID(), cbvSrvDescSize);
+		cmdList->SetGraphicsRootDescriptorTable(1, cbvHandle);
+	
+		cmdList->IASetVertexBuffers(0, 0, nullptr);
+		cmdList->IASetIndexBuffer(nullptr);
+		cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	
+		cmdList->DrawInstanced(3, 1, 0, 0);
+	}
+	int s = 0;
+}
+
+void Renderer::RenderForwardModelEffects(ID3D12GraphicsCommandList* cmdList, const UINT depthOffset, std::vector<ModelEffectData>& modelEffects, ModelHandler& modelHandler, std::vector<TextureHandler::Texture>& textures, const UINT frameIndex, Camera& cam, Transform& camTransform, UINT startLocation)
+{
+	D3D12_GPU_DESCRIPTOR_HANDLE cbvSrvHeapStart = m_framework->CbvSrvHeap().GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
+	const UINT cbvSrvDescSize = m_framework->CbvSrvHeap().DESCRIPTOR_SIZE();
+
+
+	for (UINT i = 0; i < modelEffects.size(); i++)
+	{
+		ModelEffectData& effectData = modelEffects[i];
+		
+		// Set the effects RootSignature and Pipelinestate 
+		cmdList->SetGraphicsRootSignature(effectData.GetEffectRSO());
+		cmdList->SetPipelineState(effectData.GetEffectPSO());
+
+		CD3DX12_GPU_DESCRIPTOR_HANDLE cbvHandle = UpdateDefaultBuffers(cam, camTransform, frameIndex);
+		cmdList->SetGraphicsRootDescriptorTable(0, cbvHandle);
+
+		CD3DX12_GPU_DESCRIPTOR_HANDLE depthHandle(cbvSrvHeapStart, depthOffset, cbvSrvDescSize);
+
+		ModelData& model = modelHandler.GetLoadedModelInformation(effectData.ModelID());
+		model.UpdateTransformInstanceBuffer(effectData.GetTransforms(), frameIndex);
+
+		for (UINT i = 0; i < model.GetMeshes().size(); i++)
+		{
+			ModelData::Mesh& mesh = model.GetSingleMesh(i);
+
+			if (mesh.m_renderMesh) {
+
+				int slot = 1;
+
+				if (effectData.HasBuffer()) {	
+					effectData.UpdateData(frameIndex);
+					CD3DX12_GPU_DESCRIPTOR_HANDLE effectHandle(cbvSrvHeapStart, effectData.GetBuffer().OffsetID(), cbvSrvDescSize);
+					cmdList->SetGraphicsRootDescriptorTable(slot, effectHandle);
+					slot++;
+				}
+
+				std::vector<CD3DX12_GPU_DESCRIPTOR_HANDLE> srvHandles;
+				srvHandles.emplace_back(depthHandle);
+
+				for (UINT i = 0; i < effectData.GetTextures().size(); i++)
+					srvHandles.emplace_back(cbvSrvHeapStart, textures[effectData.GetTextures()[i]].m_offsetID, cbvSrvDescSize);
+
+				for (UINT i = 0; i < srvHandles.size(); i++)
+					cmdList->SetGraphicsRootDescriptorTable(slot + i, srvHandles[i]);
+
+				D3D12_VERTEX_BUFFER_VIEW vBufferViews[2] = {
+							mesh.m_vertexBufferView, model.GetTransformInstanceBuffer().GetBufferView(frameIndex)
+				};
+				cmdList->IASetVertexBuffers(0, 2, &vBufferViews[0]);
+				cmdList->IASetIndexBuffer(&mesh.m_indexBufferView);
+				cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+				
+				for (UINT i = 0; i < effectData.GetTransforms().size(); i++)
+					cmdList->DrawIndexedInstanced(mesh.m_numIndices, 1, 0, 0, i);	
+			}
+		}
+		effectData.GetTransforms().clear();
+	}
+}
+
+void Renderer::RenderToGbuffer(ID3D12GraphicsCommandList* cmdList, std::vector<ModelData>& models, UINT frameIndex, std::vector<TextureHandler::Texture>& textures, bool renderTransparency, UINT startLocation)
+{
+	D3D12_GPU_DESCRIPTOR_HANDLE cbvSrvHeapStart = m_framework->CbvSrvHeap().GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
+	const UINT cbvSrvDescSize					= m_framework->CbvSrvHeap().DESCRIPTOR_SIZE();
 
 	for (UINT i = 0; i < models.size(); i++)
 	{
@@ -134,28 +290,29 @@ void Renderer::RenderToGbuffer(std::vector<ModelData>& models, UINT frameIndex, 
 						
 						m_materialBuffer.UpdateBuffer(&materialData, frameIndex);
 						CD3DX12_GPU_DESCRIPTOR_HANDLE cbvHandle(cbvSrvHeapStart, m_materialBuffer.OffsetID() + frameIndex, cbvSrvDescSize);
-						m_commandList->SetGraphicsRootDescriptorTable(1, cbvHandle);
-				
+						cmdList->SetGraphicsRootDescriptorTable(1, cbvHandle);
+
 						// Handle for each texture that will be used
-						CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandles[6]; 
-						srvHandles[0] = CD3DX12_GPU_DESCRIPTOR_HANDLE(cbvSrvHeapStart, textures[mesh.m_material.m_albedo].m_offsetID,	   cbvSrvDescSize);
-						srvHandles[1] = CD3DX12_GPU_DESCRIPTOR_HANDLE(cbvSrvHeapStart, textures[mesh.m_material.m_normal].m_offsetID,	   cbvSrvDescSize);
-						srvHandles[2] = CD3DX12_GPU_DESCRIPTOR_HANDLE(cbvSrvHeapStart, textures[mesh.m_material.m_heightMap].m_offsetID,   cbvSrvDescSize);
-						srvHandles[3] = CD3DX12_GPU_DESCRIPTOR_HANDLE(cbvSrvHeapStart, textures[mesh.m_material.m_metallicMap].m_offsetID, cbvSrvDescSize);
-						srvHandles[4] = CD3DX12_GPU_DESCRIPTOR_HANDLE(cbvSrvHeapStart, textures[mesh.m_material.m_roughness].m_offsetID,   cbvSrvDescSize);
-						srvHandles[5] = CD3DX12_GPU_DESCRIPTOR_HANDLE(cbvSrvHeapStart, textures[mesh.m_material.m_aoMap].m_offsetID,       cbvSrvDescSize);
+						CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandles[6] = {
+							CD3DX12_GPU_DESCRIPTOR_HANDLE(cbvSrvHeapStart, textures[mesh.m_material.m_albedo].m_offsetID,       cbvSrvDescSize), // Albedo
+							CD3DX12_GPU_DESCRIPTOR_HANDLE(cbvSrvHeapStart, textures[mesh.m_material.m_normal].m_offsetID,	    cbvSrvDescSize), // Normal
+							CD3DX12_GPU_DESCRIPTOR_HANDLE(cbvSrvHeapStart, textures[mesh.m_material.m_metallicMap].m_offsetID,  cbvSrvDescSize), // Metallic
+							CD3DX12_GPU_DESCRIPTOR_HANDLE(cbvSrvHeapStart, textures[mesh.m_material.m_roughnessMap].m_offsetID, cbvSrvDescSize), // Roughness/Smoothness
+							CD3DX12_GPU_DESCRIPTOR_HANDLE(cbvSrvHeapStart, textures[mesh.m_material.m_heightMap].m_offsetID,    cbvSrvDescSize), // Height 
+							CD3DX12_GPU_DESCRIPTOR_HANDLE(cbvSrvHeapStart, textures[mesh.m_material.m_aoMap].m_offsetID,	    cbvSrvDescSize)  // AO
+						};
 
 						for (UINT i = 0; i < _countof(srvHandles); i++)
-							m_commandList->SetGraphicsRootDescriptorTable(i+2, srvHandles[i]);
+							cmdList->SetGraphicsRootDescriptorTable(2 + i, srvHandles[i]);
 
 						D3D12_VERTEX_BUFFER_VIEW vBufferViews[2] = {
 							mesh.m_vertexBufferView, model.GetTransformInstanceBuffer().GetBufferView(frameIndex)
 						};
-						m_commandList->IASetVertexBuffers(0, 2, &vBufferViews[0]);
-						m_commandList->IASetIndexBuffer(&mesh.m_indexBufferView);
-						m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+						cmdList->IASetVertexBuffers(0, 2, &vBufferViews[0]);
+						cmdList->IASetIndexBuffer(&mesh.m_indexBufferView);
+						cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-						m_commandList->DrawIndexedInstanced(mesh.m_numIndices, numberOfTransforms, 0, 0, 0);
+						cmdList->DrawIndexedInstanced(mesh.m_numIndices, numberOfTransforms, 0, 0, 0);
 					}
 				}
 			}
@@ -164,8 +321,8 @@ void Renderer::RenderToGbuffer(std::vector<ModelData>& models, UINT frameIndex, 
 }
 //void Renderer::TransparentRender(Scene* scene, std::vector<ModelData>& models, UINT frameIndex, std::vector<TextureHandler::Texture> textures)
 //{
-//	D3D12_GPU_DESCRIPTOR_HANDLE cbvSrvHeapStart = m_framework->GetCbvSrvUavWrapper().GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
-//	const UINT cbvSrvDescSize = m_framework->GetCbvSrvUavWrapper().DESCRIPTOR_SIZE();
+//	D3D12_GPU_DESCRIPTOR_HANDLE cbvSrvHeapStart = m_framework->CbvSrvHeap().GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
+//	const UINT cbvSrvDescSize = m_framework->CbvSrvHeap().DESCRIPTOR_SIZE();
 //
 //	for (UINT i = 0; i < models.size(); i++)
 //	{
@@ -210,39 +367,23 @@ void Renderer::RenderToGbuffer(std::vector<ModelData>& models, UINT frameIndex, 
 //	//	}
 //	//}
 //}
-void Renderer::RayRendering(std::vector <RayBuffer::RayInstance > & rays, UINT frameIndex)
-{
-	m_rayBuffer.UpdateBuffer(reinterpret_cast<UINT8*>(&rays[0]), rays.size(), frameIndex);
+//void Renderer::RayRendering(std::vector <RayBuffer::RayInstance > & rays, UINT frameIndex)
+//{
+//	m_rayBuffer.UpdateBuffer(reinterpret_cast<UINT8*>(&rays[0]), rays.size(), frameIndex);
+//
+//	m_commandList->IASetVertexBuffers(0, 1, &m_rayBuffer.GetBufferView(frameIndex));
+//	m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_POINTLIST);
+//
+//	m_commandList->DrawInstanced(1, (UINT)rays.size(), 0, 0);
+//}
+//
+//void Renderer::AABBRendering(std::vector<AABBBuffer::AABBInstance>& aabb, UINT frameIndex)
+//{
+//	m_aabbBuffer.UpdateBuffer(reinterpret_cast<UINT8*>(&aabb[0]), aabb.size(), frameIndex);
+//
+//	m_commandList->IASetVertexBuffers(0, 1, &m_aabbBuffer.GetBufferView(frameIndex));
+//	m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_POINTLIST);
+//
+//	m_commandList->DrawInstanced(1, (UINT)aabb.size(), 0, 0);
+//}
 
-	m_commandList->IASetVertexBuffers(0, 1, &m_rayBuffer.GetBufferView(frameIndex));
-	m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_POINTLIST);
-
-	m_commandList->DrawInstanced(1, (UINT)rays.size(), 0, 0);
-}
-
-void Renderer::AABBRendering(std::vector<AABBBuffer::AABBInstance>& aabb, UINT frameIndex)
-{
-	m_aabbBuffer.UpdateBuffer(reinterpret_cast<UINT8*>(&aabb[0]), aabb.size(), frameIndex);
-
-	m_commandList->IASetVertexBuffers(0, 1, &m_aabbBuffer.GetBufferView(frameIndex));
-	m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_POINTLIST);
-
-	m_commandList->DrawInstanced(1, (UINT)aabb.size(), 0, 0);
-}
-
-void Renderer::UpdateLightBuffer(const DirectionalLight& light, const Vect4f& direction, UINT frameIndex, UINT& startLocation)
-{
-	D3D12_GPU_DESCRIPTOR_HANDLE cbvSrvHeapStart = m_framework->GetCbvSrvUavWrapper().GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
-	const UINT cbvSrvDescSize = m_framework->GetCbvSrvUavWrapper().DESCRIPTOR_SIZE();
-
-	LightBuffer::Data lightData;
-	lightData.m_ambientColor = light.m_ambientColor;
-	lightData.m_lightColor = light.m_lightColor;
-	lightData.m_lightDirection = direction;
-
-	m_lightBuffer.UpdateBuffer(&lightData, frameIndex);
-
-	CD3DX12_GPU_DESCRIPTOR_HANDLE cbvHandle(cbvSrvHeapStart, m_lightBuffer.OffsetID() + frameIndex, cbvSrvDescSize);
-	m_commandList->SetGraphicsRootDescriptorTable(startLocation, cbvHandle);
-	startLocation++;
-}

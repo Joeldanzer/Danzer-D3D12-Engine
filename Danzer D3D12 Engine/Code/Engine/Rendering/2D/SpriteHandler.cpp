@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "SpriteHandler.h"
 
-#include "../../Core/DirectX12Framework.h"
+#include "../../Core/D3D12Framework.h"
 
 #include "../3rdParty/rapidjson/include/rapidjson/document.h"
 
@@ -146,7 +146,7 @@ void SpriteHandler::LoadFont(std::string fontJSON)
 
     UINT textureID = m_textureHandler.GetTexture({ texturePath.begin(), texturePath.end() });
     if (textureID == 0) {
-        m_framework.ResetCommandListAndAllocator(nullptr, L"SpriteHandler: Line 153");
+        //m_framework.ResetCommandListAndAllocator(nullptr, L"SpriteHandler: Line 153");
         textureID = m_textureHandler.CreateTexture({texturePath.begin(), texturePath.end()});
         m_textureHandler.LoadAllCreatedTexuresToGPU();
     }

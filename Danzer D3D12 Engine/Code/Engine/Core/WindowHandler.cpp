@@ -89,7 +89,7 @@ WindowHandler::WindowHandler(WindowHandler::Data data)
 
 	const wchar_t* windowTitle = L"Untitled Game";
 	s_hwnd = CreateWindow(L"stuff", windowTitle, WS_OVERLAPPEDWINDOW | WS_POPUP | WS_VISIBLE,
-		s_data.m_x, s_data.m_y, s_data.m_width, s_data.m_height, nullptr, nullptr, nullptr, this);
+		s_data.m_x, s_data.m_y, s_data.m_w, s_data.m_h, nullptr, nullptr, nullptr, this);
 
 	//ShowWindow(s_hwnd, )
 	UpdateWindow(s_hwnd);

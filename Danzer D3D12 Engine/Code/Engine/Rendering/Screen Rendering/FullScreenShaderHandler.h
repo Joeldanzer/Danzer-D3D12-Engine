@@ -1,18 +1,18 @@
 #pragma once
 #include "FullscreenShader.h"
 
-class DirectX12Framework;
+class D3D12Framework;
 
 class FullScreenShaderHandler
 {
 public:
-	FullScreenShaderHandler(DirectX12Framework& framework);
+	FullScreenShaderHandler(D3D12Framework& framework);
 	~FullScreenShaderHandler();
 
 	FullScreenShader& CreateFullScreenShader(std::wstring pixelShader);
 	
 
 private:
-	DirectX12Framework& m_framework;
+	D3D12Framework& m_framework;
 };
 

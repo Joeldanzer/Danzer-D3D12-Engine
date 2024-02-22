@@ -8,6 +8,9 @@
     <Filter Include="UI">
       <UniqueIdentifier>{6148dff1-b28c-400c-96a0-bc43d5508815}</UniqueIdentifier>
     </Filter>
+    <Filter Include="EffectShaders">
+      <UniqueIdentifier>{176de28e-7d2a-4e72-a031-287bb465085f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="default\defaultStruct.hlsli">
@@ -39,6 +42,15 @@
     <FxCompile Include="Gbuffer\GbufferVS.hlsl" />
     <FxCompile Include="Fullscreen\FullscreenVS.hlsl" />
     <FxCompile Include="Light\DirectionalLightPS.hlsl" />
+    <FxCompile Include="ShadowDepthVS.hlsl" />
+    <FxCompile Include="WaterPlaneVS.hlsl">
+      <Filter>EffectShaders</Filter>
+    </FxCompile>
+    <FxCompile Include="WaterPlanePS.hlsl">
+      <Filter>EffectShaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Light\PointLightPS.hlsl" />
+    <FxCompile Include="Fullscreen\SSAOPS.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="UI\UIstructs.hlsli">
@@ -53,5 +65,14 @@
     <None Include="Light\LightHeader.hlsli" />
     <None Include="Fullscreen\FullscreenHeader.hlsli" />
     <None Include="Light\LightFunctionsHeader.hlsli" />
+    <None Include="EffectShaderHeader.hlsli">
+      <Filter>EffectShaders</Filter>
+    </None>
+    <None Include="WaterPlaneHeader.hlsli">
+      <Filter>EffectShaders</Filter>
+    </None>
+    <None Include="Light\DirectionalLightHeader.hlsli" />
+    <None Include="Light\PointLightHeader.hlsli" />
+    <None Include="Fullscreen\SSAOHeader.hlsli" />
   </ItemGroup>
 </Project>

@@ -12,13 +12,13 @@ public:
 	Quat4f m_rotation;
 	Vect3f m_scale;
 
-	const Mat4f& Local() {
+	Mat4f& Local() {
 		return m_local;
 	}
-	const Mat4f& Last() {
+	Mat4f& Last() {
 		return m_last;
 	}
-	const Mat4f& World() {
+	Mat4f& World() {
 		return m_world;
 	}
 

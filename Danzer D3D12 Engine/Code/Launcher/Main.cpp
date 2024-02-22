@@ -38,12 +38,10 @@ int main(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ PWSTR 
 
 
 	// Will thread this
-
-	//Launch Engine stuff!
-	Engine engine = Engine(1920, 1080);
-	//Editor editor(engine);
-
+	Engine engine = Engine(1920, 1080);	
 	Game game(engine);
+
+	engine.EndInitFrame();
 
 	while (true) {
 
@@ -65,8 +63,10 @@ int main(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ PWSTR 
 		}
 
 		// * Turned off at the moment when working with Editor.
+		engine.BeginUpdate();
+
 		game.Update(engine.GetDeltaTime());
-		engine.Update();
+		engine.MidUpdate();
 		//editor.Update(engine.GetDeltaTime());
 		
 		engine.LateUpdate();		

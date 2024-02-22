@@ -1,7 +1,73 @@
+#include "../Light/LightHeader.hlsli"
+
 #define PI_MACRO 3.14159265359f;
 #define FLT_EPSILON 1.192092896e-07f
 #define nMipOffset 3
+#define MAX_SHADOW_DEPTH_BIAS 0.0001f
+#define MIN_SHADOW_DEPTH_BIAS 0.00001f
+
+float invLerp(float a, float b, float c)
+{
+    return (c - a) / (b - a);
+}
+
+float ShadowCalculation(float4 worldPos, float3 normal, float3 dir, float4x4 transform, float4x4 projection)
+{ 
+    float4 lightSpacePos = mul(worldPos, transform);
+    lightSpacePos        = mul(lightSpacePos, projection);
     
+    lightSpacePos.xyz /= lightSpacePos.w;
+    
+    float2 shadowTexCoord = 0.5f * lightSpacePos.xy + 0.5f;
+    shadowTexCoord.y      = 1.0f - shadowTexCoord.y;
+    
+    float bias = max(MIN_SHADOW_DEPTH_BIAS * (1.0f - dot(normal, dir.xyz)), MAX_SHADOW_DEPTH_BIAS);
+    float currentDepth = lightSpacePos.z - bias;
+    
+    float closestDepth = shadowMap.Sample(defaultSample, shadowTexCoord.xy).r;
+    
+    float shadow = 0.0f;
+    float2 texelSize;
+    shadowMap.GetDimensions(texelSize.x, texelSize.y);
+    texelSize = 1.0f / texelSize;
+     
+    for (int x = -1; x <= 1; x++)
+    {
+        for (int y = -1; y <= 1; y++)
+        {
+            float pcfDepth = shadowMap.Sample(defaultSample, shadowTexCoord.xy + float2(x, y) * texelSize).r;
+            shadow += currentDepth > pcfDepth ? 0.0f : 1.0f;
+        }
+    }
+    
+    shadow /= 9.0f;
+    //float  shadow = currentDepth < closestDepth ? 1.0f : 0.0f;
+    return shadow;
+     
+
+    //float2 shadowTexCoord = 0.5f + lightSpacePos.xy + 0.5f;
+    //shadowTexCoord.y = 1.0f - shadowTexCoord.y;
+    //
+    //float lightSpaceDepth = lightSpacePos.z - SHADOW_DEPTH_BIAS;
+    //
+    //float2 shadowMapDimms = float2(1920.0f, 1080.0f);
+    //float4 subPixelCoords = float4(1.0f, 1.0f, 1.0f, 1.0f);
+    //
+    //subPixelCoords.xy = frac(shadowMapDimms * shadowTexCoord);
+    //subPixelCoords.zw = 1.0f - subPixelCoords.xy;
+    //float4 bilinearWeights = subPixelCoords.zxzx * subPixelCoords.wwyy;
+    //
+    //float2 texelUnits = 1.0f / shadowMapDimms;
+    //float4 shadowDepth;
+    //shadowDepth.x = shadowMap.Sample(defaultSample, shadowTexCoord);
+    //shadowDepth.y = shadowMap.Sample(defaultSample, shadowTexCoord + float2(texelUnits.x, 0.0f));
+    //shadowDepth.z = shadowMap.Sample(defaultSample, shadowTexCoord + float2(0.0f, texelUnits.y));
+    //shadowDepth.w = shadowMap.Sample(defaultSample, shadowTexCoord + texelUnits);
+    //
+    //float4 shadowTest = (shadowDepth >= lightSpaceDepth) ? 1.0f : 0.0f;
+    //return dot(bilinearWeights, shadowTest);
+}
+
 float3 LinearToGamma(float3 aColor)
 {
     return pow(abs(aColor), 1.0 / 2.2);
@@ -158,14 +224,18 @@ float DistributionGGX(float dotNH, float roughness)
 }
 float3 FresnelSchlick(float cosTheta, float3 f0)
 {
-    return f0 + (1.0f - f0) * pow(1.0f - cosTheta, 5.0f);
+    return f0 + (1.0 - f0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
+    //return f0 + (1.0f - f0) * pow(1.0f - cosTheta, 5.0f);
 }
-float GeometrySchlickGGX(float NdotV, float k)
+float GeometrySchlickGGX(float NdotV, float roughness)
 {
-    float nom = NdotV;
+    float r = (roughness + 1.0);
+    float k = (r * r) / 8.0;
+
+    float num = NdotV;
     float denom = NdotV * (1.0 - k) + k;
 	
-    return nom / denom;
+    return num / denom;
 }
 float GeometrySmith(float3 N, float3 V, float3 L, float k)
 {
@@ -176,7 +246,6 @@ float GeometrySmith(float3 N, float3 V, float3 L, float k)
 	
     return ggx1 * ggx2;
 }
-
 
 float3 EvaluateAmbience(TextureCube cubeMap, SamplerState defaultSampler, float3 vN, float3 org_normal, float3 to_cam, float perceptualRoughness, float metalness, float3 albedo, float ao, float3 dfcol, float3 spccol, float4 ambientStr)
 {
@@ -189,22 +258,11 @@ float3 EvaluateAmbience(TextureCube cubeMap, SamplerState defaultSampler, float3
     float RdotNsat = saturate(dot(vN, vR));
     
     float l = BurleyToMip(perceptualRoughness, numMips, RdotNsat);
+    float3 specRad = cubeMap.SampleLevel(defaultSampler, vR, numMips).rgb * ambientStr.w;
+    float3 diffRad = cubeMap.SampleLevel(defaultSampler, vN, numMips).rgb * ambientStr.w;
     
-    // Take the maxinum of Mips to get the Average color of skybox
-    float3 specRad = cubeMap.SampleLevel(defaultSampler, vR, numMips).rgb;
-    float3 diffRad = cubeMap.SampleLevel(defaultSampler, vN, (float) (nrBrdfMips - 1)).rgb;
-    
-    ambientStr.rgb *= ambientStr.w;
-    if (length(specRad) == 0.f && length(diffRad) == 0.f)
-    {
-        diffRad = ambientStr.rgb;
-        specRad = ambientStr.rgb; 
-    }
-    else
-    {
-        diffRad *= ambientStr.rgb;
-        specRad *= ambientStr.rgb;
-    }
+    specRad *= ambientStr.rgb;
+    diffRad *= ambientStr.rgb;
     
     float fT = 1.0 - RdotNsat;
     float fT5 = fT * fT;
@@ -215,12 +273,12 @@ float3 EvaluateAmbience(TextureCube cubeMap, SamplerState defaultSampler, float3
     fFade *= EmpiricalSpecularAO(ao, perceptualRoughness);
     fFade *= ApproximateSpecularSelfOcclusion(vR, org_normal);
     
-    float3 ambientdiffuse = ao * dfcol * diffRad;
-    float3 ambientspecular = fFade * spccol * specRad;
+    float3 ambientdiffuse = dfcol * diffRad;
+    float3 ambientspecular = ao * fFade * spccol * specRad;
     return ambientdiffuse + ambientspecular;
 }
 
-float3 EvaluateDirectionalLight(float3 albedoColor, float3 specularColor, float3 normal, float roughness, float3 lightColor, float3 lightDir, float3 viewDir)
+float3 EvaluateDirectionalLight(float3 albedoColor, float3 specularColor, float3 normal, float roughness, float3 lightColor, float3 lightDir, float3 viewDir, float metallic)
 {
     float PI = PI_MACRO;
     float NdL = saturate(dot(normal, lightDir));
@@ -230,13 +288,34 @@ float3 EvaluateDirectionalLight(float3 albedoColor, float3 specularColor, float3
     
     float cosTheta = dot(lightDir, normal);
     
-    float  D = DistributionGGX(NdH, roughness);
-    float  G = GeometrySmith(normal, viewDir, lightDir, roughness);
+    float D = DistributionGGX(NdH, roughness);
+    float G = GeometrySmith(normal, viewDir, lightDir, roughness);
     float3 F = FresnelSchlick(cosTheta, specularColor);
   
-    float3 specular = ((D * G * F) / 4.f * dot(normal, lightDir)) * dot(normal, viewDir);
+    float3 specular = ((D * G * F) / 4.f * dot(normal, lightDir) * dot(normal, viewDir));
     float3 diffuse = max(dot(normal, lightDir), 0.0f) * albedoColor;
     diffuse *= 1.f / PI;
     
     return lightColor * lambert * (diffuse * (1.0f - specular) + specular) * PI;
+    
+    //float NdL = saturate(max(dot(normal, lightDir), 0.0f));
+    //float lambert = NdL;
+    //float3 h = normalize(viewDir + lightDir);
+    //float NdH = saturate(dot(normal, h));
+    //
+    //float  D = DistributionGGX(NdH, roughness);
+    //float  G = GeometrySmith(normal, viewDir, lightDir, roughness);
+    //float3 F = FresnelSchlick(max(dot(h, viewDir), 0.0f), specularColor);
+    //
+    //float3 kS = F;
+    //float3 kD = float3(1.0f, 1.0f, 1.0f) - kS;
+    //kD *= 1.0f - metallic;
+    //
+    //float3 numerator = D * G * F;
+    //float denominator = 4.0f * max(dot(normal, viewDir), 0.0f) * max(dot(normal, lightDir), 0.0f) + 0.0001f;
+    //float specular = numerator / denominator;
+    //
+    //float3 value = float3(0.0f, 0.0f, 0.0f);
+    //value = (kD * albedoColor / PI + specular) * lightColor.rgb * NdL;
+    //return value;
 }
