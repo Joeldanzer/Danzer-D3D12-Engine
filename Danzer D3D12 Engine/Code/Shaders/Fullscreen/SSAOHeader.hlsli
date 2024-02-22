@@ -15,15 +15,16 @@ cbuffer MainCamera : register(b0)
 }
 cbuffer KernelSamplesOne : register(b1)
 {
-    float3 SamplesOne[32];
-    float2 m_noiseScale;
-    
-    //float SampleTrash[62];
+    float4 SamplesOne[32];
 }
 cbuffer KernelSamplesTwo : register(b2)
 {
-    float3 SamplesTwo[32];
-    float2 SampleTwoTrash;
+    float4 SamplesTwo[32];
+}
+
+cbuffer WindowScale : register(b3)
+{
+    float2 NoiseScale;
 }
 
 SamplerState defaultSample : register(s0);

@@ -200,24 +200,24 @@ void PipelineStateHandler::CreateUIRootSignature(ID3D12Device* device)
 
 void PipelineStateHandler::CreateSSAORootSignature(ID3D12Device* device)
 {
-	CD3DX12_ROOT_PARAMETER rootParameter[7] = {};
+	CD3DX12_ROOT_PARAMETER rootParameter[8] = {};
 
-	CD3DX12_DESCRIPTOR_RANGE ssaoCBV[3];
-	for (UINT i = 0; i < 3; i++)
+	CD3DX12_DESCRIPTOR_RANGE ssaoCBV[4];
+	for (UINT i = 0; i < _countof(ssaoCBV); i++)
 	{
 		ssaoCBV[i] = CD3DX12_DESCRIPTOR_RANGE(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, i);
 		rootParameter[i].InitAsDescriptorTable(1, &ssaoCBV[i]);
 	}
 
 	CD3DX12_DESCRIPTOR_RANGE ssaoTextures[4];
-	for (UINT i = 0; i < 4; i++)
+	for (UINT i = 0; i < _countof(ssaoTextures); i++)
 	{
 		ssaoTextures[i] = CD3DX12_DESCRIPTOR_RANGE(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, i); 
-		rootParameter[i + 3].InitAsDescriptorTable(1, &ssaoTextures[i]);
+		rootParameter[i + _countof(ssaoCBV)].InitAsDescriptorTable(1, &ssaoTextures[i]);
 	}
 
 	CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc;
-	rootSignatureDesc.Init(_countof(rootParameter), rootParameter, 1, &s_samplerDescs[SAMPLER_DESC_WRAP],
+	rootSignatureDesc.Init(_countof(rootParameter), rootParameter, 1, &s_samplerDescs[SAMPLER_DESC_CLAMP],
 		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
 		D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
 		D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS);

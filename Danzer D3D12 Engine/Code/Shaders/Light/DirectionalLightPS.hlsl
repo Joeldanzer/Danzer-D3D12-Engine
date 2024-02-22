@@ -18,6 +18,7 @@ float4 main(VertexToPixel input) : SV_TARGET
     float4 normal        = normalTexture.Sample(defaultSample, input.m_uv).rgba; 
     float4 material      = materialTexture.Sample(defaultSample, input.m_uv); 
     float3 vertexNormal  = vertexNormalTexture.Sample(defaultSample, input.m_uv).xyz; 
+    float  ssao           = ssaoTexture.Sample(defaultSample, input.m_uv).r;
     
     float emissiveData = normal.w;
     float metallic     = material.r;
@@ -40,10 +41,12 @@ float4 main(VertexToPixel input) : SV_TARGET
     //float3 kS = FresnelSchlick(max(dot(normal.xyz, toEye.xyz), 0.0), specualrcolor);
     //float3 kD = 1.0 - kS;
     //kD *= 1.0 - metallic;
-    float3 irradiance = skyboxTexture.SampleLevel(defaultSample, normal.xyz, GetNumMips(skyboxTexture)).rgb * AmbientColor.rgb;
+    float3 ambientNormal = normal.xyz;
+    ambientNormal.z = 1.0f - ambientNormal.z;
+    float3 irradiance = skyboxTexture.SampleLevel(defaultSample, ambientNormal.xyz, GetNumMips(skyboxTexture)).rgb * AmbientColor.rgb;
     irradiance *= AmbientColor.a;
     float3 diffuse = irradiance * (albedo.rgb);
-    float3 ambient = (diffusecolor * diffuse) * ao;
+    float3 ambient = (diffusecolor * diffuse) * ssao;
     
     float3 radiance = ambient + directionalLight;
     //radiance.rgb = LinearToGamma(radiance.rgb); 
@@ -81,7 +84,7 @@ float4 main(VertexToPixel input) : SV_TARGET
             color.rgb = normal.xyz;
             break;
         case 3:
-            color.rgb = vertexNormal;
+            color.rgb = ssao.rrr;
             break;
         case 4:
             color.rgb = float3(roughness, roughness, roughness);

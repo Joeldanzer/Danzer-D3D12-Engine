@@ -218,7 +218,6 @@ void RenderManager::Impl::RenderScene(LightHandler& lightHandler, TextureHandler
 {
 	ID3D12GraphicsCommandList* cmdList = m_framework.CurrentFrameResource()->CmdList();
 
-	ID3D12DescriptorHeap* cbvSrvHeap = m_framework.CbvSrvHeap().GetDescriptorHeap();
 
 	const UINT frameIndex = m_framework.m_frameIndex;
 
@@ -237,7 +236,14 @@ void RenderManager::Impl::RenderScene(LightHandler& lightHandler, TextureHandler
 		directionaLightdir = { dir.x, dir.y, dir.z, 1.0f };
 	}
 	
-	cmdList->SetDescriptorHeaps(1, &cbvSrvHeap);
+	
+	ID3D12DescriptorHeap* descHeaps[] = {
+		m_framework.CbvSrvHeap().GetDescriptorHeap(),
+		//m_framework.RTVHeap().GetDescriptorHeap(),
+		//m_framework.DSVHeap().GetDescriptorHeap()
+	};
+
+	cmdList->SetDescriptorHeaps(_countof(descHeaps), &descHeaps[0]);
 	
 	{ //* Scene to Gbuffer start
 		Update3DInstances(scene, modelHandler, effectHandler);
@@ -281,8 +287,6 @@ void RenderManager::Impl::RenderScene(LightHandler& lightHandler, TextureHandler
 			m_framework.TransitionAllResources();
 		}
 
-		// Render 
-
 		m_mainRenderer.RenderForwardModelEffects(
 			cmdList,
 			effectHandler.GetDepthTextureOffset(),
@@ -299,7 +303,9 @@ void RenderManager::Impl::RenderScene(LightHandler& lightHandler, TextureHandler
 			D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 	} //* Scene to Gbuffer end
 
-	{ //* Draw Shadow Data
+	{ //* Draw Fullscreen Effects
+
+		// Shadow Map
 		CD3DX12_GPU_DESCRIPTOR_HANDLE shadowBuffer = m_mainRenderer.UpdateShadowMapBuffer(m_shadowMap.GetProjectionMatrix(), dirLightTransform, frameIndex);
 		cmdList->SetGraphicsRootDescriptorTable(0, shadowBuffer);
 		
@@ -308,26 +314,49 @@ void RenderManager::Impl::RenderScene(LightHandler& lightHandler, TextureHandler
 		
 		m_shadowMap.SetModelsData(modelHandler.GetAllModels());
 		m_shadowMap.RenderTexture(cmdList, m_framework.DSVHeap(), frameIndex);
-		
+		// Shadow Map End
+
+		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle = m_framework.m_rtvHeap.GET_CPU_DESCRIPTOR(0);
+
+		// SSAO Rendering
+		cmdList->SetGraphicsRootSignature(m_pipeLineHandler.GetRootSignature(ROOTSIGNATURE_STATE_SSAO));
+		cmdList->SetPipelineState(m_pipeLineHandler.GetPSO(PIPELINE_STATE_SSAO));
+
+		rtvHandle = m_framework.RTVHeap().GET_CPU_DESCRIPTOR(0);
+		rtvHandle.Offset((m_ssao.RTVOffsetID() + frameIndex) * m_framework.RTVHeap().DESCRIPTOR_SIZE());
+		cmdList->RSSetViewports(1, &m_framework.m_viewport);
+		cmdList->OMSetRenderTargets(1, &rtvHandle, false, nullptr);
+
+		cmdList->SetGraphicsRootDescriptorTable(0, m_mainRenderer.UpdateDefaultBuffers(cam, camTransform, frameIndex));
+		m_ssao.SetTextureAtSlot(cmdList, 4, m_gBuffer.GetGPUHandle(GBUFFER_WORLD_POSITION, &m_framework.CbvSrvHeap()));
+		m_ssao.SetTextureAtSlot(cmdList, 5, m_gBuffer.GetGPUHandle(GBUFFER_VERTEX_NORMAL, &m_framework.CbvSrvHeap()));
+		m_ssao.SetTextureAtSlot(cmdList, 6, m_gBuffer.GetGPUHandle(GBUFFER_DEPTH, &m_framework.CbvSrvHeap()));
+		m_ssao.RenderSSAO(cmdList, m_framework.CbvSrvHeap(), textureHandler, frameIndex);
+		// SSAO End
+
 		ID3D12Resource* shadow[] = { m_shadowMap.GetResource(frameIndex) };
 		m_framework.QeueuResourceTransition(&shadow[0], 1,
 			D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 
+		ID3D12Resource* effects[] = { m_ssao.GetResource(frameIndex) };
+		m_framework.QeueuResourceTransition(effects, _countof(effects),
+			D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+
 		m_framework.TransitionAllResources();
 	} 
 
-	{ //* Render Skybox & Ligth start
+	{ 
+		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle = m_framework.m_rtvHeap.GET_CPU_DESCRIPTOR(0);
+		
+		//* Render Skybox & Ligth start
 		cmdList->SetGraphicsRootSignature(m_pipeLineHandler.GetRootSignature(ROOTSIGNATURE_STATE_DEFAULT));
 		cmdList->SetPipelineState(m_pipeLineHandler.GetPSO(PIPELINE_STATE_SKYBOX));
 
-		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle = m_framework.m_rtvHeap.GET_CPU_DESCRIPTOR(0);
+		rtvHandle = m_framework.m_rtvHeap.GET_CPU_DESCRIPTOR(0);
 		rtvHandle.Offset(frameIndex * m_framework.RTVHeap().DESCRIPTOR_SIZE());
 
 		cmdList->RSSetViewports(1, &m_framework.m_viewport);
 		cmdList->OMSetRenderTargets(1, &rtvHandle, false, nullptr);
-
-		//ID3D12DescriptorHeap* cbvSrvHeap = m_framework.GetCbvSrvUavWrapper().GetDescriptorHeap();
-		//m_framework.m_commandList->SetDescriptorHeaps(1, &cbvSrvHeap);
 
 		UINT startLocation = 0;
 		
@@ -344,21 +373,6 @@ void RenderManager::Impl::RenderScene(LightHandler& lightHandler, TextureHandler
 			m_framework.GetFrameIndex(),
 			startLocation
 		);
-
-		// SSAO Rendering
-		cmdList->SetGraphicsRootSignature(m_pipeLineHandler.GetRootSignature(ROOTSIGNATURE_STATE_SSAO));
-		cmdList->SetPipelineState(m_pipeLineHandler.GetPSO(PIPELINE_STATE_SSAO));
-		
-		cmdList->SetGraphicsRootDescriptorTable(0, m_mainRenderer.UpdateDefaultBuffers(cam, camTransform, frameIndex));
-		m_ssao.SetTextureAtSlot(cmdList, 3, m_gBuffer.GetGPUHandle(GBUFFER_WORLD_POSITION, &m_framework.CbvSrvHeap()));
-		m_ssao.SetTextureAtSlot(cmdList, 4, m_gBuffer.GetGPUHandle(GBUFFER_VERTEX_NORMAL,  &m_framework.CbvSrvHeap()));
-		m_ssao.SetTextureAtSlot(cmdList, 5, m_gBuffer.GetGPUHandle(GBUFFER_DEPTH,		   &m_framework.CbvSrvHeap()));
-		m_ssao.RenderSSAO(cmdList, m_framework.CbvSrvHeap(), textureHandler, frameIndex);
-		
-		ID3D12Resource* ssao[] = { m_ssao.GetResource(frameIndex) };
-		m_framework.QeueuResourceTransition(ssao, 1, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-		m_framework.TransitionAllResources();
-		// SSAO End
 
 		startLocation = 0;
 
@@ -377,6 +391,7 @@ void RenderManager::Impl::RenderScene(LightHandler& lightHandler, TextureHandler
 			cmdList,
 			textureHandler.GetTextures()[skybox.GetCurrentActiveSkybox()[1] - 1],
 			m_shadowMap,
+			m_ssao,
 			m_framework.GetFrameIndex(),
 			startLocation
 		);

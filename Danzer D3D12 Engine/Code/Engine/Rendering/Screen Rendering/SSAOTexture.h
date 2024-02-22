@@ -1,6 +1,7 @@
 #pragma once
 #include "Rendering/Screen Rendering/FullscreenTexture.h"
 #include "Rendering/Buffers/SSAOBuffer.h"
+#include "Rendering/Buffers/WindowSizeBuffer.h"
 
 class TextureHandler;
 class D3D12Framework;
@@ -25,6 +26,8 @@ private:
 	SSAOBuffer          m_bufferTwo;
 	SSAOBuffer::Data    m_bufferDataOne;
 	SSAOBuffer::Data    m_bufferDataTwo;
+	WindowBuffer	    m_noiseScaleBuffer;
+	WindowBuffer::Data  m_noiseScaleData;
 
 	UINT m_textureID;
 };

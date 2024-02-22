@@ -43,7 +43,7 @@ float4 main(VertexToPixel input) : SV_TARGET
     
     float3 pointLight = EvaluateDirectionalLight(diffusecolor, specualrcolor, normal.xyz, roughness, radiance * LightColor.w, lightDir.xyz, toEye.xyz, metallic);
    
-    color.rgb = pointLight;
+    color.rgb = pointLight * ao;
     color.rgb = LinearToGamma(color.rgb);
     
     color.a = 1.0f;

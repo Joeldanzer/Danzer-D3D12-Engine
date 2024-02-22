@@ -11,11 +11,13 @@ void CBVBuffer::Init(ID3D12Device* device, DescriptorHeapWrapper* cbvWrapper, vo
 	CD3DX12_CPU_DESCRIPTOR_HANDLE cbvHandle(cbvWrapper->GetDescriptorHeap()->GetCPUDescriptorHandleForHeapStart());
 	cbvHandle.Offset(cbvWrapper->m_handleCurrentOffset * cbvWrapper->DESCRIPTOR_SIZE());
 	
+	const UINT actualSize = sizeOfData;
 	ZeroMemory(&data, sizeOfData);
 	for (unsigned int i = 0; i < FrameCount; i++)
 	{
 		CD3DX12_HEAP_PROPERTIES uploadHeap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-		CD3DX12_RESOURCE_DESC   buffer     = CD3DX12_RESOURCE_DESC::Buffer(size);
+		CD3DX12_RESOURCE_DESC   buffer     = CD3DX12_RESOURCE_DESC::Buffer(actualSize);
+		
 		CHECK_HR(device->CreateCommittedResource(
 			&uploadHeap,
 			D3D12_HEAP_FLAG_NONE,

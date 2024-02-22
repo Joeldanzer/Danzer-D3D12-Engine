@@ -12,10 +12,7 @@ public:
 
 	// Camera Buffer Data
 	struct Data {
-		Vect3f m_samples[32];
-		Vect2f m_noiseScale;
-
-		//float m_trash[62];
+		Vect4f m_samples[32];
 	};
 
 	Data* FetchData() {

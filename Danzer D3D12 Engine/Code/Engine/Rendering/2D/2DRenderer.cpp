@@ -41,7 +41,7 @@ void Renderer2D::RenderUI(ID3D12GraphicsCommandList* cmdList, std::vector<Sprite
 	cmdList->IASetIndexBuffer(&m_indexBufferView);
 
 	WindowBuffer::Data data;
-	data.m_windowSize.x = (float)WindowHandler::WindowData().m_w  / 2.f;
+	data.m_windowSize.x = (float)WindowHandler::WindowData().m_w / 2.f;
 	data.m_windowSize.y = (float)WindowHandler::WindowData().m_h / 2.f;
 
 	m_windowBuffer.UpdateBuffer(&data, frameIndex);

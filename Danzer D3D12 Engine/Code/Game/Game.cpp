@@ -88,7 +88,7 @@ Game::Impl::Impl(Engine& engine) :
 	waterData.m_edgeColor	      = { 1.0f, 1.0f, 1.0f };
 	reg.emplace<ModelEffect>(waterPlane, engine.GetModelEffectHandler().CreateModelEffect(L"WaterPlane", waterModel.m_modelID, &waterData, sizeof(WaterPlaneData), textures, true));
 	Transform& waterTransform = reg.get<Transform>(waterPlane);
-	waterTransform.m_position = { 0.0f, 0.5f, 0.0f };
+	waterTransform.m_position = { 0.0f, 2.0f, 0.0f };
 	waterTransform.m_scale	  = { 1.0f, 1.0f, 1.5f };
 
 	//for (UINT i = 1; i < 12; i++)
@@ -110,7 +110,7 @@ void Game::Impl::Update(const float dt)
 	entt::registry& reg = m_engine.GetSceneManager().GetCurrentScene().Registry();
 	Transform& transform = reg.get<Transform>(m_engine.GetSceneManager().GetCurrentScene().GetMainCamera());
 	
-	float speed = 5.0f;
+	float speed = 1.0f;
 
 	if (Input::GetInstance().IsKeyDown(VK_RIGHT))
 		transform.m_rotation *= DirectX::XMQuaternionRotationAxis(Vect3f().Up,  dt * 2.f);

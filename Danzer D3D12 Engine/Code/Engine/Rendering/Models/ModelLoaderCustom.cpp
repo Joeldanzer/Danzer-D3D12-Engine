@@ -220,6 +220,7 @@ void ModelLoaderCustom::LoadVerticiesWithTransform(std::vector<Vect3f>& v3Verts,
     loaderMesh->m_vertexSize = vertexBufferSize;
     loaderMesh->m_vertexCount = mesh->mNumVertices;
     loaderMesh->m_verticies = new char[vertexBufferSize * mesh->mNumVertices];
+
     // Collect all the necessary vertex data from aiMesh 
     VertexCollector verticies;
     verticies.m_vertexInfo.reserve(mesh->mNumVertices * vertexBufferSize);

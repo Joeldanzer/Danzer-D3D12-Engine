@@ -11,6 +11,7 @@
 #include "Rendering/Screen Rendering/GBuffer.h"
 #include "Rendering/Screen Rendering/LightHandler.h"
 #include "Screen Rendering/DirectionalShadowMapping.h"
+#include "Screen Rendering/SSAOTexture.h"
 #include "Core/WindowHandler.h"
 
 #include "Camera.h"
@@ -138,7 +139,7 @@ void Renderer::RenderSkybox(ID3D12GraphicsCommandList* cmdList, Transform& camer
 	cmdList->DrawIndexedInstanced(mesh.m_numIndices, 1, 0, 0, 0);
 }
 
-void Renderer::RenderDirectionalLight(ID3D12GraphicsCommandList* cmdList, TextureHandler::Texture& skyboxTexture, DirectionalShadowMapping& shadowMap, UINT frameIndex, UINT startLocation)
+void Renderer::RenderDirectionalLight(ID3D12GraphicsCommandList* cmdList, TextureHandler::Texture& skyboxTexture, DirectionalShadowMapping& shadowMap, SSAOTexture& ssao, UINT frameIndex, UINT startLocation)
 {
 	D3D12_GPU_DESCRIPTOR_HANDLE cbvSrvHeapStart = m_framework->CbvSrvHeap().GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
 	const UINT cbvSrvDescSize = m_framework->CbvSrvHeap().DESCRIPTOR_SIZE();
@@ -149,6 +150,11 @@ void Renderer::RenderDirectionalLight(ID3D12GraphicsCommandList* cmdList, Textur
 
 	CD3DX12_GPU_DESCRIPTOR_HANDLE shadowHandle(cbvSrvHeapStart, shadowMap.SRVOffsetID(), cbvSrvDescSize);
 	cmdList->SetGraphicsRootDescriptorTable(startLocation, shadowHandle);
+	startLocation++;
+
+	CD3DX12_GPU_DESCRIPTOR_HANDLE ssaoHandle(cbvSrvHeapStart, ssao.SRVOffsetID(), cbvSrvDescSize);
+	cmdList->SetGraphicsRootDescriptorTable(startLocation, ssaoHandle);
+	startLocation++;
 
 	cmdList->IASetVertexBuffers(0, 0, nullptr);
 	cmdList->IASetIndexBuffer(nullptr);
