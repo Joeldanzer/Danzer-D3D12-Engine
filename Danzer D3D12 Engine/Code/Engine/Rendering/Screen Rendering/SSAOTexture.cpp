@@ -10,7 +10,7 @@
 
 void SSAOTexture::InitializeSSAO(D3D12Framework& framework, TextureHandler& textureHandler, const UINT numberOfSamples, const UINT noiseSize)
 {
-	std::uniform_real_distribution<float> randomFloats(0.0, 1.0);
+	std::uniform_real_distribution<float> randomFloats(-1.0, 1.0);
 	std::default_random_engine rng;
 
 	std::vector<Vect3f> kernelSamples;
@@ -18,8 +18,8 @@ void SSAOTexture::InitializeSSAO(D3D12Framework& framework, TextureHandler& text
 	for (UINT i = 0; i < numberOfSamples; i++)
 	{
 		Vect3f sample = {
-			randomFloats(rng) * 2.0f - 1.0f,
-			randomFloats(rng) * 2.0f - 1.0f,
+			randomFloats(rng),
+			randomFloats(rng),
 			randomFloats(rng)
 		};
 
@@ -38,9 +38,9 @@ void SSAOTexture::InitializeSSAO(D3D12Framework& framework, TextureHandler& text
 	for (UINT i = 0; i < noiseSize; i++)
 	{
 		Vect4f noise = {
-			randomFloats(rng) * 2.0f - 1.0f,
-			randomFloats(rng) * 2.0f - 1.0f,
-			0.0f,
+			randomFloats(rng),
+			randomFloats(rng),
+			randomFloats(rng),
 			1.0f
 		};
 		ssaoNoise.emplace_back(noise);

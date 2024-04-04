@@ -68,15 +68,14 @@ D3D12Framework::D3D12Framework() :
 
 	// Create Descriptor Heaps
 	{
-		// Main RTV's, GBUFFER
-		m_rtvHeap.CreateDescriptorHeap(m_device.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_RTV, FrameCount + GBUFFER_COUNT + 200, false);
+		// Main RTV's, GBUFFER + Additioanl RTV used for screen effects such as SSAO & more.
+		m_rtvHeap.CreateDescriptorHeap(m_device.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_RTV, FrameCount + GBUFFER_COUNT + MAX_NUMBER_OF_RTV, false);
 		
 		// DepthStencil and ShadowMapping
 		m_dsvHeap.CreateDescriptorHeap(m_device.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1 + FrameCount + 1, false);
-
+		
+		// CBV, SRV and UAV heap. Used for everything that active in current scene. 
 		m_cbvSrvHeap.CreateDescriptorHeap(m_device.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, MAX_NUMBER_OF_DESCTRIPTORS, true);
-
-		//m_samplerHeap.CreateDescriptorHeap(m_device.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, 3, true);	
 	}
 
 	CHECK_HR(m_device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&m_commandAllocator)));

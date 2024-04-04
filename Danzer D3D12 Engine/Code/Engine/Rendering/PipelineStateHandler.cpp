@@ -252,7 +252,7 @@ void PipelineStateHandler::CreateTransparentPSO(ID3D12Device* device)
 	depthStencilDesc.DepthEnable = false;
 
 	D3D12_RASTERIZER_DESC rasterizerDesc = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
-	rasterizerDesc.CullMode = D3D12_CULL_MODE_BACK;
+	rasterizerDesc.CullMode = D3D12_CULL_MODE_NONE;
 	rasterizerDesc.FillMode = D3D12_FILL_MODE_SOLID;
 	rasterizerDesc.FrontCounterClockwise = false;
 
@@ -857,7 +857,7 @@ void PipelineStateHandler::CreateGBufferPSO(ID3D12Device* device)
 	depthStencilDesc.StencilEnable = false;
 
 	CD3DX12_RASTERIZER_DESC rastDesc(D3D12_FILL_MODE_SOLID,
-		D3D12_CULL_MODE_BACK, FALSE,
+		D3D12_CULL_MODE_FRONT, FALSE,
 		D3D12_DEFAULT_DEPTH_BIAS, D3D12_DEFAULT_DEPTH_BIAS_CLAMP,
 		D3D12_DEFAULT_SLOPE_SCALED_DEPTH_BIAS, TRUE, TRUE, FALSE,
 		0, D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF);

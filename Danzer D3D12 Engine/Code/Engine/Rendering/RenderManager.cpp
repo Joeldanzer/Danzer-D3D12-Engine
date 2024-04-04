@@ -199,7 +199,6 @@ void RenderManager::Impl::BeginFrame()
 		rtvHandle = m_framework.RTVHeap().GET_CPU_DESCRIPTOR(0);
 		rtvHandle.Offset((m_ssao.RTVOffsetID() + m_framework.m_frameIndex) * m_framework.RTVHeap().DESCRIPTOR_SIZE());
 		cmdList->ClearRenderTargetView(rtvHandle, &ClearColor[0], 0, nullptr);
-		
 	}
 }
 
@@ -323,13 +322,13 @@ void RenderManager::Impl::RenderScene(LightHandler& lightHandler, TextureHandler
 		cmdList->SetPipelineState(m_pipeLineHandler.GetPSO(PIPELINE_STATE_SSAO));
 
 		rtvHandle = m_framework.RTVHeap().GET_CPU_DESCRIPTOR(0);
-		rtvHandle.Offset((m_ssao.RTVOffsetID() + frameIndex) * m_framework.RTVHeap().DESCRIPTOR_SIZE());
+		rtvHandle.Offset((m_ssao.RTVOffsetID()) * m_framework.RTVHeap().DESCRIPTOR_SIZE());
 		cmdList->RSSetViewports(1, &m_framework.m_viewport);
 		cmdList->OMSetRenderTargets(1, &rtvHandle, false, nullptr);
 
 		cmdList->SetGraphicsRootDescriptorTable(0, m_mainRenderer.UpdateDefaultBuffers(cam, camTransform, frameIndex));
 		m_ssao.SetTextureAtSlot(cmdList, 4, m_gBuffer.GetGPUHandle(GBUFFER_WORLD_POSITION, &m_framework.CbvSrvHeap()));
-		m_ssao.SetTextureAtSlot(cmdList, 5, m_gBuffer.GetGPUHandle(GBUFFER_VERTEX_NORMAL, &m_framework.CbvSrvHeap()));
+		m_ssao.SetTextureAtSlot(cmdList, 5, m_gBuffer.GetGPUHandle(GBUFFER_NORMAL, &m_framework.CbvSrvHeap()));
 		m_ssao.SetTextureAtSlot(cmdList, 6, m_gBuffer.GetGPUHandle(GBUFFER_DEPTH, &m_framework.CbvSrvHeap()));
 		m_ssao.RenderSSAO(cmdList, m_framework.CbvSrvHeap(), textureHandler, frameIndex);
 		// SSAO End

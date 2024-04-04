@@ -3,9 +3,7 @@
 #include "D3D12Header.h"
 
 #define MAX_NUMBER_OF_DESCTRIPTORS 200000
-
-//struct ID3D12DescriptorHeap;
-//struct ID3D12Device;
+#define MAX_NUMBER_OF_RTV 200
 
 class DescriptorHeapWrapper
 {
@@ -18,13 +16,13 @@ public:
 							  UINT numberOfDescriptors,
 							  bool shaderVisible);
 
-	CD3DX12_CPU_DESCRIPTOR_HANDLE GET_CPU_DESCRIPTOR(const UINT offset); //{ return m_cpuHeapStart; }
-	CD3DX12_GPU_DESCRIPTOR_HANDLE GET_GPU_DESCRIPTOR(const UINT offset); //{ return m_gpuHeapStart; }
+	CD3DX12_CPU_DESCRIPTOR_HANDLE GET_CPU_DESCRIPTOR(const UINT offset); 
+	CD3DX12_GPU_DESCRIPTOR_HANDLE GET_GPU_DESCRIPTOR(const UINT offset); 
     
 	ID3D12DescriptorHeap*        GetDescriptorHeap()	  { return m_desctiptorHeap.Get(); }
 	const UINT					 DESCRIPTOR_SIZE()        { return m_handleIncrementSize; }
 	
-	UINT						 m_handleCurrentOffset; //CurrentOffset * DESCRIPTOR_SIZE
+	UINT						 m_handleCurrentOffset; //CurrentOffset * IncrementSize
 
 private:
 	D3D12_DESCRIPTOR_HEAP_DESC m_desc;

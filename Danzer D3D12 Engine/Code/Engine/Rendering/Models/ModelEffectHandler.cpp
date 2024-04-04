@@ -125,7 +125,7 @@ ModelEffect ModelEffectHandler::CreateModelEffect(std::wstring shaderName, const
 	D3D12_RASTERIZER_DESC    rasterizerDesc   = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
 	D3D12_DEPTH_STENCIL_DESC depthStencilDesc = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
 	
-	rasterizerDesc.CullMode = D3D12_CULL_MODE_BACK;
+	rasterizerDesc.CullMode = D3D12_CULL_MODE_NONE;
 	DXGI_SAMPLE_DESC sample = { 1, 0 };
 
 	ID3DBlob* vs;

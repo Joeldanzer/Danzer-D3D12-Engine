@@ -7,6 +7,7 @@ float4 main(VertexToPixel input) : SV_TARGET
 	float4 worldPos = PositionTexture.Sample(defaultSample, input.m_uv);
     if (!(length(worldPos.xyz) > 0))
         discard;
+    
     float3 fragPos = mul(worldPos, CameraTransform).xyz;
     float3 normal  = normalize(NormalTexture.Sample(defaultSample, input.m_uv).xyz);
     float3 noise   = normalize(NoiseTexture.Sample(defaultSample, input.m_uv * NoiseScale));
@@ -15,8 +16,8 @@ float4 main(VertexToPixel input) : SV_TARGET
     float3   biTangent = cross(normal, tangent);
     float3x3 TBN = float3x3(tangent, biTangent, normal);
     
-    float radius    = 0.5f;
-    float bias      = 0.025f;
+    float radius    = 1.0f;
+    float bias      = 0.0001f;
     float occlusion = 0.0f;
     
     for (int i = 0; i < 64; i++)
@@ -27,8 +28,9 @@ float4 main(VertexToPixel input) : SV_TARGET
         else
             sample = SamplesOne[i];
         
+        //sample = mul(float4(sample, 1.0f), CameraTransform).xyz;
         float3 samplePos = mul(sample, TBN);
-        samplePos = fragPos.xyz + samplePos * radius;
+        samplePos = fragPos.xyz + (samplePos) * radius;
         
         float4 offset = float4(samplePos, 1.0f);
         offset      = mul(offset, CameraProjection);
@@ -43,7 +45,7 @@ float4 main(VertexToPixel input) : SV_TARGET
         occlusion += (depth >= samplePos.z + bias ? 1.0f : 0.0f) * rangeCheck;
     }
     
-    occlusion = (occlusion / 64);
+    occlusion = 1.0f - (occlusion / 64);
      
     return float4(occlusion, occlusion, occlusion, 1.0f);
 }

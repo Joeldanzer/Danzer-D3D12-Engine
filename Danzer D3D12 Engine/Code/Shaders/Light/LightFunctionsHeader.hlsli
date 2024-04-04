@@ -212,20 +212,36 @@ float3 Specular(float3 specularColor, float3 h, float3 v, float3 l, float a, flo
     return ((Specular_D(a, NdH) * Specular_G(a, NdV, NdL, NdH, VdH, LdV)) * Specular_F(specularColor, v, h)) / (4.0f * NdL * NdV + 0.0001f);
 
 }
-float DistributionGGX(float dotNH, float roughness)
+//float DistributionGGX(float dotNH, float roughness)
+//{
+//    float alpha = roughness;
+//    float alphaSqr = alpha * alpha;
+//    float denom = dotNH * dotNH * (alphaSqr - 1.0f) + 1.0f;
+//    
+//    float PI = PI_MACRO;
+//    
+//    return alphaSqr / (PI * denom * denom);
+//}
+
+float DistributionGGX(float3 N, float3 H, float roughness)
 {
-    float alpha = roughness;
-    float alphaSqr = alpha * alpha;
-    float denom = dotNH * dotNH * (alphaSqr - 1.0f) + 1.0f;
+    float a = roughness * roughness;
+    float a2 = a * a;
+    float NdotH = max(dot(N, H), 0.0f);
+    float NdotH2 = NdotH * NdotH;
     
+    float nom = a2;
+    float denom = (NdotH2 * (a2 - 1.0f) + 1.0f);
     float PI = PI_MACRO;
+    denom = PI * denom * denom;
     
-    return alphaSqr / (PI * denom * denom);
+    return nom / denom;
 }
+
 float3 FresnelSchlick(float cosTheta, float3 f0)
 {
-    return f0 + (1.0 - f0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
-    //return f0 + (1.0f - f0) * pow(1.0f - cosTheta, 5.0f);
+    //return f0 + (1.0 - f0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
+    return f0 + (1.0f - f0) * pow((1.0f + 0.000001f) - cosTheta, 5.0f);
 }
 float GeometrySchlickGGX(float NdotV, float roughness)
 {
@@ -237,12 +253,12 @@ float GeometrySchlickGGX(float NdotV, float roughness)
 	
     return num / denom;
 }
-float GeometrySmith(float3 N, float3 V, float3 L, float k)
+float GeometrySmith(float3 N, float3 V, float3 L, float roughness)
 {
     float NdotV = max(dot(N, V), 0.0);
     float NdotL = max(dot(N, L), 0.0);
-    float ggx1 = GeometrySchlickGGX(NdotV, k);
-    float ggx2 = GeometrySchlickGGX(NdotL, k);
+    float ggx1 = GeometrySchlickGGX(NdotV, roughness);
+    float ggx2 = GeometrySchlickGGX(NdotL, roughness);
 	
     return ggx1 * ggx2;
 }
@@ -288,34 +304,34 @@ float3 EvaluateDirectionalLight(float3 albedoColor, float3 specularColor, float3
     
     float cosTheta = dot(lightDir, normal);
     
-    float D = DistributionGGX(NdH, roughness);
+    float D = DistributionGGX(normal, h, roughness);
     float G = GeometrySmith(normal, viewDir, lightDir, roughness);
     float3 F = FresnelSchlick(cosTheta, specularColor);
-  
-    float3 specular = ((D * G * F) / 4.f * dot(normal, lightDir) * dot(normal, viewDir));
+    
+    float3 specular = ((D * G * F) / 4.f * max(dot(normal, lightDir), 0.0f) * max(dot(normal, viewDir), 0.0f)) + 0.00001f;
     float3 diffuse = max(dot(normal, lightDir), 0.0f) * albedoColor;
     diffuse *= 1.f / PI;
     
     return lightColor * lambert * (diffuse * (1.0f - specular) + specular) * PI;
     
-    //float NdL = saturate(max(dot(normal, lightDir), 0.0f));
-    //float lambert = NdL;
-    //float3 h = normalize(viewDir + lightDir);
-    //float NdH = saturate(dot(normal, h));
-    //
-    //float  D = DistributionGGX(NdH, roughness);
-    //float  G = GeometrySmith(normal, viewDir, lightDir, roughness);
-    //float3 F = FresnelSchlick(max(dot(h, viewDir), 0.0f), specularColor);
-    //
-    //float3 kS = F;
-    //float3 kD = float3(1.0f, 1.0f, 1.0f) - kS;
-    //kD *= 1.0f - metallic;
-    //
-    //float3 numerator = D * G * F;
-    //float denominator = 4.0f * max(dot(normal, viewDir), 0.0f) * max(dot(normal, lightDir), 0.0f) + 0.0001f;
-    //float specular = numerator / denominator;
-    //
-    //float3 value = float3(0.0f, 0.0f, 0.0f);
-    //value = (kD * albedoColor / PI + specular) * lightColor.rgb * NdL;
-    //return value;
+   // float NdL = saturate(max(dot(normal, lightDir), 0.0f));
+   // float lambert = NdL;
+   // float3 h = normalize(viewDir + lightDir);
+   // float NdH = saturate(dot(normal, h));
+   // 
+   // float  D = DistributionGGX(normal, h, roughness);
+   // float  G = GeometrySmith(normal, viewDir, lightDir, roughness);
+   // float3 F = FresnelSchlick(max(dot(h, viewDir), 0.0f), specularColor);
+   // 
+   // float3 kS = F;
+   // float3 kD = float3(1.0f, 1.0f, 1.0f) - kS;
+   // kD *= 1.0f - metallic;
+   // 
+   // float3 numerator = D * G * F;
+   // float denominator = 4.0f * max(dot(normal, viewDir), 0.0f) * max(dot(normal, lightDir), 0.0f) + 0.0001f;
+   // float specular = numerator / denominator;
+   // 
+   // float3 diffuse = kD * albedoColor / PI;
+   // 
+   // return diffuse + specular * lightColor.rgb * NdL;
 }

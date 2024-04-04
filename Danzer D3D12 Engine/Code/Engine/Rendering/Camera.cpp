@@ -49,5 +49,5 @@ void Camera::ConstructProjection()
 	//m_projection(2, 3) = 1;
 	//m_projection(3, 3) = 0;
 
-	m_projection = DirectX::XMMatrixPerspectiveFovLH(radiansFOV, m_aspectRatio, m_nearPlane, m_farPlane);
+	m_projection = DirectX::XMMatrixPerspectiveFovRH(radiansFOV, m_aspectRatio, m_nearPlane, m_farPlane);
 }

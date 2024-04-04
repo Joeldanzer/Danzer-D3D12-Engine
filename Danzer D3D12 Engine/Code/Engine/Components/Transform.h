@@ -6,7 +6,8 @@ public:
 	Transform() : 
 	m_position(0.f, 0.f, 0.f),
 	m_scale(1.f, 1.f, 1.f),
-	m_rotation(0.f ,0.f ,0.f, 1.f) {}
+	m_rotation(0.f ,0.f ,0.f, 1.f)
+	{}
 
 	Vect3f m_position;
 	Quat4f m_rotation;

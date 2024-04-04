@@ -58,6 +58,7 @@ Game::Impl::Impl(Engine& engine) :
 	Transform& modelTransform = reg.emplace<Transform>(entity);
 	modelTransform.m_scale	  = {1.0f, 1.0f, 1.0f};
 	modelTransform.m_position = { 0.0f, 0.0f, 0.0f };
+//	modelTransform.m_rotation = Quat4f::CreateFromAxisAngle(Vect3f::Up, ToRadians(180.0f));
 	Object& sponzaObj = reg.emplace<Object>(entity);
 	sponzaObj.m_name = "Sponza Atrium";
 
@@ -110,26 +111,29 @@ void Game::Impl::Update(const float dt)
 	entt::registry& reg = m_engine.GetSceneManager().GetCurrentScene().Registry();
 	Transform& transform = reg.get<Transform>(m_engine.GetSceneManager().GetCurrentScene().GetMainCamera());
 	
-	float speed = 1.0f;
+	float speed = 5.0f;
 
-	if (Input::GetInstance().IsKeyDown(VK_RIGHT))
-		transform.m_rotation *= DirectX::XMQuaternionRotationAxis(Vect3f().Up,  dt * 2.f);
 	if (Input::GetInstance().IsKeyDown(VK_LEFT))
-		transform.m_rotation *= DirectX::XMQuaternionRotationAxis(Vect3f().Up, -(dt * 2.f));
+		transform.m_rotation *= DirectX::XMQuaternionRotationAxis(Vect3f::Up,  dt * 2.f);
+	if (Input::GetInstance().IsKeyDown(VK_RIGHT))
+		transform.m_rotation *= DirectX::XMQuaternionRotationAxis(Vect3f::Up, -(dt * 2.f));
 	
-	if (Input::GetInstance().IsKeyDown(VK_UP))
-		transform.m_rotation *= DirectX::XMQuaternionRotationAxis(transform.World().Left(), dt * 2.f);
 	if (Input::GetInstance().IsKeyDown(VK_DOWN))
-		transform.m_rotation *= DirectX::XMQuaternionRotationAxis(transform.World().Left(), -(dt * 2.f));
+		transform.m_rotation *= DirectX::XMQuaternionRotationAxis(transform.World().Right(), -(dt * 2.f));
+	if (Input::GetInstance().IsKeyDown(VK_UP))
+		transform.m_rotation *= DirectX::XMQuaternionRotationAxis(transform.World().Right(), dt * 2.f);
+
+	Vector3 forward = transform.World().Forward();
 
 	if (Input::GetInstance().IsKeyDown('W'))
-		transform.m_position.z += dt * speed;
+		transform.m_position += (transform.World().Forward() * speed) * dt;
 	if (Input::GetInstance().IsKeyDown('S'))
-		transform.m_position.z -= dt * speed;
+		transform.m_position -= (transform.World().Forward() * speed) * dt;
+
 	if (Input::GetInstance().IsKeyDown('A'))
-		transform.m_position.x -= dt * speed;
+		transform.m_position -= (transform.World().Right() * speed) * dt;
 	if (Input::GetInstance().IsKeyDown('D'))
-		transform.m_position.x += dt * speed;
+		transform.m_position += (transform.World().Right() * speed) * dt;
 
 	if (Input::GetInstance().IsKeyDown(VK_SPACE))
 		transform.m_position.y += dt * speed;

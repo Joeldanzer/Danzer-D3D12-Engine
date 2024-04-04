@@ -57,7 +57,7 @@ CD3DX12_GPU_DESCRIPTOR_HANDLE Renderer::UpdateDefaultBuffers(Camera& camera, Tra
 	bufferData.m_transform  = DirectX::XMMatrixTranspose(bufferData.m_transform);
 	bufferData.m_projection = DirectX::XMMatrixTranspose(camera.GetProjection());
 	bufferData.m_position = { transform.m_position.x, transform.m_position.y, transform.m_position.z, float(camera.m_renderTarget)};
-	Vect4f eye = { bufferData.m_transform.Forward() };
+	Vect4f eye = { -bufferData.m_transform.Forward() };
 	eye.w = 1.f;
 	bufferData.m_direction = eye;
 	bufferData.m_time = clock() / 1000.0f;
@@ -75,11 +75,11 @@ CD3DX12_GPU_DESCRIPTOR_HANDLE Renderer::UpdateDefaultBuffers(Camera& camera, Tra
 CD3DX12_GPU_DESCRIPTOR_HANDLE Renderer::UpdateShadowMapBuffer(Mat4f& projection, Transform& transform, UINT frameIndex)
 {
 	CameraBuffer::Data bufferData;
-	bufferData.m_transform = transform.World().Invert();
-	bufferData.m_transform = DirectX::XMMatrixTranspose(bufferData.m_transform);
+	bufferData.m_transform  = transform.World().Invert();
+	bufferData.m_transform  = DirectX::XMMatrixTranspose(bufferData.m_transform);
 	bufferData.m_projection = DirectX::XMMatrixTranspose(projection);
 	bufferData.m_position = { transform.m_position.x, transform.m_position.y, transform.m_position.z, 0.0f };
-	Vect4f eye = { bufferData.m_transform.Forward() };
+	Vect4f eye = { transform.World().Forward()};
 	eye.w = 1.f;
 	bufferData.m_direction = eye;
 

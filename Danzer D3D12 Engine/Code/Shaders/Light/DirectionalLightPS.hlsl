@@ -28,28 +28,27 @@ float4 main(VertexToPixel input) : SV_TARGET
     
     //albedo.rgb = GammaToLinear(albedo.rgb);
     float3 toEye = normalize(CameraPosition.xyz - worldPosition);
-  
     float3 r = reflect(toEye, normalize(normal.xyz));
     
     float3 specualrcolor = lerp((float3) 0.04, albedo.rgb, metallic);
     float3 diffusecolor  = lerp((float3) 0.00, albedo.rgb, 1 - metallic);
        
-    //float3 ambient          = EvaluateAmbience(skyboxTexture, defaultSample, vertexNormal, normal.rgb, toEye, roughness, metallic, albedo.rgb, ao, diffusecolor, specualrcolor, AmbientColor);
+    //float3 ambient        = EvaluateAmbience(skyboxTexture, defaultSample, vertexNormal, normal.rgb, toEye, roughness, metallic, albedo.rgb, ao, diffusecolor, specualrcolor, AmbientColor);
     float  shadowData       = ShadowCalculation(float4(worldPosition, 1.0f), normal.xyz, LightDirection.xyz, LightTransform, LightProjection);
-    float3 directionalLight = EvaluateDirectionalLight(diffusecolor, specualrcolor, normal.xyz, roughness, LightColor.rgb * LightColor.w, LightDirection.xyz, toEye.xyz, metallic) * shadowData;    
+    float3 directionalLight = EvaluateDirectionalLight(diffusecolor, specualrcolor, normal.xyz, roughness, LightColor.rgb * LightColor.w, LightDirection.xyz, toEye, metallic) * shadowData;    
     
     //float3 kS = FresnelSchlick(max(dot(normal.xyz, toEye.xyz), 0.0), specualrcolor);
     //float3 kD = 1.0 - kS;
     //kD *= 1.0 - metallic;
     float3 ambientNormal = normal.xyz;
-    ambientNormal.z = 1.0f - ambientNormal.z;
+    //ambientNormal.z = 1.0f - ambientNormal.z;
     float3 irradiance = skyboxTexture.SampleLevel(defaultSample, ambientNormal.xyz, GetNumMips(skyboxTexture)).rgb * AmbientColor.rgb;
     irradiance *= AmbientColor.a;
     float3 diffuse = irradiance * (albedo.rgb);
     float3 ambient = (diffusecolor * diffuse) * ssao;
-    
+        
     float3 radiance = ambient + directionalLight;
-    //radiance.rgb = LinearToGamma(radiance.rgb); 
+ 
     
     // Fog that i want to get in!
     //float4 oldWorldPos = worldPositionTexture.Sample(defaultSample, input.m_uv).xyzw - CameraPosition.xyzw;
@@ -78,7 +77,7 @@ float4 main(VertexToPixel input) : SV_TARGET
             color.rgb = radiance;    
             break;
         case 1:
-            color.rgb = albedo.xyz;
+            color.rgb = albedo.rgb;
             break;
         case 2:
             color.rgb = normal.xyz;
