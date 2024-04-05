@@ -54,15 +54,17 @@ Game::Impl::Impl(Engine& engine) :
 
 	m_currentTime = m_time;
 	
-	auto entity = reg.create();
-	Transform& modelTransform = reg.emplace<Transform>(entity);
-	modelTransform.m_scale	  = {1.0f, 1.0f, 1.0f};
-	modelTransform.m_position = { 0.0f, 0.0f, 0.0f };
-//	modelTransform.m_rotation = Quat4f::CreateFromAxisAngle(Vect3f::Up, ToRadians(180.0f));
-	Object& sponzaObj = reg.emplace<Object>(entity);
-	sponzaObj.m_name = "Sponza Atrium";
+	//Transform& modelTransform = reg.emplace<Transform>(entity);
+	//modelTransform.m_scale	  = {1.0f, 1.0f, 1.0f};
+	//modelTransform.m_position = { 0.0f, 0.0f, 0.0f };
+	//modelTransform.m_rotation = Quat4f::CreateFromAxisAngle(Vect3f::Up, ToRadians(180.0f));
+	//Object& sponzaObj = reg.emplace<Object>(entity);
+	//sponzaObj.m_name = "Sponza Atrium";
 
-    reg.emplace<Model>(entity, engine.GetModelHandler().LoadModel(L"Models/BlenderSponzaAtriumOld.fbx", "Sponza Atrium"));
+	m_engine.GetModelHandler().LoadModelsToScene(reg, L"Models/BlenderSponzaAtriumNew.fbx");
+
+	//auto entity = reg.create();
+    //reg.emplace<Model>(entity, engine.GetModelHandler().LoadModel(L"Models/BlenderSponzaAtriumOld.fbx", "Sponza Atrium"));
 	
 	auto waterPlane = engine.GetSceneManager().GetCurrentScene().CreateBasicEntity("WaterPlane");
 	Model waterModel = reg.emplace<Model>(waterPlane, engine.GetModelHandler().LoadModel(L"Models/WaterPlane.fbx", "Water Plane"));

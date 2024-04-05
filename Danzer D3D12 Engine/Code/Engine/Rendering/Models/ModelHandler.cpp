@@ -10,6 +10,7 @@
 
 #include "Core/FrameResource.h"
 #include "Scene.h"
+#include "Components/Transform.h"
 
 #include <iostream>
 #include <filesystem>
@@ -128,36 +129,57 @@ Model ModelHandler::LoadModel(std::wstring fileName, std::string name, bool tran
 	return Model(id);
 }
 
-//Model ModelHandler::LoadModel(LoaderModel* loadedModel, bool transparent, bool uvFlipped)
-//{
-//	UINT exists = GetExistingModel(loadedModel->m_name);
-//	if (exists != 0) {
-//		return exists;
-//	}
-//
-//	m_framework.ResetCommandListAndAllocator(nullptr);
-//	std::string s = SetModelName({ loadedModel->m_name.begin(), loadedModel->m_name.end()});
-//	
-//	std::vector<ModelData::Mesh> meshes = LoadMeshFromLoaderModel(loadedModel, s);
-//
-//	// Now we set the buffer infromation into our BUFFER_VIEWS as well as 
-//	// creating DescriptorHeaps and SRV for our textures
-//	for (UINT i = 0; i < meshes.size(); i++)
-//	{
-//		meshes[i].m_indexBufferView.BufferLocation = meshes[i].m_indexBuffer->GetGPUVirtualAddress();
-//		meshes[i].m_indexBufferView.Format = DXGI_FORMAT_R32_UINT;
-//		meshes[i].m_indexBufferView.SizeInBytes = sizeof(unsigned int) * meshes[i].m_numIndices;
-//
-//		meshes[i].m_vertexBufferView.BufferLocation = meshes[i].m_vertexBuffer->GetGPUVirtualAddress();
-//		meshes[i].m_vertexBufferView.StrideInBytes = meshes[i].m_vertexSize;
-//		meshes[i].m_vertexBufferView.SizeInBytes = meshes[i].m_vertexSize * meshes[i].m_numVerticies;
-//	}
-//
-//	m_textureHandler.LoadAllCreatedTexuresToGPU();
-//
-//	UINT id = GetNewlyCreatedModelID(ModelData(meshes, m_framework.GetDevice(), loadedModel->m_verticies, s, transparent));
-//	return Model(id);
-//}
+void ModelHandler::LoadModelsToScene(entt::registry& reg, std::wstring fileName, std::string name, bool uvFlipped)
+{
+	std::string modelStr = { fileName.begin(), fileName.end() };
+	
+	std::vector<std::pair<std::string, Mat4f>> transforms;
+	std::vector<std::unique_ptr<LoaderModel>>  models = m_modelLoader.LoadMultipleModelsFromAssimp(modelStr, transforms, uvFlipped);
+
+	for (int i = 0; i < models.size(); i++)
+	{
+		std::vector<ModelData::Mesh> meshes = LoadMeshFromLoaderModel(models[i].get(), modelStr);
+		std::vector<Vect3f>	      verticies = models[i]->m_verticies;
+
+		// Now we set the buffer infromation into our BUFFER_VIEWS as well as 
+		// creating DescriptorHeaps and SRV for our textures
+		for (UINT i = 0; i < meshes.size(); i++)
+		{
+			meshes[i].m_indexBufferView.BufferLocation = meshes[i].m_indexBuffer->GetGPUVirtualAddress();
+			meshes[i].m_indexBufferView.SizeInBytes = sizeof(unsigned int) * meshes[i].m_numIndices;
+			meshes[i].m_indexBufferView.Format = DXGI_FORMAT_R32_UINT;
+
+			meshes[i].m_vertexBufferView.BufferLocation = meshes[i].m_vertexBuffer->GetGPUVirtualAddress();
+			meshes[i].m_vertexBufferView.StrideInBytes  = meshes[i].m_vertexSize;
+			meshes[i].m_vertexBufferView.SizeInBytes    = meshes[i].m_vertexSize * meshes[i].m_numVerticies;
+		}
+
+		std::string modelName = "";
+		if (name.empty())
+			modelName = SetModelName(fileName);
+		else
+			modelName = name;
+
+		GetNewlyCreatedModelID(ModelData(meshes, m_framework.GetDevice(), &m_framework.CbvSrvHeap(), verticies, fileName, models[i]->m_name.c_str(), false));
+	}	
+
+	int number = 0;
+	for (int i = 0; i < transforms.size(); i++)
+	{
+		for (int j = 0; j < m_models.size(); j++)
+		{
+			if (transforms[i].first == m_models[j].m_name) {
+				auto entity = reg.create();
+				reg.emplace<Object>(entity);
+				reg.emplace<Model>(entity, m_models[j].GetID());
+				Transform& transform = reg.emplace<Transform>(entity);
+				transform.SetTransform(transforms[i].second);
+				number++;
+			}
+
+		}
+	}
+}
 
 UINT ModelHandler::GetExistingModel(std::wstring modelPath)
 {
@@ -170,38 +192,6 @@ UINT ModelHandler::GetExistingModel(std::wstring modelPath)
 
 	return 0;
 }
-
-//UINT ModelHandler::LoadModelFromLevel(LoaderModel* loadedModel, std::vector<UINT>& textures, bool transparent, bool uvFlipped)
-//{
-//
-//	//UINT exists = GetExistingModel(loadedModel->m_name);
-//	//if (exists != 0) {
-//	//	return exists;
-//	//}
-//
-//	m_framework.ResetCommandListAndAllocator(nullptr);
-//	std::vector<ModelData::Mesh> meshes = LoadMeshFromLoaderModel(loadedModel, textures);
-//
-//	std::string s = SetModelName({ loadedModel->m_name.begin(), loadedModel->m_name.end() });
-//
-//	// Now we set the buffer infromation into our BUFFER_VIEWS as well as 
-//	// creating DescriptorHeaps and SRV for our textures
-//	for (UINT i = 0; i < meshes.size(); i++)
-//	{
-//		meshes[i].m_indexBufferView.BufferLocation = meshes[i].m_indexBuffer->GetGPUVirtualAddress();
-//		meshes[i].m_indexBufferView.Format = DXGI_FORMAT_R32_UINT;
-//		meshes[i].m_indexBufferView.SizeInBytes = sizeof(unsigned int) * meshes[i].m_numIndices;
-//
-//		meshes[i].m_vertexBufferView.BufferLocation = meshes[i].m_vertexBuffer->GetGPUVirtualAddress();
-//		meshes[i].m_vertexBufferView.StrideInBytes = meshes[i].m_vertexSize;
-//		meshes[i].m_vertexBufferView.SizeInBytes = meshes[i].m_vertexSize * meshes[i].m_numVerticies;
-//
-//	}
-//
-//	UINT id = GetNewlyCreatedModelID(ModelData(meshes, m_framework.GetDevice(), loadedModel->m_verticies, s, transparent));
-//	
-//	return id;
-//}
 
 void ModelHandler::SetMaterialForModel(UINT model, Material material, UINT meshIndex)
 {
@@ -221,6 +211,7 @@ Material ModelHandler::GetNewMaterialFromLoadedModel(const std::string& material
 	std::wstring smoothness = std::wstring(materialName.begin(), materialName.end()) + L"_Smoothness.dds";
 	std::wstring height     = std::wstring(materialName.begin(), materialName.end()) + L"_Height.dds";
 
+	// Naming convention on this model is soooo bad that I gotta do this
 	if (materialName.find("Fabric_Curtain") != std::string::npos) {
 		normal     = L"Sprites/Fabric_Curtain_Normal.dds";
 		metal      = L"Sprites/Fabric_Curtain_Metallic.dds";
@@ -233,9 +224,7 @@ Material ModelHandler::GetNewMaterialFromLoadedModel(const std::string& material
 		metal      = L"Sprites/Fabric_Round_Metallic.dds";
 		ao         = L"Sprites/Fabric_Round_AO.dds";
 		smoothness = L"Sprites/Fabric_Round_Smoothness.dds";
-
 	}
-
 
 	material.m_albedo	    = m_textureHandler.GetTexture(albedo);
 	material.m_normal	    = m_textureHandler.GetTexture(normal);

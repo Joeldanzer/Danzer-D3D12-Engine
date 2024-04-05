@@ -5,6 +5,7 @@
 #include "Components/Model.h"
 #include "ModelLoaderCustom.h"
 
+#include "entt/entt.hpp"
 class Scene;
 class RenderManager;
 class TextureHandler;
@@ -23,10 +24,8 @@ public:
 
 	Model CreateCustomModel(CustomModel model, bool transparent = false);
 	Model LoadModel(std::wstring fileName, std::string name = "", bool transparent = false, bool uvFlipped = false);
+	void  LoadModelsToScene(entt::registry& reg, std::wstring fileName, std::string name = "", bool uvFlipped = false);
 	UINT GetExistingModel(std::wstring modelName);
-
-	//Model LoadModel(LoaderModel* loadedModel, bool transparent = false, bool uvFlipped = false);
-	//UINT LoadModelFromLevel(LoaderModel* loadedModel, std::vector<UINT>& textures, bool transparent = false, bool uvFlipped = false);
 
 	ModelData& GetLoadedModelInformation(UINT id) {
 		if (id - 1 < m_models.size() && id != 0)
@@ -55,8 +54,8 @@ private:
 	std::vector<ModelData> m_models;
 
 	// Used to easily create necessary buffers for Models.
-	ModelLoaderCustom   m_modelLoader;	
-	TextureHandler&     m_textureHandler;
-	D3D12Framework& m_framework;
+	ModelLoaderCustom m_modelLoader;	
+	TextureHandler&   m_textureHandler;
+	D3D12Framework&   m_framework;
 };
 

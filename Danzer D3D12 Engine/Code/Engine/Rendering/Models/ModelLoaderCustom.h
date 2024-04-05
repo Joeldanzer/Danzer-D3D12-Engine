@@ -90,18 +90,23 @@ public:
 	~ModelLoaderCustom();
 
 	std::unique_ptr<LoaderModel> LoadModelFromAssimp(std::string fileName, bool uvFlipped);
+	std::vector<std::unique_ptr<LoaderModel>> LoadMultipleModelsFromAssimp(std::string fileName, std::vector<std::pair<std::string, Mat4f>>& transforms, bool uvFlipped);
 	std::unique_ptr<LoaderModel> LoadModelFromAiNode(const aiScene* scene, aiNode* node, std::vector<UINT>& textures, bool uvFlipped);
 	Mat4f ConvertToEngineMat4(const aiMatrix4x4& assimpMatrix);
 	std::vector<std::string> GetAllTexturesFromScene(const aiScene* scene);
 	std::string FixModelName(std::string name);
 
 private:
+	void FetchAllModelsInScene(const aiScene* scene, std::vector<std::unique_ptr<LoaderModel>>& models, std::vector<std::pair<std::string, Mat4f>>& transforms, bool uvFlipped);
 	void GetAllModelProperties(LoaderModel* out, aiNode* child, const aiScene* scene, Mat4f parentMat, bool uvFlipped);
 	void LoadVerticies(std::vector<Vect3f>& v3Verts, aiMesh* mesh, LoaderMesh* loaderMesh, bool uvFlipped);
 	void LoadVerticiesWithTransform(std::vector<Vect3f>& v3Verts, aiMesh* mesh, LoaderMesh* loaderMesh, Mat4f transform, bool uvFlipped);
 	void LoadMaterials(const aiScene* scene, LoaderModel* model);
 	void LoadTexture(int type, std::vector<std::string>& textures, aiMaterial* material);
 	void LoadTexture(int type, std::vector<std::string>& textures, aiMaterial* material, const aiScene* scene);
+	void FetchMeshOfChild(const aiScene* scene, aiNode* child, const Mat4f& transform, LoaderModel* out, bool uvFlipped);
+
+	bool CheckModelName(std::vector<std::unique_ptr<LoaderModel>>& models, std::string& name);
 
 	Assimp::Importer m_importer;
 };

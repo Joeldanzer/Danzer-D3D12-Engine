@@ -21,7 +21,6 @@ std::unique_ptr<LoaderModel> ModelLoaderCustom::LoadModelFromAssimp(std::string 
     auto flags = 0
         | aiProcessPreset_TargetRealtime_MaxQuality
         | aiProcess_ConvertToLeftHanded
-        //| aiProcess_FixInfacingNormals
         | aiProcess_TransformUVCoords
         | aiProcess_CalcTangentSpace
         | aiProcess_GlobalScale
@@ -45,6 +44,33 @@ std::unique_ptr<LoaderModel> ModelLoaderCustom::LoadModelFromAssimp(std::string 
     LoadMaterials(scene, model.get());
 
     return model;
+}
+
+std::vector<std::unique_ptr<LoaderModel>> ModelLoaderCustom::LoadMultipleModelsFromAssimp(std::string fileName, std::vector<std::pair<std::string, Mat4f>>& transforms, bool uvFlipped)
+{
+    std::ifstream fileExist(fileName);
+    if (!fileExist.good())
+        assert(fileExist, fileName.c_str() + " doesn't exist!");
+    //AI_CONFIG_COLUM_A
+    m_importer.SetPropertyBool(AI_CONFIG_FBX_CONVERT_TO_M, false);
+    m_importer.SetPropertyBool(AI_CONFIG_IMPORT_FBX_PRESERVE_PIVOTS, true);
+    auto flags = 0
+        | aiProcessPreset_TargetRealtime_MaxQuality
+        | aiProcess_ConvertToLeftHanded
+        //| aiProcess_FixInfacingNormals
+        | aiProcess_TransformUVCoords
+        | aiProcess_CalcTangentSpace
+        //| aiProcess_GlobalScale
+        //| aiProcess_FindInstances
+        ;
+
+    const aiScene* scene = m_importer.ReadFile(fileName, flags);
+    assert(scene, "Assimp Failed to load '" + fileName.c_str() + "'");
+
+    std::vector<std::unique_ptr<LoaderModel>> models;
+    FetchAllModelsInScene(scene, models, transforms, uvFlipped);
+
+    return models;
 }
 
 std::unique_ptr<LoaderModel> ModelLoaderCustom::LoadModelFromAiNode(const aiScene* scene, aiNode* node, std::vector<UINT>& textures, bool uvFlipped)
@@ -81,38 +107,52 @@ std::unique_ptr<LoaderModel> ModelLoaderCustom::LoadModelFromAiNode(const aiScen
     return model;
 }
 
+void ModelLoaderCustom::FetchAllModelsInScene(const aiScene* scene, std::vector<std::unique_ptr<LoaderModel>>& models, std::vector<std::pair<std::string, Mat4f>>& transforms, bool uvFlipped)
+{
+    aiNode* rootNode = scene->mRootNode;
+    while (rootNode->mParent != nullptr)
+        rootNode = rootNode->mParent;
+
+    for (int i = 0; i < rootNode->mNumChildren; i++)
+    {
+        // First check if we have already created this model.
+        std::string modelName = rootNode->mChildren[i]->mName.C_Str();
+        Mat4f mat = ConvertToEngineMat4(rootNode->mChildren[i]->mTransformation);// * ConvertToEngineMat4(rootNode->mTransformation);
+        //if (CheckModelName(models, modelName)) {
+        //    transforms.push_back({modelName, mat });
+        //    continue;
+        //}
+        // still need to Add all the transforms 
+        //GetAllModelProperties(models[index].get(), rootNode->mChildren[i], scene, ConvertToEngineMat4(rootNode->mTransformation), uvFlipped);
+
+        models.emplace_back(std::make_unique<LoaderModel>());
+        int index = models.size() - 1;
+        
+        models[index]->m_name  = modelName;
+        models[index]->m_scene = scene;
+
+        FetchMeshOfChild(scene, rootNode->mChildren[i], Mat4f::Identity, models[index].get(), uvFlipped);
+        LoadMaterials(scene, models[index].get());
+
+        transforms.push_back({ modelName, mat });
+    }
+}
+
 void ModelLoaderCustom::GetAllModelProperties(LoaderModel* out, aiNode* currentNode, const aiScene* scene, Mat4f parentMat, bool uvFlipped)
 {
     for (UINT i = 0; i < currentNode->mNumChildren; i++)
     {
         aiNode* child = currentNode->mChildren[i];
-        Mat4f transform = ConvertToEngineMat4(child->mTransformation) * parentMat;
-       // child->mTransformation *= currentNode->mTransformation;
+        Mat4f   transform = ConvertToEngineMat4(child->mTransformation) * parentMat;
 
         if (child->mNumChildren > 0)
             GetAllModelProperties(out, child, scene, transform, uvFlipped);
 
-
-        for (UINT j = 0; j < child->mNumMeshes; j++)
-        {
-            aiMesh* assimpMesh = scene->mMeshes[child->mMeshes[j]];
-            LoaderMesh* mesh = new LoaderMesh();
-            
-            mesh->m_name = assimpMesh->mName.C_Str();
-
-            mesh->m_textureIndex = assimpMesh->mMaterialIndex;
-            LoadVerticiesWithTransform(out->m_verticies, assimpMesh, mesh, transform, uvFlipped);
-
-            mesh->m_indices.reserve(assimpMesh->mNumFaces * 3LL);
-            for (UINT p = 0; p < assimpMesh->mNumFaces; p++)
-                for (UINT k = 0; k < assimpMesh->mFaces[p].mNumIndices; k++)               
-                    mesh->m_indices.emplace_back(assimpMesh->mFaces[p].mIndices[k]);
-                
-            out->m_meshes.emplace_back(mesh);
-        }
-
+        FetchMeshOfChild(scene, child, transform, out, uvFlipped);
     }
 }
+
+
 
 // *Loads all the useful vertex information that we need from aiMesh 
 void ModelLoaderCustom::LoadVerticies(std::vector<Vect3f>& v3Verts, aiMesh* mesh, LoaderMesh* loaderMesh, bool uvFlipped)
@@ -268,7 +308,8 @@ void ModelLoaderCustom::LoadMaterials(const aiScene* scene, LoaderModel* model)
 {
     for (unsigned int m = 0; m < scene->mNumMaterials; m++)
     {
-        LoadTexture(aiTextureType_DIFFUSE, model->m_textures, scene->mMaterials[m]); // TEXTURE_DEFINITION_ALBEDO
+        LoadTexture(aiTextureType_DIFFUSE, model->m_textures, scene->mMaterials[m]); // TEXTURE_DEFINITION_ALBEDO     
+
         //LoadTexture(aiTextureType_UNKNOWN,      model->m_textures, scene->mMaterials[m]); // TEXTURE_DEFINITION_ALBEDO
         //LoadTexture(aiTextureType_SPECULAR,     model->m_textures, scene->mMaterials[m]); // TEXTURE_DEFINITION_ROUGHNESS
         //LoadTexture(aiTextureType_AMBIENT,      model->m_textures, scene->mMaterials[m]); // TEXTURE_DEFINITION_AMBIENTOCCLUSION
@@ -280,7 +321,6 @@ void ModelLoaderCustom::LoadMaterials(const aiScene* scene, LoaderModel* model)
         //LoadTexture(aiTextureType_OPACITY,      model->m_textures, scene->mMaterials[m]);
         //LoadTexture(aiTextureType_DISPLACEMENT, model->m_textures, scene->mMaterials[m]);
         //LoadTexture(aiTextureType_LIGHTMAP,     model->m_textures, scene->mMaterials[m]);
-
     }
 } 
 
@@ -346,6 +386,40 @@ void ModelLoaderCustom::LoadTexture(int type, std::vector<std::string>& textures
     }
     
     textures.emplace_back(filePath);
+}
+
+void ModelLoaderCustom::FetchMeshOfChild(const aiScene* scene, aiNode* child, const Mat4f& transform, LoaderModel* out, bool uvFlipped)
+{
+    for (UINT i = 0; i < child->mNumMeshes; i++)
+    {
+        aiMesh* assimpMesh = scene->mMeshes[child->mMeshes[i]];
+        LoaderMesh* mesh = new LoaderMesh();
+
+        mesh->m_name = assimpMesh->mName.C_Str();
+
+        mesh->m_textureIndex = assimpMesh->mMaterialIndex;
+        LoadVerticiesWithTransform(out->m_verticies, assimpMesh, mesh, transform, uvFlipped);
+
+        mesh->m_indices.reserve(assimpMesh->mNumFaces * 3LL);
+        for (UINT p = 0; p < assimpMesh->mNumFaces; p++)
+            for (UINT k = 0; k < assimpMesh->mFaces[p].mNumIndices; k++)
+                mesh->m_indices.emplace_back(assimpMesh->mFaces[p].mIndices[k]);
+
+        out->m_meshes.emplace_back(mesh);
+        int s = 1;
+    }
+}
+
+bool ModelLoaderCustom::CheckModelName(std::vector<std::unique_ptr<LoaderModel>>& models, std::string& name)
+{
+    // First check if we have already created this model.
+    name.erase(std::remove_if(name.begin(), name.end(), ::isdigit), name.end());
+
+    for (int i = 0; i < models.size(); i++)
+        if (models[i]->m_name == name)
+            return true;
+
+    return false;
 }
 
 std::vector<std::string> ModelLoaderCustom::GetAllTexturesFromScene(const aiScene* scene)
