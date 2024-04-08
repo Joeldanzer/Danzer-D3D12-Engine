@@ -27,6 +27,14 @@ public:
 		return m_lastPosition;
 	}
 
+	void SetTransform(const Mat4f mat) {
+		DirectX::XMVECTOR s, q, p;
+		DirectX::XMMatrixDecompose(&s, &q, &p, mat);
+		m_scale    = { 1.0f, 1.0f, 1.0f };
+		m_rotation = { q.m128_f32[0], q.m128_f32[1], q.m128_f32[2], q.m128_f32[3] };
+		m_position = { p.m128_f32[0], p.m128_f32[1], p.m128_f32[2] };
+	}
+
 	void SetParent(Transform* parent) {
 		// Needs more
 		if (parent)
