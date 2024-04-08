@@ -141,6 +141,7 @@ void ModelHandler::LoadModelsToScene(entt::registry& reg, std::wstring fileName,
 		std::vector<ModelData::Mesh> meshes = LoadMeshFromLoaderModel(models[i].get(), modelStr);
 		std::vector<Vect3f>	      verticies = models[i]->m_verticies;
 
+		bool isTransparent = models[i]->m_isTransparent;
 		// Now we set the buffer infromation into our BUFFER_VIEWS as well as 
 		// creating DescriptorHeaps and SRV for our textures
 		for (UINT i = 0; i < meshes.size(); i++)
@@ -160,7 +161,7 @@ void ModelHandler::LoadModelsToScene(entt::registry& reg, std::wstring fileName,
 		else
 			modelName = name;
 
-		GetNewlyCreatedModelID(ModelData(meshes, m_framework.GetDevice(), &m_framework.CbvSrvHeap(), verticies, fileName, models[i]->m_name.c_str(), false));
+		GetNewlyCreatedModelID(ModelData(meshes, m_framework.GetDevice(), &m_framework.CbvSrvHeap(), verticies, fileName, models[i]->m_name.c_str(), isTransparent));
 	}	
 
 	int number = 0;

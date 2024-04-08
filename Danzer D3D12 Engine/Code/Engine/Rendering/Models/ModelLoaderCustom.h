@@ -29,7 +29,6 @@ struct LoaderMesh {
 
 	Mat4f m_meshTransform;
 	UINT m_textureIndex;
-	//bool m_hasTexture;
 	std::vector<unsigned int> m_indices;
 	char* m_verticies;
 	unsigned int m_vertexCount;
@@ -43,7 +42,8 @@ struct LoaderModel {
 		m_scene(nullptr),
 		m_meshes(),
 		m_inverseMatrix(Mat4f()),
-		m_isLoaded(false)
+		m_isLoaded(false),
+		m_isTransparent(false)
 	{}
 	~LoaderModel() { for (auto* m : m_meshes) { delete m; } }
 
@@ -54,6 +54,7 @@ struct LoaderModel {
 	std::vector<std::string> m_textures;
 	Mat4f m_inverseMatrix;
 	bool m_isLoaded;
+	bool m_isTransparent;
 };
 
 // Collect Vertex Info from Assimp aiMesh
@@ -102,7 +103,7 @@ private:
 	void LoadVerticies(std::vector<Vect3f>& v3Verts, aiMesh* mesh, LoaderMesh* loaderMesh, bool uvFlipped);
 	void LoadVerticiesWithTransform(std::vector<Vect3f>& v3Verts, aiMesh* mesh, LoaderMesh* loaderMesh, Mat4f transform, bool uvFlipped);
 	void LoadMaterials(const aiScene* scene, LoaderModel* model);
-	void LoadTexture(int type, std::vector<std::string>& textures, aiMaterial* material);
+	void LoadTexture(int type, int textureIndex, std::vector<std::string>& textures, aiMaterial* material);
 	void LoadTexture(int type, std::vector<std::string>& textures, aiMaterial* material, const aiScene* scene);
 	void FetchMeshOfChild(const aiScene* scene, aiNode* child, const Mat4f& transform, LoaderModel* out, bool uvFlipped);
 

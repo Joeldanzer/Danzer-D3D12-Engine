@@ -30,7 +30,7 @@ public:
 	void SetTransform(const Mat4f mat) {
 		DirectX::XMVECTOR s, q, p;
 		DirectX::XMMatrixDecompose(&s, &q, &p, mat);
-		m_scale    = { 1.0f, 1.0f, 1.0f };
+		m_scale    = { s.m128_f32[0], s.m128_f32[1], s.m128_f32[2] };
 		m_rotation = { q.m128_f32[0], q.m128_f32[1], q.m128_f32[2], q.m128_f32[3] };
 		m_position = { p.m128_f32[0], p.m128_f32[1], p.m128_f32[2] };
 	}

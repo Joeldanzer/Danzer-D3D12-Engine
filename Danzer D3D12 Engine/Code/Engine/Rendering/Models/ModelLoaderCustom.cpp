@@ -57,11 +57,10 @@ std::vector<std::unique_ptr<LoaderModel>> ModelLoaderCustom::LoadMultipleModelsF
     auto flags = 0
         | aiProcessPreset_TargetRealtime_MaxQuality
         | aiProcess_ConvertToLeftHanded
-        //| aiProcess_FixInfacingNormals
         | aiProcess_TransformUVCoords
         | aiProcess_CalcTangentSpace
-        //| aiProcess_GlobalScale
-        //| aiProcess_FindInstances
+        | aiProcess_GlobalScale
+        | aiProcess_FindInstances
         ;
 
     const aiScene* scene = m_importer.ReadFile(fileName, flags);
@@ -309,8 +308,15 @@ void ModelLoaderCustom::LoadMaterials(const aiScene* scene, LoaderModel* model)
 {
     for (unsigned int m = 0; m < model->m_meshes.size(); m++)
     {   
-        LoadTexture(aiTextureType_DIFFUSE, model->m_textures, scene->mMaterials[model->m_meshes[m]->m_textureIndex]); // TEXTURE_DEFINITION_ALBEDO     
-
+        LoadTexture(aiTextureType_DIFFUSE, model->m_meshes[m]->m_textureIndex, model->m_textures, scene->mMaterials[model->m_meshes[m]->m_textureIndex]); // TEXTURE_DEFINITION_ALBEDO     
+        // Will have to fix this some other time :/
+        if (!model->m_isTransparent) {
+            ai_real opacity = 1.0f;
+            aiReturn check = scene->mMaterials[model->m_meshes[m]->m_textureIndex]->Get(AI_MATKEY_OPACITY, opacity);
+            printf("%f \n", opacity);
+            if(check != AI_FAILURE)
+                model->m_isTransparent = opacity != 1.0f ? true : false;
+        }
         //LoadTexture(aiTextureType_UNKNOWN,      model->m_textures, scene->mMaterials[m]); // TEXTURE_DEFINITION_ALBEDO
         //LoadTexture(aiTextureType_SPECULAR,     model->m_textures, scene->mMaterials[m]); // TEXTURE_DEFINITION_ROUGHNESS
         //LoadTexture(aiTextureType_AMBIENT,      model->m_textures, scene->mMaterials[m]); // TEXTURE_DEFINITION_AMBIENTOCCLUSION
@@ -325,7 +331,7 @@ void ModelLoaderCustom::LoadMaterials(const aiScene* scene, LoaderModel* model)
     }
 } 
 
-void ModelLoaderCustom::LoadTexture(int type, std::vector<std::string>& textures, aiMaterial* material)
+void ModelLoaderCustom::LoadTexture(int type, int textureIndex, std::vector<std::string>& textures, aiMaterial* material)
 {
     int texIndex = 0;
     aiReturn texFound = AI_SUCCESS;
@@ -353,6 +359,9 @@ void ModelLoaderCustom::LoadTexture(int type, std::vector<std::string>& textures
        
         filePath.insert(0, "Sprites/");
     }
+
+    //float opacity = 1.0f;
+    //aiReturn check = material->Get(AI_MATKEY_OPACITY, opacity);
 
     textures.push_back(filePath);
 }
