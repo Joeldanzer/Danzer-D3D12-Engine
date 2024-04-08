@@ -48,8 +48,7 @@ float4 main(VertexToPixel input) : SV_TARGET
     float3 ambient = (diffusecolor * diffuse) * ssao;
         
     float3 radiance = ambient + directionalLight;
- 
-    
+
     // Fog that i want to get in!
     //float4 oldWorldPos = worldPositionTexture.Sample(defaultSample, input.m_uv).xyzw - CameraPosition.xyzw;
     //float fogDistance = length(oldWorldPos.xyz) / fogDistanceMultiplier;

@@ -77,7 +77,7 @@ Game::Impl::Impl(Engine& engine) :
 	WaterPlaneData waterData;
 	waterData.m_waterColorOne	  = { 0.1f, 0.5f, 0.95f };
 	waterData.m_waterColorTwo	  = { 0.2f, 0.7f, 1.0f };
-	waterData.m_roughness		  = 0.1f;
+	waterData.m_roughness		  = 1.0f;
 	waterData.m_metallic		  = 0.1f;
 	waterData.m_waterDirectionOne = { 1.0f,  0.2f };
 	waterData.m_waterDirectionTwo = {-0.5f, -1.0f };

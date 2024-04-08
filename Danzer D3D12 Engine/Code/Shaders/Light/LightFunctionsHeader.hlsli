@@ -6,6 +6,17 @@
 #define MAX_SHADOW_DEPTH_BIAS 0.0001f
 #define MIN_SHADOW_DEPTH_BIAS 0.00001f
 
+float ComputeScattering(float lightDotView)
+{
+    return 0.0f;
+}
+
+float VolumetricLight(float4 worldPosition)
+{
+    
+}
+
+
 float invLerp(float a, float b, float c)
 {
     return (c - a) / (b - a);
@@ -29,19 +40,20 @@ float ShadowCalculation(float4 worldPos, float3 normal, float3 dir, float4x4 tra
     float shadow = 0.0f;
     float2 texelSize;
     shadowMap.GetDimensions(texelSize.x, texelSize.y);
-    texelSize = 1.0f / texelSize;
-     
-    for (int x = -1; x <= 1; x++)
+    texelSize = 1.0f / texelSize; 
+    float scale = 0.0f;
+    
+    for (float x = -2; x <= 2; x++)
     {
-        for (int y = -1; y <= 1; y++)
+        for (float y = -2; y <= 2; y++)
         {
             float pcfDepth = shadowMap.Sample(defaultSample, shadowTexCoord.xy + float2(x, y) * texelSize).r;
             shadow += currentDepth > pcfDepth ? 0.0f : 1.0f;
+            scale++;
         }
     }
     
-    shadow /= 9.0f;
-    //float  shadow = currentDepth < closestDepth ? 1.0f : 0.0f;
+    shadow /= scale;
     return shadow;
      
 

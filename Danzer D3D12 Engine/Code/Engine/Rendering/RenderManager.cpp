@@ -24,6 +24,7 @@
 #include "Screen Rendering/LightHandler.h"
 #include "Screen Rendering/DirectionalShadowMapping.h"
 #include "Screen Rendering/SSAOTexture.h"
+#include "Screen Rendering/SSAOBlur.h"
 
 #include "Camera.h"
 
@@ -69,8 +70,7 @@ private:
 
 	DirectionalShadowMapping m_shadowMap;
 	SSAOTexture m_ssao;
-
-	
+	SSAOBlur    m_ssaoBlur;
 
 	//std::priority_queue<TransparentObject, std::vector<TransparentObject>, >
 	//struct TransparentObject {
@@ -113,12 +113,24 @@ RenderManager::Impl::Impl(D3D12Framework& framework, TextureHandler& textureHand
 		&framework.RTVHeap(),
 		WindowHandler::WindowData().m_w, 
 		WindowHandler::WindowData().m_h, 
-		DXGI_FORMAT_R16G16B16A16_FLOAT,
-		DXGI_FORMAT_R16G16B16A16_FLOAT,
+		DXGI_FORMAT_R32_FLOAT,
+		DXGI_FORMAT_R32_FLOAT,
 		D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET,
 		L"SSAO Texture Buffer"
 	);
 	m_ssao.InitializeSSAO(framework, textureHandler, 64, 64);
+
+	m_ssaoBlur.InitAsTexture(
+		framework.GetDevice(),
+		&framework.CbvSrvHeap(),
+		&framework.RTVHeap(),
+		WindowHandler::WindowData().m_w,
+		WindowHandler::WindowData().m_h,
+		DXGI_FORMAT_R32_FLOAT,
+		DXGI_FORMAT_R32_FLOAT,
+		D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET,
+		L"SSAO Blur Texture Buffer"
+	);
 }
 RenderManager::Impl::~Impl(){
 
@@ -332,6 +344,8 @@ void RenderManager::Impl::RenderScene(LightHandler& lightHandler, TextureHandler
 		m_ssao.SetTextureAtSlot(cmdList, 6, m_gBuffer.GetGPUHandle(GBUFFER_DEPTH, &m_framework.CbvSrvHeap()));
 		m_ssao.RenderSSAO(cmdList, m_framework.CbvSrvHeap(), textureHandler, frameIndex);
 		// SSAO End
+
+
 
 		ID3D12Resource* shadow[] = { m_shadowMap.GetResource(frameIndex) };
 		m_framework.QeueuResourceTransition(&shadow[0], 1,
