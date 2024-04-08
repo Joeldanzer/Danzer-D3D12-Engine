@@ -211,7 +211,7 @@ Material ModelHandler::GetNewMaterialFromLoadedModel(const std::string& material
 	std::wstring smoothness = std::wstring(materialName.begin(), materialName.end()) + L"_Smoothness.dds";
 	std::wstring height     = std::wstring(materialName.begin(), materialName.end()) + L"_Height.dds";
 
-	// Naming convention on this model is soooo bad that I gotta do this
+	// Naming convention on this model is soooo bad that I gotta do this >:(
 	if (materialName.find("Fabric_Curtain") != std::string::npos) {
 		normal     = L"Sprites/Fabric_Curtain_Normal.dds";
 		metal      = L"Sprites/Fabric_Curtain_Metallic.dds";
@@ -279,7 +279,6 @@ std::vector<ModelData::Mesh> ModelHandler::LoadMeshFromLoaderModel(LoaderModel* 
 			device
 		);
 
-
 		// Set upload Vertex Buffer SubResourceData to our vertex destBuffer
 		resourceBarriers.emplace_back(SetSubresourceData(
 			cmdList, 
@@ -308,7 +307,7 @@ std::vector<ModelData::Mesh> ModelHandler::LoadMeshFromLoaderModel(LoaderModel* 
 		mesh.m_vertexSize   = loadedMesh->m_vertexSize;
 
 		if (!loadedModel->m_textures.empty())
-			mesh.m_material = GetNewMaterialFromLoadedModel(loadedModel->m_textures[loadedMesh->m_textureIndex]);
+			mesh.m_material = GetNewMaterialFromLoadedModel(loadedModel->m_textures[i]);
 		else
 			mesh.m_material = {};
 		

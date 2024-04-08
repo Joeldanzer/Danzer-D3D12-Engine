@@ -118,6 +118,7 @@ void ModelLoaderCustom::FetchAllModelsInScene(const aiScene* scene, std::vector<
         // First check if we have already created this model.
         std::string modelName = rootNode->mChildren[i]->mName.C_Str();
         Mat4f mat = ConvertToEngineMat4(rootNode->mChildren[i]->mTransformation);// * ConvertToEngineMat4(rootNode->mTransformation);
+        // This would work if the model scene was properly made
         //if (CheckModelName(models, modelName)) {
         //    transforms.push_back({modelName, mat });
         //    continue;
@@ -234,7 +235,7 @@ void ModelLoaderCustom::LoadVerticiesWithTransform(std::vector<Vect3f>& v3Verts,
     bool binormTan = mesh->HasTangentsAndBitangents();
     bool bones     = mesh->HasBones();
     bool color     = mesh->HasVertexColors(0);
-
+   
     unsigned int shaderType = 0;
 
     // Save all the different mesh information into a int, easy to detect if a model should have
@@ -273,11 +274,11 @@ void ModelLoaderCustom::LoadVerticiesWithTransform(std::vector<Vect3f>& v3Verts,
         }
 
         if (normals) 
-            verticies.PushVec4({ -1.0f *  mesh->mNormals[i].x,    mesh->mNormals[i].y,    - 1.0f * mesh->mNormals[i].z, 1.f });
-                                                                
-        if (binormTan) {                                      
-            verticies.PushVec4({ -1.0f *  mesh->mTangents[i].x,   mesh->mTangents[i].y,   -1.0f * mesh->mTangents[i].z,   1.f });
-            verticies.PushVec4({ -1.0f *  mesh->mBitangents[i].x, mesh->mBitangents[i].y, -1.0f * mesh->mBitangents[i].z, 1.f });
+            verticies.PushVec4({ mesh->mNormals[i].x,    mesh->mNormals[i].y,     mesh->mNormals[i].z, 1.f });
+                                                       
+        if (binormTan) {                             
+            verticies.PushVec4({ mesh->mTangents[i].x,   mesh->mTangents[i].y,   mesh->mTangents[i].z,   1.f });
+            verticies.PushVec4({ mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z, 1.f });
         }
 
         if (color) {     
@@ -306,9 +307,9 @@ Mat4f ModelLoaderCustom::ConvertToEngineMat4(const aiMatrix4x4& assimpMatrix)
 
 void ModelLoaderCustom::LoadMaterials(const aiScene* scene, LoaderModel* model)
 {
-    for (unsigned int m = 0; m < scene->mNumMaterials; m++)
-    {
-        LoadTexture(aiTextureType_DIFFUSE, model->m_textures, scene->mMaterials[m]); // TEXTURE_DEFINITION_ALBEDO     
+    for (unsigned int m = 0; m < model->m_meshes.size(); m++)
+    {   
+        LoadTexture(aiTextureType_DIFFUSE, model->m_textures, scene->mMaterials[model->m_meshes[m]->m_textureIndex]); // TEXTURE_DEFINITION_ALBEDO     
 
         //LoadTexture(aiTextureType_UNKNOWN,      model->m_textures, scene->mMaterials[m]); // TEXTURE_DEFINITION_ALBEDO
         //LoadTexture(aiTextureType_SPECULAR,     model->m_textures, scene->mMaterials[m]); // TEXTURE_DEFINITION_ROUGHNESS
