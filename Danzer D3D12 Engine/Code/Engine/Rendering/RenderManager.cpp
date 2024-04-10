@@ -3,6 +3,7 @@
 #include "../3rdParty/imgui-master/backends/imgui_impl_dx12.h"
 #include "../3rdParty/imgui-master/backends/imgui_impl_win32.h"
 
+#include "PSOHandler.h"
 #include "RenderManager.h"
 #include "Core/D3D12Framework.h"
 #include "Core/MathDefinitions.h"
@@ -50,7 +51,11 @@ public:
 	void RenderFrame(LightHandler& lightHandler, TextureHandler& textureHandler, ModelHandler& modelHandler, ModelEffectHandler& effectHandler,
 		SpriteHandler& SpriteHandler, Skybox& skybox, Scene& scene/*Camera, Ligthing, GameObjects, etc...*/);
 
+	PSOHandler& GetPSOHandler();
+
 private:
+	void InitializeCommonPSOandRS();
+
 	void RenderScene(LightHandler& lightHandler, TextureHandler& textureHandler, SpriteHandler& spriteHandler, ModelHandler& modelHandler, ModelEffectHandler& effectHandler, Scene& scene, Skybox& skybox);
 
 	void Update3DInstances(Scene& scene, ModelHandler& modelHandler, ModelEffectHandler& effectHandler);
@@ -61,7 +66,9 @@ private:
 
 	void ClearAllInstances(ModelHandler& modelHandler, SpriteHandler& spriteHandler);
 
+
 	PipelineStateHandler m_pipeLineHandler;
+	PSOHandler			 m_psoHandler;
 	Renderer			 m_mainRenderer;
 	Renderer2D			 m_2dRenderer;
 	GBuffer				 m_gBuffer;
@@ -86,7 +93,8 @@ private:
 
 RenderManager::Impl::Impl(D3D12Framework& framework, TextureHandler& textureHandler) :
 	m_framework(framework),
-	m_gBuffer(framework),
+	m_psoHandler(framework),
+	m_gBuffer(framework, m_psoHandler),
 	m_shadowMap(),
 	m_ssao()
 {
@@ -171,8 +179,10 @@ void RenderManager::Impl::BeginFrame()
 		ID3D12Resource* shadow[] = { m_shadowMap.GetResource(m_framework.m_frameIndex) };
 		m_framework.QeueuResourceTransition(&shadow[0], 1,
 			D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_DEPTH_WRITE);
-		
-		ID3D12Resource* srvToRTV[] = {m_ssao.GetResource(m_framework.m_frameIndex)};
+	
+		ID3D12Resource* srvToRTV[] = {
+			m_ssao.GetResource(m_framework.m_frameIndex)
+		};
 		m_framework.QeueuResourceTransition(&srvToRTV[0], _countof(srvToRTV), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
 		m_framework.TransitionAllResources();
@@ -225,6 +235,11 @@ void RenderManager::Impl::RenderFrame(LightHandler& lightHandler, TextureHandler
 	ClearAllInstances(modelHandler, spriteHandler);
 }
 
+PSOHandler& RenderManager::Impl::GetPSOHandler()
+{
+	return m_psoHandler;
+}
+
 void RenderManager::Impl::RenderScene(LightHandler& lightHandler, TextureHandler& textureHandler, SpriteHandler& spriteHandler, ModelHandler& modelHandler, ModelEffectHandler& effectHandler, Scene& scene, Skybox& skybox)
 {
 	ID3D12GraphicsCommandList* cmdList = m_framework.CurrentFrameResource()->CmdList();
@@ -263,8 +278,8 @@ void RenderManager::Impl::RenderScene(LightHandler& lightHandler, TextureHandler
 		std::array<CD3DX12_CPU_DESCRIPTOR_HANDLE, GBUFFER_COUNT> rtvHandle = m_gBuffer.GetRTVDescriptorHandles(m_framework.RTVHeap());
 		cmdList->OMSetRenderTargets(GBUFFER_COUNT, &rtvHandle[0], false, &dsvHandle);
 				
-		cmdList->SetGraphicsRootSignature(m_pipeLineHandler.GetRootSignature(ROOTSIGNATURE_STATE_GBUFFER));
-		cmdList->SetPipelineState(m_pipeLineHandler.GetPSO(PIPELINE_STATE_GBUFFER));
+		cmdList->SetGraphicsRootSignature(m_psoHandler.GetRootSignature(m_gBuffer.GetRootSignature()));
+		cmdList->SetPipelineState(m_psoHandler.GetPipelineState(m_gBuffer.GetPSO()));
 
 		UINT startLocation = 0;
 
@@ -300,6 +315,7 @@ void RenderManager::Impl::RenderScene(LightHandler& lightHandler, TextureHandler
 
 		m_mainRenderer.RenderForwardModelEffects(
 			cmdList,
+			m_psoHandler,
 			effectHandler.GetDepthTextureOffset(),
 			effectHandler.GetAllEffects(), 
 			modelHandler, textureHandler.GetTextures(), 
@@ -345,8 +361,6 @@ void RenderManager::Impl::RenderScene(LightHandler& lightHandler, TextureHandler
 		m_ssao.RenderSSAO(cmdList, m_framework.CbvSrvHeap(), textureHandler, frameIndex);
 		// SSAO End
 
-
-
 		ID3D12Resource* shadow[] = { m_shadowMap.GetResource(frameIndex) };
 		m_framework.QeueuResourceTransition(&shadow[0], 1,
 			D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
@@ -355,10 +369,12 @@ void RenderManager::Impl::RenderScene(LightHandler& lightHandler, TextureHandler
 		m_framework.QeueuResourceTransition(effects, _countof(effects),
 			D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 
-		m_framework.TransitionAllResources();
 	} 
 
 	{ 
+		// Transition all resources before rendering light pass.
+		m_framework.TransitionAllResources();
+
 		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle = m_framework.m_rtvHeap.GET_CPU_DESCRIPTOR(0);
 		
 		//* Render Skybox & Ligth start
@@ -609,6 +625,11 @@ void RenderManager::BeginFrame()
 void RenderManager::RenderFrame(LightHandler& lightHandler, TextureHandler& textureHandler, ModelHandler& modelHandler, ModelEffectHandler& effectHandler, SpriteHandler& SpriteHandler, Skybox& skybox, Scene& scene)
 {
 	m_Impl->RenderFrame(lightHandler, textureHandler, modelHandler, effectHandler, SpriteHandler, skybox, scene);
+}
+
+PSOHandler& RenderManager::GetPSOHandler() const noexcept
+{
+	return m_Impl->GetPSOHandler();
 }
 
 

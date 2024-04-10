@@ -1,7 +1,6 @@
 #include "stdafx.h"
 #include "DirectionalShadowMapping.h"
-
-
+#include "Rendering/PSOHandler.h"
 
 #include "Core/DesriptorHeapWrapper.h"
 
@@ -36,6 +35,32 @@ void DirectionalShadowMapping::RenderTexture(ID3D12GraphicsCommandList* cmdList,
 			}
 		}
 	}
+}
+
+void DirectionalShadowMapping::SetPipelineAndRootSignature(PSOHandler& psoHandler)
+{
+	CD3DX12_DEPTH_STENCIL_DESC depth(D3D12_DEFAULT);
+	depth.DepthEnable = true;
+	depth.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+	depth.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
+	depth.StencilEnable = false;
+
+	auto flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
+				 D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS     |
+				 D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS   |
+				 D3D12_ROOT_SIGNATURE_FLAG_DENY_PIXEL_SHADER_ROOT_ACCESS;
+	m_rs  = psoHandler.CreateRootSignature(1, 0, PSOHandler::SAMPLER_DESC_BORDER, flags, L"Dirrectional Shadow Mapping Root Signature");
+	m_pso = psoHandler.CreatePSO(
+		{ L"Shaders/ShadowDepthVS.cso", L"" },
+		CD3DX12_BLEND_DESC(D3D12_DEFAULT),
+		psoHandler.RastDescs(PSOHandler::RASTERIZER_FRONT),
+		depth,
+		nullptr,
+		0,
+		m_rs,
+		PSOHandler::INPUT_LAYOUT_INSTANCE_DEFFERED,
+		L"Directional Shadow Mapping PSO"
+	);
 }
 
 void DirectionalShadowMapping::CreateProjection(float projectionScale, float increase)

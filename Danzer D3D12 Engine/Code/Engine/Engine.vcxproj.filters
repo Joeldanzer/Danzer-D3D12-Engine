@@ -78,6 +78,8 @@
     <ClCompile Include="Rendering\Screen Rendering\LightHandler.cpp" />
     <ClCompile Include="Rendering\Screen Rendering\SSAOTexture.cpp" />
     <ClCompile Include="Rendering\Buffers\SSAOBuffer.cpp" />
+    <ClCompile Include="Rendering\Screen Rendering\SSAOBlur.cpp" />
+    <ClCompile Include="Rendering\PSOHandler.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Core\DirectX12Framework.h">
@@ -179,5 +181,7 @@
     <ClInclude Include="Rendering\Screen Rendering\LightHandler.h" />
     <ClInclude Include="Rendering\Screen Rendering\SSAOTexture.h" />
     <ClInclude Include="Rendering\Buffers\SSAOBuffer.h" />
+    <ClInclude Include="Rendering\Screen Rendering\SSAOBlur.h" />
+    <ClInclude Include="Rendering\PSOHandler.h" />
   </ItemGroup>
 </Project>

@@ -11,7 +11,8 @@ public:
 	{}
 	
 	void RenderTexture(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper& handle, const UINT frameIndex) override;
-	
+	void SetPipelineAndRootSignature(PSOHandler& psoHandler);
+
 	void CreateProjection(float projectionScale, float increase);
 	Mat4f& GetProjectionMatrix() {
 		return m_projectionMatrix;

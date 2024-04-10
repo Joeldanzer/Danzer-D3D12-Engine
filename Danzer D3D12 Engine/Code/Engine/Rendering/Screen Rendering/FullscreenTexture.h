@@ -5,6 +5,8 @@
 
 class D3D12Framework;
 class DescriptorHeapWrapper;
+class TextureHandler;
+class PSOHandler;
 
 class FullscreenTexture
 {
@@ -36,10 +38,10 @@ public:
 		std::wstring name
 	);
 
+	virtual void SetPipelineAndRootSignature(PSOHandler& psoHandler) = 0;
 
 	void SetTextureAtSlot(ID3D12GraphicsCommandList* cmdList, const UINT slot, D3D12_GPU_DESCRIPTOR_HANDLE handle);
-
-	virtual void RenderTexture(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper& handle, const UINT frameIndex) = 0;
+	virtual void RenderTexture(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper& handle, TextureHandler& textureHandler, const UINT frameIndex){}
 
 	ID3D12Resource* GetResource(const UINT frameIndex) {
 		return m_resource[frameIndex].Get();
@@ -62,6 +64,9 @@ protected:
 	UINT m_dsvOffsetID;
 	UINT m_srvOffsetID; 
 	UINT m_rtvOffsetID;
+
+	UINT m_pso;
+	UINT m_rs;
 
 	D3D12_VIEWPORT m_viewPort;
 	ComPtr<ID3D12Resource> m_resource[FrameCount];

@@ -21,12 +21,6 @@ public:
 			m_buffer.Init(framework.GetDevice(), &framework.CbvSrvHeap(), m_buffer.FetchData(), sizeof(EffectShaderBuffer::Data));
 	}
 
-	ID3D12PipelineState* GetEffectPSO(){
-		return m_pipelineState.Get();
-	}
-	ID3D12RootSignature* GetEffectRSO() {
-		return m_rootSignature.Get();
-	}
 	const UINT ModelID() {
 		return m_model;
 	}
@@ -50,6 +44,13 @@ public:
 	std::vector<Mat4f>& GetTransforms() {
 		return m_transforms;
 	}
+
+	const UINT GetPSO() {
+		return m_pso;
+	}
+	const UINT GetRootsSignature() {
+		return m_rs;
+	}
 private:
 	friend class ModelEffectHandler; //
 
@@ -57,12 +58,12 @@ private:
 	std::vector<UINT> m_textures;
 	std::vector<Mat4f> m_transforms;
 
+	UINT m_rs;
+	UINT m_pso;
+
 	EffectShaderBuffer::Data m_bufferData;
 	UINT m_sizeOfData;
 
 	bool m_hasBuffer;
 	EffectShaderBuffer m_buffer;
-
-	ComPtr<ID3D12PipelineState> m_pipelineState; // Holds all the information that will be sent to shader
-	ComPtr<ID3D12RootSignature> m_rootSignature;
 };

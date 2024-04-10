@@ -5,6 +5,7 @@
 #include "Core/D3D12Framework.h"
 #include "Core/MathDefinitions.h"
 #include "Rendering/TextureHandler.h"
+#include "Rendering/PSOHandler.h"
 
 #include <random>
 
@@ -51,12 +52,28 @@ void SSAOTexture::InitializeSSAO(D3D12Framework& framework, TextureHandler& text
 	SetBufferData(framework, kernelSamples);
 }
 
-void SSAOTexture::RenderTexture(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper& handle, const UINT frameIndex)
+void SSAOTexture::SetPipelineAndRootSignature(PSOHandler& psoHandler)
 {
-
+	DXGI_FORMAT format[] = { DXGI_FORMAT_R32_FLOAT };
+	auto flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
+				 D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS     |
+				 D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS       |
+				 D3D12_ROOT_SIGNATURE_FLAG_DENY_VERTEX_SHADER_ROOT_ACCESS ;
+	m_rs  = psoHandler.CreateRootSignature(4, 4, PSOHandler::SAMPLER_DESC_CLAMP, flags, L"SSAO Root Signature");
+	m_pso = psoHandler.CreatePSO(
+		{ L"Shaders/FullscrenVS.cso", L"SSAOPS.cso" },
+		CD3DX12_BLEND_DESC(D3D12_DEFAULT),
+		CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT),
+		CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT),
+		&format[0],
+		1,
+		m_rs,
+		PSOHandler::INPUT_LAYOUT_NONE,
+		L"SSAO PSO"
+	);
 }
 
-void SSAOTexture::RenderSSAO(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper& srvWrapper, TextureHandler& textureHandler, const UINT frameIndex)
+void SSAOTexture::RenderTexture(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper& srvWrapper, TextureHandler& textureHandler, const UINT frameIndex)
 {
 	D3D12_GPU_DESCRIPTOR_HANDLE cbvSrvHeapStart = srvWrapper.GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
 	const UINT cbvSrvDescSize = srvWrapper.DESCRIPTOR_SIZE();

@@ -6,15 +6,16 @@
 
 class D3D12Framework;
 class DescriptorHeapWrapper;
+class PSOHandler;
 
 class ModelEffectHandler
 {	
 public:
-	ModelEffectHandler(D3D12Framework& framework);
+	ModelEffectHandler(D3D12Framework& framework, PSOHandler& psoHandler);
 	~ModelEffectHandler();
 
 	ModelEffect CreateModelEffect(
-		std::wstring shaderNames,
+		std::array<std::wstring, 2> shaders,
 		const UINT model, 
 		void* bufferData,
 		const UINT sizeOfData,
@@ -38,8 +39,13 @@ public:
 	const UINT GetDepthTextureOffset() {
 		return m_depthTextureOffset;
 	}
+	
+	PSOHandler* GetPSOHandler() {
+		return m_psoHandler;
+	}
 
 private:	
+	PSOHandler*     m_psoHandler;
 	D3D12Framework* m_framework;
 	ComPtr<ID3D12Resource> m_depthTexture;
 	UINT m_depthTextureOffset;

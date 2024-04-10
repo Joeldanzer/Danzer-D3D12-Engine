@@ -9,7 +9,7 @@ struct ID3D12Device;
 
 // NOTE: Pipelinestate handler needs to be reworked, It's gonna get bloated very fast
 // Current idea is that PipelineStateHandler works as any other Handler where it gives a id 
-// that we use to reference the specific pipeline being used. 
+// that we use to reference the specific pipeline being used.
 
 enum PIPELINE_STATES {
 	PIPELINE_STATE_MODELS,
@@ -97,6 +97,9 @@ private:
 
 	void InitializeSamplerDescs();
 	void InitializeInputLayouts();
+
+	//std::vector<ComPtr<ID3D12PipelineState>> m_pipelineStates;
+	//std::vector<>
 
 	std::array<ComPtr<ID3D12PipelineState>, PIPELINE_COUNT> m_PSObjects;
 	std::array<ComPtr<ID3D12RootSignature>, ROOTSIGNATURE_COUNT> m_rootSignatures;

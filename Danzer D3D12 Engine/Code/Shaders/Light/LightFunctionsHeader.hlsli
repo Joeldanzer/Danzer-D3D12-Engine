@@ -13,7 +13,7 @@ float ComputeScattering(float lightDotView)
 
 float VolumetricLight(float4 worldPosition)
 {
-    
+    return 0.0f;
 }
 
 
