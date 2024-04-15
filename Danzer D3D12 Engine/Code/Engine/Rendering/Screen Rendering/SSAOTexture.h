@@ -15,7 +15,7 @@ public:
 
 	//void SetTextures(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper& handle, TextureHandler& textureHandler);
 	void SetPipelineAndRootSignature(PSOHandler& psoHandler) override;
-	void RenderTexture(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper& handle, TextureHandler& textureHandler, const UINT frameIndex) override;
+	void RenderTexture(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper* handle, TextureHandler* textureHandler, const UINT frameIndex) override;
 	const UINT SampleTextureID() {
 		return m_textureID;
 	}

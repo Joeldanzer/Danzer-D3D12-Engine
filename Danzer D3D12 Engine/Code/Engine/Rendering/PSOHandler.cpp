@@ -12,6 +12,8 @@ PSOHandler::PSOHandler(D3D12Framework& framework) :
 {
 	InitializeSamplerDescs();
 	InitializeInputLayouts();
+	InitializeRastDescs();
+	InitializeBlendDescs();
 
 }
 
@@ -55,7 +57,7 @@ UINT PSOHandler::CreateRootSignature(const UINT numberOfCBV, const UINT numberOf
 	return index;
 }
 
-UINT PSOHandler::CreatePSO(std::array<std::wstring, 2> shaderName, D3D12_BLEND_DESC blend, D3D12_RASTERIZER_DESC rast, D3D12_DEPTH_STENCIL_DESC depth, DXGI_FORMAT* rtvFormats, const UINT rtvCount, const UINT rootSignature, INPUT_LAYOUTS layout, std::wstring name)
+UINT PSOHandler::CreatePSO(std::array<std::wstring, 2> shaderName, D3D12_BLEND_DESC blend, D3D12_RASTERIZER_DESC rast, D3D12_DEPTH_STENCIL_DESC depth, DXGI_FORMAT depthFormat, DXGI_FORMAT* rtvFormats, const UINT rtvCount, const UINT rootSignature, INPUT_LAYOUTS layout, std::wstring name)
 {
 	DXGI_SAMPLE_DESC sample = { 1, 0 };
 
@@ -81,7 +83,7 @@ UINT PSOHandler::CreatePSO(std::array<std::wstring, 2> shaderName, D3D12_BLEND_D
 	else
 		psoDesc.RTVFormats[0] = DXGI_FORMAT_UNKNOWN;
 
-	psoDesc.DSVFormat			  = DXGI_FORMAT_D32_FLOAT;
+	psoDesc.DSVFormat			  = depthFormat;
 	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 	psoDesc.NumRenderTargets	  = rtvFormats ? rtvCount : 0;
 	psoDesc.SampleDesc			  = sample;
@@ -100,8 +102,8 @@ UINT PSOHandler::CreatePSO(std::array<std::wstring, 2> shaderName, D3D12_BLEND_D
 
 	m_pipelineStates.emplace_back(ComPtr<ID3D12PipelineState>());
 	UINT index = m_pipelineStates.size() - 1;
-
 	CHECK_HR(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_pipelineStates[index])));
+	
 	m_pipelineStates[index]->SetName(name.c_str());
 
 	return index;

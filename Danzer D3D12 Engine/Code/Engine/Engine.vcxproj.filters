@@ -24,7 +24,6 @@
     <ClCompile Include="Rendering\Camera.cpp">
       <Filter>Objects</Filter>
     </ClCompile>
-    <ClCompile Include="Rendering\PipelineStateHandler.cpp" />
     <ClCompile Include="Rendering\Renderer.cpp">
       <Filter>Main</Filter>
     </ClCompile>
@@ -100,7 +99,6 @@
     <ClInclude Include="Rendering\Camera.h">
       <Filter>Objects</Filter>
     </ClInclude>
-    <ClInclude Include="Rendering\PipelineStateHandler.h" />
     <ClInclude Include="Rendering\Renderer.h">
       <Filter>Main</Filter>
     </ClInclude>

@@ -41,7 +41,7 @@ public:
 	virtual void SetPipelineAndRootSignature(PSOHandler& psoHandler) = 0;
 
 	void SetTextureAtSlot(ID3D12GraphicsCommandList* cmdList, const UINT slot, D3D12_GPU_DESCRIPTOR_HANDLE handle);
-	virtual void RenderTexture(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper& handle, TextureHandler& textureHandler, const UINT frameIndex){}
+	virtual void RenderTexture(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper* handle, TextureHandler* textureHandler, const UINT frameIndex){}
 
 	ID3D12Resource* GetResource(const UINT frameIndex) {
 		return m_resource[frameIndex].Get();
@@ -58,6 +58,12 @@ public:
 	}
 	const D3D12_VIEWPORT& GetViewPort() {
 		return m_viewPort;
+	}
+	const UINT GetPSO() {
+		return m_pso;
+	}
+	const UINT GetRootSignature() {
+		return m_rs;
 	}
 
 protected:

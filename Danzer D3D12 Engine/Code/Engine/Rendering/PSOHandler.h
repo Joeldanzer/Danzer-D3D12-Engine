@@ -50,6 +50,7 @@ public:
 		D3D12_BLEND_DESC            blend, 
 		D3D12_RASTERIZER_DESC		rast, 
 		D3D12_DEPTH_STENCIL_DESC	depth,
+		DXGI_FORMAT					depthFormat,
 		DXGI_FORMAT*				rtvFormats,
 		const UINT					rtvCount,
 		const UINT					rootSignature,

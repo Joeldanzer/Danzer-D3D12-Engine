@@ -140,7 +140,7 @@ void Renderer::RenderSkybox(ID3D12GraphicsCommandList* cmdList, Transform& camer
 	cmdList->DrawIndexedInstanced(mesh.m_numIndices, 1, 0, 0, 0);
 }
 
-void Renderer::RenderDirectionalLight(ID3D12GraphicsCommandList* cmdList, TextureHandler::Texture& skyboxTexture, DirectionalShadowMapping& shadowMap, SSAOTexture& ssao, UINT frameIndex, UINT startLocation)
+void Renderer::RenderDirectionalLight(ID3D12GraphicsCommandList* cmdList, TextureHandler::Texture& skyboxTexture, DirectionalShadowMapping& shadowMap, FullscreenTexture* ssao, UINT frameIndex, UINT startLocation)
 {
 	D3D12_GPU_DESCRIPTOR_HANDLE cbvSrvHeapStart = m_framework->CbvSrvHeap().GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
 	const UINT cbvSrvDescSize = m_framework->CbvSrvHeap().DESCRIPTOR_SIZE();
@@ -149,11 +149,11 @@ void Renderer::RenderDirectionalLight(ID3D12GraphicsCommandList* cmdList, Textur
 	cmdList->SetGraphicsRootDescriptorTable(startLocation, srvHandle);
 	startLocation++;
 
-	CD3DX12_GPU_DESCRIPTOR_HANDLE shadowHandle(cbvSrvHeapStart, shadowMap.SRVOffsetID(), cbvSrvDescSize);
+	CD3DX12_GPU_DESCRIPTOR_HANDLE shadowHandle(cbvSrvHeapStart, shadowMap.SRVOffsetID() + frameIndex, cbvSrvDescSize);
 	cmdList->SetGraphicsRootDescriptorTable(startLocation, shadowHandle);
 	startLocation++;
 
-	CD3DX12_GPU_DESCRIPTOR_HANDLE ssaoHandle(cbvSrvHeapStart, ssao.SRVOffsetID(), cbvSrvDescSize);
+	CD3DX12_GPU_DESCRIPTOR_HANDLE ssaoHandle(cbvSrvHeapStart, ssao->SRVOffsetID() + frameIndex, cbvSrvDescSize);
 	cmdList->SetGraphicsRootDescriptorTable(startLocation, ssaoHandle);
 	startLocation++;
 

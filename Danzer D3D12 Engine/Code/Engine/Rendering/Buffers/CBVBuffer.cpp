@@ -16,7 +16,7 @@ void CBVBuffer::Init(ID3D12Device* device, DescriptorHeapWrapper* cbvWrapper, vo
 	for (unsigned int i = 0; i < FrameCount; i++)
 	{
 		CD3DX12_HEAP_PROPERTIES uploadHeap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-		CD3DX12_RESOURCE_DESC   buffer     = CD3DX12_RESOURCE_DESC::Buffer(actualSize);
+		CD3DX12_RESOURCE_DESC   buffer     = CD3DX12_RESOURCE_DESC::Buffer(size);
 		
 		CHECK_HR(device->CreateCommittedResource(
 			&uploadHeap,

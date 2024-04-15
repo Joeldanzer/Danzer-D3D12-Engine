@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "2DRenderer.h"
 
+#include "Rendering/PSOHandler.h"
 #include "Core/FrameResource.h"
 #include "../VertexAndTextures.h"
 #include "../../Core/WindowHandler.h"
@@ -9,8 +10,28 @@
 
 Renderer2D::~Renderer2D(){}
 
-void Renderer2D::Init(D3D12Framework& framework)
+void Renderer2D::Init(D3D12Framework& framework, PSOHandler& psoHandler)
 {
+	DXGI_FORMAT format[] = { DXGI_FORMAT_R8G8B8A8_UNORM };
+	CD3DX12_DEPTH_STENCIL_DESC depth(D3D12_DEFAULT);
+	depth.DepthEnable = false;
+	auto flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
+				 D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
+				 D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS;
+	m_rs  = psoHandler.CreateRootSignature(1, 1, PSOHandler::SAMPLER_DESC_CLAMP, flags, L"Renderer 2D Root Signature");
+	m_pso = psoHandler.CreatePSO(
+		{L"Shaders/uiVertexShader.cso", L"Shaders/uiPixelShader.cso"},
+		psoHandler.BlendDescs(PSOHandler::BLEND_TRANSPARENT),
+		psoHandler.RastDescs(PSOHandler::RASTERIZER_BACK),
+		depth,
+		DXGI_FORMAT_UNKNOWN,
+		&format[0],
+		1,
+		m_rs,
+		PSOHandler::INPUT_LAYOUT_INSTANCE_SPRITE_2D,
+		L"Renderer 2D PSO"
+	);
+
 	m_framework = &framework;
 	
 	m_windowBuffer.Init(framework.GetDevice(), &framework.CbvSrvHeap(), m_windowBuffer.FetchData(), sizeof(WindowBuffer::Data));

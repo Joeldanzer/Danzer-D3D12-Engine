@@ -4,10 +4,10 @@
 
 #include "Core/DesriptorHeapWrapper.h"
 
-void DirectionalShadowMapping::RenderTexture(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper& handle, const UINT frameIndex)
+void DirectionalShadowMapping::RenderTexture(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper* handle, TextureHandler* textureHandler, const UINT frameIndex)
 {
-	CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle = handle.GET_CPU_DESCRIPTOR(0);
-	dsvHandle.Offset((DSVOffsetID() + frameIndex) * handle.DESCRIPTOR_SIZE());
+	CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle = handle->GET_CPU_DESCRIPTOR(0);
+	dsvHandle.Offset((DSVOffsetID() + frameIndex) * handle->DESCRIPTOR_SIZE());
 
 	cmdList->RSSetViewports(1, &GetViewPort());
 	cmdList->OMSetRenderTargets(0, nullptr, false, &dsvHandle);
@@ -44,7 +44,6 @@ void DirectionalShadowMapping::SetPipelineAndRootSignature(PSOHandler& psoHandle
 	depth.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
 	depth.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
 	depth.StencilEnable = false;
-
 	auto flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
 				 D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS     |
 				 D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS   |
@@ -53,8 +52,9 @@ void DirectionalShadowMapping::SetPipelineAndRootSignature(PSOHandler& psoHandle
 	m_pso = psoHandler.CreatePSO(
 		{ L"Shaders/ShadowDepthVS.cso", L"" },
 		CD3DX12_BLEND_DESC(D3D12_DEFAULT),
-		psoHandler.RastDescs(PSOHandler::RASTERIZER_FRONT),
+		psoHandler.RastDescs(PSOHandler::RASTERIZER_NONE),
 		depth,
+		DXGI_FORMAT_D32_FLOAT,
 		nullptr,
 		0,
 		m_rs,

@@ -201,7 +201,6 @@
     <ClInclude Include="Core\MathDefinitions.h" />
     <ClInclude Include="Rendering\Models\ModelHandler.h" />
     <ClInclude Include="Rendering\Buffers\CBVBuffer.h" />
-    <ClInclude Include="Rendering\PipelineStateHandler.h" />
     <ClInclude Include="Rendering\Renderer.h" />
     <ClInclude Include="Rendering\RenderManager.h" />
     <ClInclude Include="Rendering\RenderUtility.h" />
@@ -259,7 +258,6 @@
     <ClCompile Include="Core\Engine.cpp" />
     <ClCompile Include="Rendering\Models\ModelData.cpp" />
     <ClCompile Include="Rendering\Models\ModelHandler.cpp" />
-    <ClCompile Include="Rendering\PipelineStateHandler.cpp" />
     <ClCompile Include="Rendering\Renderer.cpp" />
     <ClCompile Include="Rendering\RenderManager.cpp" />
     <ClCompile Include="Rendering\2D\SpriteHandler.cpp" />

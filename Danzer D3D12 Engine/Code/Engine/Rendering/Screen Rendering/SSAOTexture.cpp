@@ -54,6 +54,8 @@ void SSAOTexture::InitializeSSAO(D3D12Framework& framework, TextureHandler& text
 
 void SSAOTexture::SetPipelineAndRootSignature(PSOHandler& psoHandler)
 {
+	CD3DX12_DEPTH_STENCIL_DESC depth(D3D12_DEFAULT);
+	depth.DepthEnable = false;
 	DXGI_FORMAT format[] = { DXGI_FORMAT_R32_FLOAT };
 	auto flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
 				 D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS     |
@@ -61,10 +63,11 @@ void SSAOTexture::SetPipelineAndRootSignature(PSOHandler& psoHandler)
 				 D3D12_ROOT_SIGNATURE_FLAG_DENY_VERTEX_SHADER_ROOT_ACCESS ;
 	m_rs  = psoHandler.CreateRootSignature(4, 4, PSOHandler::SAMPLER_DESC_CLAMP, flags, L"SSAO Root Signature");
 	m_pso = psoHandler.CreatePSO(
-		{ L"Shaders/FullscrenVS.cso", L"SSAOPS.cso" },
+		{ L"Shaders/FullscreenVS.cso", L"Shaders/SSAOPS.cso" },
 		CD3DX12_BLEND_DESC(D3D12_DEFAULT),
 		CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT),
-		CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT),
+		depth,
+		DXGI_FORMAT_UNKNOWN,
 		&format[0],
 		1,
 		m_rs,
@@ -73,10 +76,10 @@ void SSAOTexture::SetPipelineAndRootSignature(PSOHandler& psoHandler)
 	);
 }
 
-void SSAOTexture::RenderTexture(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper& srvWrapper, TextureHandler& textureHandler, const UINT frameIndex)
+void SSAOTexture::RenderTexture(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper* srvWrapper, TextureHandler* textureHandler, const UINT frameIndex)
 {
-	D3D12_GPU_DESCRIPTOR_HANDLE cbvSrvHeapStart = srvWrapper.GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
-	const UINT cbvSrvDescSize = srvWrapper.DESCRIPTOR_SIZE();
+	D3D12_GPU_DESCRIPTOR_HANDLE cbvSrvHeapStart = srvWrapper->GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
+	const UINT cbvSrvDescSize = srvWrapper->DESCRIPTOR_SIZE();
 
 	m_bufferOne.UpdateBuffer(&m_bufferDataOne, frameIndex);
 	CD3DX12_GPU_DESCRIPTOR_HANDLE bufferHandleOne(cbvSrvHeapStart, m_bufferOne.OffsetID(), cbvSrvDescSize);
@@ -90,7 +93,7 @@ void SSAOTexture::RenderTexture(ID3D12GraphicsCommandList* cmdList, DescriptorHe
 	CD3DX12_GPU_DESCRIPTOR_HANDLE noiseScaleHandle(cbvSrvHeapStart, m_noiseScaleBuffer.OffsetID(), cbvSrvDescSize);
 	cmdList->SetGraphicsRootDescriptorTable(3, noiseScaleHandle);
 
-	CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle(cbvSrvHeapStart, textureHandler.GetTextureData(m_textureID).m_offsetID, cbvSrvDescSize);
+	CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle(cbvSrvHeapStart, textureHandler->GetTextureData(m_textureID).m_offsetID, cbvSrvDescSize);
 	cmdList->SetGraphicsRootDescriptorTable(7, srvHandle);
 
 	cmdList->IASetVertexBuffers(0, 0, nullptr);

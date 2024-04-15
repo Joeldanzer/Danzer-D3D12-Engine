@@ -3,7 +3,6 @@
 
 #include "Renderer.h"
 #include "2D/2DRenderer.h"
-#include "PipelineStateHandler.h"
 
 #include <map>
 

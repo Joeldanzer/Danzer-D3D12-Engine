@@ -43,7 +43,6 @@ public:
 	~Impl();
 
 	D3D12Framework& GetFramework() { return m_framework; }
-	PipelineStateHandler& GetPipelineStateHandler() { return m_pipeLineHandler; }
 
 	void RenderImgui();
 
@@ -66,13 +65,15 @@ private:
 
 	void ClearAllInstances(ModelHandler& modelHandler, SpriteHandler& spriteHandler);
 
-
-	PipelineStateHandler m_pipeLineHandler;
 	PSOHandler			 m_psoHandler;
 	Renderer			 m_mainRenderer;
 	Renderer2D			 m_2dRenderer;
 	GBuffer				 m_gBuffer;
 	
+	UINT m_lightRootSignture;
+	UINT m_dirLightPSO;
+	UINT m_pointLightPSO;
+
 	D3D12Framework& m_framework;
 
 	DirectionalShadowMapping m_shadowMap;
@@ -98,9 +99,8 @@ RenderManager::Impl::Impl(D3D12Framework& framework, TextureHandler& textureHand
 	m_shadowMap(),
 	m_ssao()
 {
-	m_2dRenderer.Init(framework);
+	m_2dRenderer.Init(framework, m_psoHandler);
 	m_mainRenderer.Init(framework);
-	m_pipeLineHandler.Init(framework);
 
 	m_shadowMap.InitAsDepth(
 		framework.GetDevice(),
@@ -113,6 +113,7 @@ RenderManager::Impl::Impl(D3D12Framework& framework, TextureHandler& textureHand
 		D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL,
 		L"Shadow Map Buffer: "
 	);
+	m_shadowMap.SetPipelineAndRootSignature(m_psoHandler);
 	m_shadowMap.CreateProjection(32.0f, 8.f);
 
 	m_ssao.InitAsTexture(
@@ -126,6 +127,7 @@ RenderManager::Impl::Impl(D3D12Framework& framework, TextureHandler& textureHand
 		D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET,
 		L"SSAO Texture Buffer"
 	);
+	m_ssao.SetPipelineAndRootSignature(m_psoHandler);
 	m_ssao.InitializeSSAO(framework, textureHandler, 64, 64);
 
 	m_ssaoBlur.InitAsTexture(
@@ -139,11 +141,46 @@ RenderManager::Impl::Impl(D3D12Framework& framework, TextureHandler& textureHand
 		D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET,
 		L"SSAO Blur Texture Buffer"
 	);
+	m_ssaoBlur.SetPipelineAndRootSignature(m_psoHandler);
+
+	DXGI_FORMAT format[] = { DXGI_FORMAT_R8G8B8A8_UNORM };
+	CD3DX12_DEPTH_STENCIL_DESC depth(D3D12_DEFAULT);
+	depth.DepthEnable = false;
+	auto flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
+			     D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
+			     D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS |
+			     D3D12_ROOT_SIGNATURE_FLAG_DENY_VERTEX_SHADER_ROOT_ACCESS;
+	m_lightRootSignture = m_psoHandler.CreateRootSignature(2, GBUFFER_COUNT + 3, PSOHandler::SAMPLER_DESC_CLAMP, flags, L"Light Root Signature");
+	m_dirLightPSO = m_psoHandler.CreatePSO(
+		{L"Shaders/FullscreenVS.cso", L"Shaders/DirectionalLightPS.cso"},
+		CD3DX12_BLEND_DESC(D3D12_DEFAULT),
+		CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT),
+		depth,
+		DXGI_FORMAT_UNKNOWN,
+		&format[0],
+		1,
+		m_lightRootSignture,
+		PSOHandler::INPUT_LAYOUT_NONE,
+		L"Directional Light PSO"
+	);
+	m_pointLightPSO = m_psoHandler.CreatePSO(
+		{ L"Shaders/FullscreenVS.cso", L"Shaders/PointLightPS.cso" },
+		CD3DX12_BLEND_DESC(D3D12_DEFAULT),
+		CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT),
+		depth,
+		DXGI_FORMAT_UNKNOWN,
+		&format[0],
+		1,
+		m_lightRootSignture,
+		PSOHandler::INPUT_LAYOUT_NONE,
+		L"Point Light PSO"
+	);
+
 }
 RenderManager::Impl::~Impl(){
 
 	m_mainRenderer.~Renderer();
-	m_pipeLineHandler.~PipelineStateHandler();
+	m_psoHandler.~PSOHandler();
 }
 
 void RenderManager::Impl::RenderImgui()
@@ -181,7 +218,8 @@ void RenderManager::Impl::BeginFrame()
 			D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_DEPTH_WRITE);
 	
 		ID3D12Resource* srvToRTV[] = {
-			m_ssao.GetResource(m_framework.m_frameIndex)
+			m_ssao.GetResource(m_framework.m_frameIndex),
+			m_ssaoBlur.GetResource(m_framework.m_frameIndex)
 		};
 		m_framework.QeueuResourceTransition(&srvToRTV[0], _countof(srvToRTV), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
@@ -296,7 +334,6 @@ void RenderManager::Impl::RenderScene(LightHandler& lightHandler, TextureHandler
 			false,
 			startLocation
 		);
-
 		// Render non Transparent effects
 
 		{ // Copy over Depth buffer data to a depth texture to be used in pixel shader
@@ -336,21 +373,25 @@ void RenderManager::Impl::RenderScene(LightHandler& lightHandler, TextureHandler
 		CD3DX12_GPU_DESCRIPTOR_HANDLE shadowBuffer = m_mainRenderer.UpdateShadowMapBuffer(m_shadowMap.GetProjectionMatrix(), dirLightTransform, frameIndex);
 		cmdList->SetGraphicsRootDescriptorTable(0, shadowBuffer);
 		
-		cmdList->SetPipelineState(m_pipeLineHandler.GetPSO(PIPELINE_STATE_SHADOW));
-		cmdList->SetGraphicsRootSignature(m_pipeLineHandler.GetRootSignature(ROOTSIGNATURE_STATE_GBUFFER));
+		cmdList->SetGraphicsRootSignature(m_psoHandler.GetRootSignature(m_shadowMap.GetRootSignature()));
+		cmdList->SetPipelineState(m_psoHandler.GetPipelineState(m_shadowMap.GetPSO()));
 		
 		m_shadowMap.SetModelsData(modelHandler.GetAllModels());
-		m_shadowMap.RenderTexture(cmdList, m_framework.DSVHeap(), frameIndex);
+		m_shadowMap.RenderTexture(cmdList, &m_framework.DSVHeap(), nullptr, frameIndex);
+		
+		ID3D12Resource* shadow[] = { m_shadowMap.GetResource(frameIndex) };
+		m_framework.QeueuResourceTransition(&shadow[0], 1,
+			D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+		
 		// Shadow Map End
-
 		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle = m_framework.m_rtvHeap.GET_CPU_DESCRIPTOR(0);
 
 		// SSAO Rendering
-		cmdList->SetGraphicsRootSignature(m_pipeLineHandler.GetRootSignature(ROOTSIGNATURE_STATE_SSAO));
-		cmdList->SetPipelineState(m_pipeLineHandler.GetPSO(PIPELINE_STATE_SSAO));
+		cmdList->SetGraphicsRootSignature(m_psoHandler.GetRootSignature(m_ssao.GetRootSignature()));
+		cmdList->SetPipelineState(m_psoHandler.GetPipelineState(m_ssao.GetPSO()));
 
 		rtvHandle = m_framework.RTVHeap().GET_CPU_DESCRIPTOR(0);
-		rtvHandle.Offset((m_ssao.RTVOffsetID()) * m_framework.RTVHeap().DESCRIPTOR_SIZE());
+		rtvHandle.Offset((m_ssao.RTVOffsetID() + frameIndex) * m_framework.RTVHeap().DESCRIPTOR_SIZE());
 		cmdList->RSSetViewports(1, &m_framework.m_viewport);
 		cmdList->OMSetRenderTargets(1, &rtvHandle, false, nullptr);
 
@@ -358,28 +399,40 @@ void RenderManager::Impl::RenderScene(LightHandler& lightHandler, TextureHandler
 		m_ssao.SetTextureAtSlot(cmdList, 4, m_gBuffer.GetGPUHandle(GBUFFER_WORLD_POSITION, &m_framework.CbvSrvHeap()));
 		m_ssao.SetTextureAtSlot(cmdList, 5, m_gBuffer.GetGPUHandle(GBUFFER_NORMAL, &m_framework.CbvSrvHeap()));
 		m_ssao.SetTextureAtSlot(cmdList, 6, m_gBuffer.GetGPUHandle(GBUFFER_DEPTH, &m_framework.CbvSrvHeap()));
-		m_ssao.RenderSSAO(cmdList, m_framework.CbvSrvHeap(), textureHandler, frameIndex);
-		// SSAO End
-
-		ID3D12Resource* shadow[] = { m_shadowMap.GetResource(frameIndex) };
-		m_framework.QeueuResourceTransition(&shadow[0], 1,
-			D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-
+		m_ssao.RenderTexture(cmdList, &m_framework.CbvSrvHeap(), &textureHandler, frameIndex);
+		
 		ID3D12Resource* effects[] = { m_ssao.GetResource(frameIndex) };
 		m_framework.QeueuResourceTransition(effects, _countof(effects),
+			D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);		
+		m_framework.TransitionAllResources();
+
+		// SSAO End
+		rtvHandle = m_framework.RTVHeap().GET_CPU_DESCRIPTOR(0);
+		rtvHandle.Offset((m_ssaoBlur.RTVOffsetID() + frameIndex)* m_framework.RTVHeap().DESCRIPTOR_SIZE());
+		cmdList->RSSetViewports(1, &m_framework.m_viewport);
+		cmdList->OMSetRenderTargets(1, &rtvHandle, false, nullptr);
+
+		cmdList->SetGraphicsRootSignature(m_psoHandler.GetRootSignature(m_ssaoBlur.GetRootSignature()));
+		cmdList->SetPipelineState(m_psoHandler.GetPipelineState(m_ssaoBlur.GetPSO()));
+		CD3DX12_GPU_DESCRIPTOR_HANDLE ssaoHandler = m_framework.CbvSrvHeap().GET_GPU_DESCRIPTOR(0);
+		ssaoHandler.Offset((m_ssao.SRVOffsetID() + frameIndex) * m_framework.CbvSrvHeap().DESCRIPTOR_SIZE());
+		m_ssaoBlur.SetTextureAtSlot(cmdList, 0, ssaoHandler);
+		m_ssaoBlur.RenderTexture(cmdList, nullptr, nullptr, frameIndex);
+
+		ID3D12Resource* ssaoBlur[] = { m_ssaoBlur.GetResource(frameIndex) };
+		m_framework.QeueuResourceTransition(ssaoBlur, _countof(ssaoBlur),
 			D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 
+		m_framework.TransitionAllResources();
 	} 
 
 	{ 
 		// Transition all resources before rendering light pass.
-		m_framework.TransitionAllResources();
-
 		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle = m_framework.m_rtvHeap.GET_CPU_DESCRIPTOR(0);
 		
 		//* Render Skybox & Ligth start
-		cmdList->SetGraphicsRootSignature(m_pipeLineHandler.GetRootSignature(ROOTSIGNATURE_STATE_DEFAULT));
-		cmdList->SetPipelineState(m_pipeLineHandler.GetPSO(PIPELINE_STATE_SKYBOX));
+		cmdList->SetGraphicsRootSignature(m_psoHandler.GetRootSignature(skybox.GetRootSignature()));
+		cmdList->SetPipelineState(m_psoHandler.GetPipelineState(skybox.GetPSO()));
 
 		rtvHandle = m_framework.m_rtvHeap.GET_CPU_DESCRIPTOR(0);
 		rtvHandle.Offset(frameIndex * m_framework.RTVHeap().DESCRIPTOR_SIZE());
@@ -405,9 +458,8 @@ void RenderManager::Impl::RenderScene(LightHandler& lightHandler, TextureHandler
 
 		startLocation = 0;
 
-		cmdList->SetGraphicsRootSignature(m_pipeLineHandler.GetRootSignature(ROOTSIGNATURE_STATE_LIGHT));
-		cmdList->SetPipelineState(m_pipeLineHandler.GetPSO(PIPELINE_STATE_DIRECTIONAL_LIGHT));
-
+		cmdList->SetGraphicsRootSignature(m_psoHandler.GetRootSignature(m_lightRootSignture));
+		cmdList->SetPipelineState(m_psoHandler.GetPipelineState(m_dirLightPSO));
 		cmdList->SetGraphicsRootDescriptorTable(startLocation, defaultHandle);
 		startLocation++;
 
@@ -420,20 +472,20 @@ void RenderManager::Impl::RenderScene(LightHandler& lightHandler, TextureHandler
 			cmdList,
 			textureHandler.GetTextures()[skybox.GetCurrentActiveSkybox()[1] - 1],
 			m_shadowMap,
-			m_ssao,
+			&m_ssaoBlur,
 			m_framework.GetFrameIndex(),
 			startLocation
 		);
 		
-		cmdList->SetPipelineState(m_pipeLineHandler.GetPSO(PIPELINE_STATE_POINT_LIGHT));
+		cmdList->SetPipelineState(m_psoHandler.GetPipelineState(m_pointLightPSO));
 		cmdList->SetGraphicsRootDescriptorTable(0, defaultHandle);
 		m_mainRenderer.RenderPointLights(cmdList, lightHandler, scene.Registry(), frameIndex, startLocation += 1);
 
 	} //* Render scene Ligthing end
 
 	{ //* Render 2D Scene
-		cmdList->SetGraphicsRootSignature(m_pipeLineHandler.GetRootSignature(ROOTSIGNATURE_STATE_UI));
-		cmdList->SetPipelineState(m_pipeLineHandler.GetPSO(PIPELINE_STATE_UI));
+		cmdList->SetGraphicsRootSignature(m_psoHandler.GetRootSignature(m_2dRenderer.GetRootSignature()));
+		cmdList->SetPipelineState(m_psoHandler.GetPipelineState(m_2dRenderer.GetPSO()));
 
 		Update2DInstances(scene, spriteHandler);
 		m_2dRenderer.RenderUI(

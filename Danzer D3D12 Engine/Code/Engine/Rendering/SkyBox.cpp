@@ -1,14 +1,34 @@
 #include "stdafx.h"
 #include "SkyBox.h"
 
+#include "PSOHandler.h"
 #include "TextureHandler.h"
 
 Skybox::~Skybox(){}
-void Skybox::Init(UINT cubeModel, std::wstring skyBoxTexture, bool spin, std::string skyboxName)
+void Skybox::Init(PSOHandler& psoHandler, UINT cubeModel, std::wstring skyBoxTexture, bool spin, std::string skyboxName)
 {
+	DXGI_FORMAT format[] = { DXGI_FORMAT_R8G8B8A8_UNORM };
+	CD3DX12_DEPTH_STENCIL_DESC depth(D3D12_DEFAULT);
+	depth.DepthEnable = false;
+	auto flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
+				 D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
+				 D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS;
+	m_rs  = psoHandler.CreateRootSignature(1, 1, PSOHandler::SAMPLER_DESC_WRAP, flags, L"Skybox Root Signature");
+	m_pso = psoHandler.CreatePSO(
+		{ L"Shaders/skyboxVS.cso", L"Shaders/skyboxPS.cso" },
+		CD3DX12_BLEND_DESC(D3D12_DEFAULT),
+		psoHandler.RastDescs(PSOHandler::RASTERIZER_NONE),
+		depth,
+		DXGI_FORMAT_UNKNOWN,
+		&format[0],
+		1,
+		m_rs,
+		PSOHandler::INPUT_LAYOUT_INSTANCE_FORWARD,
+		L"Skybox PSO"
+	);
+
 	m_spin = spin;
 	m_skyboxes.emplace(skyboxName, m_textureHandler.CreateTexture(skyBoxTexture, true));
-	//m_textureHandler.LoadAllCreatedTexuresToGPU();
 	m_currentSkyBox = m_skyboxes[skyboxName];
 	m_cube = cubeModel;
 }
