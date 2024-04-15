@@ -24,7 +24,6 @@
     <ClCompile Include="Rendering\Camera.cpp">
       <Filter>Objects</Filter>
     </ClCompile>
-    <ClCompile Include="Rendering\PipelineStateHandler.cpp" />
     <ClCompile Include="Rendering\Renderer.cpp">
       <Filter>Main</Filter>
     </ClCompile>
@@ -78,6 +77,8 @@
     <ClCompile Include="Rendering\Screen Rendering\LightHandler.cpp" />
     <ClCompile Include="Rendering\Screen Rendering\SSAOTexture.cpp" />
     <ClCompile Include="Rendering\Buffers\SSAOBuffer.cpp" />
+    <ClCompile Include="Rendering\Screen Rendering\SSAOBlur.cpp" />
+    <ClCompile Include="Rendering\PSOHandler.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Core\DirectX12Framework.h">
@@ -98,7 +99,6 @@
     <ClInclude Include="Rendering\Camera.h">
       <Filter>Objects</Filter>
     </ClInclude>
-    <ClInclude Include="Rendering\PipelineStateHandler.h" />
     <ClInclude Include="Rendering\Renderer.h">
       <Filter>Main</Filter>
     </ClInclude>
@@ -179,5 +179,7 @@
     <ClInclude Include="Rendering\Screen Rendering\LightHandler.h" />
     <ClInclude Include="Rendering\Screen Rendering\SSAOTexture.h" />
     <ClInclude Include="Rendering\Buffers\SSAOBuffer.h" />
+    <ClInclude Include="Rendering\Screen Rendering\SSAOBlur.h" />
+    <ClInclude Include="Rendering\PSOHandler.h" />
   </ItemGroup>
 </Project>

@@ -13,6 +13,7 @@
 #include "Screen Rendering/DirectionalShadowMapping.h"
 #include "Screen Rendering/SSAOTexture.h"
 #include "Core/WindowHandler.h"
+#include "PSOHandler.h"
 
 #include "Camera.h"
 
@@ -139,7 +140,7 @@ void Renderer::RenderSkybox(ID3D12GraphicsCommandList* cmdList, Transform& camer
 	cmdList->DrawIndexedInstanced(mesh.m_numIndices, 1, 0, 0, 0);
 }
 
-void Renderer::RenderDirectionalLight(ID3D12GraphicsCommandList* cmdList, TextureHandler::Texture& skyboxTexture, DirectionalShadowMapping& shadowMap, SSAOTexture& ssao, UINT frameIndex, UINT startLocation)
+void Renderer::RenderDirectionalLight(ID3D12GraphicsCommandList* cmdList, TextureHandler::Texture& skyboxTexture, DirectionalShadowMapping& shadowMap, FullscreenTexture* ssao, UINT frameIndex, UINT startLocation)
 {
 	D3D12_GPU_DESCRIPTOR_HANDLE cbvSrvHeapStart = m_framework->CbvSrvHeap().GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
 	const UINT cbvSrvDescSize = m_framework->CbvSrvHeap().DESCRIPTOR_SIZE();
@@ -148,11 +149,11 @@ void Renderer::RenderDirectionalLight(ID3D12GraphicsCommandList* cmdList, Textur
 	cmdList->SetGraphicsRootDescriptorTable(startLocation, srvHandle);
 	startLocation++;
 
-	CD3DX12_GPU_DESCRIPTOR_HANDLE shadowHandle(cbvSrvHeapStart, shadowMap.SRVOffsetID(), cbvSrvDescSize);
+	CD3DX12_GPU_DESCRIPTOR_HANDLE shadowHandle(cbvSrvHeapStart, shadowMap.SRVOffsetID() + frameIndex, cbvSrvDescSize);
 	cmdList->SetGraphicsRootDescriptorTable(startLocation, shadowHandle);
 	startLocation++;
 
-	CD3DX12_GPU_DESCRIPTOR_HANDLE ssaoHandle(cbvSrvHeapStart, ssao.SRVOffsetID(), cbvSrvDescSize);
+	CD3DX12_GPU_DESCRIPTOR_HANDLE ssaoHandle(cbvSrvHeapStart, ssao->SRVOffsetID() + frameIndex, cbvSrvDescSize);
 	cmdList->SetGraphicsRootDescriptorTable(startLocation, ssaoHandle);
 	startLocation++;
 
@@ -198,7 +199,7 @@ void Renderer::RenderPointLights(ID3D12GraphicsCommandList* cmdList, LightHandle
 	int s = 0;
 }
 
-void Renderer::RenderForwardModelEffects(ID3D12GraphicsCommandList* cmdList, const UINT depthOffset, std::vector<ModelEffectData>& modelEffects, ModelHandler& modelHandler, std::vector<TextureHandler::Texture>& textures, const UINT frameIndex, Camera& cam, Transform& camTransform, UINT startLocation)
+void Renderer::RenderForwardModelEffects(ID3D12GraphicsCommandList* cmdList, PSOHandler& psoHandler, const UINT depthOffset, std::vector<ModelEffectData>& modelEffects, ModelHandler& modelHandler, std::vector<TextureHandler::Texture>& textures, const UINT frameIndex, Camera& cam, Transform& camTransform, UINT startLocation)
 {
 	D3D12_GPU_DESCRIPTOR_HANDLE cbvSrvHeapStart = m_framework->CbvSrvHeap().GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
 	const UINT cbvSrvDescSize = m_framework->CbvSrvHeap().DESCRIPTOR_SIZE();
@@ -209,8 +210,8 @@ void Renderer::RenderForwardModelEffects(ID3D12GraphicsCommandList* cmdList, con
 		ModelEffectData& effectData = modelEffects[i];
 		
 		// Set the effects RootSignature and Pipelinestate 
-		cmdList->SetGraphicsRootSignature(effectData.GetEffectRSO());
-		cmdList->SetPipelineState(effectData.GetEffectPSO());
+		cmdList->SetGraphicsRootSignature(psoHandler.GetRootSignature(effectData.GetRootsSignature()));
+		cmdList->SetPipelineState(psoHandler.GetPipelineState(effectData.GetPSO()));
 
 		CD3DX12_GPU_DESCRIPTOR_HANDLE cbvHandle = UpdateDefaultBuffers(cam, camTransform, frameIndex);
 		cmdList->SetGraphicsRootDescriptorTable(0, cbvHandle);

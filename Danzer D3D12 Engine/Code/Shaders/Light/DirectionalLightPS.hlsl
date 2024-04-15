@@ -18,7 +18,7 @@ float4 main(VertexToPixel input) : SV_TARGET
     float4 normal        = normalTexture.Sample(defaultSample, input.m_uv).rgba; 
     float4 material      = materialTexture.Sample(defaultSample, input.m_uv); 
     float3 vertexNormal  = vertexNormalTexture.Sample(defaultSample, input.m_uv).xyz; 
-    float  ssao           = ssaoTexture.Sample(defaultSample, input.m_uv).r;
+    float  ssao          = ssaoTexture.Sample(defaultSample, input.m_uv).r;
     
     float emissiveData = normal.w;
     float metallic     = material.r;
@@ -45,9 +45,9 @@ float4 main(VertexToPixel input) : SV_TARGET
     float3 irradiance = skyboxTexture.SampleLevel(defaultSample, ambientNormal.xyz, GetNumMips(skyboxTexture)).rgb * AmbientColor.rgb;
     irradiance *= AmbientColor.a;
     float3 diffuse = irradiance * (albedo.rgb);
-    float3 ambient = (diffusecolor * diffuse) * ssao;
+    float3 ambient = (diffusecolor * diffuse);
         
-    float3 radiance = ambient + directionalLight;
+    float3 radiance = (ambient + directionalLight) * ssao;
 
     // Fog that i want to get in!
     //float4 oldWorldPos = worldPositionTexture.Sample(defaultSample, input.m_uv).xyzw - CameraPosition.xyzw;

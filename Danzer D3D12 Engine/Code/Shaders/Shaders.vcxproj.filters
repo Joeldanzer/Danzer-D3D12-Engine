@@ -51,6 +51,7 @@
     </FxCompile>
     <FxCompile Include="Light\PointLightPS.hlsl" />
     <FxCompile Include="Fullscreen\SSAOPS.hlsl" />
+    <FxCompile Include="Fullscreen\SSAOBlurPS.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="UI\UIstructs.hlsli">

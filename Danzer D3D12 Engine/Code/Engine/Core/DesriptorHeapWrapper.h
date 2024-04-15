@@ -2,7 +2,7 @@
 #include "../../3rdParty/DirectX-Headers-main/include/directx/d3dx12.h"
 #include "D3D12Header.h"
 
-#define MAX_NUMBER_OF_DESCTRIPTORS 200000
+#define MAX_NUMBER_OF_DESCTRIPTORS 1000000
 #define MAX_NUMBER_OF_RTV 200
 
 class DescriptorHeapWrapper

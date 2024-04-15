@@ -72,9 +72,9 @@ Engine::Impl::Impl(unsigned int width, unsigned int height) :
 	m_windowHandler({ 0, 0, width, height }),
 	m_framework(),
 	m_textureHandler(m_framework),
-	m_modelHandler(m_framework, m_textureHandler),
-	m_modelEffectHandler(m_framework),
 	m_renderManager(m_framework, m_textureHandler),
+	m_modelHandler(m_framework, m_textureHandler),
+	m_modelEffectHandler(m_framework, m_renderManager.GetPSOHandler()),
 	m_spriteHandler(m_framework, m_textureHandler),
 	m_lightHandler(m_framework),
 	m_sceneManager(),
@@ -94,7 +94,7 @@ Engine::Impl::Impl(unsigned int width, unsigned int height) :
 
 	CustomModel skyboxCube = ModelData::GetCube();
 	skyboxCube.m_customModelName = "skybox";
-	m_skybox.Init(m_modelHandler.CreateCustomModel(skyboxCube).m_modelID, L"Sprites/defaultRedSkybox.dds", true);
+	m_skybox.Init(m_renderManager.GetPSOHandler(), m_modelHandler.CreateCustomModel(skyboxCube).m_modelID, L"Sprites/defaultRedSkybox.dds", true);
 	m_spriteHandler.CreateSpriteSheet(L"Sprites/testSpriteSheet.dds", 4, 4);
 	
 	m_sceneManager.Init(m_camera);

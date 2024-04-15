@@ -14,8 +14,8 @@ public:
 	void InitializeSSAO(D3D12Framework& framework, TextureHandler& textureHandler, const UINT numberOfSamples, const UINT noiseSize);
 
 	//void SetTextures(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper& handle, TextureHandler& textureHandler);
-	void RenderTexture(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper& handle, const UINT frameIndex) override;
-	void RenderSSAO(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper& handle, TextureHandler& textureHandler, const UINT frameIndex);
+	void SetPipelineAndRootSignature(PSOHandler& psoHandler) override;
+	void RenderTexture(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper* handle, TextureHandler* textureHandler, const UINT frameIndex) override;
 	const UINT SampleTextureID() {
 		return m_textureID;
 	}

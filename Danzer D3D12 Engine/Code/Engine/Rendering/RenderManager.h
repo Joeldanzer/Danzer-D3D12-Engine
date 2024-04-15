@@ -3,7 +3,6 @@
 
 #include "Renderer.h"
 #include "2D/2DRenderer.h"
-#include "PipelineStateHandler.h"
 
 #include <map>
 
@@ -15,6 +14,7 @@ class TextureHandler;
 class D3D12Framework;
 class ModelEffectHandler;
 class LightHandler;
+class PSOHandler;
 
 struct Object;
 struct Sprite;
@@ -32,6 +32,7 @@ public:
 	void RenderFrame(LightHandler& lightHandler, TextureHandler& textureHandler, ModelHandler& modelHandler, ModelEffectHandler& effectHandler,
 		SpriteHandler& SpriteHandler, Skybox& skybox, Scene& scene/*Camera, Ligthing, GameObjects, etc...*/);
 
+	PSOHandler& GetPSOHandler() const noexcept;
 
 private:
 	friend class Impl;

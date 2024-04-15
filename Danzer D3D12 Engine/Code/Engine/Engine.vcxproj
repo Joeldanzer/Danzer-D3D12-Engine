@@ -158,6 +158,7 @@
     <ClInclude Include="Components\WaterPlaneBufferData.h" />
     <ClInclude Include="Core\DesriptorHeapWrapper.h" />
     <ClInclude Include="Core\D3D12Framework.h" />
+    <ClInclude Include="Rendering\PSOHandler.h" />
     <ClInclude Include="Rendering\Screen Rendering\LightHandler.h" />
     <ClInclude Include="Rendering\Buffers\PointLightBuffer.h" />
     <ClInclude Include="Rendering\Buffers\EffectShaderBuffer.h" />
@@ -200,7 +201,6 @@
     <ClInclude Include="Core\MathDefinitions.h" />
     <ClInclude Include="Rendering\Models\ModelHandler.h" />
     <ClInclude Include="Rendering\Buffers\CBVBuffer.h" />
-    <ClInclude Include="Rendering\PipelineStateHandler.h" />
     <ClInclude Include="Rendering\Renderer.h" />
     <ClInclude Include="Rendering\RenderManager.h" />
     <ClInclude Include="Rendering\RenderUtility.h" />
@@ -216,6 +216,7 @@
     <ClInclude Include="ShaderEffectRenderer.h" />
     <ClInclude Include="Rendering\Screen Rendering\SSAOTexture.h" />
     <ClInclude Include="Rendering\Buffers\SSAOBuffer.h" />
+    <ClInclude Include="Rendering\Screen Rendering\SSAOBlur.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="Rendering\Buffers\TransformBuffer.h" />
     <ClInclude Include="Rendering\Buffers\VertexBuffer.h" />
@@ -229,6 +230,7 @@
     <ClCompile Include="Core\input.cpp" />
     <ClCompile Include="Core\DesriptorHeapWrapper.cpp" />
     <ClCompile Include="Core\D3D12Framework.cpp" />
+    <ClCompile Include="Rendering\PSOHandler.cpp" />
     <ClCompile Include="Rendering\Screen Rendering\LightHandler.cpp" />
     <ClCompile Include="Rendering\Buffers\PointLightBuffer.cpp" />
     <ClCompile Include="Rendering\Buffers\EffectShaderBuffer.cpp" />
@@ -256,7 +258,6 @@
     <ClCompile Include="Core\Engine.cpp" />
     <ClCompile Include="Rendering\Models\ModelData.cpp" />
     <ClCompile Include="Rendering\Models\ModelHandler.cpp" />
-    <ClCompile Include="Rendering\PipelineStateHandler.cpp" />
     <ClCompile Include="Rendering\Renderer.cpp" />
     <ClCompile Include="Rendering\RenderManager.cpp" />
     <ClCompile Include="Rendering\2D\SpriteHandler.cpp" />
@@ -268,6 +269,7 @@
     <ClCompile Include="ShaderEffectRenderer.cpp" />
     <ClCompile Include="Rendering\Screen Rendering\SSAOTexture.cpp" />
     <ClCompile Include="Rendering\Buffers\SSAOBuffer.cpp" />
+    <ClCompile Include="Rendering\Screen Rendering\SSAOBlur.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>

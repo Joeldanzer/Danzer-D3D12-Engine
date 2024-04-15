@@ -10,8 +10,9 @@ public:
 		m_models(nullptr), modelCount(0), m_projectionMatrix() 
 	{}
 	
-	void RenderTexture(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper& handle, const UINT frameIndex) override;
-	
+	void RenderTexture(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper* handle, TextureHandler* textureHandler, const UINT frameIndex) override;
+	void SetPipelineAndRootSignature(PSOHandler& psoHandler);
+
 	void CreateProjection(float projectionScale, float increase);
 	Mat4f& GetProjectionMatrix() {
 		return m_projectionMatrix;

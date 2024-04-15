@@ -7,6 +7,7 @@
 #include <unordered_map>
 
 class TextureHandler;
+class PSOHandler;
 
 class Skybox
 {
@@ -25,7 +26,7 @@ public:
 		std::string m_skyboxName;
 	};
 
-	void Init(UINT cubeModel, std::wstring skyBoxTexture = L"Sprites/defaultRedSkybox.dds", bool spin = false, std::string skyboxName = "defaultSkybox");
+	void Init(PSOHandler& psoHandler, UINT cubeModel, std::wstring skyBoxTexture = L"Sprites/defaultRedSkybox.dds", bool spin = false, std::string skyboxName = "defaultSkybox");
 
 	void Update(const float dt);
 
@@ -38,10 +39,16 @@ public:
 		
 	}
 
-	UINT GetSkyboxCube() {
+	const UINT GetPSO() {
+		return m_pso;
+	}
+	const UINT GetRootSignature() {
+		return m_rs;
+	}
+	const UINT GetSkyboxCube() {
 		return m_cube;
 	}
-	UINT GetCurrentSkyboxTexture() {
+	const UINT GetCurrentSkyboxTexture() {
 		return m_currentSkyBox;
 	}
 
@@ -57,6 +64,8 @@ private:
 	
 	Quat4f m_rotation;
 	bool m_spin;
+
+	UINT m_pso, m_rs;
 
 	UINT m_cube;
 	UINT m_currentSkyBox;

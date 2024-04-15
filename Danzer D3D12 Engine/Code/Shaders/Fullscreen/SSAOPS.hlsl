@@ -17,7 +17,7 @@ float4 main(VertexToPixel input) : SV_TARGET
     float3x3 TBN = float3x3(tangent, biTangent, normal);
     
     float radius    = 1.0f;
-    float bias      = 0.0001f;
+    float bias      = 0.005f;
     float occlusion = 0.0f;
     
     for (int i = 0; i < 64; i++)
@@ -27,8 +27,7 @@ float4 main(VertexToPixel input) : SV_TARGET
             sample = SamplesTwo[i - 32];
         else
             sample = SamplesOne[i];
-        
-        //sample = mul(float4(sample, 1.0f), CameraTransform).xyz;
+
         float3 samplePos = mul(sample, TBN);
         samplePos = fragPos.xyz + (samplePos) * radius;
         

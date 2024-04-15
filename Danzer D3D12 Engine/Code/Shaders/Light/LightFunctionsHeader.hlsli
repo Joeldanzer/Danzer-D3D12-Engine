@@ -13,9 +13,8 @@ float ComputeScattering(float lightDotView)
 
 float VolumetricLight(float4 worldPosition)
 {
-    
+    return 0.0f;
 }
-
 
 float invLerp(float a, float b, float c)
 {
@@ -43,11 +42,11 @@ float ShadowCalculation(float4 worldPos, float3 normal, float3 dir, float4x4 tra
     texelSize = 1.0f / texelSize; 
     float scale = 0.0f;
     
-    for (float x = -2; x <= 2; x++)
+    for (float x = -1; x <= 1; x++)
     {
-        for (float y = -2; y <= 2; y++)
+        for (float y = -1; y <= 1; y++)
         {
-            float pcfDepth = shadowMap.Sample(defaultSample, shadowTexCoord.xy + float2(x, y) * texelSize).r;
+            float pcfDepth = shadowMap.SampleLevel(defaultSample, shadowTexCoord.xy + float2(x, y) * texelSize, 0).r;
             shadow += currentDepth > pcfDepth ? 0.0f : 1.0f;
             scale++;
         }
