@@ -112,15 +112,15 @@ UINT PSOHandler::CreatePSO(std::array<std::wstring, 2> shaderName, D3D12_BLEND_D
 void PSOHandler::InitializeSamplerDescs()
 {
 	D3D12_STATIC_SAMPLER_DESC samplerDesc = {};
-	samplerDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
+	samplerDesc.Filter = D3D12_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR;
 	samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
 	samplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
 	samplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
 	samplerDesc.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
-	samplerDesc.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
+	samplerDesc.ComparisonFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
 	samplerDesc.BorderColor = D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK;
 	samplerDesc.MipLODBias = 0;
-	samplerDesc.MaxAnisotropy = 16.0f;
+	samplerDesc.MaxAnisotropy = 4.0f;
 	samplerDesc.MinLOD = 0.f;
 	samplerDesc.MaxLOD = D3D12_FLOAT32_MAX;
 	samplerDesc.ShaderRegister = 0;
@@ -157,7 +157,8 @@ void PSOHandler::InitializeSamplerDescs()
 	samplerDesc.MaxLOD = D3D12_FLOAT32_MAX;
 	samplerDesc.ShaderRegister = 0;
 	samplerDesc.RegisterSpace = 0;
-
+	//samplerDesc
+	
 	m_samplerDescs[SAMPLER_DESC_BORDER] = samplerDesc;
 }
 

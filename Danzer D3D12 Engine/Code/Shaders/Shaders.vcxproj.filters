@@ -52,6 +52,8 @@
     <FxCompile Include="Light\PointLightPS.hlsl" />
     <FxCompile Include="Fullscreen\SSAOPS.hlsl" />
     <FxCompile Include="Fullscreen\SSAOBlurPS.hlsl" />
+    <FxCompile Include="Light\VolumetricLightingPS.hlsl" />
+    <FxCompile Include="Light\VolumetricLightBlurPS.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="UI\UIstructs.hlsli">
@@ -75,5 +77,6 @@
     <None Include="Light\DirectionalLightHeader.hlsli" />
     <None Include="Light\PointLightHeader.hlsli" />
     <None Include="Fullscreen\SSAOHeader.hlsli" />
+    <None Include="Light\VolumetricLightHeader.hlsli" />
   </ItemGroup>
 </Project>

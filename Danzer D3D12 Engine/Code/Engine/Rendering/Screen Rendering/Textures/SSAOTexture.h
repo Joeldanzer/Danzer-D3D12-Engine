@@ -1,5 +1,5 @@
 #pragma once
-#include "Rendering/Screen Rendering/FullscreenTexture.h"
+#include "FullscreenTexture.h"
 #include "Rendering/Buffers/SSAOBuffer.h"
 #include "Rendering/Buffers/WindowSizeBuffer.h"
 

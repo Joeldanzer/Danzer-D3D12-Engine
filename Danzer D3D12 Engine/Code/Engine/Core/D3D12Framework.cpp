@@ -51,12 +51,15 @@ D3D12Framework::D3D12Framework() :
 	swapChainDesc.SampleDesc.Count = 1;
 	swapChainDesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
 
+	DXGI_SWAP_CHAIN_FULLSCREEN_DESC fullscreenDesc = {};
+	fullscreenDesc.Windowed = false;
+
 	ComPtr<IDXGISwapChain1> swapChain;
 	CHECK_HR(factory->CreateSwapChainForHwnd(
 		m_commandQueue.Get(),
 		WindowHandler::GetHWND(),
 		&swapChainDesc,
-		nullptr,
+		&fullscreenDesc,
 		nullptr,
 		&swapChain
 	));

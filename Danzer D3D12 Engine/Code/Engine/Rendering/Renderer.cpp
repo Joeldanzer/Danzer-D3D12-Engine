@@ -8,10 +8,10 @@
 #include "Components/Object.h"
 #include "Components/DirectionalLight.h"
 #include "SkyBox.h"
+#include "Rendering/Screen Rendering/Textures/FullscreenTexture.h"
+#include "Rendering/Screen Rendering/Textures/DirectionalShadowMapping.h"
 #include "Rendering/Screen Rendering/GBuffer.h"
 #include "Rendering/Screen Rendering/LightHandler.h"
-#include "Screen Rendering/DirectionalShadowMapping.h"
-#include "Screen Rendering/SSAOTexture.h"
 #include "Core/WindowHandler.h"
 #include "PSOHandler.h"
 
@@ -70,7 +70,6 @@ CD3DX12_GPU_DESCRIPTOR_HANDLE Renderer::UpdateDefaultBuffers(Camera& camera, Tra
 	D3D12_GPU_DESCRIPTOR_HANDLE cbvSrvHeapStart = m_framework->CbvSrvHeap().GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
 	CD3DX12_GPU_DESCRIPTOR_HANDLE cbvHandle(cbvSrvHeapStart, m_cameraBuffer.OffsetID() + frameIndex, m_framework->CbvSrvHeap().DESCRIPTOR_SIZE());
 	return cbvHandle;
-	//m_commandList->SetGraphicsRootDescriptorTable(0, cbvHandle);
 }
 
 CD3DX12_GPU_DESCRIPTOR_HANDLE Renderer::UpdateShadowMapBuffer(Mat4f& projection, Transform& transform, UINT frameIndex)
@@ -140,7 +139,7 @@ void Renderer::RenderSkybox(ID3D12GraphicsCommandList* cmdList, Transform& camer
 	cmdList->DrawIndexedInstanced(mesh.m_numIndices, 1, 0, 0, 0);
 }
 
-void Renderer::RenderDirectionalLight(ID3D12GraphicsCommandList* cmdList, TextureHandler::Texture& skyboxTexture, DirectionalShadowMapping& shadowMap, FullscreenTexture* ssao, UINT frameIndex, UINT startLocation)
+void Renderer::RenderDirectionalLight(ID3D12GraphicsCommandList* cmdList, TextureHandler::Texture& skyboxTexture, DirectionalShadowMapping& shadowMap, FullscreenTexture* ssao, FullscreenTexture* vl, UINT frameIndex, UINT startLocation)
 {
 	D3D12_GPU_DESCRIPTOR_HANDLE cbvSrvHeapStart = m_framework->CbvSrvHeap().GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
 	const UINT cbvSrvDescSize = m_framework->CbvSrvHeap().DESCRIPTOR_SIZE();
@@ -155,6 +154,10 @@ void Renderer::RenderDirectionalLight(ID3D12GraphicsCommandList* cmdList, Textur
 
 	CD3DX12_GPU_DESCRIPTOR_HANDLE ssaoHandle(cbvSrvHeapStart, ssao->SRVOffsetID() + frameIndex, cbvSrvDescSize);
 	cmdList->SetGraphicsRootDescriptorTable(startLocation, ssaoHandle);
+	startLocation++;
+
+	CD3DX12_GPU_DESCRIPTOR_HANDLE vlHandle(cbvSrvHeapStart, vl->SRVOffsetID() + frameIndex, cbvSrvDescSize);
+	cmdList->SetGraphicsRootDescriptorTable(startLocation, vlHandle);
 	startLocation++;
 
 	cmdList->IASetVertexBuffers(0, 0, nullptr);

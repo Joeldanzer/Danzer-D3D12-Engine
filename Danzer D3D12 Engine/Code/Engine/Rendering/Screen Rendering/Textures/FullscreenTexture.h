@@ -1,5 +1,5 @@
 #pragma once
-#include "DirectX-Headers-main/include/directx/d3dx12.h"
+#include "../3rdParty/DirectX-Headers-main/include/directx/d3dx12.h"
 #include "Core/MathDefinitions.h"
 #include "Core/D3D12Header.h"
 
@@ -38,9 +38,14 @@ public:
 		std::wstring name
 	);
 
+	virtual void InitBuffers(ID3D12Device* device, DescriptorHeapWrapper& cbvWrapper);
+
 	virtual void SetPipelineAndRootSignature(PSOHandler& psoHandler) = 0;
 
-	void SetTextureAtSlot(ID3D12GraphicsCommandList* cmdList, const UINT slot, D3D12_GPU_DESCRIPTOR_HANDLE handle);
+	virtual void SetAsRenderTarget(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper* rtvWrapper, D3D12_CPU_DESCRIPTOR_HANDLE* dsvHandle, const UINT frameIndex);
+	void SetViewportAndPSO(ID3D12GraphicsCommandList* cmdList, PSOHandler& psoHandler);
+	
+	void SetTextureAtSlot(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper* srvWrapper, const UINT slot, const UINT frameIndex);
 	virtual void RenderTexture(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper* handle, TextureHandler* textureHandler, const UINT frameIndex){}
 
 	ID3D12Resource* GetResource(const UINT frameIndex) {

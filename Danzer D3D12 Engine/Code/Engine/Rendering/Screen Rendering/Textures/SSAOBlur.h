@@ -1,5 +1,5 @@
 #pragma once
-#include "Rendering/Screen Rendering/FullscreenTexture.h"
+#include "FullscreenTexture.h"
 
 class SSAOBlur : public FullscreenTexture
 {

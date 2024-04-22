@@ -1,19 +1,15 @@
 #pragma once
-#include <string>
+#include "DirectX-Headers-main/include/directx/d3dx12.h"
 
-class D3D12Framework;
-struct ID3D12GraphicCommandList;
+class PSOHandler;
 
 class FullScreenShader
 {
 public:
-	FullScreenShader(D3D12Framework& framework);
+	FullScreenShader();
 	~FullScreenShader();
 
-	
-private:
-	D3D12Framework& m_framework;
-	ID3D12GraphicCommandList* m_cmdList;
-	
+	virtual void SetPipelineAndRootsignature(PSOHandler& psoHandler) = 0;
+	void SetRenderTarget(ID3D12GraphicsCommandList* cmdList, D3D12_CPU_DESCRIPTOR_HANDLE* rtvHandle, D3D12_CPU_DESCRIPTOR_HANDLE* dsvHandle);
 };
 

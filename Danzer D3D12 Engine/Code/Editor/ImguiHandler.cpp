@@ -3,7 +3,7 @@
 #include "Core/Engine.h"
 #include "Core/WindowHandler.h"
 #include "Rendering/RenderManager.h"
-#include "Rendering/RenderUtility.h"
+//#include "Rendering/RenderUtility.h"
 #include "Rendering/2D/SpriteHandler.h"
 #include "SceneManager.h"
 #include "Rendering/Models/ModelData.h"
@@ -11,8 +11,7 @@
 #include "Rendering/Models/ModelHandler.h"
 #include "Components/DirectionalLight.h"
 #include "Rendering/TextureHandler.h"
-
-#include "Core/FrameResource.h"
+#include "Rendering/Screen Rendering/Textures/VolumetricLight.h"
 
 #include "Components/Text.h"
 #include "Components/Object.h"
@@ -22,7 +21,6 @@
 #include "Core/input.hpp"
 
 #include <tchar.h>
-
 #include "../3rdParty/imgui-master/imgui.h"
 
 ImguiHandler::ImguiHandler(Engine& engine) :
@@ -71,94 +69,142 @@ void ImguiHandler::Init()
 
 void ImguiHandler::Update(const float dt)
 {
-	//ImGui::ShowDemoWindow();
-
-	//ImGui::NewFrame();
-
-	D3D12Framework& framework = m_engine.GetFramework();
+	D3D12Framework&  framework   = m_engine.GetFramework();
+	RenderManager& renderManager = m_engine.GetRenderManager();
 	Scene& scene = m_engine.GetSceneManager().GetCurrentScene();
 	entt::registry& reg = scene.Registry();
+
 	if (ImGui::BeginMainMenuBar()) {
-		if (ImGui::BeginMenu("File")) {
-			if (ImGui::MenuItem("Load Scene", "CTRL+O")) {
-				std::wstring scene = m_fileExplorer.OpenFileExplorer(FILE_EXPLORER_GET, m_fileExtensions["Scenes"]);
-				if (!scene.empty()) {
+		if (ImGui::BeginMenu("Scene Lighting")) {	
+			ImGui::Text("Directional Lighting");
+			auto dirLightList = reg.view<DirectionalLight, Transform>();
+			entt::entity ent;
+			for (auto entity : dirLightList)
+				ent = entity;
 
-					// This section is not my proudest programming moment...
-					// Definetly Gonna rewrite this whole section when I have remade
-					// Scenes and how they function.
+			DirectionalLight& light = reg.get<DirectionalLight>(ent);
+			Transform&        transform = reg.get<Transform>(ent);
 
-					bool loadScene = false;
+			float lightColor[3] = {light.m_lightColor.x, light.m_lightColor.y, light.m_lightColor.z};
+			ImGui::ColorPicker3("Light Color", &lightColor[0]);
 
-					std::string sceneInString = { scene.begin(), scene.end() };
-					if (sceneInString != m_engine.GetSceneManager().GetCurrentScene().SceneName()) {
-						loadScene = true;
-					}
-					else {
-						if (ImGui::BeginPopupContextWindow()) {
-							ImGui::Text("Want to save scene before loading the same/a new one?");
+			float lightStrength = light.m_lightColor.w;
+			ImGui::DragFloat("Light Strength", &lightStrength, 0.01f, 0.0f, 10.0f);
 
-							if (ImGui::Button("Save")) {
-								SaveScene(reg);
-								loadScene = true;
-							}
-							ImGui::SameLine();
-							if(ImGui::Button("Load"))
-								loadScene = true;
+			float ambientColor[3] = {light.m_ambientColor.x, light.m_ambientColor.y, light.m_ambientColor.z};
+			ImGui::ColorPicker3("Ambient Color", &ambientColor[0]);
 
-							ImGui::SameLine();
-							if (ImGui::Button("Close")){}
-							
-							ImGui::EndPopup();
-						}
-					}
+			float ambientStrength = light.m_ambientColor.w;
+			ImGui::DragFloat("Ambient Strength", &ambientStrength, 0.01f, 10.0f);
 
-					if (loadScene) {
-						// This is very complicated for no reason atm, something i really want to fix 
-						// once i get a good idea how to handle scenes between edtior and game
-						entt::entity camEntt = m_engine.GetSceneManager().GetCurrentScene().GetMainCamera();
-						Camera& camera = reg.get<Camera>(camEntt);
-						Transform& transform = reg.get<Transform>(camEntt);
-						Object& obj = reg.get<Object>(camEntt);
+			light.m_lightColor   = { lightColor[0], lightColor[1], lightColor[2], lightStrength };
+			light.m_ambientColor = { ambientColor[0], ambientColor[1], ambientColor[2], ambientStrength };
 
-						Scene& newScene = m_engine.GetSceneManager().CreateEmptyScene(sceneInString);
-						if (!newScene.Registry().empty())
-							newScene.Registry().clear();
+			Vect3f euler = transform.m_rotation.ToEuler();
+			euler = { ToDegrees(euler.x), ToDegrees(euler.y), ToDegrees(euler.z) };
+			float rotation[3] = { euler.x, euler.y, euler.z };
+			ImGui::DragFloat3("Light Direction", &rotation[0], 0.1f, -180.0f, 180.0f);
 
-						entt::registry& newReg = newScene.Registry();
-						entt::entity newCam = newReg.create();
-						newReg.emplace<Camera>(newCam, camera);
-						newReg.emplace<Transform>(newCam, transform);
-						newReg.emplace<Object>(newCam, obj);
+			transform.m_rotation = DirectX::XMQuaternionRotationRollPitchYaw(ToRadians(rotation[0]), ToRadians(rotation[1]), ToRadians(rotation[2]));
 
-						m_engine.GetSceneManager().SetScene(sceneInString, newCam);
-						m_sceneLoader.LoadScene(sceneInString, newReg);
+			//transform.m_rotation  = Quat4f::CreateFromAxisAngle(Vect3f::Right, ToRadians(rotation[0]));
+			//transform.m_rotation *= Quat4f::CreateFromAxisAngle(Vect3f::Backward, ToRadians(rotation[2]));
+			//transform.m_rotation *= Quat4f::CreateFromAxisAngle(Vect3f::Up, ToRadians(rotation[1]));
 
-						m_itemsHasBeenSelected = false;
-					}
-				}
-			}
+			//transform.m_rotation = Quat4f::CreateFromYawPitchRoll({ ToRadians(rotation[0]), ToRadians(rotation[1]), ToRadians(rotation[2]) });
 
-			if (ImGui::MenuItem("Save Scene", "CTRL+S")) {
-				SaveScene(reg);
-			}
+			ImGui::Text("Volumetric Lighting");
+			VolumetricLight& vl = renderManager.GetVolumetricLight();
 			
-			if (ImGui::MenuItem("Save Scene as", "F12")) {
-				SaveSceneAs(reg);
-			}
+			int steps = vl.GetVolumetricData().m_numberOfSteps;
+			ImGui::DragInt("Number Of Steps", &steps, 5.0f, 10, 1000);
+			
+			float gScattering = vl.GetVolumetricData().m_gScattering;
+			ImGui::DragFloat("G Scattering", &gScattering, 0.01f, -1.0f, 1.0f);
+
+			float scatteringStr = vl.GetVolumetricData().m_scatteringStrength;
+			ImGui::DragFloat("Scattering Strength", &scatteringStr, 0.01f, 1.5f, 10.0f);
+
+			vl.SetVolumetricData(steps, gScattering, scatteringStr);
 
 			ImGui::EndMenu();
 		}
+		//if (ImGui::BeginMenu("File")) {
+		//	if (ImGui::MenuItem("Load Scene", "CTRL+O")) {
+		//		std::wstring scene = m_fileExplorer.OpenFileExplorer(FILE_EXPLORER_GET, m_fileExtensions["Scenes"]);
+		//		if (!scene.empty()) {
+		//
+		//			// This section is not my proudest programming moment...
+		//			// Definetly Gonna rewrite this whole section when I have remade
+		//			// Scenes and how they function.
+		//
+		//			bool loadScene = false;
+		//
+		//			std::string sceneInString = { scene.begin(), scene.end() };
+		//			if (sceneInString != m_engine.GetSceneManager().GetCurrentScene().SceneName()) {
+		//				loadScene = true;
+		//			}
+		//			else {
+		//				if (ImGui::BeginPopupContextWindow()) {
+		//					ImGui::Text("Want to save scene before loading the same/a new one?");
+		//
+		//					if (ImGui::Button("Save")) {
+		//						SaveScene(reg);
+		//						loadScene = true;
+		//					}
+		//					ImGui::SameLine();
+		//					if(ImGui::Button("Load"))
+		//						loadScene = true;
+		//
+		//					ImGui::SameLine();
+		//					if (ImGui::Button("Close")){}
+		//					
+		//					ImGui::EndPopup();
+		//				}
+		//			}
+		//
+		//			if (loadScene) {
+		//				// This is very complicated for no reason atm, something i really want to fix 
+		//				// once i get a good idea how to handle scenes between edtior and game
+		//				entt::entity camEntt = m_engine.GetSceneManager().GetCurrentScene().GetMainCamera();
+		//				Camera& camera = reg.get<Camera>(camEntt);
+		//				Transform& transform = reg.get<Transform>(camEntt);
+		//				Object& obj = reg.get<Object>(camEntt);
+		//
+		//				Scene& newScene = m_engine.GetSceneManager().CreateEmptyScene(sceneInString);
+		//				if (!newScene.Registry().empty())
+		//					newScene.Registry().clear();
+		//
+		//				entt::registry& newReg = newScene.Registry();
+		//				entt::entity newCam = newReg.create();
+		//				newReg.emplace<Camera>(newCam, camera);
+		//				newReg.emplace<Transform>(newCam, transform);
+		//				newReg.emplace<Object>(newCam, obj);
+		//
+		//				m_engine.GetSceneManager().SetScene(sceneInString, newCam);
+		//				m_sceneLoader.LoadScene(sceneInString, newReg);
+		//
+		//				m_itemsHasBeenSelected = false;
+		//			}
+		//		}
+		//	}
+		//
+		//	if (ImGui::MenuItem("Save Scene", "CTRL+S")) {
+		//		SaveScene(reg);
+		//	}
+		//	
+		//	if (ImGui::MenuItem("Save Scene as", "F12")) {
+		//		SaveSceneAs(reg);
+		//	}
+		//
+		//	ImGui::EndMenu();
+		//}
 	}
-	ImGui::EndMainMenuBar();
-	
-	if (Input::GetInstance().IsKeyPressed(VK_DELETE)) {
-		m_removeEntity = true;
-	}
+	ImGui::EndMainMenuBar();	
 
-	StaticWindows();
-
-	m_removeEntity = false;
+	//StaticWindows();
+	//
+	//m_removeEntity = false;
 }
 
 
@@ -565,50 +611,52 @@ std::wstring ImguiHandler::SelectTexture(UINT& texture)
 CD3DX12_GPU_DESCRIPTOR_HANDLE ImguiHandler::AddImguiImage(std::wstring path)
 {
 	
-	for (UINT i = 0; i < m_imguiTextures.size(); i++)
-	{
-		if (path == m_imguiTextures[i].m_imagePath)
-			return m_imguiTextures[i].m_srvGpuHandle;
-	}
+	//for (UINT i = 0; i < m_imguiTextures.size(); i++)
+	//{
+	//	if (path == m_imguiTextures[i].m_imagePath)
+	//		return m_imguiTextures[i].m_srvGpuHandle;
+	//}
+	//
+	////if(!m_engine.GetFramework().CmdListIsRecording())
+	////	m_engine.GetFramework().ResetCommandListAndAllocator(nullptr, L"ImguiHandler: Line 570");
+	//
+	//ImguiTexture texture;
+	//
+	//ID3D12Device* device = m_engine.GetFramework().GetDevice();
+	//ID3D12GraphicsCommandList* cmdList = m_engine.GetFramework().CurrentFrameResource()->CmdList();
+	//
+	//CD3DX12_RESOURCE_BARRIER barrier = LoadATextures(
+	//	path,
+	//	device,
+	//	cmdList,
+	//	&texture.m_texture
+	//);
+	//
+	//cmdList->ResourceBarrier(1, &barrier);
+	//m_engine.GetFramework().ExecuteCommandList();
+	//m_engine.GetFramework().WaitForGPU();
+	//
+	//ID3D12DescriptorHeap* imguiDesc = m_engine.GetFramework().GetImguiHeap();
+	//
+	//CD3DX12_GPU_DESCRIPTOR_HANDLE srvGpuHandle;
+	//CD3DX12_CPU_DESCRIPTOR_HANDLE srvCpuHandle;
+	//
+	//UINT inrementSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	//srvGpuHandle.InitOffsetted(imguiDesc->GetGPUDescriptorHandleForHeapStart(), static_cast<INT>(m_imguiTextures.size()) + 1, inrementSize);
+	//srvCpuHandle.InitOffsetted(imguiDesc->GetCPUDescriptorHandleForHeapStart(), static_cast<INT>(m_imguiTextures.size()) + 1, inrementSize);
+	//
+	//DirectX::CreateShaderResourceView(
+	//	device,
+	//	texture.m_texture,
+	//	srvCpuHandle
+	//);
+	//
+	//texture.m_imagePath = path;
+	//texture.m_srvGpuHandle = srvGpuHandle;
+	//m_imguiTextures.emplace_back(texture);
+	//
+	//
+	//return m_imguiTextures[m_imguiTextures.size() - 1].m_srvGpuHandle;
 
-	//if(!m_engine.GetFramework().CmdListIsRecording())
-	//	m_engine.GetFramework().ResetCommandListAndAllocator(nullptr, L"ImguiHandler: Line 570");
-
-	ImguiTexture texture;
-
-	ID3D12Device* device = m_engine.GetFramework().GetDevice();
-	ID3D12GraphicsCommandList* cmdList = m_engine.GetFramework().CurrentFrameResource()->CmdList();
-
-	CD3DX12_RESOURCE_BARRIER barrier = LoadATextures(
-		path,
-		device,
-		cmdList,
-		&texture.m_texture
-	);
-
-	cmdList->ResourceBarrier(1, &barrier);
-	m_engine.GetFramework().ExecuteCommandList();
-	m_engine.GetFramework().WaitForGPU();
-
-	ID3D12DescriptorHeap* imguiDesc = m_engine.GetFramework().GetImguiHeap();
-
-	CD3DX12_GPU_DESCRIPTOR_HANDLE srvGpuHandle;
-	CD3DX12_CPU_DESCRIPTOR_HANDLE srvCpuHandle;
-
-	UINT inrementSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-	srvGpuHandle.InitOffsetted(imguiDesc->GetGPUDescriptorHandleForHeapStart(), static_cast<INT>(m_imguiTextures.size()) + 1, inrementSize);
-	srvCpuHandle.InitOffsetted(imguiDesc->GetCPUDescriptorHandleForHeapStart(), static_cast<INT>(m_imguiTextures.size()) + 1, inrementSize);
-
-	DirectX::CreateShaderResourceView(
-		device,
-		texture.m_texture,
-		srvCpuHandle
-	);
-
-	texture.m_imagePath = path;
-	texture.m_srvGpuHandle = srvGpuHandle;
-	m_imguiTextures.emplace_back(texture);
-
-
-	return m_imguiTextures[m_imguiTextures.size() - 1].m_srvGpuHandle;
+	return CD3DX12_GPU_DESCRIPTOR_HANDLE();
 }

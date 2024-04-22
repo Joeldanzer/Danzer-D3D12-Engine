@@ -2,6 +2,7 @@
 #include "FullscreenTexture.h"
 
 #include "Core/DesriptorHeapWrapper.h"
+#include "Rendering/PSOHandler.h"
 
 void FullscreenTexture::InitAsDepth(ID3D12Device* device, DescriptorHeapWrapper* cbvSrvHeap, DescriptorHeapWrapper* dsvHeap, const UINT width, const UINT height, DXGI_FORMAT textureDesc, DXGI_FORMAT srvFormat, D3D12_RESOURCE_FLAGS flag, std::wstring name)
 {
@@ -107,7 +108,7 @@ void FullscreenTexture::InitAsTexture(ID3D12Device* device, DescriptorHeapWrappe
 		D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 		srvDesc.Format = srvFormat;
 		srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-		srvDesc.Texture2D.MipLevels = 1; 
+		srvDesc.Texture2D.MipLevels = -1; 
 		srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 
 		CD3DX12_HEAP_PROPERTIES heapProperties(D3D12_HEAP_TYPE_DEFAULT);
@@ -134,7 +135,27 @@ void FullscreenTexture::InitAsTexture(ID3D12Device* device, DescriptorHeapWrappe
 	m_viewPort = CD3DX12_VIEWPORT(0.0f, 0.0f, width, height);
 }
 
-void FullscreenTexture::SetTextureAtSlot(ID3D12GraphicsCommandList* cmdList, const UINT slot, D3D12_GPU_DESCRIPTOR_HANDLE handle)
+void FullscreenTexture::InitBuffers(ID3D12Device* device, DescriptorHeapWrapper& cbvWrapper)
+{ 
+	device; cbvWrapper;
+}
+
+void FullscreenTexture::SetAsRenderTarget(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper* rtvWrapper, D3D12_CPU_DESCRIPTOR_HANDLE* dsvHandle, const UINT frameIndex)
 {
-	cmdList->SetGraphicsRootDescriptorTable(slot, handle);
+	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle = rtvWrapper->GET_CPU_DESCRIPTOR((m_rtvOffsetID + frameIndex));
+	cmdList->OMSetRenderTargets(1, &rtvHandle, false, dsvHandle);
+}
+
+void FullscreenTexture::SetTextureAtSlot(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper* srvWrapper, const UINT slot, const UINT frameIndex)
+{
+	CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle = srvWrapper->GET_GPU_DESCRIPTOR(m_srvOffsetID + frameIndex);
+	cmdList->SetGraphicsRootDescriptorTable(slot, srvHandle);
+}
+
+void FullscreenTexture::SetViewportAndPSO(ID3D12GraphicsCommandList* cmdList, PSOHandler& psoHandler)
+{
+	cmdList->SetGraphicsRootSignature(psoHandler.GetRootSignature(m_rs));
+	cmdList->SetPipelineState(psoHandler.GetPipelineState(m_pso));
+
+	cmdList->RSSetViewports(1, &m_viewPort);
 }

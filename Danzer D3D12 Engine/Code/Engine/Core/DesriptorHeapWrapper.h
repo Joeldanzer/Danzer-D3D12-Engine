@@ -16,8 +16,8 @@ public:
 							  UINT numberOfDescriptors,
 							  bool shaderVisible);
 
-	CD3DX12_CPU_DESCRIPTOR_HANDLE GET_CPU_DESCRIPTOR(const UINT offset); 
-	CD3DX12_GPU_DESCRIPTOR_HANDLE GET_GPU_DESCRIPTOR(const UINT offset); 
+	CD3DX12_CPU_DESCRIPTOR_HANDLE GET_CPU_DESCRIPTOR(const UINT size); 
+	CD3DX12_GPU_DESCRIPTOR_HANDLE GET_GPU_DESCRIPTOR(const UINT size); 
     
 	ID3D12DescriptorHeap*        GetDescriptorHeap()	  { return m_desctiptorHeap.Get(); }
 	const UINT					 DESCRIPTOR_SIZE()        { return m_handleIncrementSize; }

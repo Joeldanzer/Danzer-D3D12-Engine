@@ -21,3 +21,4 @@ Texture2D depthTexture         : register(t6);
 TextureCube skyboxTexture      : register(t7);
 Texture2D shadowMap            : register(t8);
 Texture2D ssaoTexture          : register(t9);
+Texture2D volumetricLight      : register(t10);
