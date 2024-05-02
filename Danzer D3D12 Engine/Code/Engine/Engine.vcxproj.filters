@@ -62,7 +62,7 @@
     <ClCompile Include="Rendering\Screen Rendering\ScreenTexture.cpp" />
     <ClCompile Include="Rendering\Buffers\LightBuffer.cpp" />
     <ClCompile Include="Rendering\Buffers\MaterialBuffer.cpp" />
-    <ClCompile Include="Rendering\Screen Rendering\FullscreenShader.cpp" />
+    <ClCompile Include="Rendering\Screen Rendering\Fullscreen Shaders\FullscreenShader.cpp" />
     <ClCompile Include="Rendering\Screen Rendering\FullScreenShaderHandler.cpp" />
     <ClCompile Include="Core\DesriptorHeapWrapper.cpp" />
     <ClCompile Include="Rendering\Buffers\CBVBuffer.cpp" />
@@ -82,6 +82,8 @@
     <ClCompile Include="Rendering\Screen Rendering\Textures\VolumetricLight.cpp" />
     <ClCompile Include="Rendering\Buffers\ConstantBufferData.cpp" />
     <ClCompile Include="Rendering\Screen Rendering\Textures\VolumetricLightBlur.cpp" />
+    <ClCompile Include="Rendering\Screen Rendering\Fullscreen Shaders\KuwaharaFilter.cpp" />
+    <ClCompile Include="Rendering\Screen Rendering\Textures\DirectionalLightTexture.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Core\DirectX12Framework.h">
@@ -163,7 +165,7 @@
     <ClInclude Include="Rendering\Buffers\LightBuffer.h" />
     <ClInclude Include="Rendering\Buffers\MaterialBuffer.h" />
     <ClInclude Include="Rendering\Models\Material.h" />
-    <ClInclude Include="Rendering\Screen Rendering\FullscreenShader.h" />
+    <ClInclude Include="Rendering\Screen Rendering\Fullscreen Shaders\FullscreenShader.h" />
     <ClInclude Include="Rendering\Screen Rendering\FullScreenShaderHandler.h" />
     <ClInclude Include="Components\Script.h" />
     <ClInclude Include="Core\DesriptorHeapWrapper.h" />
@@ -187,5 +189,7 @@
     <ClInclude Include="Rendering\Screen Rendering\Textures\VolumetricLight.h" />
     <ClInclude Include="Rendering\Buffers\ConstantBufferData.h" />
     <ClInclude Include="Rendering\Screen Rendering\Textures\VolumetricLightBlur.h" />
+    <ClInclude Include="Rendering\Screen Rendering\Fullscreen Shaders\KuwaharaFilter.h" />
+    <ClInclude Include="Rendering\Screen Rendering\Textures\DirectionalLightTexture.h" />
   </ItemGroup>
 </Project>

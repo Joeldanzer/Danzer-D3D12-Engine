@@ -18,6 +18,7 @@ struct DirectionalLight
 	Vect4f m_lightColor;
 	Vect4f m_ambientColor;
 
+	Mat4f  m_lightTransform;
 	Mat4f  m_lightProjection;
 };
 

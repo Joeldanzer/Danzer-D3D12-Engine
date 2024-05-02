@@ -46,7 +46,7 @@ public:
 	void Init(D3D12Framework& framework);
 
 	CD3DX12_GPU_DESCRIPTOR_HANDLE UpdateDefaultBuffers(Camera& camera, Transform&, UINT frameIndex);
-	CD3DX12_GPU_DESCRIPTOR_HANDLE UpdateShadowMapBuffer(Mat4f& projection, Transform& transform, UINT frameIndex);
+	CD3DX12_GPU_DESCRIPTOR_HANDLE UpdateShadowMapBuffer(Mat4f& projection, Mat4f& transform, UINT frameIndex);
 	CD3DX12_GPU_DESCRIPTOR_HANDLE UpdateLightBuffer(Mat4f& projection, Transform& transform, const DirectionalLight& light, const Vect4f& direction, UINT frameIndex);
 	
 	void RenderToGbuffer(ID3D12GraphicsCommandList* cmdList, std::vector<ModelData>& models, UINT frameIndex, std::vector<TextureHandler::Texture>& textures, bool renderTransparency, UINT startLocation);

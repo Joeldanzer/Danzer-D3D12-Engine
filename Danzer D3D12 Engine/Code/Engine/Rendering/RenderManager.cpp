@@ -29,6 +29,7 @@
 #include "Screen Rendering/Textures/SSAOBlur.h"
 #include "Screen Rendering/Textures/VolumetricLight.h"
 #include "Screen Rendering/Textures/VolumetricLightBlur.h"
+#include "Screen Rendering/Textures/DirectionalLightTexture.h"
 
 #include "Camera.h"
 
@@ -79,6 +80,7 @@ private:
 	D3D12Framework& m_framework;
 
 	DirectionalShadowMapping m_shadowMap;
+	DirectionalLightTexture  m_dirLight;
 	VolumetricLightBlur		 m_volumetricLightBlur;
 	VolumetricLight			 m_volumetricLight;
 	SSAOTexture				 m_ssao;
@@ -103,8 +105,25 @@ RenderManager::Impl::Impl(D3D12Framework& framework, TextureHandler& textureHand
 	m_shadowMap(),
 	m_ssao()
 {
+	std::string s;
+	s[0]
+
 	m_2dRenderer.Init(framework, m_psoHandler);
 	m_mainRenderer.Init(framework);
+
+	m_dirLight.InitAsTexture(
+		framework.GetDevice(),
+		&framework.CbvSrvHeap(),
+		&framework.RTVHeap(),
+		WindowHandler::WindowData().m_w,
+		WindowHandler::WindowData().m_h,
+		DXGI_FORMAT_R8G8B8A8_UNORM,
+		DXGI_FORMAT_R8G8B8A8_UNORM,
+		D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET,
+		L"Directional Light Buffer"
+	);
+	m_dirLight.SetPipelineAndRootSignature(m_psoHandler);
+	m_dirLight.InitBuffers(framework.GetDevice(), framework.CbvSrvHeap());
 
 	m_shadowMap.InitAsDepth(
 		framework.GetDevice(),
@@ -330,13 +349,10 @@ void RenderManager::Impl::RenderScene(LightHandler& lightHandler, TextureHandler
 
 	auto list = scene.Registry().view<DirectionalLight, Transform>();
 	DirectionalLight directionalLight;
-	Transform dirLightTransform;
 	Vect4f directionaLightdir = { 0.f, 0.f, 0.f, 1.f };
 	for (auto entity : list) {
 		directionalLight = reg.get<DirectionalLight>(entity);
-		dirLightTransform = reg.get<Transform>(entity);
-		Vect3f dir = dirLightTransform.m_world.Forward();
-		directionaLightdir = { dir.x, dir.y, dir.z, 1.0f };
+	    directionalLight.m_lightTransform = reg.get<Transform>(entity).m_world;
 	}
 	
 	
@@ -411,7 +427,7 @@ void RenderManager::Impl::RenderScene(LightHandler& lightHandler, TextureHandler
 			cmdList->SetGraphicsRootSignature(m_psoHandler.GetRootSignature(m_shadowMap.GetRootSignature()));
 			cmdList->SetPipelineState(m_psoHandler.GetPipelineState(m_shadowMap.GetPSO()));
 			
-			CD3DX12_GPU_DESCRIPTOR_HANDLE shadowBuffer = m_mainRenderer.UpdateShadowMapBuffer(m_shadowMap.GetProjectionMatrix(), dirLightTransform, frameIndex);
+			CD3DX12_GPU_DESCRIPTOR_HANDLE shadowBuffer = m_mainRenderer.UpdateShadowMapBuffer(m_shadowMap.GetProjectionMatrix(), directionalLight.m_lightTransform, frameIndex);
 			cmdList->SetGraphicsRootDescriptorTable(0, shadowBuffer);
 					
 			m_shadowMap.SetModelsData(modelHandler.GetAllModels());
@@ -428,7 +444,7 @@ void RenderManager::Impl::RenderScene(LightHandler& lightHandler, TextureHandler
 			m_volumetricLight.SetViewportAndPSO(cmdList, m_psoHandler);
 			m_volumetricLight.SetAsRenderTarget(cmdList, &m_framework.RTVHeap(), nullptr, frameIndex);
 
-			m_volumetricLight.UpdateBufferData(camTransform, cam, directionalLight, dirLightTransform, frameIndex);
+			m_volumetricLight.UpdateBufferData(camTransform, cam, directionalLight, frameIndex);
 			m_gBuffer.SetTextureAtSlot(cmdList, GBUFFER_WORLD_POSITION, &m_framework.CbvSrvHeap(), 3);
 			m_shadowMap.SetTextureAtSlot(cmdList, &m_framework.CbvSrvHeap(), 4, frameIndex);
 			m_volumetricLight.RenderTexture(cmdList, &m_framework.CbvSrvHeap(), nullptr, frameIndex);
@@ -487,16 +503,17 @@ void RenderManager::Impl::RenderScene(LightHandler& lightHandler, TextureHandler
 
 	{ 
 		// Transition all resources before rendering light pass.
-		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle = m_framework.m_rtvHeap.GET_CPU_DESCRIPTOR(0);
+		//CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle = m_framework.m_rtvHeap.GET_CPU_DESCRIPTOR(0);
 		
 		//* Render Skybox & Ligth start
 		cmdList->SetGraphicsRootSignature(m_psoHandler.GetRootSignature(skybox.GetRootSignature()));
 		cmdList->SetPipelineState(m_psoHandler.GetPipelineState(skybox.GetPSO()));
 
-		rtvHandle = m_framework.m_rtvHeap.GET_CPU_DESCRIPTOR(0);
-		rtvHandle.Offset(frameIndex * m_framework.RTVHeap().DESCRIPTOR_SIZE());
+		//rtvHandle = m_framework.m_rtvHeap.GET_CPU_DESCRIPTOR(0);
+		//rtvHandle.Offset(frameIndex * m_framework.RTVHeap().DESCRIPTOR_SIZE());
 
 		cmdList->RSSetViewports(1, &m_framework.m_viewport);
+		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_framework.RTVHeap().GET_CPU_DESCRIPTOR(m_dirLight.RTVOffsetID() + frameIndex));
 		cmdList->OMSetRenderTargets(1, &rtvHandle, false, nullptr);
 
 		UINT startLocation = 0;
@@ -515,31 +532,47 @@ void RenderManager::Impl::RenderScene(LightHandler& lightHandler, TextureHandler
 			startLocation
 		);
 
-		startLocation = 0;
+		//startLocation = 0;
+		m_dirLight.SetViewportAndPSO(cmdList, m_psoHandler);
+		m_dirLight.SetBufferData(directionalLight);
 
-		cmdList->SetGraphicsRootSignature(m_psoHandler.GetRootSignature(m_lightRootSignture));
-		cmdList->SetPipelineState(m_psoHandler.GetPipelineState(m_dirLightPSO));
-		cmdList->SetGraphicsRootDescriptorTable(startLocation, defaultHandle);
-		startLocation++;
-
-		D3D12_GPU_DESCRIPTOR_HANDLE lightHandle = m_mainRenderer.UpdateLightBuffer(m_shadowMap.GetProjectionMatrix(),
-		dirLightTransform, directionalLight, directionaLightdir, m_framework.GetFrameIndex());
-		cmdList->SetGraphicsRootDescriptorTable(startLocation, lightHandle);
-		startLocation++;
+		startLocation = 1;
 		m_gBuffer.AssignSRVSlots(cmdList, &m_framework.CbvSrvHeap(), startLocation);
-		m_mainRenderer.RenderDirectionalLight(
-			cmdList,
-			textureHandler.GetTextures()[skybox.GetCurrentActiveSkybox()[1] - 1],
-			m_shadowMap,
-			&m_ssaoBlur,
-			&m_volumetricLight,
-			m_framework.GetFrameIndex(),
-			startLocation
-		);
-		
-		cmdList->SetPipelineState(m_psoHandler.GetPipelineState(m_pointLightPSO));
-		cmdList->SetGraphicsRootDescriptorTable(0, defaultHandle);
-		m_mainRenderer.RenderPointLights(cmdList, lightHandler, scene.Registry(), frameIndex, startLocation += 1);
+		UINT offset = textureHandler.GetTextures()[skybox.GetCurrentActiveSkybox()[1] - 1].m_offsetID;
+		cmdList->SetGraphicsRootDescriptorTable(startLocation, m_framework.CbvSrvHeap().GET_GPU_DESCRIPTOR(offset));
+		startLocation++;
+
+		m_shadowMap.SetTextureAtSlot(cmdList, &m_framework.CbvSrvHeap(), startLocation, frameIndex);
+		startLocation++;
+		m_ssaoBlur.SetTextureAtSlot(cmdList, &m_framework.CbvSrvHeap(), startLocation, frameIndex);
+		startLocation++;
+		m_volumetricLight.SetTextureAtSlot(cmdList, &m_framework.CbvSrvHeap(), startLocation, frameIndex);
+
+		m_dirLight.RenderTexture(cmdList, &m_framework.CbvSrvHeap(), nullptr, frameIndex);
+
+		//cmdList->SetGraphicsRootSignature(m_psoHandler.GetRootSignature(m_lightRootSignture));
+		//cmdList->SetPipelineState(m_psoHandler.GetPipelineState(m_dirLightPSO));
+		//cmdList->SetGraphicsRootDescriptorTable(startLocation, defaultHandle);
+		//startLocation++;
+		//
+		//D3D12_GPU_DESCRIPTOR_HANDLE lightHandle = m_mainRenderer.UpdateLightBuffer(m_shadowMap.GetProjectionMatrix(),
+		//dirLightTransform, directionalLight, directionaLightdir, m_framework.GetFrameIndex());
+		//cmdList->SetGraphicsRootDescriptorTable(startLocation, lightHandle);
+		//startLocation++;
+		//m_gBuffer.AssignSRVSlots(cmdList, &m_framework.CbvSrvHeap(), startLocation);
+		//m_mainRenderer.RenderDirectionalLight(
+		//	cmdList,
+		//	textureHandler.GetTextures()[skybox.GetCurrentActiveSkybox()[1] - 1],
+		//	m_shadowMap,
+		//	&m_ssaoBlur,
+		//	&m_volumetricLight,
+		//	m_framework.GetFrameIndex(),
+		//	startLocation
+		//);
+		//
+		//cmdList->SetPipelineState(m_psoHandler.GetPipelineState(m_pointLightPSO));
+		//cmdList->SetGraphicsRootDescriptorTable(0, defaultHandle);
+		//m_mainRenderer.RenderPointLights(cmdList, lightHandler, scene.Registry(), frameIndex, startLocation += 1);
 
 	} //* Render scene Ligthing end
 
