@@ -4,6 +4,8 @@
 #include "Rendering/Screen Rendering/GBuffer.h"
 #include "Core/WindowHandler.h"
 #include "Core/DesriptorHeapWrapper.h"
+#include "Components/Transform.h"
+#include "Rendering/Camera.h"
 
 DirectionalLightTexture::DirectionalLightTexture()
 {
@@ -15,7 +17,8 @@ DirectionalLightTexture::~DirectionalLightTexture()
 
 void DirectionalLightTexture::InitBuffers(ID3D12Device* device, DescriptorHeapWrapper& cbvWrapper)
 {
-	m_cbvData.IntializeBuffer(device, &cbvWrapper, sizeof(Data));
+	m_lightCbvData.IntializeBuffer(device, &cbvWrapper, sizeof(Data));
+	m_camCbvData.IntializeBuffer(device, &cbvWrapper, sizeof(Data));
 }
 
 void DirectionalLightTexture::SetPipelineAndRootSignature(PSOHandler& psoHandler)
@@ -44,8 +47,11 @@ void DirectionalLightTexture::SetPipelineAndRootSignature(PSOHandler& psoHandler
 
 void DirectionalLightTexture::RenderTexture(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper* handle, TextureHandler* textureHandler, const UINT frameIndex)
 {
-	m_cbvData.UpdateBuffer(reinterpret_cast<UINT16*>(&m_data), frameIndex);
-	cmdList->SetGraphicsRootDescriptorTable(0, handle->GET_GPU_DESCRIPTOR(m_cbvData.OffsetID() + frameIndex));
+	m_camCbvData.UpdateBuffer(reinterpret_cast<UINT16*>(&m_cameraData), frameIndex);
+	cmdList->SetGraphicsRootDescriptorTable(0, handle->GET_GPU_DESCRIPTOR(m_camCbvData.OffsetID() + frameIndex));
+
+	m_lightCbvData.UpdateBuffer(reinterpret_cast<UINT16*>(&m_lightData), frameIndex);
+	cmdList->SetGraphicsRootDescriptorTable(1, handle->GET_GPU_DESCRIPTOR(m_lightCbvData.OffsetID() + frameIndex));
 
 	cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	cmdList->IASetVertexBuffers(0, 0, nullptr);
@@ -54,16 +60,26 @@ void DirectionalLightTexture::RenderTexture(ID3D12GraphicsCommandList* cmdList, 
 	cmdList->DrawInstanced(3, 1, 0, 0);
 }
 
-void DirectionalLightTexture::SetBufferData(DirectionalLight& dirLight)
+void DirectionalLightTexture::SetBufferData(DirectionalLight& dirLight, Camera& cam, Transform& camTransform)
 {
 	Vect3f dir = dirLight.m_lightTransform.Forward();
-	m_data = {
-		dirLight.m_lightTransform,
-		dirLight.m_lightProjection,
-		{dir.x, dir.y, dir.z, 1.0f },
+	m_lightData = {
+		DirectX::XMMatrixTranspose(dirLight.m_lightTransform.Invert()),
+		DirectX::XMMatrixTranspose(dirLight.m_lightProjection),
 		dirLight.m_lightColor,
 		dirLight.m_ambientColor,
+		{dir.x, dir.y, dir.z, 1.0f },
 		WindowHandler::WindowData().m_w,
 		WindowHandler::WindowData().m_h
+	};
+	
+	m_cameraData = {
+		DirectX::XMMatrixTranspose(camTransform.World().Invert()),
+		DirectX::XMMatrixTranspose(cam.GetProjection()),
+		{camTransform.m_position.x, camTransform.m_position.y, camTransform.m_position.z, 0.0f},
+		{camTransform.World().Forward().x, camTransform.World().Forward().y, camTransform.World().Forward().z, 1.0f},
+		{},
+		0,
+		0,
 	};
 }

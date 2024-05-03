@@ -38,6 +38,10 @@ public:
 
 private:
 
+	Vect3f m_kuwaharaOffset = { 0.0f, 0.0f, 0.0f };
+	int m_kuwaharaRadius = 7;
+	int m_kuwaharaScale =  1;
+
 	struct ImguiTexture {
 		unsigned int m_descriptorIndex;
 		std::wstring m_imagePath;

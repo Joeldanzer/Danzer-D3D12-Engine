@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "FullscreenShader.h"
 #include "Core/D3D12Framework.h"
+#include "Rendering/PSOHandler.h"
 
 
 FullScreenShader::FullScreenShader() :
@@ -31,6 +32,12 @@ void FullScreenShader::RenderEffect(ID3D12GraphicsCommandList* cmdList, Descript
 	cmdList->IASetIndexBuffer(nullptr);
 
 	cmdList->DrawInstanced(3, 1, 0, 0);
+}
+
+void FullScreenShader::SetPSOandRS(ID3D12GraphicsCommandList* cmdList, PSOHandler& psoHandler)
+{
+	cmdList->SetGraphicsRootSignature(psoHandler.GetRootSignature(m_rs));
+	cmdList->SetPipelineState(psoHandler.GetPipelineState(m_pso));
 }
 
 void FullScreenShader::UpdateBufferData(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper* cbvWrapper, const UINT frameIndex)

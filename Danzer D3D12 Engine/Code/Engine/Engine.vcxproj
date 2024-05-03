@@ -170,7 +170,6 @@
     <ClInclude Include="Rendering\Screen Rendering\Textures\FullscreenTexture.h" />
     <ClInclude Include="Rendering\Screen Rendering\Textures\DirectionalShadowMapping.h" />
     <ClInclude Include="Core\FrameResource.h" />
-    <ClInclude Include="Rendering\Screen Rendering\FullScreenShaderHandler.h" />
     <ClInclude Include="Rendering\Screen Rendering\Fullscreen Shaders\FullscreenShader.h" />
     <ClInclude Include="Rendering\Models\Material.h" />
     <ClInclude Include="Components\Model.h" />
@@ -247,7 +246,6 @@
     <ClCompile Include="Rendering\Screen Rendering\Textures\DirectionalShadowMapping.cpp" />
     <ClCompile Include="Core\FrameResource.cpp" />
     <ClCompile Include="Rendering\Buffers\CBVBuffer.cpp" />
-    <ClCompile Include="Rendering\Screen Rendering\FullScreenShaderHandler.cpp" />
     <ClCompile Include="Rendering\Screen Rendering\Fullscreen Shaders\FullscreenShader.cpp" />
     <ClCompile Include="Rendering\Buffers\MaterialBuffer.cpp" />
     <ClCompile Include="Rendering\Buffers\LightBuffer.cpp" />

@@ -30,6 +30,7 @@
 #include "Screen Rendering/Textures/VolumetricLight.h"
 #include "Screen Rendering/Textures/VolumetricLightBlur.h"
 #include "Screen Rendering/Textures/DirectionalLightTexture.h"
+#include "Screen Rendering/Fullscreen Shaders/KuwaharaFilter.h"
 
 #include "Camera.h"
 
@@ -56,6 +57,9 @@ public:
 
 	PSOHandler& GetPSOHandler();
 	VolumetricLight& GetVolumetricLight();
+	void SetKuwaharaRadius(UINT radius, UINT scale, Vect3f offset) {
+		m_kuwaharaFilter.SetFilterRadius(radius, scale, offset);
+	}
 
 private:
 	void RenderScene(LightHandler& lightHandler, TextureHandler& textureHandler, SpriteHandler& spriteHandler, ModelHandler& modelHandler, ModelEffectHandler& effectHandler, Scene& scene, Skybox& skybox);
@@ -78,6 +82,8 @@ private:
 	UINT m_pointLightPSO;
 
 	D3D12Framework& m_framework;
+
+	KuwaharaFilter			 m_kuwaharaFilter;
 
 	DirectionalShadowMapping m_shadowMap;
 	DirectionalLightTexture  m_dirLight;
@@ -105,11 +111,13 @@ RenderManager::Impl::Impl(D3D12Framework& framework, TextureHandler& textureHand
 	m_shadowMap(),
 	m_ssao()
 {
-	std::string s;
-	s[0]
 
 	m_2dRenderer.Init(framework, m_psoHandler);
 	m_mainRenderer.Init(framework);
+
+	m_kuwaharaFilter.InitializeFullscreenShader(framework.GetDevice(), &framework.CbvSrvHeap());
+	m_kuwaharaFilter.CreatePipelineAndRootsignature(m_psoHandler);
+	m_kuwaharaFilter.SetFilterRadius(7, 1, {0.0f, 0.0f, 0.0f});
 
 	m_dirLight.InitAsTexture(
 		framework.GetDevice(),
@@ -179,7 +187,7 @@ RenderManager::Impl::Impl(D3D12Framework& framework, TextureHandler& textureHand
 	);
 	m_volumetricLight.SetPipelineAndRootSignature(m_psoHandler);
 	m_volumetricLight.InitBuffers(framework.GetDevice(), framework.CbvSrvHeap());
-	m_volumetricLight.SetVolumetricData(200, 0.35f, 1.5f);
+	m_volumetricLight.SetVolumetricData(100, 0.35f, 1.5f);
 
 	m_volumetricLightBlur.InitAsTexture(
 		framework.GetDevice(),
@@ -273,6 +281,7 @@ void RenderManager::Impl::BeginFrame()
 			m_ssao.GetResource(m_framework.m_frameIndex),
 			m_ssaoBlur.GetResource(m_framework.m_frameIndex),
 			m_volumetricLight.GetResource(m_framework.m_frameIndex),
+			m_dirLight.GetResource(m_framework.m_frameIndex),
 			//m_volumetricLightBlur.GetResource(m_framework.m_frameIndex)
 		};
 		m_framework.QeueuResourceTransition(&srvToRTV[0], _countof(srvToRTV), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET);
@@ -502,9 +511,6 @@ void RenderManager::Impl::RenderScene(LightHandler& lightHandler, TextureHandler
 	} 
 
 	{ 
-		// Transition all resources before rendering light pass.
-		//CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle = m_framework.m_rtvHeap.GET_CPU_DESCRIPTOR(0);
-		
 		//* Render Skybox & Ligth start
 		cmdList->SetGraphicsRootSignature(m_psoHandler.GetRootSignature(skybox.GetRootSignature()));
 		cmdList->SetPipelineState(m_psoHandler.GetPipelineState(skybox.GetPSO()));
@@ -534,14 +540,13 @@ void RenderManager::Impl::RenderScene(LightHandler& lightHandler, TextureHandler
 
 		//startLocation = 0;
 		m_dirLight.SetViewportAndPSO(cmdList, m_psoHandler);
-		m_dirLight.SetBufferData(directionalLight);
+		m_dirLight.SetBufferData(directionalLight, cam, camTransform);
 
-		startLocation = 1;
+		startLocation = 2;
 		m_gBuffer.AssignSRVSlots(cmdList, &m_framework.CbvSrvHeap(), startLocation);
 		UINT offset = textureHandler.GetTextures()[skybox.GetCurrentActiveSkybox()[1] - 1].m_offsetID;
 		cmdList->SetGraphicsRootDescriptorTable(startLocation, m_framework.CbvSrvHeap().GET_GPU_DESCRIPTOR(offset));
 		startLocation++;
-
 		m_shadowMap.SetTextureAtSlot(cmdList, &m_framework.CbvSrvHeap(), startLocation, frameIndex);
 		startLocation++;
 		m_ssaoBlur.SetTextureAtSlot(cmdList, &m_framework.CbvSrvHeap(), startLocation, frameIndex);
@@ -549,6 +554,13 @@ void RenderManager::Impl::RenderScene(LightHandler& lightHandler, TextureHandler
 		m_volumetricLight.SetTextureAtSlot(cmdList, &m_framework.CbvSrvHeap(), startLocation, frameIndex);
 
 		m_dirLight.RenderTexture(cmdList, &m_framework.CbvSrvHeap(), nullptr, frameIndex);
+
+		ID3D12Resource* light[] = {
+			m_dirLight.GetResource(frameIndex)
+		};
+		m_framework.QeueuResourceTransition(light, _countof(light),
+			D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+		m_framework.TransitionAllResources();
 
 		//cmdList->SetGraphicsRootSignature(m_psoHandler.GetRootSignature(m_lightRootSignture));
 		//cmdList->SetPipelineState(m_psoHandler.GetPipelineState(m_dirLightPSO));
@@ -573,7 +585,13 @@ void RenderManager::Impl::RenderScene(LightHandler& lightHandler, TextureHandler
 		//cmdList->SetPipelineState(m_psoHandler.GetPipelineState(m_pointLightPSO));
 		//cmdList->SetGraphicsRootDescriptorTable(0, defaultHandle);
 		//m_mainRenderer.RenderPointLights(cmdList, lightHandler, scene.Registry(), frameIndex, startLocation += 1);
+		CD3DX12_CPU_DESCRIPTOR_HANDLE backBuffer(m_framework.RTVHeap().GET_CPU_DESCRIPTOR(frameIndex));
+		cmdList->RSSetViewports(1, &m_framework.m_viewport); 
+		cmdList->OMSetRenderTargets(1, &backBuffer, false, nullptr);
 
+		m_kuwaharaFilter.SetPSOandRS(cmdList, m_psoHandler);
+		m_dirLight.SetTextureAtSlot(cmdList, &m_framework.CbvSrvHeap(), 1, frameIndex);
+		m_kuwaharaFilter.RenderEffect(cmdList, &m_framework.CbvSrvHeap(), frameIndex);
 	} //* Render scene Ligthing end
 
 	{ //* Render 2D Scene
@@ -777,8 +795,12 @@ PSOHandler& RenderManager::GetPSOHandler() const noexcept
 	return m_Impl->GetPSOHandler();
 }
 
-VolumetricLight& RenderManager::GetVolumawetricLight() const noexcept
+VolumetricLight& RenderManager::GetVolumetricLight() const noexcept
 {
 	return m_Impl->GetVolumetricLight();
+}
+
+void RenderManager::SetKuwaharaRadius(UINT radius, UINT scale, Vect3f offset) {
+	m_Impl->SetKuwaharaRadius(radius, scale, offset);
 }
 

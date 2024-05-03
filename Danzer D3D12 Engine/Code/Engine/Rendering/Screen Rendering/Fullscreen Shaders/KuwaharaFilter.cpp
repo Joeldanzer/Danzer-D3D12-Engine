@@ -3,8 +3,10 @@
 
 #include "Core/D3D12Framework.h"
 #include "Rendering/PSOHandler.h"
+#include "Core/WindowHandler.h"
 
-KuwaharaFilter::KuwaharaFilter()
+KuwaharaFilter::KuwaharaFilter() :
+	m_data({Vect3f(), 0, 0, 0})
 {
 }
 
@@ -17,7 +19,7 @@ void KuwaharaFilter::InitializeFullscreenShader(ID3D12Device* device, Descriptor
 	m_cbvData.IntializeBuffer(device, cbvWrapper, sizeof(Data));
 }
 
-void KuwaharaFilter::SetPipelineAndRootsignature(PSOHandler& psoHandler)
+void KuwaharaFilter::CreatePipelineAndRootsignature(PSOHandler& psoHandler)
 {
 	DXGI_FORMAT format[] = { DXGI_FORMAT_R8G8B8A8_UNORM };
 	CD3DX12_DEPTH_STENCIL_DESC depth(D3D12_DEFAULT);
@@ -39,14 +41,19 @@ void KuwaharaFilter::SetPipelineAndRootsignature(PSOHandler& psoHandler)
 	);
 }
 
-void KuwaharaFilter::SetFilterRadius(float radius)
+void KuwaharaFilter::SetFilterRadius(UINT radius, UINT scale, Vect3f offset)
 {
+	m_data.offset   = offset;
 	m_data.m_radius = radius;
+	m_scale = scale;
 }
 
 void KuwaharaFilter::UpdateBufferData(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper* cbvWrapper, const UINT frameIndex)
 {
-	m_cbvData.UpdateBuffer(reinterpret_cast<UINT16*>(&m_cbvData), frameIndex);
-	cmdList->SetGraphicsRootDescriptorTable(0, cbvWrapper->GET_GPU_DESCRIPTOR(m_cbvData.OffsetID() + frameIndex));	
+	m_data.m_width  = WindowHandler::WindowData().m_w / m_scale;
+	m_data.m_height = WindowHandler::WindowData().m_h / m_scale;
+
+	m_cbvData.UpdateBuffer(reinterpret_cast<UINT16*>(&m_data), frameIndex);
+	cmdList->SetGraphicsRootDescriptorTable(0, cbvWrapper->GET_GPU_DESCRIPTOR(m_cbvData.OffsetID() + frameIndex));
 }
 

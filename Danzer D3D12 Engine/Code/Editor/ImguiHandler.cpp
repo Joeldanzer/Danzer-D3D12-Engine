@@ -129,6 +129,19 @@ void ImguiHandler::Update(const float dt)
 
 			ImGui::EndMenu();
 		}
+
+		if (ImGui::BeginMenu("Post Process")) {
+			ImGui::DragInt("Kuwahara Radius", &m_kuwaharaRadius, 1.0f, 1, 15);
+
+			ImGui::DragInt("Kuwahara Scale", &m_kuwaharaScale, 1.0f, 1, 4);
+
+			float offset[3] = { m_kuwaharaOffset.x, m_kuwaharaOffset.y, m_kuwaharaOffset.z };
+			ImGui::DragFloat3("Kuwahara Offset", &offset[0], 0.01f, -1.0f, 1.0f);
+			m_kuwaharaOffset = { offset[0], offset[1], offset[2] };
+
+			renderManager.SetKuwaharaRadius(m_kuwaharaRadius, m_kuwaharaScale, m_kuwaharaOffset);
+			ImGui::EndMenu();
+		}
 		//if (ImGui::BeginMenu("File")) {
 		//	if (ImGui::MenuItem("Load Scene", "CTRL+O")) {
 		//		std::wstring scene = m_fileExplorer.OpenFileExplorer(FILE_EXPLORER_GET, m_fileExtensions["Scenes"]);
