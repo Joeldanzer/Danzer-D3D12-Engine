@@ -19,6 +19,6 @@ float4 main(VertexToPixel input) : SV_TARGET
             result += SSAOTexture.Sample(defaultSampler, input.m_uv + offset).r;
         }
     }
-    
+
     return result / (4.0f * 4.0f);
 }
