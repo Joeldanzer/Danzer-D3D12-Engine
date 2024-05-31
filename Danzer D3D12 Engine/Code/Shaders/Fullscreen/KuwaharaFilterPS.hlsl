@@ -110,5 +110,5 @@ float4 main(VertexToPixel input) : SV_TARGET
         color = float4(m3, 1.0f);
     }
     
-    return color;
+    return SceneTexture.Sample(Sampler, input.m_uv);
 }

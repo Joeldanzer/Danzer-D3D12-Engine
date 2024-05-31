@@ -117,7 +117,7 @@ RenderManager::Impl::Impl(D3D12Framework& framework, TextureHandler& textureHand
 
 	m_kuwaharaFilter.InitializeFullscreenShader(framework.GetDevice(), &framework.CbvSrvHeap());
 	m_kuwaharaFilter.CreatePipelineAndRootsignature(m_psoHandler);
-	m_kuwaharaFilter.SetFilterRadius(7, 1, {0.0f, 0.0f, 0.0f});
+	m_kuwaharaFilter.SetFilterRadius(1, 1, {0.0f, 0.0f, 0.0f});
 
 	m_dirLight.InitAsTexture(
 		framework.GetDevice(),
@@ -585,10 +585,12 @@ void RenderManager::Impl::RenderScene(LightHandler& lightHandler, TextureHandler
 		//cmdList->SetPipelineState(m_psoHandler.GetPipelineState(m_pointLightPSO));
 		//cmdList->SetGraphicsRootDescriptorTable(0, defaultHandle);
 		//m_mainRenderer.RenderPointLights(cmdList, lightHandler, scene.Registry(), frameIndex, startLocation += 1);
+		
+		// Kuwahara Filter
 		CD3DX12_CPU_DESCRIPTOR_HANDLE backBuffer(m_framework.RTVHeap().GET_CPU_DESCRIPTOR(frameIndex));
 		cmdList->RSSetViewports(1, &m_framework.m_viewport); 
 		cmdList->OMSetRenderTargets(1, &backBuffer, false, nullptr);
-
+		
 		m_kuwaharaFilter.SetPSOandRS(cmdList, m_psoHandler);
 		m_dirLight.SetTextureAtSlot(cmdList, &m_framework.CbvSrvHeap(), 1, frameIndex);
 		m_kuwaharaFilter.RenderEffect(cmdList, &m_framework.CbvSrvHeap(), frameIndex);
