@@ -23,7 +23,7 @@ cbuffer MainCamera : register(b0)
     float4 trash[7];
 }
 
-TextureCube skyboxTexture    : register(t0);
-Texture2D albedo             : register(t1);
+TextureCube  skyboxTexture    : register(t0);
+Texture2D    albedo           : register(t1);
 SamplerState defaultSampler  : register(s0);
 //Ras defaultRasterizer : register(s1);

@@ -280,8 +280,9 @@ void ModelLoaderCustom::LoadVerticiesWithTransform(std::vector<Vect3f>& v3Verts,
             verticies.PushVec4({ mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z, 1.f });
         }
 
-        if (color) {     
-               verticies.PushVec4({ mesh->mColors[i]->r, mesh->mColors[i]->g, mesh->mColors[i]->b, mesh->mColors[i]->a });
+        if (color) {    
+
+               verticies.PushVec4({ 1, 1, 1, 1 });
         }
         else
             verticies.PushVec4({ 1.f, 1.f, 1.f, 0.f });

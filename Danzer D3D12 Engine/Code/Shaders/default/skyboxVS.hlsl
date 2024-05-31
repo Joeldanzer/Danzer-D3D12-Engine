@@ -8,7 +8,7 @@ VertexToPixel main( InputToVertex input )
     float4 toCamera = mul(toWorld,  CameraTransform);
     float4 toProj   = mul(toCamera, CameraProjection);
    
-    returnValue.m_position      = toProj.xyww;
+    returnValue.m_position      = toProj.xyzw;
     returnValue.m_worldPosition = input.m_position;
     returnValue.m_uv            = input.m_uv;
     

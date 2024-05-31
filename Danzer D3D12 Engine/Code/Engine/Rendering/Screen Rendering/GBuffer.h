@@ -50,7 +50,8 @@ public:
 	std::array<CD3DX12_CPU_DESCRIPTOR_HANDLE, GBUFFER_COUNT> GetRTVDescriptorHandles(DescriptorHeapWrapper& rtvDesc);
 
 	void ClearRenderTargets(DescriptorHeapWrapper& rtvHeap, ID3D12GraphicsCommandList* cmdList, UINT numberOfRects, const D3D12_RECT* rect);
-	void AssignSRVSlots(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper* srvWrapper, UINT& startLocation);
+	void AssignSRVSlots(ID3D12GraphicsCommandList* cmdList,   DescriptorHeapWrapper* srvWrapper, UINT& startLocation);
+	void SetTextureAtSlot(ID3D12GraphicsCommandList* cmdList, GBUFFER_TEXTURES texture, DescriptorHeapWrapper* srvWrapper, const UINT slot);
 
 	void SetPSOAndRS(const UINT pso, const UINT rs) {
 		m_pso = pso; m_rs = rs;

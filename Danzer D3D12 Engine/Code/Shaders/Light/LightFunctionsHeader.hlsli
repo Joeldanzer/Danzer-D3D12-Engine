@@ -1,10 +1,17 @@
 #include "../Light/LightHeader.hlsli"
 
-#define PI_MACRO 3.14159265359f;
+#define PI 3.14159265359f
 #define FLT_EPSILON 1.192092896e-07f
 #define nMipOffset 3
 #define MAX_SHADOW_DEPTH_BIAS 0.0001f
 #define MIN_SHADOW_DEPTH_BIAS 0.00001f
+
+static float ditherPattern[4][4] = {
+                            { 0.0f, 0.5f, 0.125f, 0.625f},
+                            { 0.75f, 0.22f, 0.875f, 0.375f},
+                            { 0.1875f, 0.6875f, 0.0625f, 0.5625},
+                            { 0.9375f, 0.4375f, 0.8125f, 0.3125}
+};
 
 float ComputeScattering(float lightDotView)
 {
@@ -21,7 +28,7 @@ float invLerp(float a, float b, float c)
     return (c - a) / (b - a);
 }
 
-float ShadowCalculation(float4 worldPos, float3 normal, float3 dir, float4x4 transform, float4x4 projection)
+float ShadowCalculation(uint2 screenPositon, float4 worldPos, float3 normal, float3 dir, float4x4 transform, float4x4 projection)
 { 
     float4 lightSpacePos = mul(worldPos, transform);
     lightSpacePos        = mul(lightSpacePos, projection);
@@ -31,8 +38,9 @@ float ShadowCalculation(float4 worldPos, float3 normal, float3 dir, float4x4 tra
     float2 shadowTexCoord = 0.5f * lightSpacePos.xy + 0.5f;
     shadowTexCoord.y      = 1.0f - shadowTexCoord.y;
     
-    float bias = max(MIN_SHADOW_DEPTH_BIAS * (1.0f - dot(normal, dir.xyz)), MAX_SHADOW_DEPTH_BIAS);
-    float currentDepth = lightSpacePos.z - bias;
+    //float ditherValue = ditherPattern[screenPositon.x % 4][screenPositon.y % 4];
+    float bias = max(MAX_SHADOW_DEPTH_BIAS * (1.0f - dot(normal, dir.xyz)), MIN_SHADOW_DEPTH_BIAS);
+    float currentDepth = lightSpacePos.z - bias; // * ditherValue;
     
     float closestDepth = shadowMap.Sample(defaultSample, shadowTexCoord.xy).r;
     
@@ -45,7 +53,7 @@ float ShadowCalculation(float4 worldPos, float3 normal, float3 dir, float4x4 tra
     for (float x = -1; x <= 1; x++)
     {
         for (float y = -1; y <= 1; y++)
-        {
+        {   
             float pcfDepth = shadowMap.SampleLevel(defaultSample, shadowTexCoord.xy + float2(x, y) * texelSize, 0).r;
             shadow += currentDepth > pcfDepth ? 0.0f : 1.0f;
             scale++;
@@ -55,7 +63,6 @@ float ShadowCalculation(float4 worldPos, float3 normal, float3 dir, float4x4 tra
     shadow /= scale;
     return shadow;
      
-
     //float2 shadowTexCoord = 0.5f + lightSpacePos.xy + 0.5f;
     //shadowTexCoord.y = 1.0f - shadowTexCoord.y;
     //
@@ -179,7 +186,7 @@ float ApproximateSpecularSelfOcclusion(float3 vR, float3 vertNormalNormalized)
 
 float3 Diffuse(float3 pAlbedo)
 {
-    return pAlbedo / PI_MACRO;
+    return pAlbedo / PI;
 }
 
 float NormalDistribution_GGX(float a, float NdH)
@@ -189,7 +196,7 @@ float NormalDistribution_GGX(float a, float NdH)
     
     float denominator = NdH2 * (a2 - 1.0f) + 1.0f;
     denominator *= denominator;
-    denominator *= PI_MACRO;
+    denominator *= PI;
     
     return a2 / denominator;
 }
@@ -243,7 +250,6 @@ float DistributionGGX(float3 N, float3 H, float roughness)
     
     float nom = a2;
     float denom = (NdotH2 * (a2 - 1.0f) + 1.0f);
-    float PI = PI_MACRO;
     denom = PI * denom * denom;
     
     return nom / denom;
@@ -253,6 +259,11 @@ float3 FresnelSchlick(float cosTheta, float3 f0)
 {
     //return f0 + (1.0 - f0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
     return f0 + (1.0f - f0) * pow((1.0f + 0.000001f) - cosTheta, 5.0f);
+}
+
+float3 FresnelSchlickRoughness(float cosTheta, float3 f0, float roughness)
+{
+    return f0 + (max(float(1.f - roughness).rrr, f0) - f0) * pow(clamp(1.0f - cosTheta, 0.0f, 1.0), 5.0f);
 }
 float GeometrySchlickGGX(float NdotV, float roughness)
 {
@@ -307,7 +318,6 @@ float3 EvaluateAmbience(TextureCube cubeMap, SamplerState defaultSampler, float3
 
 float3 EvaluateDirectionalLight(float3 albedoColor, float3 specularColor, float3 normal, float roughness, float3 lightColor, float3 lightDir, float3 viewDir, float metallic)
 {
-    float PI = PI_MACRO;
     float NdL = saturate(dot(normal, lightDir));
     float lambert = NdL;
     float3 h = normalize(viewDir + lightDir);
@@ -325,24 +335,24 @@ float3 EvaluateDirectionalLight(float3 albedoColor, float3 specularColor, float3
     
     return lightColor * lambert * (diffuse * (1.0f - specular) + specular) * PI;
     
-   // float NdL = saturate(max(dot(normal, lightDir), 0.0f));
-   // float lambert = NdL;
-   // float3 h = normalize(viewDir + lightDir);
-   // float NdH = saturate(dot(normal, h));
-   // 
-   // float  D = DistributionGGX(normal, h, roughness);
-   // float  G = GeometrySmith(normal, viewDir, lightDir, roughness);
-   // float3 F = FresnelSchlick(max(dot(h, viewDir), 0.0f), specularColor);
-   // 
-   // float3 kS = F;
-   // float3 kD = float3(1.0f, 1.0f, 1.0f) - kS;
-   // kD *= 1.0f - metallic;
-   // 
-   // float3 numerator = D * G * F;
-   // float denominator = 4.0f * max(dot(normal, viewDir), 0.0f) * max(dot(normal, lightDir), 0.0f) + 0.0001f;
-   // float specular = numerator / denominator;
-   // 
-   // float3 diffuse = kD * albedoColor / PI;
-   // 
-   // return diffuse + specular * lightColor.rgb * NdL;
+   //float NdL = saturate(max(dot(normal, lightDir), 0.0f));
+   //float lambert = NdL;
+   //float3 h = normalize(viewDir + lightDir);
+   //float NdH = saturate(dot(normal, h));
+   //
+   //float  D = DistributionGGX(normal, h, roughness);
+   //float  G = GeometrySmith(normal, viewDir, lightDir, roughness);
+   //float3 F = FresnelSchlick(max(dot(h, viewDir), 0.0f), specularColor);
+   //
+   //float3 kS = F;
+   //float3 kD = float3(1.0f, 1.0f, 1.0f) - kS;
+   //kD *= 1.0f - metallic;
+   //
+   //float3 numerator = D * G * F;
+   //float denominator = 4.0f * max(dot(normal, viewDir), 0.0f) * max(dot(normal, lightDir), 0.0f) + 0.0001f;
+   //float specular = numerator / denominator;
+   //
+   //float3 diffuse = kD * albedoColor / PI;
+   
+   return diffuse + specular * lightColor.rgb * NdL;
 }

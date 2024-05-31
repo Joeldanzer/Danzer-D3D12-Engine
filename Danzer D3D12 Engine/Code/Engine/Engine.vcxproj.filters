@@ -62,23 +62,27 @@
     <ClCompile Include="Rendering\Screen Rendering\ScreenTexture.cpp" />
     <ClCompile Include="Rendering\Buffers\LightBuffer.cpp" />
     <ClCompile Include="Rendering\Buffers\MaterialBuffer.cpp" />
-    <ClCompile Include="Rendering\Screen Rendering\FullscreenShader.cpp" />
-    <ClCompile Include="Rendering\Screen Rendering\FullScreenShaderHandler.cpp" />
+    <ClCompile Include="Rendering\Screen Rendering\Fullscreen Shaders\FullscreenShader.cpp" />
     <ClCompile Include="Core\DesriptorHeapWrapper.cpp" />
     <ClCompile Include="Rendering\Buffers\CBVBuffer.cpp" />
     <ClCompile Include="Core\D3D12Framework.cpp" />
     <ClCompile Include="Core\FrameResource.cpp" />
-    <ClCompile Include="Rendering\Screen Rendering\DirectionalShadowMapping.cpp" />
+    <ClCompile Include="Rendering\Screen Rendering\Textures\DirectionalShadowMapping.cpp" />
     <ClCompile Include="ShaderEffectRenderer.cpp" />
-    <ClCompile Include="Rendering\Screen Rendering\FullscreenTexture.cpp" />
+    <ClCompile Include="Rendering\Screen Rendering\Textures\FullscreenTexture.cpp" />
     <ClCompile Include="Rendering\Models\ModelEffectHandler.cpp" />
     <ClCompile Include="Rendering\Buffers\EffectShaderBuffer.cpp" />
     <ClCompile Include="Rendering\Buffers\PointLightBuffer.cpp" />
     <ClCompile Include="Rendering\Screen Rendering\LightHandler.cpp" />
-    <ClCompile Include="Rendering\Screen Rendering\SSAOTexture.cpp" />
+    <ClCompile Include="Rendering\Screen Rendering\Textures\SSAOTexture.cpp" />
     <ClCompile Include="Rendering\Buffers\SSAOBuffer.cpp" />
-    <ClCompile Include="Rendering\Screen Rendering\SSAOBlur.cpp" />
+    <ClCompile Include="Rendering\Screen Rendering\Textures\SSAOBlur.cpp" />
     <ClCompile Include="Rendering\PSOHandler.cpp" />
+    <ClCompile Include="Rendering\Screen Rendering\Textures\VolumetricLight.cpp" />
+    <ClCompile Include="Rendering\Buffers\ConstantBufferData.cpp" />
+    <ClCompile Include="Rendering\Screen Rendering\Textures\VolumetricLightBlur.cpp" />
+    <ClCompile Include="Rendering\Screen Rendering\Fullscreen Shaders\KuwaharaFilter.cpp" />
+    <ClCompile Include="Rendering\Screen Rendering\Textures\DirectionalLightTexture.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Core\DirectX12Framework.h">
@@ -160,15 +164,14 @@
     <ClInclude Include="Rendering\Buffers\LightBuffer.h" />
     <ClInclude Include="Rendering\Buffers\MaterialBuffer.h" />
     <ClInclude Include="Rendering\Models\Material.h" />
-    <ClInclude Include="Rendering\Screen Rendering\FullscreenShader.h" />
-    <ClInclude Include="Rendering\Screen Rendering\FullScreenShaderHandler.h" />
+    <ClInclude Include="Rendering\Screen Rendering\Fullscreen Shaders\FullscreenShader.h" />
     <ClInclude Include="Components\Script.h" />
     <ClInclude Include="Core\DesriptorHeapWrapper.h" />
     <ClInclude Include="Core\D3D12Framework.h" />
     <ClInclude Include="Core\FrameResource.h" />
-    <ClInclude Include="Rendering\Screen Rendering\DirectionalShadowMapping.h" />
+    <ClInclude Include="Rendering\Screen Rendering\Textures\DirectionalShadowMapping.h" />
     <ClInclude Include="ShaderEffectRenderer.h" />
-    <ClInclude Include="Rendering\Screen Rendering\FullscreenTexture.h" />
+    <ClInclude Include="Rendering\Screen Rendering\Textures\FullscreenTexture.h" />
     <ClInclude Include="Rendering\Models\ModelEffectHandler.h" />
     <ClInclude Include="Components\ModelEffect.h" />
     <ClInclude Include="Rendering\Models\ModelEffectData.h" />
@@ -177,9 +180,14 @@
     <ClInclude Include="Components\PointLight.h" />
     <ClInclude Include="Rendering\Buffers\PointLightBuffer.h" />
     <ClInclude Include="Rendering\Screen Rendering\LightHandler.h" />
-    <ClInclude Include="Rendering\Screen Rendering\SSAOTexture.h" />
+    <ClInclude Include="Rendering\Screen Rendering\Textures\SSAOTexture.h" />
     <ClInclude Include="Rendering\Buffers\SSAOBuffer.h" />
-    <ClInclude Include="Rendering\Screen Rendering\SSAOBlur.h" />
+    <ClInclude Include="Rendering\Screen Rendering\Textures\SSAOBlur.h" />
     <ClInclude Include="Rendering\PSOHandler.h" />
+    <ClInclude Include="Rendering\Screen Rendering\Textures\VolumetricLight.h" />
+    <ClInclude Include="Rendering\Buffers\ConstantBufferData.h" />
+    <ClInclude Include="Rendering\Screen Rendering\Textures\VolumetricLightBlur.h" />
+    <ClInclude Include="Rendering\Screen Rendering\Fullscreen Shaders\KuwaharaFilter.h" />
+    <ClInclude Include="Rendering\Screen Rendering\Textures\DirectionalLightTexture.h" />
   </ItemGroup>
 </Project>

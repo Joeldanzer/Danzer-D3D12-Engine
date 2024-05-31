@@ -89,10 +89,10 @@ Game::Impl::Impl(Engine& engine) :
 	waterData.m_far				  = 1000.0f;
 	waterData.m_edgeScale	      = 1.0f;
 	waterData.m_edgeColor	      = { 1.0f, 1.0f, 1.0f };
-	reg.emplace<ModelEffect>(waterPlane, engine.GetModelEffectHandler().CreateModelEffect({L"Shaders/WaterPlaneVS.cso", L"Shaders/WaterPlanePS.cso"}, waterModel.m_modelID, &waterData, sizeof(WaterPlaneData), textures, true));
-	Transform& waterTransform = reg.get<Transform>(waterPlane);
-	waterTransform.m_position = { 0.0f, 2.0f, 0.0f };
-	waterTransform.m_scale	  = { 1.0f, 1.0f, 1.5f };
+	//reg.emplace<ModelEffect>(waterPlane, engine.GetModelEffectHandler().CreateModelEffect({L"Shaders/WaterPlaneVS.cso", L"Shaders/WaterPlanePS.cso"}, waterModel.m_modelID, &waterData, sizeof(WaterPlaneData), textures, true));
+	//Transform& waterTransform = reg.get<Transform>(waterPlane);
+	//waterTransform.m_position = { 0.0f, 2.0f, 0.0f };
+	//waterTransform.m_scale	  = { 1.0f, 1.0f, 1.5f };
 
 	//for (UINT i = 1; i < 12; i++)
 	//{

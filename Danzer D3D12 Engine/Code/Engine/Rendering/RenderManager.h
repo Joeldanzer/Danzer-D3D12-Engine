@@ -15,6 +15,7 @@ class D3D12Framework;
 class ModelEffectHandler;
 class LightHandler;
 class PSOHandler;
+class VolumetricLight;
 
 struct Object;
 struct Sprite;
@@ -33,6 +34,8 @@ public:
 		SpriteHandler& SpriteHandler, Skybox& skybox, Scene& scene/*Camera, Ligthing, GameObjects, etc...*/);
 
 	PSOHandler& GetPSOHandler() const noexcept;
+	VolumetricLight& GetVolumetricLight() const noexcept;
+	void SetKuwaharaRadius(UINT radius, UINT scale, Vect3f offset);
 
 private:
 	friend class Impl;

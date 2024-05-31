@@ -1,5 +1,6 @@
 #include "defaultStruct.hlsli"
 
+
 float4 main(VertexToPixel input) : SV_TARGET
 {
     //const float PI = 3.14159265359;
@@ -28,8 +29,7 @@ float4 main(VertexToPixel input) : SV_TARGET
     //
     //irradiance.rgb = PI * irradiance * (1.0f / nrSamples);
     //irradiance.a = 1.0f;
-    float4 color = skyboxTexture.Sample(defaultSampler, input.m_worldPosition.xyz);
     
-    
-	return color;
+    float3 color = skyboxTexture.Sample(defaultSampler, normalize(input.m_worldPosition.xyz)).rgb; 
+    return float4(color, 1.0f);
 }

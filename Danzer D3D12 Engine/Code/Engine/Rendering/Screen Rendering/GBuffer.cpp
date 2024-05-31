@@ -62,6 +62,12 @@ void GBuffer::AssignSRVSlots(ID3D12GraphicsCommandList* cmdList, DescriptorHeapW
 	}
 }
 
+void GBuffer::SetTextureAtSlot(ID3D12GraphicsCommandList* cmdList, GBUFFER_TEXTURES texture, DescriptorHeapWrapper* srvWrapper, const UINT slot)
+{
+	CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle = srvWrapper->GET_GPU_DESCRIPTOR(m_resources[texture].m_offsetID);
+	cmdList->SetGraphicsRootDescriptorTable(slot, srvHandle);
+}
+
 CD3DX12_GPU_DESCRIPTOR_HANDLE GBuffer::GetGPUHandle(GBUFFER_TEXTURES texture, DescriptorHeapWrapper* srvWrapper)
 {
 	D3D12_GPU_DESCRIPTOR_HANDLE cbvSrvHeapStart = srvWrapper->GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
