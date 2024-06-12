@@ -1,8 +1,0 @@
-﻿  Building Custom Rule C:/Users/joeld/OneDrive/Desktop/Direct3D12 Engine/Code/3rdParty/assimp-master/tools/assimp_cmd/CMakeLists.txt
-  CompareDump.cpp
-  ImageExtractor.cpp
-  Main.cpp
-  WriteDump.cpp
-  Info.cpp
-  Export.cpp
-  assimp_cmd.vcxproj -> C:\Users\joeld\OneDrive\Desktop\Direct3D12 Engine\Code\3rdParty\assimp-master\build\bin\Release\assimp.exe

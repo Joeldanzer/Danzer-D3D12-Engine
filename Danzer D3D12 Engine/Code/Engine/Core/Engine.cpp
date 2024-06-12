@@ -21,8 +21,8 @@
 #include "D3D12Framework.h"
 
 // ImGui
-#include "../3rdParty/imgui-master/backends/imgui_impl_dx12.h"
-#include "../3rdParty/imgui-master/backends/imgui_impl_win32.h"
+#include "imgui-master/backends/imgui_impl_dx12.h"
+#include "imgui-master/backends/imgui_impl_win32.h"
 
 
 class Engine::Impl {
@@ -83,7 +83,7 @@ Engine::Impl::Impl(unsigned int width, unsigned int height) :
 	m_skybox(m_textureHandler),
 	m_deltaTime(0.f)
 {
-
+	 
 	ImGuiIO* io = &ImGui::GetIO();
 	ImVec2 vec;
 	vec.x = (float)width;

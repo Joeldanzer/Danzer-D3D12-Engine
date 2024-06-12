@@ -1,8 +1,8 @@
 #include "stdafx.h"
 #include "ModelLoaderCustom.h"
 
-#include "../3rdParty/assimp-master/include/assimp/Scene.h"
-#include "../3rdParty/assimp-master/include/assimp/postprocess.h"
+#include "assimp/Scene.h"
+#include "assimp/postprocess.h"
 
 #include <assert.h>
 #include <fstream>

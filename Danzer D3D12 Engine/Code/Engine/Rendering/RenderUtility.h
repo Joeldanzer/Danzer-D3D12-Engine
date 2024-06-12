@@ -1,8 +1,8 @@
 #ifndef RENDER_UTILITY_H
 #define RENDER_UTILITY_H
 
-#include "../3rdParty/DirectXTK12-main/Inc/DDSTextureLoader.h"
-#include "../3rdParty/DirectXTK12-main/Inc/DirectXHelpers.h"
+#include "DirectXTK12/Inc/DDSTextureLoader.h"
+#include "DirectXTK12/Inc/DirectXHelpers.h"
 
 #include <fstream>
 #include <iostream>

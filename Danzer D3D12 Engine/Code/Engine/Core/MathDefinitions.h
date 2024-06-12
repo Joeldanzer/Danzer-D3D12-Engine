@@ -1,5 +1,5 @@
 #pragma once
-#include "../3rdParty/DirectXTK12-main/Inc/SimpleMath.h"
+#include "DirectXTK12/Inc/SimpleMath.h"
 #include <cmath>
 
 typedef DirectX::SimpleMath::Vector2 Vect2f;

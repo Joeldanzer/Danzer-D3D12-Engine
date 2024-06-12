@@ -1,5 +1,5 @@
 #pragma once
-#include "entt/entt.hpp"
+#include "../3rdParty/entt/entt.hpp"
 #include "Components/Object.h"
 
 class Scene
