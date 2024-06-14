@@ -83,7 +83,8 @@
     <ClCompile Include="Rendering\Screen Rendering\Textures\VolumetricLightBlur.cpp" />
     <ClCompile Include="Rendering\Screen Rendering\Fullscreen Shaders\KuwaharaFilter.cpp" />
     <ClCompile Include="Rendering\Screen Rendering\Textures\DirectionalLightTexture.cpp" />
-    <ClCompile Include="PhysicsWrapper.cpp" />
+    <ClCompile Include="Physics\PhysicsWrapper.cpp" />
+    <ClCompile Include="Physics\PhysicsLayers.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Core\DirectX12Framework.h">
@@ -190,6 +191,7 @@
     <ClInclude Include="Rendering\Screen Rendering\Textures\VolumetricLightBlur.h" />
     <ClInclude Include="Rendering\Screen Rendering\Fullscreen Shaders\KuwaharaFilter.h" />
     <ClInclude Include="Rendering\Screen Rendering\Textures\DirectionalLightTexture.h" />
-    <ClInclude Include="PhysicsWrapper.h" />
+    <ClInclude Include="Physics\PhysicsWrapper.h" />
+    <ClInclude Include="Physics\PhysicsLayers.h" />
   </ItemGroup>
 </Project>
