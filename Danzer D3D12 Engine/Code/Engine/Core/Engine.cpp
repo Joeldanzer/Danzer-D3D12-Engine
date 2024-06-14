@@ -19,6 +19,7 @@
 #include "CollisionManager.h"
 #include "Rendering/Camera.h"
 #include "D3D12Framework.h"
+#include "PhysicsWrapper.h"
 
 // ImGui
 #include "imgui-master/backends/imgui_impl_dx12.h"
@@ -49,21 +50,20 @@ public:
 	LightHandler&		GetLightHandler()	    noexcept;
 
 private:
-	WindowHandler m_windowHandler;
-	D3D12Framework m_framework;
-	TextureHandler m_textureHandler;
-	//DirectX12Framework m_framework;
-	RenderManager m_renderManager;
-	ModelHandler m_modelHandler;
-	SpriteHandler m_spriteHandler;
-	SceneManager m_sceneManager;
-	CollisionManager m_collisionManager;
+	WindowHandler	   m_windowHandler;
+	D3D12Framework	   m_framework;
+	TextureHandler	   m_textureHandler;
+	RenderManager      m_renderManager;
+	ModelHandler	   m_modelHandler;
+	SpriteHandler	   m_spriteHandler;
+	SceneManager	   m_sceneManager;
+	PhysicsWrapper	   m_physicsManager;
+	CollisionManager   m_collisionManager;
 	ModelEffectHandler m_modelEffectHandler;
-	LightHandler m_lightHandler;
-	FrameTimer m_frameTimer;
-	Skybox m_skybox;
-	
-	Camera m_camera;
+	LightHandler	   m_lightHandler;
+	FrameTimer		   m_frameTimer;
+	Skybox			   m_skybox;	
+	Camera			   m_camera;
 
 	float m_deltaTime;
 };
@@ -78,12 +78,22 @@ Engine::Impl::Impl(unsigned int width, unsigned int height) :
 	m_spriteHandler(m_framework, m_textureHandler),
 	m_lightHandler(m_framework),
 	m_sceneManager(),
+	m_physicsManager(10240, 0, 65536, 20480),
 	m_collisionManager(),
 	m_camera(65.f, (float)m_windowHandler.WindowData().m_w / (float)m_windowHandler.WindowData().m_h),
 	m_skybox(m_textureHandler),
 	m_deltaTime(0.f)
 {
-	 
+	//JPH::PhysicsSystem physicsSystem;
+	//physicsSystem.Init(1000, 0, 1000, 1000, )
+	FMOD_RESULT fResult;
+	FMOD::System* fmodSystem = nullptr;
+	FMOD::System_Create(&fmodSystem);
+	fResult = fmodSystem->init(256, FMOD_INIT_3D_RIGHTHANDED, nullptr);
+	if (fResult != FMOD_OK)
+		throw fResult;
+	
+
 	ImGuiIO* io = &ImGui::GetIO();
 	ImVec2 vec;
 	vec.x = (float)width;

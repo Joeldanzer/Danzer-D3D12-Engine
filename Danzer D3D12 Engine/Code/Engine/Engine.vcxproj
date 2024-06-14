@@ -157,6 +157,7 @@
     <ClInclude Include="Components\PointLight.h" />
     <ClInclude Include="Components\Script.h" />
     <ClInclude Include="Components\WaterPlaneBufferData.h" />
+    <ClInclude Include="PhysicsWrapper.h" />
     <ClInclude Include="Rendering\Screen Rendering\Textures\DirectionalLightTexture.h" />
     <ClInclude Include="Rendering\Screen Rendering\Fullscreen Shaders\KuwaharaFilter.h" />
     <ClInclude Include="Rendering\Buffers\ConstantBufferData.h" />
@@ -232,6 +233,7 @@
     <ClInclude Include="Rendering\Screen Rendering\Textures\VolumetricLightBlur.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="PhysicsWrapper.cpp" />
     <ClCompile Include="Rendering\Screen Rendering\Textures\DirectionalLightTexture.cpp" />
     <ClCompile Include="Rendering\Screen Rendering\Fullscreen Shaders\KuwaharaFilter.cpp" />
     <ClCompile Include="Rendering\Buffers\ConstantBufferData.cpp" />

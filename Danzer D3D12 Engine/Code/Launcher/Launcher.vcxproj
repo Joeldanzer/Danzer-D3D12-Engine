@@ -133,7 +133,7 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
-      <AdditionalDependencies>$(SolutionDir)..\Libs\$(Configuration)\Engine_$(Configuration).lib;$(SolutionDir)..\Libs\$(Configuration)\Game_$(Configuration).lib;$(SolutionDir)..\Libs\$(Configuration)\3rdParty_$(Configuration).lib;$(SolutionDir)..\Libs\$(Configuration)\Editor_$(Configuration).lib;$(SolutionDir)..\Libs\$(Configuration)\assimp-vc142-mtd.lib;$(SolutionDir)..\Libs\$(Configuration)\Jolt.lib;$(SolutionDir)..\Libs\$(Configuration)\DirectXTK12.lib;d3d12.lib;dxgi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(SolutionDir)..\Libs\$(Configuration)\Engine_$(Configuration).lib;$(SolutionDir)..\Libs\$(Configuration)\Game_$(Configuration).lib;$(SolutionDir)..\Libs\$(Configuration)\3rdParty_$(Configuration).lib;$(SolutionDir)..\Libs\$(Configuration)\Editor_$(Configuration).lib;$(SolutionDir)..\Libs\$(Configuration)\assimp-vc142-mtd.lib;$(SolutionDir)..\Libs\$(Configuration)\Jolt.lib;$(SolutionDir)..\Libs\$(Configuration)\DirectXTK12.lib;$(SolutionDir)..\Libs\$(Configuration)\fmod_vc.lib;d3d12.lib;dxgi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
