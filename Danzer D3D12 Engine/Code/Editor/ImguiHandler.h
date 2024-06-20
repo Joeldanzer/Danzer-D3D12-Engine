@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../3rdParty/DirectX-Headers-main/include/directx/d3dx12.h"
-#include "../3rdParty/entt-master/single_include/entt/entt.hpp"
+#include "../3rdParty/entt/entt.hpp"
 //#include "entt/entt.hpp"
 #include "Core/MathDefinitions.h"
 

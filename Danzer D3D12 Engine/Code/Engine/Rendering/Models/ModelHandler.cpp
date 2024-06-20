@@ -2,7 +2,7 @@
 
 #include "ModelHandler.h"
 
-#include "../3rdParty/assimp-master/include/assimp/Scene.h"
+#include "assimp/Scene.h"
 
 #include "../RenderManager.h"
 #include "../RenderUtility.h"

@@ -126,13 +126,14 @@
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)3rdParty\assimp-master\Include\;$(SolutionDir)3rdParty\assimp-master\Code\;$(SolutionDir)3rdParty\imgui-master\;$(SolutionDir)Engine\;$(SolutionDir)Editor\;$(SolutionDir)Game\</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)3rdParty\;$(SolutionDir)Engine\;$(SolutionDir)Editor\;$(SolutionDir)Game\</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
-      <AdditionalDependencies>$(SolutionDir)..\Libs\$(Configuration)\Engine_$(Configuration).lib;$(SolutionDir)..\Libs\$(Configuration)\Game_$(Configuration).lib;$(SolutionDir)..\Libs\$(Configuration)\3rdParty_$(Configuration).lib;$(SolutionDir)..\Libs\$(Configuration)\Editor_$(Configuration).lib;$(SolutionDir)..\Libs\$(Configuration)\assimp-vc142-mtd.lib;$(SolutionDir)\3rdParty\DirectXTK12-main\Bin\Desktop_2022_Win10\x64\$(Configuration)\DirectXTK12.lib;d3d12.lib;dxgi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(SolutionDir)..\Libs\$(Configuration)\Engine_$(Configuration).lib;$(SolutionDir)..\Libs\$(Configuration)\Game_$(Configuration).lib;$(SolutionDir)..\Libs\$(Configuration)\3rdParty_$(Configuration).lib;$(SolutionDir)..\Libs\$(Configuration)\Editor_$(Configuration).lib;$(SolutionDir)..\Libs\$(Configuration)\assimp-vc142-mtd.lib;$(SolutionDir)..\Libs\$(Configuration)\Jolt.lib;$(SolutionDir)..\Libs\$(Configuration)\DirectXTK12.lib;$(SolutionDir)..\Libs\$(Configuration)\fmod_vc.lib;d3d12.lib;dxgi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -144,7 +145,7 @@
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;NDEBUG;_CONSOLE;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)3rdParty\assimp-master\Include\;$(SolutionDir)3rdParty\assimp-master\Code\;$(SolutionDir)3rdParty\entt-master\single_include\;$(SolutionDir)3rdParty\imgui-master\;$(SolutionDir)3rdParty\;$(SolutionDir)Engine\;$(SolutionDir)Game\;$(SolutionDir)Editor\</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)3rdParty\Jolt\;$(SolutionDir)3rdParty\assimp-master\Include\;$(SolutionDir)3rdParty\assimp-master\Code\;$(SolutionDir)3rdParty\entt-master\single_include\;$(SolutionDir)3rdParty\imgui-master\;$(SolutionDir)3rdParty\;$(SolutionDir)Engine\;$(SolutionDir)Game\;$(SolutionDir)Editor\</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

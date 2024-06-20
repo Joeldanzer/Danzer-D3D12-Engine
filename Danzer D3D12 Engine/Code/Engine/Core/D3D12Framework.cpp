@@ -52,7 +52,7 @@ D3D12Framework::D3D12Framework() :
 	swapChainDesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
 
 	DXGI_SWAP_CHAIN_FULLSCREEN_DESC fullscreenDesc = {};
-	fullscreenDesc.Windowed = false;
+	fullscreenDesc.Windowed = true;
 
 	ComPtr<IDXGISwapChain1> swapChain;
 	CHECK_HR(factory->CreateSwapChainForHwnd(

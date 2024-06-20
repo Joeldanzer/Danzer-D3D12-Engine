@@ -1,8 +1,8 @@
 #include "stdafx.h"
 #include "ModelLoaderCustom.h"
 
-#include "../3rdParty/assimp-master/include/assimp/Scene.h"
-#include "../3rdParty/assimp-master/include/assimp/postprocess.h"
+#include "assimp/Scene.h"
+#include "assimp/postprocess.h"
 
 #include <assert.h>
 #include <fstream>
@@ -15,6 +15,7 @@ std::unique_ptr<LoaderModel> ModelLoaderCustom::LoadModelFromAssimp(std::string 
     std::ifstream fileExist(fileName);
     if (!fileExist.good())
         assert(fileExist, fileName.c_str() + " doesn't exist!");
+
     //AI_CONFIG_COLUM_A
     m_importer.SetPropertyBool(AI_CONFIG_FBX_CONVERT_TO_M, false);
     m_importer.SetPropertyBool(AI_CONFIG_IMPORT_FBX_PRESERVE_PIVOTS, true);

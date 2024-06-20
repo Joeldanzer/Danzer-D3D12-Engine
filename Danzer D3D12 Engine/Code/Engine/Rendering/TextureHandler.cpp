@@ -3,8 +3,8 @@
 #include "Core/FrameResource.h"
 #include "Core/D3D12Framework.h"
 
-#include "../3rdParty/DirectXTK12-main/Inc/DDSTextureLoader.h"
-#include "../3rdParty/DirectXTK12-main/Inc/DirectXHelpers.h"
+#include "DirectXTK12/Inc/DDSTextureLoader.h"
+#include "DirectXTK12/Inc/DirectXHelpers.h"
 
 #include <filesystem>
 #include <fstream>

@@ -2,7 +2,7 @@
 
 #include "..\..\Core\MathDefinitions.h"
 
-#include "../3rdParty/assimp-master/include/assimp/Importer.hpp"
+#include "assimp/Importer.hpp"
 
 #include <unordered_map>
 #include <vector>
@@ -28,7 +28,7 @@ struct LoaderMesh {
 	}
 
 	Mat4f m_meshTransform;
-	UINT m_textureIndex;
+	UINT  m_textureIndex;
 	std::vector<unsigned int> m_indices;
 	char* m_verticies;
 	unsigned int m_vertexCount;
