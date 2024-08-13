@@ -193,5 +193,6 @@
     <ClInclude Include="Rendering\Screen Rendering\Textures\DirectionalLightTexture.h" />
     <ClInclude Include="Physics\PhysicsWrapper.h" />
     <ClInclude Include="Physics\PhysicsLayers.h" />
+    <ClInclude Include="Physics\PhysicsHeader.h" />
   </ItemGroup>
 </Project>

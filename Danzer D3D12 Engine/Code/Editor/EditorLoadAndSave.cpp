@@ -45,11 +45,11 @@ bool EditorLoadAndSave::LoadScene(std::string scene, entt::registry& reg)
 			obj.m_static = objectData["Static"].GetBool();
 			
 			if (objectData["State"] == "ACTIVE") 
-				obj.m_state == Object::STATE::ACTIVE;
+				obj.m_state = Object::STATE::ACTIVE;
 			else if (objectData["State"] == "NOT_ACTIVE") 
-				obj.m_state == Object::STATE::NOT_ACTIVE;
+				obj.m_state = Object::STATE::NOT_ACTIVE;
 			else
-				obj.m_state == Object::STATE::NOT_ACTIVE;
+				obj.m_state = Object::STATE::NOT_ACTIVE;
 
 			auto& transformData = object["Transform"];
 			Transform& transform = reg.emplace<Transform>(entity);

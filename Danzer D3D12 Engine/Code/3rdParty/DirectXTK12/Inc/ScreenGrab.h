@@ -20,19 +20,24 @@
 #include <d3d12_xs.h>
 #elif (defined(_XBOX_ONE) && defined(_TITLE)) || defined(_GAMING_XBOX)
 #include <d3d12_x.h>
+#elif defined(USING_DIRECTX_HEADERS)
+#include <directx/d3d12.h>
+#include <dxguids/dxguids.h>
 #else
 #include <d3d12.h>
 #endif
 
 #include <functional>
 
-#ifdef NTDDI_WIN10_FE
+#if defined(NTDDI_WIN10_FE) || defined(__MINGW32__)
 #include <ocidl.h>
 #else
 #include <OCIdl.h>
 #endif
 
+#ifdef _MSC_VER
 #pragma comment(lib,"uuid.lib")
+#endif
 
 
 namespace DirectX
@@ -52,6 +57,6 @@ namespace DirectX
         D3D12_RESOURCE_STATES beforeState = D3D12_RESOURCE_STATE_RENDER_TARGET,
         D3D12_RESOURCE_STATES afterState = D3D12_RESOURCE_STATE_RENDER_TARGET,
         _In_opt_ const GUID* targetFormat = nullptr,
-        _In_opt_ std::function<void __cdecl(IPropertyBag2*)> setCustomProps = nullptr,
+        _In_ std::function<void __cdecl(IPropertyBag2*)> setCustomProps = nullptr,
         bool forceSRGB = false);
 }

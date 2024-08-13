@@ -9,9 +9,9 @@ public:
 
 	// Camera Buffer Data
 	struct Data {
-		Vect4f m_color;
-		float  m_range;
-		Vect3f m_position;
+		Vect4f m_color = Vect4f::Zero;
+		float  m_range = 0.0f;
+		Vect3f m_position = Vect3f::Zero;
 
 		Vect4f trash[14];
 	};

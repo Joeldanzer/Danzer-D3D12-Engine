@@ -7,7 +7,7 @@
 class Font {
 public:
 	struct Letter {
-		Letter() {}
+		Letter() : m_letter(' '), m_position(0.0f, 0.0f) {}
 		~Letter() {}
 
 		//Letter(const Letter&);

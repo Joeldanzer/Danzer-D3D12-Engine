@@ -1,25 +1,9 @@
 #pragma once
 #include "Core/D3D12Header.h"
 
-#include "Jolt/Jolt.h"
-#include "Jolt/Physics/Collision/ObjectLayer.h"
-#include "Jolt/Physics/Collision/BroadPhase/BroadPhaseLayer.h"
+#include "PhysicsHeader.h"
 
-/// Layer that objects can be in, determines which other objects it can collide with
-namespace Layers
-{
-	static constexpr JPH::ObjectLayer UNUSED1 = 0; // 4 unused values so that broadphase layers values don't match with object layer values (for testing purposes)
-	static constexpr JPH::ObjectLayer UNUSED2 = 1;
-	static constexpr JPH::ObjectLayer UNUSED3 = 2;
-	static constexpr JPH::ObjectLayer UNUSED4 = 3;
-	static constexpr JPH::ObjectLayer NON_MOVING = 4;
-	static constexpr JPH::ObjectLayer MOVING = 5;
-	static constexpr JPH::ObjectLayer DEBRIS = 6; // Example: Debris collides only with NON_MOVING
-	static constexpr JPH::ObjectLayer SENSOR = 7; // Sensors only collide with MOVING objects
-	static constexpr JPH::ObjectLayer NUM_LAYERS = 8;
-};
-
-/// Class that determines if two object layers can collide
+// Class that determines if two object layers can collide
 class ObjectLayerPairFilterImpl : public JPH::ObjectLayerPairFilter
 {
 public:
@@ -47,16 +31,6 @@ public:
 	}
 };
 
-/// Broadphase layers
-namespace BroadPhaseLayers
-{
-	static constexpr JPH::BroadPhaseLayer NON_MOVING(0);
-	static constexpr JPH::BroadPhaseLayer MOVING(1);
-	static constexpr JPH::BroadPhaseLayer DEBRIS(2);
-	static constexpr JPH::BroadPhaseLayer SENSOR(3);
-	static constexpr JPH::BroadPhaseLayer UNUSED(4);
-	static constexpr UINT NUM_LAYERS(5);
-};
 
 class LayerInterfaceImpl : public JPH::BroadPhaseLayerInterface
 {
@@ -64,14 +38,14 @@ public:
 	LayerInterfaceImpl()
 	{
 		// Create a mapping table from object to broad phase layer
-		m_ObjectToBroadPhase[Layers::UNUSED1] = BroadPhaseLayers::UNUSED;
-		m_ObjectToBroadPhase[Layers::UNUSED2] = BroadPhaseLayers::UNUSED;
-		m_ObjectToBroadPhase[Layers::UNUSED3] = BroadPhaseLayers::UNUSED;
-		m_ObjectToBroadPhase[Layers::UNUSED4] = BroadPhaseLayers::UNUSED;
+		m_ObjectToBroadPhase[Layers::UNUSED1]	 = BroadPhaseLayers::UNUSED;
+		m_ObjectToBroadPhase[Layers::UNUSED2]	 = BroadPhaseLayers::UNUSED;
+		m_ObjectToBroadPhase[Layers::UNUSED3]	 = BroadPhaseLayers::UNUSED;
+		m_ObjectToBroadPhase[Layers::UNUSED4]	 = BroadPhaseLayers::UNUSED;
 		m_ObjectToBroadPhase[Layers::NON_MOVING] = BroadPhaseLayers::NON_MOVING;
-		m_ObjectToBroadPhase[Layers::MOVING] = BroadPhaseLayers::MOVING;
-		m_ObjectToBroadPhase[Layers::DEBRIS] = BroadPhaseLayers::DEBRIS;
-		m_ObjectToBroadPhase[Layers::SENSOR] = BroadPhaseLayers::SENSOR;
+		m_ObjectToBroadPhase[Layers::MOVING]	 = BroadPhaseLayers::MOVING;
+		m_ObjectToBroadPhase[Layers::DEBRIS]	 = BroadPhaseLayers::DEBRIS;
+		m_ObjectToBroadPhase[Layers::SENSOR]	 = BroadPhaseLayers::SENSOR;
 	}
 
 	virtual UINT GetNumBroadPhaseLayers() const override
@@ -86,16 +60,16 @@ public:
 	}
 
 #if defined(JPH_EXTERNAL_PROFILE) || defined(JPH_PROFILE_ENABLED)
-	virtual const char* GetBroadPhaseLayerName(BroadPhaseLayer inLayer) const override
+	virtual const char* GetBroadPhaseLayerName(JPH::BroadPhaseLayer inLayer) const override
 	{
-		switch ((BroadPhaseLayer::Type)inLayer)
+		switch ((JPH::BroadPhaseLayer::Type)inLayer)
 		{
-		case (BroadPhaseLayer::Type)BroadPhaseLayers::NON_MOVING:	return "NON_MOVING";
-		case (BroadPhaseLayer::Type)BroadPhaseLayers::MOVING:		return "MOVING";
-		case (BroadPhaseLayer::Type)BroadPhaseLayers::DEBRIS:		return "DEBRIS";
-		case (BroadPhaseLayer::Type)BroadPhaseLayers::SENSOR:		return "SENSOR";
-		case (BroadPhaseLayer::Type)BroadPhaseLayers::UNUSED:		return "UNUSED";
-		default:													JPH_ASSERT(false); return "INVALID";
+		case (JPH::BroadPhaseLayer::Type)BroadPhaseLayers::NON_MOVING:	return "NON_MOVING";
+		case (JPH::BroadPhaseLayer::Type)BroadPhaseLayers::MOVING:		return "MOVING";
+		case (JPH::BroadPhaseLayer::Type)BroadPhaseLayers::DEBRIS:		return "DEBRIS";
+		case (JPH::BroadPhaseLayer::Type)BroadPhaseLayers::SENSOR:		return "SENSOR";
+		case (JPH::BroadPhaseLayer::Type)BroadPhaseLayers::UNUSED:		return "UNUSED";
+		default : JPH_ASSERT(false); return "INVALID";
 		}
 	}
 #endif // JPH_EXTERNAL_PROFILE || JPH_PROFILE_ENABLED
@@ -113,7 +87,7 @@ public:
 		switch (inLayer1)
 		{
 		case Layers::NON_MOVING:
-			return inLayer2 == BroadPhaseLayers::MOVING || inLayer2 == BroadPhaseLayers::DEBRIS;
+			return inLayer2 == BroadPhaseLayers::MOVING     || inLayer2 == BroadPhaseLayers::DEBRIS;
 		case Layers::MOVING:
 			return inLayer2 == BroadPhaseLayers::NON_MOVING || inLayer2 == BroadPhaseLayers::MOVING || inLayer2 == BroadPhaseLayers::SENSOR;
 		case Layers::DEBRIS:

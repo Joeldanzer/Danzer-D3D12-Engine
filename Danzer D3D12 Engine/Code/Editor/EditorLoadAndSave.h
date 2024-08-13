@@ -1,17 +1,15 @@
 #pragma once
 
-#include "../3rdParty/entt/entt.hpp"
+#include "entt/entt.hpp"
 
-#include "../3rdParty/rapidjson/include/rapidjson/stringbuffer.h"
-#include "../3rdParty/rapidjson/include/rapidjson/prettywriter.h"
+#include "rapidjson/include/rapidjson/stringbuffer.h"
+#include "rapidjson/include/rapidjson/prettywriter.h"
 
-#include "../3rdParty/rapidjson/include/rapidjson/document.h"
+#include "rapidjson/include/rapidjson/document.h"
 
 class Engine;
 
-class DirectionalLight;
-//class Camera;
-
+struct DirectionalLight;
 struct Model;
 
 

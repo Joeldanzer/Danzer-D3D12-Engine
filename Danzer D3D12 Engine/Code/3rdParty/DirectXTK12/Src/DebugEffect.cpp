@@ -59,77 +59,78 @@ public:
 };
 
 
+#pragma region Shaders
 // Include the precompiled shader code.
 namespace
 {
 #ifdef _GAMING_XBOX_SCARLETT
-    #include "XboxGamingScarlettDebugEffect_VSDebug.inc"
-    #include "XboxGamingScarlettDebugEffect_VSDebugInst.inc"
+#include "XboxGamingScarlettDebugEffect_VSDebug.inc"
+#include "XboxGamingScarlettDebugEffect_VSDebugInst.inc"
 
-    #include "XboxGamingScarlettDebugEffect_VSDebugVc.inc"
-    #include "XboxGamingScarlettDebugEffect_VSDebugVcInst.inc"
+#include "XboxGamingScarlettDebugEffect_VSDebugVc.inc"
+#include "XboxGamingScarlettDebugEffect_VSDebugVcInst.inc"
 
-    #include "XboxGamingScarlettDebugEffect_VSDebugBn.inc"
-    #include "XboxGamingScarlettDebugEffect_VSDebugBnInst.inc"
+#include "XboxGamingScarlettDebugEffect_VSDebugBn.inc"
+#include "XboxGamingScarlettDebugEffect_VSDebugBnInst.inc"
 
-    #include "XboxGamingScarlettDebugEffect_VSDebugVcBn.inc"
-    #include "XboxGamingScarlettDebugEffect_VSDebugVcBnInst.inc"
+#include "XboxGamingScarlettDebugEffect_VSDebugVcBn.inc"
+#include "XboxGamingScarlettDebugEffect_VSDebugVcBnInst.inc"
 
-    #include "XboxGamingScarlettDebugEffect_PSHemiAmbient.inc"
-    #include "XboxGamingScarlettDebugEffect_PSRGBNormals.inc"
-    #include "XboxGamingScarlettDebugEffect_PSRGBTangents.inc"
-    #include "XboxGamingScarlettDebugEffect_PSRGBBiTangents.inc"
+#include "XboxGamingScarlettDebugEffect_PSHemiAmbient.inc"
+#include "XboxGamingScarlettDebugEffect_PSRGBNormals.inc"
+#include "XboxGamingScarlettDebugEffect_PSRGBTangents.inc"
+#include "XboxGamingScarlettDebugEffect_PSRGBBiTangents.inc"
 #elif defined(_GAMING_XBOX)
-    #include "XboxGamingXboxOneDebugEffect_VSDebug.inc"
-    #include "XboxGamingXboxOneDebugEffect_VSDebugInst.inc"
+#include "XboxGamingXboxOneDebugEffect_VSDebug.inc"
+#include "XboxGamingXboxOneDebugEffect_VSDebugInst.inc"
 
-    #include "XboxGamingXboxOneDebugEffect_VSDebugVc.inc"
-    #include "XboxGamingXboxOneDebugEffect_VSDebugVcInst.inc"
+#include "XboxGamingXboxOneDebugEffect_VSDebugVc.inc"
+#include "XboxGamingXboxOneDebugEffect_VSDebugVcInst.inc"
 
-    #include "XboxGamingXboxOneDebugEffect_VSDebugBn.inc"
-    #include "XboxGamingXboxOneDebugEffect_VSDebugBnInst.inc"
+#include "XboxGamingXboxOneDebugEffect_VSDebugBn.inc"
+#include "XboxGamingXboxOneDebugEffect_VSDebugBnInst.inc"
 
-    #include "XboxGamingXboxOneDebugEffect_VSDebugVcBn.inc"
-    #include "XboxGamingXboxOneDebugEffect_VSDebugVcBnInst.inc"
+#include "XboxGamingXboxOneDebugEffect_VSDebugVcBn.inc"
+#include "XboxGamingXboxOneDebugEffect_VSDebugVcBnInst.inc"
 
-    #include "XboxGamingXboxOneDebugEffect_PSHemiAmbient.inc"
-    #include "XboxGamingXboxOneDebugEffect_PSRGBNormals.inc"
-    #include "XboxGamingXboxOneDebugEffect_PSRGBTangents.inc"
-    #include "XboxGamingXboxOneDebugEffect_PSRGBBiTangents.inc"
+#include "XboxGamingXboxOneDebugEffect_PSHemiAmbient.inc"
+#include "XboxGamingXboxOneDebugEffect_PSRGBNormals.inc"
+#include "XboxGamingXboxOneDebugEffect_PSRGBTangents.inc"
+#include "XboxGamingXboxOneDebugEffect_PSRGBBiTangents.inc"
 #elif defined(_XBOX_ONE) && defined(_TITLE)
-    #include "XboxOneDebugEffect_VSDebug.inc"
-    #include "XboxOneDebugEffect_VSDebugInst.inc"
+#include "XboxOneDebugEffect_VSDebug.inc"
+#include "XboxOneDebugEffect_VSDebugInst.inc"
 
-    #include "XboxOneDebugEffect_VSDebugVc.inc"
-    #include "XboxOneDebugEffect_VSDebugVcInst.inc"
+#include "XboxOneDebugEffect_VSDebugVc.inc"
+#include "XboxOneDebugEffect_VSDebugVcInst.inc"
 
-    #include "XboxOneDebugEffect_VSDebugBn.inc"
-    #include "XboxOneDebugEffect_VSDebugBnInst.inc"
+#include "XboxOneDebugEffect_VSDebugBn.inc"
+#include "XboxOneDebugEffect_VSDebugBnInst.inc"
 
-    #include "XboxOneDebugEffect_VSDebugVcBn.inc"
-    #include "XboxOneDebugEffect_VSDebugVcBnInst.inc"
+#include "XboxOneDebugEffect_VSDebugVcBn.inc"
+#include "XboxOneDebugEffect_VSDebugVcBnInst.inc"
 
-    #include "XboxOneDebugEffect_PSHemiAmbient.inc"
-    #include "XboxOneDebugEffect_PSRGBNormals.inc"
-    #include "XboxOneDebugEffect_PSRGBTangents.inc"
-    #include "XboxOneDebugEffect_PSRGBBiTangents.inc"
+#include "XboxOneDebugEffect_PSHemiAmbient.inc"
+#include "XboxOneDebugEffect_PSRGBNormals.inc"
+#include "XboxOneDebugEffect_PSRGBTangents.inc"
+#include "XboxOneDebugEffect_PSRGBBiTangents.inc"
 #else
-    #include "DebugEffect_VSDebug.inc"
-    #include "DebugEffect_VSDebugInst.inc"
+#include "DebugEffect_VSDebug.inc"
+#include "DebugEffect_VSDebugInst.inc"
 
-    #include "DebugEffect_VSDebugVc.inc"
-    #include "DebugEffect_VSDebugVcInst.inc"
+#include "DebugEffect_VSDebugVc.inc"
+#include "DebugEffect_VSDebugVcInst.inc"
 
-    #include "DebugEffect_VSDebugBn.inc"
-    #include "DebugEffect_VSDebugBnInst.inc"
+#include "DebugEffect_VSDebugBn.inc"
+#include "DebugEffect_VSDebugBnInst.inc"
 
-    #include "DebugEffect_VSDebugVcBn.inc"
-    #include "DebugEffect_VSDebugVcBnInst.inc"
+#include "DebugEffect_VSDebugVcBn.inc"
+#include "DebugEffect_VSDebugVcBnInst.inc"
 
-    #include "DebugEffect_PSHemiAmbient.inc"
-    #include "DebugEffect_PSRGBNormals.inc"
-    #include "DebugEffect_PSRGBTangents.inc"
-    #include "DebugEffect_PSRGBBiTangents.inc"
+#include "DebugEffect_PSHemiAmbient.inc"
+#include "DebugEffect_PSRGBNormals.inc"
+#include "DebugEffect_PSRGBTangents.inc"
+#include "DebugEffect_PSRGBBiTangents.inc"
 #endif
 }
 
@@ -245,7 +246,7 @@ const int EffectBase<DebugEffectTraits>::PixelShaderIndices[] =
     2,      // instancing + vertex color (biased vertex normal) + tangents
     3,      // instancing + vertex color (biased vertex normal) + bitangents
 };
-
+#pragma endregion
 
 // Global pool of per-deviceDebugEffect resources.
 template<>
@@ -272,11 +273,16 @@ DebugEffect::Impl::Impl(
 
     // Create root signature.
     {
-        D3D12_ROOT_SIGNATURE_FLAGS rootSignatureFlags =
-            D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
-            D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
-            D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS |
-            D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS;
+        ENUM_FLAGS_CONSTEXPR D3D12_ROOT_SIGNATURE_FLAGS rootSignatureFlags =
+            D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT
+            | D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS
+            | D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS
+            | D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS
+#ifdef _GAMING_XBOX_SCARLETT
+            | D3D12_ROOT_SIGNATURE_FLAG_DENY_AMPLIFICATION_SHADER_ROOT_ACCESS
+            | D3D12_ROOT_SIGNATURE_FLAG_DENY_MESH_SHADER_ROOT_ACCESS
+#endif
+            ;
 
         // Create root parameters and initialize first (constants)
         CD3DX12_ROOT_PARAMETER rootParameters[RootParameterIndex::RootParameterCount] = {};
@@ -293,14 +299,14 @@ DebugEffect::Impl::Impl(
     assert(mRootSignature != nullptr);
 
     // Create pipeline state.
-    int sp = GetPipelineStatePermutation(debugMode, effectFlags);
+    const int sp = GetPipelineStatePermutation(debugMode, effectFlags);
     assert(sp >= 0 && sp < DebugEffectTraits::ShaderPermutationCount);
     _Analysis_assume_(sp >= 0 && sp < DebugEffectTraits::ShaderPermutationCount);
 
-    int vi = EffectBase<DebugEffectTraits>::VertexShaderIndices[sp];
+    const int vi = EffectBase<DebugEffectTraits>::VertexShaderIndices[sp];
     assert(vi >= 0 && vi < DebugEffectTraits::VertexShaderCount);
     _Analysis_assume_(vi >= 0 && vi < DebugEffectTraits::VertexShaderCount);
-    int pi = EffectBase<DebugEffectTraits>::PixelShaderIndices[sp];
+    const int pi = EffectBase<DebugEffectTraits>::PixelShaderIndices[sp];
     assert(pi >= 0 && pi < DebugEffectTraits::PixelShaderCount);
     _Analysis_assume_(pi >= 0 && pi < DebugEffectTraits::PixelShaderCount);
 
@@ -352,7 +358,7 @@ void DebugEffect::Impl::Apply(_In_ ID3D12GraphicsCommandList* commandList)
     {
         constants.world = XMMatrixTranspose(matrices.world);
 
-        XMMATRIX worldInverse = XMMatrixInverse(nullptr, matrices.world);
+        const XMMATRIX worldInverse = XMMatrixInverse(nullptr, matrices.world);
 
         constants.worldInverseTranspose[0] = worldInverse.r[0];
         constants.worldInverseTranspose[1] = worldInverse.r[1];

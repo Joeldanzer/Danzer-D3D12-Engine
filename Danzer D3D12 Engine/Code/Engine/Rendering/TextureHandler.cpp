@@ -59,9 +59,7 @@ void TextureHandler::LoadAllCreatedTexuresToGPU()
 
 	CD3DX12_CPU_DESCRIPTOR_HANDLE cbvSrvHandle(srvWrapper->GetDescriptorHeap()->GetCPUDescriptorHandleForHeapStart());
 	if (!m_resourceBarriers.empty()) {
-		m_framework.InitCmdList()->ResourceBarrier(m_resourceBarriers.size(), &m_resourceBarriers[0]);
-
-		HRESULT result;
+		m_framework.InitCmdList()->ResourceBarrier((UINT)m_resourceBarriers.size(), &m_resourceBarriers[0]);
 
 		cbvSrvHandle.Offset(srvWrapper->m_handleCurrentOffset * srvWrapper->DESCRIPTOR_SIZE());
 
@@ -156,7 +154,7 @@ UINT TextureHandler::CreateTexture(std::wstring file, bool isCubeMap)
 	m_resourceBarriers.emplace_back(resource);
 	m_tempTextures.emplace_back(texture);
 
-	return m_textures.size() + m_tempTextures.size();
+	return (UINT)m_textures.size() + (UINT)m_tempTextures.size();
 }
 
 UINT TextureHandler::CreateCustomTexture(void* data, const UINT sizeOfData, std::wstring name)
@@ -175,7 +173,7 @@ UINT TextureHandler::CreateCustomTexture(void* data, const UINT sizeOfData, std:
 	m_resourceBarriers.emplace_back(resource);
 	m_tempTextures.emplace_back(texture);
 
-	return m_textures.size() + m_tempTextures.size() - 1;
+	return (UINT)m_textures.size() + (UINT)m_tempTextures.size() - 1;
 }
 
 

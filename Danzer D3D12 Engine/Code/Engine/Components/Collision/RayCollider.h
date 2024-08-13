@@ -4,12 +4,12 @@
 class Transform;
 class AABBCollider;
 class SphereCollider;
-class Object;
+struct Object;
 
 class RayCollider : public Collider
 {
 public:
-	RayCollider(){}
+	RayCollider() : m_direction(0.0f, 0.0f, 0.0f), m_distance(1.0f), m_invDirection(0.0f, 0.0f, 0.0f) {}
 	RayCollider(Vect3f origin, Vect3f destination, Vect3f offset = {0.f, 0.f, 0.f});
 	RayCollider(Vect3f origin, Vect3f direction, float distance, Vect3f offset = {0.f, 0.f, 0.f});
 	

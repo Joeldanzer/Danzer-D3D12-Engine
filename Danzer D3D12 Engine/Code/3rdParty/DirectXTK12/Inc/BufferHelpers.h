@@ -13,11 +13,15 @@
 #include <d3d12_xs.h>
 #elif (defined(_XBOX_ONE) && defined(_TITLE)) || defined(_GAMING_XBOX)
 #include <d3d12_x.h>
+#elif defined(USING_DIRECTX_HEADERS)
+#include <directx/d3d12.h>
+#include <dxguids/dxguids.h>
 #else
 #include <d3d12.h>
 #endif
 
 #include <cstddef>
+#include <cstdint>
 
 
 namespace DirectX
@@ -56,6 +60,39 @@ namespace DirectX
     {
         return CreateStaticBuffer(device, resourceUpload, data.data(), data.size(), sizeof(typename T::value_type),
             afterState, pBuffer, resFlags);
+    }
+
+    HRESULT __cdecl CreateUAVBuffer(_In_ ID3D12Device* device,
+        uint64_t bufferSize,
+        _COM_Outptr_ ID3D12Resource** pBuffer,
+        D3D12_RESOURCE_STATES initialState = D3D12_RESOURCE_STATE_COMMON,
+        D3D12_RESOURCE_FLAGS additionalResFlags = D3D12_RESOURCE_FLAG_NONE) noexcept;
+
+    HRESULT __cdecl CreateUploadBuffer(_In_ ID3D12Device* device,
+        _In_reads_bytes_opt_(count* stride) const void* ptr,
+        size_t count,
+        size_t stride,
+        _COM_Outptr_ ID3D12Resource** pBuffer,
+        D3D12_RESOURCE_FLAGS resFlags = D3D12_RESOURCE_FLAG_NONE) noexcept;
+
+    template<typename T>
+    HRESULT CreateUploadBuffer(_In_ ID3D12Device* device,
+        _In_reads_(count) T const* data,
+        size_t count,
+        _COM_Outptr_ ID3D12Resource** pBuffer,
+        D3D12_RESOURCE_FLAGS resFlags = D3D12_RESOURCE_FLAG_NONE) noexcept
+    {
+        return CreateUploadBuffer(device, data, count, sizeof(T), pBuffer, resFlags);
+    }
+
+    template<typename T>
+    HRESULT CreateUploadBuffer(_In_ ID3D12Device* device,
+        T const& data,
+        _COM_Outptr_ ID3D12Resource** pBuffer,
+        D3D12_RESOURCE_FLAGS resFlags = D3D12_RESOURCE_FLAG_NONE) noexcept
+    {
+        return CreateUploadBuffer(device, data.data(), data.size(), sizeof(typename T::value_type),
+            pBuffer, resFlags);
     }
 
     // Helpers for creating texture from memory arrays.

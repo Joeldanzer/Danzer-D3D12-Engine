@@ -28,21 +28,6 @@
     <ClInclude Include="Fmod\fmod_dsp_effects.h" />
     <ClInclude Include="Fmod\fmod_errors.h" />
     <ClInclude Include="Fmod\fmod_output.h" />
-    <ClInclude Include="imgui-master\backends\imgui_impl_dx12.h" />
-    <ClInclude Include="imgui-master\backends\imgui_impl_win32.h" />
-    <ClInclude Include="imgui-master\imconfig.h" />
-    <ClInclude Include="imgui-master\imgui.h" />
-    <ClInclude Include="imgui-master\imgui_internal.h" />
-    <ClInclude Include="Jolt\Jolt.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="imgui-master\backends\imgui_impl_dx12.cpp" />
-    <ClCompile Include="imgui-master\backends\imgui_impl_win32.cpp" />
-    <ClCompile Include="imgui-master\imgui.cpp" />
-    <ClCompile Include="imgui-master\imgui_demo.cpp" />
-    <ClCompile Include="imgui-master\imgui_draw.cpp" />
-    <ClCompile Include="imgui-master\imgui_tables.cpp" />
-    <ClCompile Include="imgui-master\imgui_widgets.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Fmod\fmod.cs" />
@@ -149,11 +134,11 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
+      <WarningLevel>Level4</WarningLevel>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)assimp-master\include\;$(ProjectDir)assimp-master\code\</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)/</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>

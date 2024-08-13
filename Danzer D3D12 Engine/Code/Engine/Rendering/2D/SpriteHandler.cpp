@@ -65,10 +65,10 @@ void SpriteHandler::CreateSpriteSheet(std::wstring sprite, const UINT widthFrame
 
     for (UINT y = 0; y < heightFrames; y++)
     {
-        float newY = newHeight * y;
+        float newY = static_cast<float>(newHeight * y);
         for (UINT x = 0; x < widthFrames; x++)
         {
-            float newX = newWidth * x;
+            float newX = static_cast<float>(newWidth * x);
             SpriteData::Frame frame;
             frame.m_framePosition = { newX, newY };
             frame.m_height = (UINT)newHeight;
@@ -92,6 +92,8 @@ void SpriteHandler::LoadFont(std::string fontJSON)
     fopen_s(&f, fontJSON.c_str(), "rb");
     // Allocate sufficient memory
 
+#pragma warning ( push )
+#pragma warning ( disable : 6387)
     fseek(f, 0, SEEK_END);
     size_t length = ftell(f);
     str = (char*)malloc(length + 1);
@@ -102,6 +104,7 @@ void SpriteHandler::LoadFont(std::string fontJSON)
     str[length] = '\0';
 
     fclose(f);
+#pragma warning ( pop )
 
     doc.Parse(str);
 
@@ -186,13 +189,13 @@ UINT SpriteHandler::GetLoadedFont(std::string fontName)
 void SpriteHandler::AddNewlyCreatedFont(Font font)
 {
     m_fonts.emplace_back(font);
-    m_fonts[m_fonts.size() - 1].SetID(m_fonts.size());
+    m_fonts[m_fonts.size() - 1].SetID(UINT(m_fonts.size()));
 }
 
 void SpriteHandler::AddNewlyCreatedSprite(SpriteData sprite)
 {
     m_sprites.emplace_back(sprite);
-    m_sprites[m_sprites.size() - 1].SetID(m_sprites.size()); 
+    m_sprites[m_sprites.size() - 1].SetID(UINT(m_sprites.size())); 
 }
 
 std::string SpriteHandler::SetSpriteName(std::wstring spritePath)

@@ -79,7 +79,7 @@ void Renderer2D::RenderUI(ID3D12GraphicsCommandList* cmdList, std::vector<Sprite
 		cmdList->SetGraphicsRootDescriptorTable(1, srvHandle);
 	
 		cmdList->IASetVertexBuffers(1, 1, &sprite.GetInstanceBuffer().GetBufferView(frameIndex));
-		cmdList->DrawIndexedInstanced(6, sprite.GetInstances().size(), 0, 0, 0);
+		cmdList->DrawIndexedInstanced(6, (UINT)sprite.GetInstances().size(), 0, 0, 0);
 	}
 }
 
@@ -101,7 +101,7 @@ void Renderer2D::RenderFontUI(ID3D12GraphicsCommandList* cmdList, std::vector<Fo
 			//m_commandList->SetDescriptorHeaps(_countof(descHeaps), &descHeaps[0]);
 			//m_commandList->SetGraphicsRootDescriptorTable(1, descHeaps[0]->GetGPUDescriptorHandleForHeapStart());
 	
-			cmdList->DrawInstanced(6, font.GetInstances().size(), 0, 0);
+			cmdList->DrawInstanced(6, (UINT)font.GetInstances().size(), 0, 0);
 		}
 	}
 }
@@ -123,8 +123,8 @@ void Renderer2D::CreateUIVertexAndIndexBuffers(D3D12Framework& framework)
 		 0,  1,  2,  3,  4,  5
 	};
 
-	VertexIndexBufferInfo bufferInfo = GetIndexAndVertexBuffer(L"Default",verticies.size() * sizeof(Vertex),
-		indices.size() * sizeof(UINT), framework.GetDevice());
+	VertexIndexBufferInfo bufferInfo = GetIndexAndVertexBuffer(L"Default", (UINT)verticies.size() * sizeof(Vertex),
+		(UINT)indices.size() * sizeof(UINT), framework.GetDevice());
 
 	CD3DX12_RESOURCE_BARRIER resourceBarriers[2];
 
@@ -163,10 +163,10 @@ void Renderer2D::CreateUIVertexAndIndexBuffers(D3D12Framework& framework)
 	{
 		m_indexBufferView.BufferLocation = m_indexBuffer->GetGPUVirtualAddress();
 		m_indexBufferView.Format = DXGI_FORMAT_R32_UINT;
-		m_indexBufferView.SizeInBytes = sizeof(unsigned int) * indices.size();
+		m_indexBufferView.SizeInBytes = sizeof(UINT) * (UINT)indices.size();
 
 		m_vertexBufferView.BufferLocation = m_vertexBuffer->GetGPUVirtualAddress();
 		m_vertexBufferView.StrideInBytes = sizeof(Vertex);
-		m_vertexBufferView.SizeInBytes = sizeof(Vertex) * verticies.size();;
+		m_vertexBufferView.SizeInBytes = sizeof(Vertex) * (UINT)verticies.size();;
 	}
 }

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../3rdParty/DirectX-Headers-main/include/directx/d3dx12.h"
-#include "../3rdParty/entt/entt.hpp"
+#include "DirectX/include/directx/d3dx12.h"
+#include "entt/entt.hpp"
 //#include "entt/entt.hpp"
 #include "Core/MathDefinitions.h"
 
@@ -12,8 +12,8 @@
 #include <vector>
 
 class Engine;
-class Object;
-class Object2D;
+struct Object;
+struct Object2D;
 
 class ImguiHandler
 {

@@ -4,11 +4,9 @@
 #include "Rendering/Buffers/ConstantBufferData.h"
 
 class Camera;
-class DirectionalLight;
+class Transform;
 
-struct Transform;
 struct DirectionalLight;
-class  Camera;
 
 class VolumetricLight : public FullscreenTexture
 {

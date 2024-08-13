@@ -17,7 +17,9 @@ public:
 		m_cube(0),
 		m_spin(false),
 		m_currentSkyBox(0),
-		m_rotation(0.f, 0.f, 0.f, 1.f)
+		m_rotation(0.f, 0.f, 0.f, 1.f),
+		m_pso(0),
+		m_rs(0)
 	{}
 	~Skybox();
 

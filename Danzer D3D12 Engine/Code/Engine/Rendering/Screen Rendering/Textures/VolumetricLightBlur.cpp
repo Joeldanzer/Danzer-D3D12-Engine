@@ -37,8 +37,8 @@ void VolumetricLightBlur::RenderTexture(ID3D12GraphicsCommandList* cmdList, Desc
 	BufferData data = {
 		WindowHandler::WindowData().m_w,
 		WindowHandler::WindowData().m_h,
-		m_viewPort.Width  / 2.0f,
-		m_viewPort.Height / 2.0f
+		UINT(m_viewPort.Width  / 2),
+		UINT(m_viewPort.Height / 2)
 	};
 	m_constantBuffer.UpdateBuffer(reinterpret_cast<UINT16*>(&data), frameIndex);
 

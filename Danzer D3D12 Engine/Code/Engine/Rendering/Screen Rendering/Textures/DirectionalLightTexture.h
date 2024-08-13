@@ -4,7 +4,7 @@
 #include "Rendering/Buffers/ConstantBufferData.h"
 
 class  Camera;
-struct Transform;
+class Transform;
 
 class DirectionalLightTexture : public FullscreenTexture
 {

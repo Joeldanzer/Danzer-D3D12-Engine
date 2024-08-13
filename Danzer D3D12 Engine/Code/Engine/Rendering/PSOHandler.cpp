@@ -41,13 +41,13 @@ UINT PSOHandler::CreateRootSignature(const UINT numberOfCBV, const UINT numberOf
 	}
 	
 	CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc;
-	rootSignatureDesc.Init(rootParameter.size(), &rootParameter[0], 1, &m_samplerDescs[sampler], flags);
+	rootSignatureDesc.Init((UINT)rootParameter.size(), &rootParameter[0], 1, &m_samplerDescs[sampler], flags);
 
 	ID3DBlob* signature = nullptr;
 	ID3DBlob* error		= nullptr;
 
 	m_rootSignatures.emplace_back(ComPtr<ID3D12RootSignature>());
-	UINT index = m_rootSignatures.size() - 1;
+	UINT index = (UINT)m_rootSignatures.size() - 1;
 
 	CHECK_HR(D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error));
 	CHECK_HR(m_device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&m_rootSignatures[index])));
@@ -97,11 +97,11 @@ UINT PSOHandler::CreatePSO(std::array<std::wstring, 2> shaderName, D3D12_BLEND_D
 	psoDesc.Flags				  = D3D12_PIPELINE_STATE_FLAG_NONE;
 	if (layout != INPUT_LAYOUT_NONE) {
 		psoDesc.InputLayout.pInputElementDescs = m_inputLayouts[layout].data();
-		psoDesc.InputLayout.NumElements        = m_inputLayouts[layout].size();
+		psoDesc.InputLayout.NumElements        = (UINT)m_inputLayouts[layout].size();
 	}
 
 	m_pipelineStates.emplace_back(ComPtr<ID3D12PipelineState>());
-	UINT index = m_pipelineStates.size() - 1;
+	UINT index = (UINT)m_pipelineStates.size() - 1;
 	CHECK_HR(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_pipelineStates[index])));
 	
 	m_pipelineStates[index]->SetName(name.c_str());
@@ -120,7 +120,7 @@ void PSOHandler::InitializeSamplerDescs()
 	samplerDesc.ComparisonFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
 	samplerDesc.BorderColor = D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK;
 	samplerDesc.MipLODBias = 0;
-	samplerDesc.MaxAnisotropy = 4.0f;
+	samplerDesc.MaxAnisotropy = 16;
 	samplerDesc.MinLOD = 0.f;
 	samplerDesc.MaxLOD = D3D12_FLOAT32_MAX;
 	samplerDesc.ShaderRegister = 0;
@@ -136,7 +136,7 @@ void PSOHandler::InitializeSamplerDescs()
 	samplerDesc.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
 	samplerDesc.BorderColor = D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK;
 	samplerDesc.MipLODBias = 0;
-	samplerDesc.MaxAnisotropy = 16.0f;
+	samplerDesc.MaxAnisotropy = 16;
 	samplerDesc.MinLOD = 0.f;
 	samplerDesc.MaxLOD = D3D12_FLOAT32_MAX;
 	samplerDesc.ShaderRegister = 0;
@@ -152,7 +152,7 @@ void PSOHandler::InitializeSamplerDescs()
 	samplerDesc.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
 	samplerDesc.BorderColor = D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK;
 	samplerDesc.MipLODBias = 0;
-	samplerDesc.MaxAnisotropy = 16.0f;
+	samplerDesc.MaxAnisotropy = 16;
 	samplerDesc.MinLOD = 0.f;
 	samplerDesc.MaxLOD = D3D12_FLOAT32_MAX;
 	samplerDesc.ShaderRegister = 0;

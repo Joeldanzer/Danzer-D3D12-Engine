@@ -1,5 +1,5 @@
 #pragma once
-#include "DirectX-Headers-main/include/directx/d3dx12.h"
+#include "DirectX/include/directx/d3dx12.h"
 
 class PSOHandler;
 class DescriptorHeapWrapper;

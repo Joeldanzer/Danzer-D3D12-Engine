@@ -28,12 +28,12 @@ namespace
 {
     enum : unsigned int
     {
-        PER_VERTEX_COLOR        = 0x1,
-        SKINNING                = 0x2,
-        DUAL_TEXTURE            = 0x4,
-        NORMAL_MAPS             = 0x8,
-        BIASED_VERTEX_NORMALS   = 0x10,
-        USES_OBSOLETE_DEC3N     = 0x20,
+        PER_VERTEX_COLOR = 0x1,
+        SKINNING = 0x2,
+        DUAL_TEXTURE = 0x4,
+        NORMAL_MAPS = 0x8,
+        BIASED_VERTEX_NORMALS = 0x10,
+        USES_OBSOLETE_DEC3N = 0x20,
     };
 
     int GetUniqueTextureIndex(const wchar_t* textureName, std::map<std::wstring, int>& textureDictionary)
@@ -72,7 +72,7 @@ namespace
     }
 
     template<size_t sizeOfBuffer>
-    inline void ASCIIToWChar(wchar_t (&buffer)[sizeOfBuffer], const char *ascii)
+    inline void ASCIIToWChar(wchar_t(&buffer)[sizeOfBuffer], const char *ascii)
     {
         MultiByteToWideChar(CP_UTF8, 0, ascii, -1, buffer, sizeOfBuffer);
     }
@@ -255,24 +255,24 @@ namespace
                 bool unk = false;
                 switch (decl[index].Type)
                 {
-                    case D3DDECLTYPE_FLOAT3:                 assert(desc.Format == DXGI_FORMAT_R32G32B32_FLOAT); offset += 12; break;
-                    case D3DDECLTYPE_UBYTE4N:                desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM; flags |= BIASED_VERTEX_NORMALS; offset += 4; break;
-                    case D3DDECLTYPE_SHORT4N:                desc.Format = DXGI_FORMAT_R16G16B16A16_SNORM; offset += 8; break;
-                    case D3DDECLTYPE_FLOAT16_4:              desc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT; offset += 8; break;
-                    case D3DDECLTYPE_DXGI_R10G10B10A2_UNORM: desc.Format = DXGI_FORMAT_R10G10B10A2_UNORM; flags |= BIASED_VERTEX_NORMALS; offset += 4; break;
-                    case D3DDECLTYPE_DXGI_R11G11B10_FLOAT:   desc.Format = DXGI_FORMAT_R11G11B10_FLOAT; flags |= BIASED_VERTEX_NORMALS; offset += 4; break;
-                    case D3DDECLTYPE_DXGI_R8G8B8A8_SNORM:    desc.Format = DXGI_FORMAT_R8G8B8A8_SNORM; offset += 4; break;
+                case D3DDECLTYPE_FLOAT3:                 assert(desc.Format == DXGI_FORMAT_R32G32B32_FLOAT); offset += 12; break;
+                case D3DDECLTYPE_UBYTE4N:                desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM; flags |= BIASED_VERTEX_NORMALS; offset += 4; break;
+                case D3DDECLTYPE_SHORT4N:                desc.Format = DXGI_FORMAT_R16G16B16A16_SNORM; offset += 8; break;
+                case D3DDECLTYPE_FLOAT16_4:              desc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT; offset += 8; break;
+                case D3DDECLTYPE_DXGI_R10G10B10A2_UNORM: desc.Format = DXGI_FORMAT_R10G10B10A2_UNORM; flags |= BIASED_VERTEX_NORMALS; offset += 4; break;
+                case D3DDECLTYPE_DXGI_R11G11B10_FLOAT:   desc.Format = DXGI_FORMAT_R11G11B10_FLOAT; flags |= BIASED_VERTEX_NORMALS; offset += 4; break;
+                case D3DDECLTYPE_DXGI_R8G8B8A8_SNORM:    desc.Format = DXGI_FORMAT_R8G8B8A8_SNORM; offset += 4; break;
 
-                    #if (defined(_XBOX_ONE) && defined(_TITLE)) || defined(_GAMING_XBOX)
-                    case D3DDECLTYPE_DEC3N:                  desc.Format = DXGI_FORMAT_R10G10B10_SNORM_A2_UNORM; offset += 4; break;
-                    case (32 + DXGI_FORMAT_R10G10B10_SNORM_A2_UNORM): desc.Format = DXGI_FORMAT_R10G10B10_SNORM_A2_UNORM; offset += 4; break;
-                    #else
-                    case D3DDECLTYPE_DEC3N:                  desc.Format = DXGI_FORMAT_R10G10B10A2_UNORM; flags |= USES_OBSOLETE_DEC3N; offset += 4; break;
-                    #endif
+                #if (defined(_XBOX_ONE) && defined(_TITLE)) || defined(_GAMING_XBOX)
+                case D3DDECLTYPE_DEC3N:                  desc.Format = DXGI_FORMAT_R10G10B10_SNORM_A2_UNORM; offset += 4; break;
+                case (32 + DXGI_FORMAT_R10G10B10_SNORM_A2_UNORM): desc.Format = DXGI_FORMAT_R10G10B10_SNORM_A2_UNORM; offset += 4; break;
+                #else
+                case D3DDECLTYPE_DEC3N:                  desc.Format = DXGI_FORMAT_R10G10B10A2_UNORM; flags |= USES_OBSOLETE_DEC3N; offset += 4; break;
+                #endif
 
-                    default:
-                        unk = true;
-                        break;
+                default:
+                    unk = true;
+                    break;
                 }
 
                 if (unk)
@@ -287,16 +287,16 @@ namespace
                 bool unk = false;
                 switch (decl[index].Type)
                 {
-                    case D3DDECLTYPE_FLOAT4:                 desc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT; offset += 16; break;
-                    case D3DDECLTYPE_D3DCOLOR:               assert(desc.Format == DXGI_FORMAT_B8G8R8A8_UNORM); offset += 4; break;
-                    case D3DDECLTYPE_UBYTE4N:                desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM; offset += 4; break;
-                    case D3DDECLTYPE_FLOAT16_4:              desc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT; offset += 8; break;
-                    case D3DDECLTYPE_DXGI_R10G10B10A2_UNORM: desc.Format = DXGI_FORMAT_R10G10B10A2_UNORM; offset += 4; break;
-                    case D3DDECLTYPE_DXGI_R11G11B10_FLOAT:   desc.Format = DXGI_FORMAT_R11G11B10_FLOAT; offset += 4; break;
+                case D3DDECLTYPE_FLOAT4:                 desc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT; offset += 16; break;
+                case D3DDECLTYPE_D3DCOLOR:               assert(desc.Format == DXGI_FORMAT_B8G8R8A8_UNORM); offset += 4; break;
+                case D3DDECLTYPE_UBYTE4N:                desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM; offset += 4; break;
+                case D3DDECLTYPE_FLOAT16_4:              desc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT; offset += 8; break;
+                case D3DDECLTYPE_DXGI_R10G10B10A2_UNORM: desc.Format = DXGI_FORMAT_R10G10B10A2_UNORM; offset += 4; break;
+                case D3DDECLTYPE_DXGI_R11G11B10_FLOAT:   desc.Format = DXGI_FORMAT_R11G11B10_FLOAT; offset += 4; break;
 
-                    default:
-                        unk = true;
-                        break;
+                default:
+                    unk = true;
+                    break;
                 }
 
                 if (unk)
@@ -314,16 +314,16 @@ namespace
                 bool unk = false;
                 switch (decl[index].Type)
                 {
-                    case D3DDECLTYPE_FLOAT1:    desc.Format = DXGI_FORMAT_R32_FLOAT; offset += 4; break;
-                    case D3DDECLTYPE_FLOAT2:    assert(desc.Format == DXGI_FORMAT_R32G32_FLOAT); offset += 8; break;
-                    case D3DDECLTYPE_FLOAT3:    desc.Format = DXGI_FORMAT_R32G32B32_FLOAT; offset += 12; break;
-                    case D3DDECLTYPE_FLOAT4:    desc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT; offset += 16; break;
-                    case D3DDECLTYPE_FLOAT16_2: desc.Format = DXGI_FORMAT_R16G16_FLOAT; offset += 4; break;
-                    case D3DDECLTYPE_FLOAT16_4: desc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT; offset += 8; break;
+                case D3DDECLTYPE_FLOAT1:    desc.Format = DXGI_FORMAT_R32_FLOAT; offset += 4; break;
+                case D3DDECLTYPE_FLOAT2:    assert(desc.Format == DXGI_FORMAT_R32G32_FLOAT); offset += 8; break;
+                case D3DDECLTYPE_FLOAT3:    desc.Format = DXGI_FORMAT_R32G32B32_FLOAT; offset += 12; break;
+                case D3DDECLTYPE_FLOAT4:    desc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT; offset += 16; break;
+                case D3DDECLTYPE_FLOAT16_2: desc.Format = DXGI_FORMAT_R16G16_FLOAT; offset += 4; break;
+                case D3DDECLTYPE_FLOAT16_4: desc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT; offset += 8; break;
 
-                    default:
-                        unk = true;
-                        break;
+                default:
+                    unk = true;
+                    break;
                 }
 
                 if (unk)
@@ -385,14 +385,14 @@ std::unique_ptr<Model> DirectX::Model::CreateFromSDKMESH(
     if (!meshData)
         throw std::invalid_argument("meshData cannot be null");
 
-    uint64_t dataSize = idataSize;
+    const uint64_t dataSize = idataSize;
 
     // File Headers
     if (dataSize < sizeof(DXUT::SDKMESH_HEADER))
         throw std::runtime_error("End of file");
     auto header = reinterpret_cast<const DXUT::SDKMESH_HEADER*>(meshData);
 
-    size_t headerSize = sizeof(DXUT::SDKMESH_HEADER)
+    const size_t headerSize = sizeof(DXUT::SDKMESH_HEADER)
         + header->NumVertexBuffers * sizeof(DXUT::SDKMESH_VERTEX_BUFFER_HEADER)
         + header->NumIndexBuffers * sizeof(DXUT::SDKMESH_INDEX_BUFFER_HEADER);
     if (header->HeaderSize != headerSize)
@@ -472,7 +472,7 @@ std::unique_ptr<Model> DirectX::Model::CreateFromSDKMESH(
     }
 
     // Buffer data
-    uint64_t bufferDataOffset = header->HeaderSize + header->NonBufferDataSize;
+    const uint64_t bufferDataOffset = header->HeaderSize + header->NonBufferDataSize;
     if ((dataSize < bufferDataOffset)
         || (dataSize < bufferDataOffset + header->BufferDataSize))
         throw std::runtime_error("End of file");
@@ -526,7 +526,7 @@ std::unique_ptr<Model> DirectX::Model::CreateFromSDKMESH(
     if (dec3nwarning)
     {
         DebugTrace("WARNING: Vertex declaration uses legacy Direct3D 9 D3DDECLTYPE_DEC3N which has no DXGI equivalent\n"
-                   "         (treating as DXGI_FORMAT_R10G10B10A2_UNORM which is not a signed format)\n");
+            "         (treating as DXGI_FORMAT_R10G10B10A2_UNORM which is not a signed format)\n");
     }
 
     // Validate index buffers
@@ -613,7 +613,7 @@ std::unique_ptr<Model> DirectX::Model::CreateFromSDKMESH(
         // Create subsets
         for (size_t j = 0; j < mh.NumSubsets; ++j)
         {
-            auto sIndex = subsets[j];
+            auto const sIndex = subsets[j];
             if (sIndex >= header->NumTotalSubsets)
                 throw std::out_of_range("Invalid mesh found");
 
@@ -622,22 +622,22 @@ std::unique_ptr<Model> DirectX::Model::CreateFromSDKMESH(
             D3D_PRIMITIVE_TOPOLOGY primType;
             switch (subset.PrimitiveType)
             {
-                case DXUT::PT_TRIANGLE_LIST:        primType = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;       break;
-                case DXUT::PT_TRIANGLE_STRIP:       primType = D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP;      break;
-                case DXUT::PT_LINE_LIST:            primType = D3D_PRIMITIVE_TOPOLOGY_LINELIST;           break;
-                case DXUT::PT_LINE_STRIP:           primType = D3D_PRIMITIVE_TOPOLOGY_LINESTRIP;          break;
-                case DXUT::PT_POINT_LIST:           primType = D3D_PRIMITIVE_TOPOLOGY_POINTLIST;          break;
-                case DXUT::PT_TRIANGLE_LIST_ADJ:    primType = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST_ADJ;   break;
-                case DXUT::PT_TRIANGLE_STRIP_ADJ:   primType = D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP_ADJ;  break;
-                case DXUT::PT_LINE_LIST_ADJ:        primType = D3D_PRIMITIVE_TOPOLOGY_LINELIST_ADJ;       break;
-                case DXUT::PT_LINE_STRIP_ADJ:       primType = D3D_PRIMITIVE_TOPOLOGY_LINESTRIP_ADJ;      break;
+            case DXUT::PT_TRIANGLE_LIST:        primType = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;       break;
+            case DXUT::PT_TRIANGLE_STRIP:       primType = D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP;      break;
+            case DXUT::PT_LINE_LIST:            primType = D3D_PRIMITIVE_TOPOLOGY_LINELIST;           break;
+            case DXUT::PT_LINE_STRIP:           primType = D3D_PRIMITIVE_TOPOLOGY_LINESTRIP;          break;
+            case DXUT::PT_POINT_LIST:           primType = D3D_PRIMITIVE_TOPOLOGY_POINTLIST;          break;
+            case DXUT::PT_TRIANGLE_LIST_ADJ:    primType = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST_ADJ;   break;
+            case DXUT::PT_TRIANGLE_STRIP_ADJ:   primType = D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP_ADJ;  break;
+            case DXUT::PT_LINE_LIST_ADJ:        primType = D3D_PRIMITIVE_TOPOLOGY_LINELIST_ADJ;       break;
+            case DXUT::PT_LINE_STRIP_ADJ:       primType = D3D_PRIMITIVE_TOPOLOGY_LINESTRIP_ADJ;      break;
 
-                case DXUT::PT_QUAD_PATCH_LIST:
-                case DXUT::PT_TRIANGLE_PATCH_LIST:
-                    throw std::runtime_error("Direct3D9 era tessellation not supported");
+            case DXUT::PT_QUAD_PATCH_LIST:
+            case DXUT::PT_TRIANGLE_PATCH_LIST:
+                throw std::runtime_error("Direct3D9 era tessellation not supported");
 
-                default:
-                    throw std::runtime_error("Unknown primitive type");
+            default:
+                throw std::runtime_error("Unknown primitive type");
             }
 
             if (subset.MaterialID >= header->NumMaterials)
@@ -679,16 +679,16 @@ std::unique_ptr<Model> DirectX::Model::CreateFromSDKMESH(
 
             // Vertex data
             auto verts = bufferData + (vh.DataOffset - bufferDataOffset);
-            auto vbytes = static_cast<size_t>(vh.SizeBytes);
+            auto const vbytes = static_cast<size_t>(vh.SizeBytes);
             part->vertexBufferSize = static_cast<uint32_t>(vh.SizeBytes);
-            part->vertexBuffer = GraphicsMemory::Get(device).Allocate(vbytes);
+            part->vertexBuffer = GraphicsMemory::Get(device).Allocate(vbytes, 16, GraphicsMemory::TAG_VERTEX);
             memcpy(part->vertexBuffer.Memory(), verts, vbytes);
 
             // Index data
             auto indices = bufferData + (ih.DataOffset - bufferDataOffset);
-            auto ibytes = static_cast<size_t>(ih.SizeBytes);
+            auto const ibytes = static_cast<size_t>(ih.SizeBytes);
             part->indexBufferSize = static_cast<uint32_t>(ih.SizeBytes);
-            part->indexBuffer = GraphicsMemory::Get(device).Allocate(ibytes);
+            part->indexBuffer = GraphicsMemory::Get(device).Allocate(ibytes, 16, GraphicsMemory::TAG_INDEX);
             memcpy(part->indexBuffer.Memory(), indices, ibytes);
 
             part->materialIndex = subset.MaterialID;
@@ -734,7 +734,7 @@ std::unique_ptr<Model> DirectX::Model::CreateFromSDKMESH(
 
             transforms[j] = XMLoadFloat4x4(&frameArray[j].Matrix);
 
-            uint32_t index = frameArray[j].Mesh;
+            const uint32_t index = frameArray[j].Mesh;
             if (index != DXUT::INVALID_MESH)
             {
                 if (index >= model->meshes.size())
@@ -793,3 +793,20 @@ std::unique_ptr<Model> DirectX::Model::CreateFromSDKMESH(
 
     return model;
 }
+
+
+//--------------------------------------------------------------------------------------
+// Adapters for /Zc:wchar_t- clients
+
+#if defined(_MSC_VER) && !defined(_NATIVE_WCHAR_T_DEFINED)
+
+_Use_decl_annotations_
+std::unique_ptr<Model> DirectX::Model::CreateFromSDKMESH(
+    ID3D12Device* device,
+    const __wchar_t* szFileName,
+    ModelLoaderFlags flags)
+{
+    return CreateFromSDKMESH(device, reinterpret_cast<const unsigned short*>(szFileName), flags);
+}
+
+#endif

@@ -27,11 +27,11 @@ public:
 				return i;	
 	}
 
-	SpriteData& const GetSprite(UINT id) {
+	const SpriteData& GetSprite(UINT id) {
 		return m_sprites[id - 1];
 	}
 
-	Font& const GetFont(UINT id) {
+	const Font& GetFont(UINT id) {
 		return m_fonts[id - 1];
 	}
 

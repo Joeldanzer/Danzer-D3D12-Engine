@@ -12,6 +12,11 @@
 #include "PlatformHelpers.h"
 #include "LinearAllocator.h"
 
+#ifdef USING_PIX_CUSTOM_MEMORY_EVENTS
+#include <pix3.h>
+#include <pixmemory.h>
+#endif
+
 using namespace DirectX;
 using Microsoft::WRL::ComPtr;
 using ScopedLock = std::lock_guard<std::mutex>;
@@ -29,7 +34,7 @@ namespace
     static_assert((MinAllocSize & (MinAllocSize - 1)) == 0, "MinAllocSize size must be a power of 2");
     static_assert(MinAllocSize >= (4 * 1024), "MinAllocSize size must be greater than 4K");
 
-    inline size_t NextPow2(size_t x) noexcept
+    constexpr size_t NextPow2(size_t x) noexcept
     {
         x--;
         x |= x >> 1;
@@ -37,15 +42,15 @@ namespace
         x |= x >> 4;
         x |= x >> 8;
         x |= x >> 16;
-#ifdef _WIN64
+    #ifdef _WIN64
         x |= x >> 32;
-#endif
+    #endif
         return ++x;
     }
 
     inline size_t GetPoolIndexFromSize(size_t x) noexcept
     {
-        size_t allocatorPageSize = x >> AllocatorIndexShift;
+        const size_t allocatorPageSize = x >> AllocatorIndexShift;
         // gives a value from range:
         // 0 - sub-4k allocator
         // 1 - 4k allocator
@@ -54,26 +59,26 @@ namespace
         // etc...
         // Need to convert to an index.
 
-#ifdef _MSC_VER
+    #ifdef _MSC_VER
         unsigned long bitIndex = 0;
 
-#ifdef _WIN64
+    #ifdef _WIN64
         return _BitScanForward64(&bitIndex, allocatorPageSize) ? bitIndex + 1 : 0;
-#else
+    #else
         return _BitScanForward(&bitIndex, static_cast<unsigned long>(allocatorPageSize)) ? bitIndex + 1 : 0;
-#endif
+    #endif
 
-#elif defined(__GNUC__)
+    #elif defined(__GNUC__)
 
-#ifdef __LP64__
+    #ifdef __LP64__
         return static_cast<size_t>(__builtin_ffsll(static_cast<long long>(allocatorPageSize)));
-#else
+    #else
         return static_cast<size_t>(__builtin_ffs(static_cast<int>(allocatorPageSize)));
-#endif
+    #endif
 
-#else
-#error Unknown forward bit-scan syntax
-#endif
+    #else
+    #error Unknown forward bit-scan syntax
+    #endif
     }
 
     inline size_t GetPageSizeFromPoolIndex(size_t x) noexcept
@@ -112,7 +117,7 @@ namespace
         // Explicitly destroy LinearAllocators inside a critical section
         ~DeviceAllocator()
         {
-            ScopedLock lock(mMutex);
+            const ScopedLock lock(mMutex);
 
             for (auto& allocator : mPools)
             {
@@ -125,8 +130,8 @@ namespace
             ScopedLock lock(mMutex);
 
             // Which memory pool does it live in?
-            size_t poolSize = NextPow2((alignment + size) * PoolIndexScale);
-            size_t poolIndex = GetPoolIndexFromSize(poolSize);
+            const size_t poolSize = NextPow2((alignment + size) * PoolIndexScale);
+            const size_t poolIndex = GetPoolIndexFromSize(poolSize);
             assert(poolIndex < mPools.size());
 
             // If the allocator isn't initialized yet, do so now
@@ -214,6 +219,10 @@ namespace
         std::array<std::unique_ptr<LinearAllocator>, AllocatorPoolCount> mPools;
         mutable std::mutex mMutex;
     };
+
+#ifdef USING_PIX_CUSTOM_MEMORY_EVENTS
+    constexpr uint16_t c_PIXAllocatorID = 1001;
+#endif
 } // anonymous namespace
 
 
@@ -237,6 +246,10 @@ public:
         }
 
         s_graphicsMemory = this;
+
+    #endif
+    #ifdef USING_PIX_CUSTOM_MEMORY_EVENTS
+        DebugTrace("INFO: GraphicsMemory PIX custom memory tracking events enabled (Allocator ID %u)\n", c_PIXAllocatorID);
     #endif
     }
 
@@ -315,7 +328,7 @@ public:
         m_peakCommited = 0;
         m_peakBytes = 0;
         m_peakPages = 0;
-}
+    }
 
     GraphicsMemory* mOwner;
 #if (defined(_XBOX_ONE) && defined(_TITLE)) || defined(_GAMING_XBOX)
@@ -372,7 +385,7 @@ GraphicsMemory& GraphicsMemory::operator= (GraphicsMemory&& moveFrom) noexcept
 GraphicsMemory::~GraphicsMemory() = default;
 
 
-GraphicsResource GraphicsMemory::Allocate(size_t size, size_t alignment)
+GraphicsResource GraphicsMemory::AllocateImpl(size_t size, size_t alignment)
 {
     assert(alignment >= 4); // Should use at least DWORD alignment
     return pImpl->Allocate(size, alignment);
@@ -436,6 +449,15 @@ GraphicsMemory& GraphicsMemory::Get(_In_opt_ ID3D12Device* device)
 }
 #endif
 
+#ifdef USING_PIX_CUSTOM_MEMORY_EVENTS
+__declspec(allocator)
+void* GraphicsMemory::ReportCustomMemoryAlloc(void* pMem, size_t size, UINT64 metadata)
+{
+    PIXRecordMemoryAllocationEvent(c_PIXAllocatorID, pMem, size, metadata);
+    return pMem;
+}
+#endif
+
 
 //--------------------------------------------------------------------------------------
 // GraphicsResource smart-pointer interface
@@ -443,7 +465,7 @@ GraphicsMemory& GraphicsMemory::Get(_In_opt_ ID3D12Device* device)
 
 GraphicsResource::GraphicsResource() noexcept
     : mPage(nullptr)
-    , mGpuAddress {}
+    , mGpuAddress{}
     , mResource(nullptr)
     , mMemory(nullptr)
     , mBufferOffset(0)
@@ -484,6 +506,10 @@ GraphicsResource::~GraphicsResource()
 {
     if (mPage)
     {
+#ifdef USING_PIX_CUSTOM_MEMORY_EVENTS
+        PIXRecordMemoryFreeEvent(c_PIXAllocatorID, reinterpret_cast<void*>(mGpuAddress), mSize, 0);
+#endif
+
         mPage->Release();
         mPage = nullptr;
     }
@@ -499,6 +525,10 @@ void GraphicsResource::Reset() noexcept
 {
     if (mPage)
     {
+#ifdef USING_PIX_CUSTOM_MEMORY_EVENTS
+        PIXRecordMemoryFreeEvent(c_PIXAllocatorID, reinterpret_cast<void*>(mGpuAddress), mSize, 0);
+#endif
+
         mPage->Release();
         mPage = nullptr;
     }
@@ -514,6 +544,10 @@ void GraphicsResource::Reset(GraphicsResource&& alloc) noexcept
 {
     if (mPage)
     {
+#ifdef USING_PIX_CUSTOM_MEMORY_EVENTS
+        PIXRecordMemoryFreeEvent(c_PIXAllocatorID, reinterpret_cast<void*>(mGpuAddress), mSize, 0);
+#endif
+
         mPage->Release();
         mPage = nullptr;
     }

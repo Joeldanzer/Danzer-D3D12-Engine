@@ -2,26 +2,21 @@
 #include "Renderer.h"
 
 #include "Components/PointLight.h"
-#include "Models/ModelHandler.h"
-#include "Scene.h"
-#include "Components/Transform.h";
+#include "Components/Transform.h"
 #include "Components/Object.h"
 #include "Components/DirectionalLight.h"
+
+#include "Scene.h"
+#include "Camera.h"
 #include "SkyBox.h"
+#include "PSOHandler.h"
+#include "Models/ModelHandler.h"
+#include "RenderUtility.h"
 #include "Rendering/Screen Rendering/Textures/FullscreenTexture.h"
 #include "Rendering/Screen Rendering/Textures/DirectionalShadowMapping.h"
 #include "Rendering/Screen Rendering/GBuffer.h"
 #include "Rendering/Screen Rendering/LightHandler.h"
-#include "Core/WindowHandler.h"
-#include "PSOHandler.h"
-
-#include "Camera.h"
-
-#include "RenderUtility.h"
 #include "Core/FrameResource.h"
-
-
-#include "Core/D3D12Framework.h"
 
 #include <chrono>
 #include <string>
@@ -172,7 +167,6 @@ void Renderer::RenderPointLights(ID3D12GraphicsCommandList* cmdList, LightHandle
 	D3D12_GPU_DESCRIPTOR_HANDLE cbvSrvHeapStart = m_framework->CbvSrvHeap().GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
 	const UINT cbvSrvDescSize = m_framework->CbvSrvHeap().DESCRIPTOR_SIZE();
 
-
 	auto view = registry.view<PointLight, Transform, Object>();
 	for (auto i : view)
 	{
@@ -199,7 +193,6 @@ void Renderer::RenderPointLights(ID3D12GraphicsCommandList* cmdList, LightHandle
 	
 		cmdList->DrawInstanced(3, 1, 0, 0);
 	}
-	int s = 0;
 }
 
 void Renderer::RenderForwardModelEffects(ID3D12GraphicsCommandList* cmdList, PSOHandler& psoHandler, const UINT depthOffset, std::vector<ModelEffectData>& modelEffects, ModelHandler& modelHandler, std::vector<TextureHandler::Texture>& textures, const UINT frameIndex, Camera& cam, Transform& camTransform, UINT startLocation)

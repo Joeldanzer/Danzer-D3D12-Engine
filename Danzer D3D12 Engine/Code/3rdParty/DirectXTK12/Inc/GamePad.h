@@ -10,9 +10,39 @@
 
 #pragma once
 
-#if (_WIN32_WINNT < 0x0A00 /*_WIN32_WINNT_WIN10*/) || defined(_GAMING_DESKTOP)
-#ifndef _XBOX_ONE
-#if !defined(WINAPI_FAMILY) || (WINAPI_FAMILY != WINAPI_FAMILY_PHONE_APP)
+#if !defined(USING_XINPUT) && !defined(USING_GAMEINPUT) && !defined(USING_WINDOWS_GAMING_INPUT)
+
+#ifdef _GAMING_DESKTOP
+#include <grdk.h>
+#endif
+
+#if (defined(WINAPI_FAMILY) && (WINAPI_FAMILY == WINAPI_FAMILY_GAMES)) || (defined(_GAMING_DESKTOP) && (_GRDK_EDITION >= 220600))
+#define USING_GAMEINPUT
+#elif (_WIN32_WINNT >= 0x0A00 /*_WIN32_WINNT_WIN10*/) && !defined(_GAMING_DESKTOP) && !defined(__MINGW32__)
+#define USING_WINDOWS_GAMING_INPUT
+#elif !defined(_XBOX_ONE)
+#define USING_XINPUT
+#endif
+
+#endif // !USING_XINPUT && !USING_GAMEINPUT && !USING_WINDOWS_GAMING_INPUT
+
+#ifdef USING_GAMEINPUT
+#include <GameInput.h>
+#if !defined(_GAMING_XBOX) && defined(_MSC_VER)
+#pragma comment(lib,"gameinput.lib")
+#endif
+
+#elif defined(USING_WINDOWS_GAMING_INPUT)
+#ifdef _MSC_VER
+#pragma comment(lib,"runtimeobject.lib")
+#endif
+#include <string>
+
+#elif defined(_XBOX_ONE)
+// Legacy Xbox One XDK uses Windows::Xbox::Input
+
+#elif defined(USING_XINPUT)
+#ifdef _MSC_VER
 #if (_WIN32_WINNT >= 0x0602 /*_WIN32_WINNT_WIN8*/ )
 #pragma comment(lib,"xinput.lib")
 #else
@@ -20,19 +50,9 @@
 #endif
 #endif
 #endif
-#endif
-
-#if defined(WINAPI_FAMILY) && (WINAPI_FAMILY == WINAPI_FAMILY_GAMES)
-interface IGameInputDevice;
-#endif
 
 #include <cstdint>
 #include <memory>
-
-#if (_WIN32_WINNT >= 0x0A00 /*_WIN32_WINNT_WIN10*/) && !defined(_GAMING_DESKTOP)
-#pragma comment(lib,"runtimeobject.lib")
-#include <string>
-#endif
 
 #ifdef __clang__
 #pragma clang diagnostic push
@@ -55,7 +75,7 @@ namespace DirectX
 
         virtual ~GamePad();
 
-    #if ((_WIN32_WINNT >= 0x0A00 /*_WIN32_WINNT_WIN10*/) && !defined(_GAMING_DESKTOP)) || defined(_XBOX_ONE)
+    #if defined(USING_GAMEINPUT) || defined(USING_WINDOWS_GAMING_INPUT) || defined(_XBOX_ONE)
         static constexpr int MAX_PLAYER_COUNT = 8;
     #else
         static constexpr int MAX_PLAYER_COUNT = 4;
@@ -63,7 +83,7 @@ namespace DirectX
 
         static constexpr int c_MostRecent = -1;
 
-    #if defined(WINAPI_FAMILY) && (WINAPI_FAMILY == WINAPI_FAMILY_GAMES)
+    #ifdef USING_GAMEINPUT
         static constexpr int c_MergedInput = -2;
     #endif
 
@@ -184,9 +204,9 @@ namespace DirectX
 
             bool                connected;
             Type                gamepadType;
-        #if defined(WINAPI_FAMILY) && (WINAPI_FAMILY == WINAPI_FAMILY_GAMES)
+        #ifdef USING_GAMEINPUT
             APP_LOCAL_DEVICE_ID id;
-        #elif (_WIN32_WINNT >= 0x0A00 /*_WIN32_WINNT_WIN10*/) && !defined(_GAMING_DESKTOP)
+        #elif defined(USING_WINDOWS_GAMING_INPUT)
             std::wstring        id;
         #else
             uint64_t            id;
@@ -251,8 +271,14 @@ namespace DirectX
             ButtonState leftTrigger;
             ButtonState rightTrigger;
 
-            #pragma prefast(suppress: 26495, "Reset() performs the initialization")
+        #ifdef _PREFAST_
+        #pragma prefast(push)
+        #pragma prefast(disable : 26495, "Reset() performs the initialization")
+        #endif
             ButtonStateTracker() noexcept { Reset(); }
+        #ifdef _PREFAST_
+        #pragma prefast(pop)
+        #endif
 
             void __cdecl Update(const State& state) noexcept;
 
@@ -277,16 +303,14 @@ namespace DirectX
         void __cdecl Suspend() noexcept;
         void __cdecl Resume() noexcept;
 
-    #if defined(WINAPI_FAMILY) && (WINAPI_FAMILY == WINAPI_FAMILY_GAMES)
+    #ifdef USING_GAMEINPUT
         void __cdecl RegisterEvents(void* ctrlChanged) noexcept;
-    #elif ((_WIN32_WINNT >= 0x0A00 /*_WIN32_WINNT_WIN10*/ ) && !defined(_GAMING_DESKTOP)) || defined(_XBOX_ONE)
-        void __cdecl RegisterEvents(void* ctrlChanged, void* userChanged) noexcept;
-    #endif
 
-    #if defined(WINAPI_FAMILY) && (WINAPI_FAMILY == WINAPI_FAMILY_GAMES)
         // Underlying device access
         _Success_(return)
-        bool __cdecl GetDevice(int player, _Outptr_ IGameInputDevice** device) noexcept;
+            bool __cdecl GetDevice(int player, _Outptr_ IGameInputDevice * *device) noexcept;
+    #elif defined(USING_WINDOWS_GAMING_INPUT) || defined(_XBOX_ONE)
+        void __cdecl RegisterEvents(void* ctrlChanged, void* userChanged) noexcept;
     #endif
 
         // Singleton

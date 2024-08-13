@@ -109,129 +109,130 @@ private:
 };
 
 
+#pragma region Shaders
 // Include the precompiled shader code.
 namespace
 {
 #ifdef _GAMING_XBOX_SCARLETT
-    #include "XboxGamingScarlettNormalMapEffect_VSNormalPixelLightingTx.inc"
-    #include "XboxGamingScarlettNormalMapEffect_VSNormalPixelLightingTxVc.inc"
-    #include "XboxGamingScarlettNormalMapEffect_VSNormalPixelLightingTxNoSpec.inc"
-    #include "XboxGamingScarlettNormalMapEffect_VSNormalPixelLightingTxVcNoSpec.inc"
+#include "XboxGamingScarlettNormalMapEffect_VSNormalPixelLightingTx.inc"
+#include "XboxGamingScarlettNormalMapEffect_VSNormalPixelLightingTxVc.inc"
+#include "XboxGamingScarlettNormalMapEffect_VSNormalPixelLightingTxNoSpec.inc"
+#include "XboxGamingScarlettNormalMapEffect_VSNormalPixelLightingTxVcNoSpec.inc"
 
-    #include "XboxGamingScarlettNormalMapEffect_VSNormalPixelLightingTxBn.inc"
-    #include "XboxGamingScarlettNormalMapEffect_VSNormalPixelLightingTxVcBn.inc"
-    #include "XboxGamingScarlettNormalMapEffect_VSNormalPixelLightingTxNoSpecBn.inc"
-    #include "XboxGamingScarlettNormalMapEffect_VSNormalPixelLightingTxVcNoSpecBn.inc"
+#include "XboxGamingScarlettNormalMapEffect_VSNormalPixelLightingTxBn.inc"
+#include "XboxGamingScarlettNormalMapEffect_VSNormalPixelLightingTxVcBn.inc"
+#include "XboxGamingScarlettNormalMapEffect_VSNormalPixelLightingTxNoSpecBn.inc"
+#include "XboxGamingScarlettNormalMapEffect_VSNormalPixelLightingTxVcNoSpecBn.inc"
 
-    #include "XboxGamingScarlettNormalMapEffect_VSNormalPixelLightingTxInst.inc"
-    #include "XboxGamingScarlettNormalMapEffect_VSNormalPixelLightingTxVcInst.inc"
-    #include "XboxGamingScarlettNormalMapEffect_VSNormalPixelLightingTxNoSpecInst.inc"
-    #include "XboxGamingScarlettNormalMapEffect_VSNormalPixelLightingTxVcNoSpecInst.inc"
+#include "XboxGamingScarlettNormalMapEffect_VSNormalPixelLightingTxInst.inc"
+#include "XboxGamingScarlettNormalMapEffect_VSNormalPixelLightingTxVcInst.inc"
+#include "XboxGamingScarlettNormalMapEffect_VSNormalPixelLightingTxNoSpecInst.inc"
+#include "XboxGamingScarlettNormalMapEffect_VSNormalPixelLightingTxVcNoSpecInst.inc"
 
-    #include "XboxGamingScarlettNormalMapEffect_VSNormalPixelLightingTxBnInst.inc"
-    #include "XboxGamingScarlettNormalMapEffect_VSNormalPixelLightingTxVcBnInst.inc"
-    #include "XboxGamingScarlettNormalMapEffect_VSNormalPixelLightingTxNoSpecBnInst.inc"
-    #include "XboxGamingScarlettNormalMapEffect_VSNormalPixelLightingTxVcNoSpecBnInst.inc"
+#include "XboxGamingScarlettNormalMapEffect_VSNormalPixelLightingTxBnInst.inc"
+#include "XboxGamingScarlettNormalMapEffect_VSNormalPixelLightingTxVcBnInst.inc"
+#include "XboxGamingScarlettNormalMapEffect_VSNormalPixelLightingTxNoSpecBnInst.inc"
+#include "XboxGamingScarlettNormalMapEffect_VSNormalPixelLightingTxVcNoSpecBnInst.inc"
 
-    #include "XboxGamingScarlettNormalMapEffect_VSSkinnedPixelLightingTx.inc"
-    #include "XboxGamingScarlettNormalMapEffect_VSSkinnedPixelLightingTxBn.inc"
-    #include "XboxGamingScarlettNormalMapEffect_VSSkinnedPixelLightingTxNoSpec.inc"
-    #include "XboxGamingScarlettNormalMapEffect_VSSkinnedPixelLightingTxNoSpecBn.inc"
+#include "XboxGamingScarlettNormalMapEffect_VSSkinnedPixelLightingTx.inc"
+#include "XboxGamingScarlettNormalMapEffect_VSSkinnedPixelLightingTxBn.inc"
+#include "XboxGamingScarlettNormalMapEffect_VSSkinnedPixelLightingTxNoSpec.inc"
+#include "XboxGamingScarlettNormalMapEffect_VSSkinnedPixelLightingTxNoSpecBn.inc"
 
-    #include "XboxGamingScarlettNormalMapEffect_PSNormalPixelLightingTx.inc"
-    #include "XboxGamingScarlettNormalMapEffect_PSNormalPixelLightingTxNoFog.inc"
-    #include "XboxGamingScarlettNormalMapEffect_PSNormalPixelLightingTxNoSpec.inc"
-    #include "XboxGamingScarlettNormalMapEffect_PSNormalPixelLightingTxNoFogSpec.inc"
+#include "XboxGamingScarlettNormalMapEffect_PSNormalPixelLightingTx.inc"
+#include "XboxGamingScarlettNormalMapEffect_PSNormalPixelLightingTxNoFog.inc"
+#include "XboxGamingScarlettNormalMapEffect_PSNormalPixelLightingTxNoSpec.inc"
+#include "XboxGamingScarlettNormalMapEffect_PSNormalPixelLightingTxNoFogSpec.inc"
 #elif defined(_GAMING_XBOX)
-    #include "XboxGamingXboxOneNormalMapEffect_VSNormalPixelLightingTx.inc"
-    #include "XboxGamingXboxOneNormalMapEffect_VSNormalPixelLightingTxVc.inc"
-    #include "XboxGamingXboxOneNormalMapEffect_VSNormalPixelLightingTxNoSpec.inc"
-    #include "XboxGamingXboxOneNormalMapEffect_VSNormalPixelLightingTxVcNoSpec.inc"
+#include "XboxGamingXboxOneNormalMapEffect_VSNormalPixelLightingTx.inc"
+#include "XboxGamingXboxOneNormalMapEffect_VSNormalPixelLightingTxVc.inc"
+#include "XboxGamingXboxOneNormalMapEffect_VSNormalPixelLightingTxNoSpec.inc"
+#include "XboxGamingXboxOneNormalMapEffect_VSNormalPixelLightingTxVcNoSpec.inc"
 
-    #include "XboxGamingXboxOneNormalMapEffect_VSNormalPixelLightingTxBn.inc"
-    #include "XboxGamingXboxOneNormalMapEffect_VSNormalPixelLightingTxVcBn.inc"
-    #include "XboxGamingXboxOneNormalMapEffect_VSNormalPixelLightingTxNoSpecBn.inc"
-    #include "XboxGamingXboxOneNormalMapEffect_VSNormalPixelLightingTxVcNoSpecBn.inc"
+#include "XboxGamingXboxOneNormalMapEffect_VSNormalPixelLightingTxBn.inc"
+#include "XboxGamingXboxOneNormalMapEffect_VSNormalPixelLightingTxVcBn.inc"
+#include "XboxGamingXboxOneNormalMapEffect_VSNormalPixelLightingTxNoSpecBn.inc"
+#include "XboxGamingXboxOneNormalMapEffect_VSNormalPixelLightingTxVcNoSpecBn.inc"
 
-    #include "XboxGamingXboxOneNormalMapEffect_VSNormalPixelLightingTxInst.inc"
-    #include "XboxGamingXboxOneNormalMapEffect_VSNormalPixelLightingTxVcInst.inc"
-    #include "XboxGamingXboxOneNormalMapEffect_VSNormalPixelLightingTxNoSpecInst.inc"
-    #include "XboxGamingXboxOneNormalMapEffect_VSNormalPixelLightingTxVcNoSpecInst.inc"
+#include "XboxGamingXboxOneNormalMapEffect_VSNormalPixelLightingTxInst.inc"
+#include "XboxGamingXboxOneNormalMapEffect_VSNormalPixelLightingTxVcInst.inc"
+#include "XboxGamingXboxOneNormalMapEffect_VSNormalPixelLightingTxNoSpecInst.inc"
+#include "XboxGamingXboxOneNormalMapEffect_VSNormalPixelLightingTxVcNoSpecInst.inc"
 
-    #include "XboxGamingXboxOneNormalMapEffect_VSNormalPixelLightingTxBnInst.inc"
-    #include "XboxGamingXboxOneNormalMapEffect_VSNormalPixelLightingTxVcBnInst.inc"
-    #include "XboxGamingXboxOneNormalMapEffect_VSNormalPixelLightingTxNoSpecBnInst.inc"
-    #include "XboxGamingXboxOneNormalMapEffect_VSNormalPixelLightingTxVcNoSpecBnInst.inc"
+#include "XboxGamingXboxOneNormalMapEffect_VSNormalPixelLightingTxBnInst.inc"
+#include "XboxGamingXboxOneNormalMapEffect_VSNormalPixelLightingTxVcBnInst.inc"
+#include "XboxGamingXboxOneNormalMapEffect_VSNormalPixelLightingTxNoSpecBnInst.inc"
+#include "XboxGamingXboxOneNormalMapEffect_VSNormalPixelLightingTxVcNoSpecBnInst.inc"
 
-    #include "XboxGamingXboxOneNormalMapEffect_VSSkinnedPixelLightingTx.inc"
-    #include "XboxGamingXboxOneNormalMapEffect_VSSkinnedPixelLightingTxBn.inc"
-    #include "XboxGamingXboxOneNormalMapEffect_VSSkinnedPixelLightingTxNoSpec.inc"
-    #include "XboxGamingXboxOneNormalMapEffect_VSSkinnedPixelLightingTxNoSpecBn.inc"
+#include "XboxGamingXboxOneNormalMapEffect_VSSkinnedPixelLightingTx.inc"
+#include "XboxGamingXboxOneNormalMapEffect_VSSkinnedPixelLightingTxBn.inc"
+#include "XboxGamingXboxOneNormalMapEffect_VSSkinnedPixelLightingTxNoSpec.inc"
+#include "XboxGamingXboxOneNormalMapEffect_VSSkinnedPixelLightingTxNoSpecBn.inc"
 
-    #include "XboxGamingXboxOneNormalMapEffect_PSNormalPixelLightingTx.inc"
-    #include "XboxGamingXboxOneNormalMapEffect_PSNormalPixelLightingTxNoFog.inc"
-    #include "XboxGamingXboxOneNormalMapEffect_PSNormalPixelLightingTxNoSpec.inc"
-    #include "XboxGamingXboxOneNormalMapEffect_PSNormalPixelLightingTxNoFogSpec.inc"
+#include "XboxGamingXboxOneNormalMapEffect_PSNormalPixelLightingTx.inc"
+#include "XboxGamingXboxOneNormalMapEffect_PSNormalPixelLightingTxNoFog.inc"
+#include "XboxGamingXboxOneNormalMapEffect_PSNormalPixelLightingTxNoSpec.inc"
+#include "XboxGamingXboxOneNormalMapEffect_PSNormalPixelLightingTxNoFogSpec.inc"
 #elif defined(_XBOX_ONE) && defined(_TITLE)
-    #include "XboxOneNormalMapEffect_VSNormalPixelLightingTx.inc"
-    #include "XboxOneNormalMapEffect_VSNormalPixelLightingTxVc.inc"
-    #include "XboxOneNormalMapEffect_VSNormalPixelLightingTxNoSpec.inc"
-    #include "XboxOneNormalMapEffect_VSNormalPixelLightingTxVcNoSpec.inc"
+#include "XboxOneNormalMapEffect_VSNormalPixelLightingTx.inc"
+#include "XboxOneNormalMapEffect_VSNormalPixelLightingTxVc.inc"
+#include "XboxOneNormalMapEffect_VSNormalPixelLightingTxNoSpec.inc"
+#include "XboxOneNormalMapEffect_VSNormalPixelLightingTxVcNoSpec.inc"
 
-    #include "XboxOneNormalMapEffect_VSNormalPixelLightingTxBn.inc"
-    #include "XboxOneNormalMapEffect_VSNormalPixelLightingTxVcBn.inc"
-    #include "XboxOneNormalMapEffect_VSNormalPixelLightingTxNoSpecBn.inc"
-    #include "XboxOneNormalMapEffect_VSNormalPixelLightingTxVcNoSpecBn.inc"
+#include "XboxOneNormalMapEffect_VSNormalPixelLightingTxBn.inc"
+#include "XboxOneNormalMapEffect_VSNormalPixelLightingTxVcBn.inc"
+#include "XboxOneNormalMapEffect_VSNormalPixelLightingTxNoSpecBn.inc"
+#include "XboxOneNormalMapEffect_VSNormalPixelLightingTxVcNoSpecBn.inc"
 
-    #include "XboxOneNormalMapEffect_VSNormalPixelLightingTxInst.inc"
-    #include "XboxOneNormalMapEffect_VSNormalPixelLightingTxVcInst.inc"
-    #include "XboxOneNormalMapEffect_VSNormalPixelLightingTxNoSpecInst.inc"
-    #include "XboxOneNormalMapEffect_VSNormalPixelLightingTxVcNoSpecInst.inc"
+#include "XboxOneNormalMapEffect_VSNormalPixelLightingTxInst.inc"
+#include "XboxOneNormalMapEffect_VSNormalPixelLightingTxVcInst.inc"
+#include "XboxOneNormalMapEffect_VSNormalPixelLightingTxNoSpecInst.inc"
+#include "XboxOneNormalMapEffect_VSNormalPixelLightingTxVcNoSpecInst.inc"
 
-    #include "XboxOneNormalMapEffect_VSNormalPixelLightingTxBnInst.inc"
-    #include "XboxOneNormalMapEffect_VSNormalPixelLightingTxVcBnInst.inc"
-    #include "XboxOneNormalMapEffect_VSNormalPixelLightingTxNoSpecBnInst.inc"
-    #include "XboxOneNormalMapEffect_VSNormalPixelLightingTxVcNoSpecBnInst.inc"
+#include "XboxOneNormalMapEffect_VSNormalPixelLightingTxBnInst.inc"
+#include "XboxOneNormalMapEffect_VSNormalPixelLightingTxVcBnInst.inc"
+#include "XboxOneNormalMapEffect_VSNormalPixelLightingTxNoSpecBnInst.inc"
+#include "XboxOneNormalMapEffect_VSNormalPixelLightingTxVcNoSpecBnInst.inc"
 
-    #include "XboxOneNormalMapEffect_VSSkinnedPixelLightingTx.inc"
-    #include "XboxOneNormalMapEffect_VSSkinnedPixelLightingTxBn.inc"
-    #include "XboxOneNormalMapEffect_VSSkinnedPixelLightingTxNoSpec.inc"
-    #include "XboxOneNormalMapEffect_VSSkinnedPixelLightingTxNoSpecBn.inc"
+#include "XboxOneNormalMapEffect_VSSkinnedPixelLightingTx.inc"
+#include "XboxOneNormalMapEffect_VSSkinnedPixelLightingTxBn.inc"
+#include "XboxOneNormalMapEffect_VSSkinnedPixelLightingTxNoSpec.inc"
+#include "XboxOneNormalMapEffect_VSSkinnedPixelLightingTxNoSpecBn.inc"
 
-    #include "XboxOneNormalMapEffect_PSNormalPixelLightingTx.inc"
-    #include "XboxOneNormalMapEffect_PSNormalPixelLightingTxNoFog.inc"
-    #include "XboxOneNormalMapEffect_PSNormalPixelLightingTxNoSpec.inc"
-    #include "XboxOneNormalMapEffect_PSNormalPixelLightingTxNoFogSpec.inc"
+#include "XboxOneNormalMapEffect_PSNormalPixelLightingTx.inc"
+#include "XboxOneNormalMapEffect_PSNormalPixelLightingTxNoFog.inc"
+#include "XboxOneNormalMapEffect_PSNormalPixelLightingTxNoSpec.inc"
+#include "XboxOneNormalMapEffect_PSNormalPixelLightingTxNoFogSpec.inc"
 #else
-    #include "NormalMapEffect_VSNormalPixelLightingTx.inc"
-    #include "NormalMapEffect_VSNormalPixelLightingTxVc.inc"
-    #include "NormalMapEffect_VSNormalPixelLightingTxNoSpec.inc"
-    #include "NormalMapEffect_VSNormalPixelLightingTxVcNoSpec.inc"
+#include "NormalMapEffect_VSNormalPixelLightingTx.inc"
+#include "NormalMapEffect_VSNormalPixelLightingTxVc.inc"
+#include "NormalMapEffect_VSNormalPixelLightingTxNoSpec.inc"
+#include "NormalMapEffect_VSNormalPixelLightingTxVcNoSpec.inc"
 
-    #include "NormalMapEffect_VSNormalPixelLightingTxBn.inc"
-    #include "NormalMapEffect_VSNormalPixelLightingTxVcBn.inc"
-    #include "NormalMapEffect_VSNormalPixelLightingTxNoSpecBn.inc"
-    #include "NormalMapEffect_VSNormalPixelLightingTxVcNoSpecBn.inc"
+#include "NormalMapEffect_VSNormalPixelLightingTxBn.inc"
+#include "NormalMapEffect_VSNormalPixelLightingTxVcBn.inc"
+#include "NormalMapEffect_VSNormalPixelLightingTxNoSpecBn.inc"
+#include "NormalMapEffect_VSNormalPixelLightingTxVcNoSpecBn.inc"
 
-    #include "NormalMapEffect_VSNormalPixelLightingTxInst.inc"
-    #include "NormalMapEffect_VSNormalPixelLightingTxVcInst.inc"
-    #include "NormalMapEffect_VSNormalPixelLightingTxNoSpecInst.inc"
-    #include "NormalMapEffect_VSNormalPixelLightingTxVcNoSpecInst.inc"
+#include "NormalMapEffect_VSNormalPixelLightingTxInst.inc"
+#include "NormalMapEffect_VSNormalPixelLightingTxVcInst.inc"
+#include "NormalMapEffect_VSNormalPixelLightingTxNoSpecInst.inc"
+#include "NormalMapEffect_VSNormalPixelLightingTxVcNoSpecInst.inc"
 
-    #include "NormalMapEffect_VSNormalPixelLightingTxBnInst.inc"
-    #include "NormalMapEffect_VSNormalPixelLightingTxVcBnInst.inc"
-    #include "NormalMapEffect_VSNormalPixelLightingTxNoSpecBnInst.inc"
-    #include "NormalMapEffect_VSNormalPixelLightingTxVcNoSpecBnInst.inc"
+#include "NormalMapEffect_VSNormalPixelLightingTxBnInst.inc"
+#include "NormalMapEffect_VSNormalPixelLightingTxVcBnInst.inc"
+#include "NormalMapEffect_VSNormalPixelLightingTxNoSpecBnInst.inc"
+#include "NormalMapEffect_VSNormalPixelLightingTxVcNoSpecBnInst.inc"
 
-    #include "NormalMapEffect_VSSkinnedPixelLightingTx.inc"
-    #include "NormalMapEffect_VSSkinnedPixelLightingTxBn.inc"
-    #include "NormalMapEffect_VSSkinnedPixelLightingTxNoSpec.inc"
-    #include "NormalMapEffect_VSSkinnedPixelLightingTxNoSpecBn.inc"
+#include "NormalMapEffect_VSSkinnedPixelLightingTx.inc"
+#include "NormalMapEffect_VSSkinnedPixelLightingTxBn.inc"
+#include "NormalMapEffect_VSSkinnedPixelLightingTxNoSpec.inc"
+#include "NormalMapEffect_VSSkinnedPixelLightingTxNoSpecBn.inc"
 
-    #include "NormalMapEffect_PSNormalPixelLightingTx.inc"
-    #include "NormalMapEffect_PSNormalPixelLightingTxNoFog.inc"
-    #include "NormalMapEffect_PSNormalPixelLightingTxNoSpec.inc"
-    #include "NormalMapEffect_PSNormalPixelLightingTxNoFogSpec.inc"
+#include "NormalMapEffect_PSNormalPixelLightingTx.inc"
+#include "NormalMapEffect_PSNormalPixelLightingTxNoFog.inc"
+#include "NormalMapEffect_PSNormalPixelLightingTxNoSpec.inc"
+#include "NormalMapEffect_PSNormalPixelLightingTxNoFogSpec.inc"
 #endif
 }
 
@@ -388,6 +389,7 @@ const int EffectBase<NormalMapEffectTraits>::PixelShaderIndices[] =
     2,      // skinning + pixel lighting (biased vertex normal) + texture, no specular
     3,      // skinning + pixel lighting (biased vertex normal) + texture, no fog or specular
 };
+#pragma endregion
 
 // Global pool of per-device NormalMapEffect resources.
 template<>
@@ -398,13 +400,13 @@ SharedResourcePool<ID3D12Device*, EffectBase<NormalMapEffectTraits>::DeviceResou
 NormalMapEffect::Impl::Impl(
     _In_ ID3D12Device* device)
     : EffectBase(device),
-        weightsPerVertex(0),
-        specularMap(false),
-        texture{},
-        normal{},
-        specular{},
-        sampler{},
-        boneConstants{}
+    weightsPerVertex(0),
+    specularMap(false),
+    texture{},
+    normal{},
+    specular{},
+    sampler{},
+    boneConstants{}
 {
     static_assert(static_cast<int>(std::size(EffectBase<NormalMapEffectTraits>::VertexShaderIndices)) == NormalMapEffectTraits::ShaderPermutationCount, "array/max mismatch");
     static_assert(static_cast<int>(std::size(EffectBase<NormalMapEffectTraits>::VertexShaderBytecode)) == NormalMapEffectTraits::VertexShaderCount, "array/max mismatch");
@@ -447,20 +449,25 @@ void NormalMapEffect::Impl::Initialize(
 
     // Create root signature.
     {
-        D3D12_ROOT_SIGNATURE_FLAGS rootSignatureFlags =
-            D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
-            D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
-            D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS |
-            D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS;
+        ENUM_FLAGS_CONSTEXPR D3D12_ROOT_SIGNATURE_FLAGS rootSignatureFlags =
+            D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT
+            | D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS
+            | D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS
+            | D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS
+#ifdef _GAMING_XBOX_SCARLETT
+            | D3D12_ROOT_SIGNATURE_FLAG_DENY_AMPLIFICATION_SHADER_ROOT_ACCESS
+            | D3D12_ROOT_SIGNATURE_FLAG_DENY_MESH_SHADER_ROOT_ACCESS
+#endif
+            ;
 
         CD3DX12_ROOT_PARAMETER rootParameters[RootParameterIndex::RootParameterCount] = {};
-        CD3DX12_DESCRIPTOR_RANGE textureSRV(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
+        const CD3DX12_DESCRIPTOR_RANGE textureSRV(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
         rootParameters[RootParameterIndex::TextureSRV].InitAsDescriptorTable(1, &textureSRV, D3D12_SHADER_VISIBILITY_PIXEL);
 
-        CD3DX12_DESCRIPTOR_RANGE textureSRV2(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1);
+        const CD3DX12_DESCRIPTOR_RANGE textureSRV2(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1);
         rootParameters[RootParameterIndex::TextureNormalSRV].InitAsDescriptorTable(1, &textureSRV2, D3D12_SHADER_VISIBILITY_PIXEL);
 
-        CD3DX12_DESCRIPTOR_RANGE textureSampler(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0);
+        const CD3DX12_DESCRIPTOR_RANGE textureSampler(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0);
         rootParameters[RootParameterIndex::TextureSampler].InitAsDescriptorTable(1, &textureSampler, D3D12_SHADER_VISIBILITY_PIXEL);
         rootParameters[RootParameterIndex::ConstantBuffer].InitAsConstantBufferView(0, 0, D3D12_SHADER_VISIBILITY_ALL);
         rootParameters[RootParameterIndex::ConstantBufferBones].InitAsConstantBufferView(1, 0, D3D12_SHADER_VISIBILITY_VERTEX);
@@ -469,7 +476,7 @@ void NormalMapEffect::Impl::Initialize(
 
         if (specularMap)
         {
-            CD3DX12_DESCRIPTOR_RANGE textureSRV3(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 2);
+            const CD3DX12_DESCRIPTOR_RANGE textureSRV3(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 2);
             rootParameters[RootParameterIndex::TextureSpecularSRV].InitAsDescriptorTable(1, &textureSRV3, D3D12_SHADER_VISIBILITY_PIXEL);
 
             rsigDesc.Init(static_cast<UINT>(std::size(rootParameters)), rootParameters, 0, nullptr, rootSignatureFlags);
@@ -489,14 +496,14 @@ void NormalMapEffect::Impl::Initialize(
     fog.enabled = (effectFlags & EffectFlags::Fog) != 0;
 
     // Create pipeline state.
-    int sp = GetPipelineStatePermutation(effectFlags);
+    const int sp = GetPipelineStatePermutation(effectFlags);
     assert(sp >= 0 && sp < NormalMapEffectTraits::ShaderPermutationCount);
     _Analysis_assume_(sp >= 0 && sp < NormalMapEffectTraits::ShaderPermutationCount);
 
-    int vi = EffectBase<NormalMapEffectTraits>::VertexShaderIndices[sp];
+    const int vi = EffectBase<NormalMapEffectTraits>::VertexShaderIndices[sp];
     assert(vi >= 0 && vi < NormalMapEffectTraits::VertexShaderCount);
     _Analysis_assume_(vi >= 0 && vi < NormalMapEffectTraits::VertexShaderCount);
-    int pi = EffectBase<NormalMapEffectTraits>::PixelShaderIndices[sp];
+    const int pi = EffectBase<NormalMapEffectTraits>::PixelShaderIndices[sp];
     assert(pi >= 0 && pi < NormalMapEffectTraits::PixelShaderCount);
     _Analysis_assume_(pi >= 0 && pi < NormalMapEffectTraits::PixelShaderCount);
 
@@ -608,7 +615,7 @@ void NormalMapEffect::Impl::Apply(_In_ ID3D12GraphicsCommandList* commandList)
     }
 
     // Set constants
-    auto cbuffer = GetConstantBufferGpuAddress();
+    auto const cbuffer = GetConstantBufferGpuAddress();
     commandList->SetGraphicsRootConstantBufferView(RootParameterIndex::ConstantBuffer, cbuffer);
     commandList->SetGraphicsRootConstantBufferView(RootParameterIndex::ConstantBufferBones,
         (weightsPerVertex > 0) ? mBones.GpuAddress() : cbuffer);
@@ -839,6 +846,10 @@ void NormalMapEffect::SetSpecularTexture(D3D12_GPU_DESCRIPTOR_HANDLE srvDescript
 // SkinnedNormalMapEffect
 //--------------------------------------------------------------------------------------
 
+SkinnedNormalMapEffect::~SkinnedNormalMapEffect()
+{
+}
+
 // Animation settings.
 void SkinnedNormalMapEffect::SetBoneTransforms(_In_reads_(count) XMMATRIX const* value, size_t count)
 {
@@ -849,16 +860,16 @@ void SkinnedNormalMapEffect::SetBoneTransforms(_In_reads_(count) XMMATRIX const*
 
     for (size_t i = 0; i < count; i++)
     {
-#if DIRECTX_MATH_VERSION >= 313
+    #if DIRECTX_MATH_VERSION >= 313
         XMStoreFloat3x4A(reinterpret_cast<XMFLOAT3X4A*>(&boneConstant[i]), value[i]);
-#else
-        // Xbox One XDK has an older version of DirectXMath
+    #else
+            // Xbox One XDK has an older version of DirectXMath
         XMMATRIX boneMatrix = XMMatrixTranspose(value[i]);
 
         boneConstant[i][0] = boneMatrix.r[0];
         boneConstant[i][1] = boneMatrix.r[1];
         boneConstant[i][2] = boneMatrix.r[2];
-#endif
+    #endif
     }
 
     pImpl->dirtyFlags |= EffectDirtyFlags::ConstantBufferBones;

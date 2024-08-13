@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "FrameResource.h"
 
-#include "DirectX-Headers-main/include/directx/d3d12.h"
+#include "DirectX/include/directx/d3d12.h"
 
 #include <string>
 

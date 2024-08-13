@@ -16,9 +16,7 @@
 
 class Scene;
 class Camera; 
-class Object;
 class Skybox;
-class DirectionalLight;
 class D3D12Framework;
 class DirectionalShadowMapping;
 class SSAOTexture;
@@ -26,8 +24,10 @@ class ModelHandler;
 class LightHandler;
 class PSOHandler;
 class FullscreenTexture;
-
 class Transform;
+
+struct DirectionalLight;
+struct Object;
 
 class Renderer
 {

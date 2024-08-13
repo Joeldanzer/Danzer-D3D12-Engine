@@ -1,8 +1,16 @@
 #pragma once
 
+// General Engine includes 
+#include "Core/WindowHandler.h"  
+#include "Core/D3D12Framework.h" 
+#include "Core/MathDefinitions.h"
+#include "Core/D3D12Header.h"
+
+// 3rd Party includes
 #include "assimp/config.h"
-#include "Jolt/Jolt.h"
+#include "entt/entt.hpp"
 #include "Fmod/fmod.hpp"
+#include "Physics/PhysicsHeader.h"
 
 // This needs to be reworked.
 enum class EngineState {

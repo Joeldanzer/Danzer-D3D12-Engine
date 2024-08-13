@@ -76,7 +76,7 @@ std::unique_ptr<Model> DirectX::Model::CreateFromVBO(
             throw std::runtime_error("VB too large for DirectX 12");
     }
 
-    auto vertSize = static_cast<size_t>(sizeInBytes);
+    auto const vertSize = static_cast<size_t>(sizeInBytes);
 
     if (dataSize < (vertSize + sizeof(VBO::header_t)))
         throw std::runtime_error("End of file");
@@ -92,18 +92,18 @@ std::unique_ptr<Model> DirectX::Model::CreateFromVBO(
             throw std::runtime_error("IB too large for DirectX 12");
     }
 
-    auto indexSize = static_cast<size_t>(sizeInBytes);
+    auto const indexSize = static_cast<size_t>(sizeInBytes);
 
     if (dataSize < (sizeof(VBO::header_t) + vertSize + indexSize))
         throw std::runtime_error("End of file");
     auto indices = reinterpret_cast<const uint16_t*>(meshData + sizeof(VBO::header_t) + vertSize);
 
     // Create vertex buffer
-    auto vb = GraphicsMemory::Get(device).Allocate(vertSize);
+    auto vb = GraphicsMemory::Get(device).Allocate(vertSize, 16, GraphicsMemory::TAG_VERTEX);
     memcpy(vb.Memory(), verts, vertSize);
 
     // Create index buffer
-    auto ib = GraphicsMemory::Get(device).Allocate(indexSize);
+    auto ib = GraphicsMemory::Get(device).Allocate(indexSize, 16, GraphicsMemory::TAG_INDEX);
     memcpy(ib.Memory(), indices, indexSize);
 
     auto part = new ModelMeshPart(0);
@@ -153,3 +153,20 @@ std::unique_ptr<Model> DirectX::Model::CreateFromVBO(
 
     return model;
 }
+
+
+//--------------------------------------------------------------------------------------
+// Adapters for /Zc:wchar_t- clients
+
+#if defined(_MSC_VER) && !defined(_NATIVE_WCHAR_T_DEFINED)
+
+_Use_decl_annotations_
+std::unique_ptr<Model> DirectX::Model::CreateFromVBO(
+    ID3D12Device* device,
+    const __wchar_t* szFileName,
+    ModelLoaderFlags flags)
+{
+    return CreateFromVBO(device, reinterpret_cast<const unsigned short*>(szFileName), flags);
+}
+
+#endif

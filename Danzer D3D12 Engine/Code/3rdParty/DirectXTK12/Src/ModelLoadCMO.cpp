@@ -375,7 +375,7 @@ std::unique_ptr<Model> DirectX::Model::CreateFromCMO(
         if (dataSize < usedSize)
             throw std::runtime_error("End of file");
 
-        auto meshName = reinterpret_cast<const wchar_t*>(meshData + usedSize);
+        auto meshName = reinterpret_cast<const wchar_t*>(static_cast<const void*>(meshData + usedSize));
 
         usedSize += sizeof(wchar_t)*(*nName);
         if (dataSize < usedSize)
@@ -392,7 +392,7 @@ std::unique_ptr<Model> DirectX::Model::CreateFromCMO(
 
         std::vector<MaterialRecordCMO> materials;
         materials.reserve(*nMats);
-        size_t baseMaterialIndex = modelmats.size();
+        const size_t baseMaterialIndex = modelmats.size();
         for (size_t j = 0; j < *nMats; ++j)
         {
             MaterialRecordCMO m;
@@ -404,7 +404,7 @@ std::unique_ptr<Model> DirectX::Model::CreateFromCMO(
             if (dataSize < usedSize)
                 throw std::runtime_error("End of file");
 
-            auto matName = reinterpret_cast<const wchar_t*>(meshData + usedSize);
+            auto matName = reinterpret_cast<const wchar_t*>(static_cast<const void*>(meshData + usedSize));
 
             usedSize += sizeof(wchar_t)*(*nName);
             if (dataSize < usedSize)
@@ -426,7 +426,7 @@ std::unique_ptr<Model> DirectX::Model::CreateFromCMO(
             if (dataSize < usedSize)
                 throw std::runtime_error("End of file");
 
-            auto psName = reinterpret_cast<const wchar_t*>(meshData + usedSize);
+            auto psName = reinterpret_cast<const wchar_t*>(static_cast<const void*>(meshData + usedSize));
 
             usedSize += sizeof(wchar_t)*(*nName);
             if (dataSize < usedSize)
@@ -441,7 +441,7 @@ std::unique_ptr<Model> DirectX::Model::CreateFromCMO(
                 if (dataSize < usedSize)
                     throw std::runtime_error("End of file");
 
-                auto txtName = reinterpret_cast<const wchar_t*>(meshData + usedSize);
+                auto txtName = reinterpret_cast<const wchar_t*>(static_cast<const void*>(meshData + usedSize));
 
                 usedSize += sizeof(wchar_t)*(*nName);
                 if (dataSize < usedSize)
@@ -527,7 +527,7 @@ std::unique_ptr<Model> DirectX::Model::CreateFromCMO(
                     throw std::runtime_error("IB too large for DirectX 12");
             }
 
-            auto ibBytes = static_cast<size_t>(sizeInBytes);
+            auto const ibBytes = static_cast<size_t>(sizeInBytes);
 
             auto indexes = reinterpret_cast<const uint16_t*>(meshData + usedSize);
             usedSize += ibBytes;
@@ -539,7 +539,7 @@ std::unique_ptr<Model> DirectX::Model::CreateFromCMO(
             ib.ptr = indexes;
             ibData.emplace_back(ib);
 
-            ibs[j] = GraphicsMemory::Get(device).Allocate(ibBytes);
+            ibs[j] = GraphicsMemory::Get(device).Allocate(ibBytes, 16, GraphicsMemory::TAG_INDEX);
             memcpy(ibs[j].Memory(), indexes, ibBytes);
         }
 
@@ -636,8 +636,8 @@ std::unique_ptr<Model> DirectX::Model::CreateFromCMO(
         mesh->boundingSphere.Center.z = extents->CenterZ;
         mesh->boundingSphere.Radius = extents->Radius;
 
-        XMVECTOR min = XMVectorSet(extents->MinX, extents->MinY, extents->MinZ, 0.f);
-        XMVECTOR max = XMVectorSet(extents->MaxX, extents->MaxY, extents->MaxZ, 0.f);
+        const XMVECTOR min = XMVectorSet(extents->MinX, extents->MinY, extents->MinZ, 0.f);
+        const XMVECTOR max = XMVectorSet(extents->MaxX, extents->MaxY, extents->MaxZ, 0.f);
         BoundingBox::CreateFromPoints(mesh->boundingBox, min, max);
 
         // Load model bones (if present and requested)
@@ -665,7 +665,7 @@ std::unique_ptr<Model> DirectX::Model::CreateFromCMO(
                 if (dataSize < usedSize)
                     throw std::runtime_error("End of file");
 
-                auto boneName = reinterpret_cast<const wchar_t*>(meshData + usedSize);
+                auto boneName = reinterpret_cast<const wchar_t*>(static_cast<const void*>(meshData + usedSize));
 
                 usedSize += sizeof(wchar_t) * (*nName);
                 if (dataSize < usedSize)
@@ -694,7 +694,7 @@ std::unique_ptr<Model> DirectX::Model::CreateFromCMO(
                         if (visited >= *nBones)
                             throw std::runtime_error("Skeleton bones form an invalid graph");
 
-                        uint32_t sibling = bones[index].siblingIndex;
+                        const uint32_t sibling = bones[index].siblingIndex;
                         if (sibling == ModelBone::c_Invalid)
                         {
                             bones[index].siblingIndex = j;
@@ -734,7 +734,7 @@ std::unique_ptr<Model> DirectX::Model::CreateFromCMO(
                             if (visited >= *nBones)
                                 throw std::runtime_error("Skeleton bones form an invalid graph");
 
-                            uint32_t sibling = bones[index].siblingIndex;
+                            const uint32_t sibling = bones[index].siblingIndex;
                             if (sibling == ModelBone::c_Invalid)
                             {
                                 bones[index].siblingIndex = j;
@@ -773,7 +773,7 @@ std::unique_ptr<Model> DirectX::Model::CreateFromCMO(
             }
         }
 
-        bool enableSkinning = (*nSkinVBs) != 0 && !(flags & ModelLoader_DisableSkinning);
+        const bool enableSkinning = (*nSkinVBs) != 0 && !(flags & ModelLoader_DisableSkinning);
 
         // Build vertex buffers
         std::vector<SharedGraphicsResource> vbs;
@@ -846,7 +846,7 @@ std::unique_ptr<Model> DirectX::Model::CreateFromCMO(
                             || (sm.MaterialIndex >= materials.size()))
                             throw std::out_of_range("Invalid submesh found\n");
 
-                        XMMATRIX uvTransform = XMLoadFloat4x4(&materials[sm.MaterialIndex].pMaterial->UVTransform);
+                        const XMMATRIX uvTransform = XMLoadFloat4x4(&materials[sm.MaterialIndex].pMaterial->UVTransform);
 
                         auto ib = ibData[sm.IndexBufferIndex].ptr;
 
@@ -875,7 +875,7 @@ std::unique_ptr<Model> DirectX::Model::CreateFromCMO(
                             else if (visited[v] != sm.MaterialIndex)
                             {
                             #ifdef _DEBUG
-                                XMMATRIX uv2 = XMLoadFloat4x4(&materials[visited[v]].pMaterial->UVTransform);
+                                const XMMATRIX uv2 = XMLoadFloat4x4(&materials[visited[v]].pMaterial->UVTransform);
 
                                 if (XMVector4NotEqual(uvTransform.r[0], uv2.r[0])
                                     || XMVector4NotEqual(uvTransform.r[1], uv2.r[1])
@@ -890,7 +890,7 @@ std::unique_ptr<Model> DirectX::Model::CreateFromCMO(
                     }
                 }
 
-                vbs[j] = GraphicsMemory::Get(device).Allocate(bytes);
+                vbs[j] = GraphicsMemory::Get(device).Allocate(bytes, 16, GraphicsMemory::TAG_VERTEX);
                 memcpy(vbs[j].Memory(), temp.get(), bytes);
             }
         }
@@ -898,7 +898,7 @@ std::unique_ptr<Model> DirectX::Model::CreateFromCMO(
         assert(vbs.size() == *nVBs);
 
         // Create model materials
-        bool srgb = (flags & ModelLoader_MaterialColorsSRGB) != 0;
+        const bool srgb = (flags & ModelLoader_MaterialColorsSRGB) != 0;
 
         for (size_t j = 0; j < materials.size(); ++j)
         {
@@ -998,3 +998,21 @@ std::unique_ptr<Model> DirectX::Model::CreateFromCMO(
 
     return model;
 }
+
+
+//--------------------------------------------------------------------------------------
+// Adapters for /Zc:wchar_t- clients
+
+#if defined(_MSC_VER) && !defined(_NATIVE_WCHAR_T_DEFINED)
+
+_Use_decl_annotations_
+std::unique_ptr<Model> DirectX::Model::CreateFromCMO(
+    ID3D12Device* device,
+    const __wchar_t* szFileName,
+    ModelLoaderFlags flags,
+    size_t* animsOffset)
+{
+    return CreateFromCMO(device, reinterpret_cast<const unsigned short*>(szFileName), flags, animsOffset);
+}
+
+#endif

@@ -1,11 +1,10 @@
 #pragma once
 
-#include "../../Core/D3D12Header.h"
-
-#include "../3rdParty/DirectX-Headers-main/include/directx/d3dx12.h"
+#include "Core/D3D12Header.h"
+#include "DirectX/include/directx/d3dx12.h"
 
 struct ID3D12Device;
-struct DescriptorHeapWrapper;
+class  DescriptorHeapWrapper;
 
 // Class that holds all the needed infromation for any kind of CBV buffer
 class CBVBuffer

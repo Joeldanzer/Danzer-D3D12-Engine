@@ -19,7 +19,7 @@
 #include "CollisionManager.h"
 #include "Rendering/Camera.h"
 #include "D3D12Framework.h"
-//#include "PhysicsWrapper.h"
+#include "Physics/PhysicsWrapper.h"
 
 // ImGui
 #include "imgui-master/backends/imgui_impl_dx12.h"
@@ -57,7 +57,7 @@ private:
 	ModelHandler	   m_modelHandler;
 	SpriteHandler	   m_spriteHandler;
 	SceneManager	   m_sceneManager;
-	//PhysicsWrapper	   m_physicsManager;
+	PhysicsWrapper	   m_physicsManager;
 	CollisionManager   m_collisionManager;
 	ModelEffectHandler m_modelEffectHandler;
 	LightHandler	   m_lightHandler;
@@ -78,7 +78,7 @@ Engine::Impl::Impl(unsigned int width, unsigned int height) :
 	m_spriteHandler(m_framework, m_textureHandler),
 	m_lightHandler(m_framework),
 	m_sceneManager(),
-	//m_physicsManager(10240, 0, 65536, 20480),
+	m_physicsManager(10240, 0, 65536, 20480),
 	m_collisionManager(),
 	m_camera(65.f, (float)m_windowHandler.WindowData().m_w / (float)m_windowHandler.WindowData().m_h),
 	m_skybox(m_textureHandler),

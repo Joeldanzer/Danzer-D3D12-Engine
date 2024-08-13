@@ -1,7 +1,7 @@
 #pragma once
 #include "../Core/D3D12Header.h"
 
-#include "../3rdParty/DirectX-Headers-main/include/directx/d3dx12.h"
+#include "DirectX/include/directx/d3dx12.h"
 #include <array>
 
 class  D3D12Framework;

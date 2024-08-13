@@ -156,6 +156,8 @@ void DirectX12FrameworkOLD::InitFramework()
 	m_fenceValue++;
 
 	result = m_fence->SetEventOnCompletion(fenceToWaitFor, m_fenceEvent);
+
+#pragma warning ( suppress : 6387 )
 	WaitForSingleObject(m_fenceEvent, INFINITE);
 }
 
@@ -276,7 +278,7 @@ void DirectX12FrameworkOLD::TransitionAllResources()
 			transition.second.m_newState)
 		);
 	}
-	m_commandList->ResourceBarrier(transitionList.size(), &transitionList[0]);	
+	m_commandList->ResourceBarrier(static_cast<UINT>(transitionList.size()), &transitionList[0]);	
 	m_transitionQeueu.clear();
 }
 
@@ -289,7 +291,7 @@ void DirectX12FrameworkOLD::SetViewport(UINT w, UINT h)
 		// Minimizes ouput Window and centers it 
 
 	    // Define viewport
-		m_viewport.TopLeftX = w - (w / 2);
+		m_viewport.TopLeftX = static_cast<float>(w - (w / 2));
 		m_viewport.TopLeftY = 19;
 		m_viewport.Width  = (float)w;
 		m_viewport.Height = (float)h + 19;
@@ -297,9 +299,9 @@ void DirectX12FrameworkOLD::SetViewport(UINT w, UINT h)
 		m_viewport.MaxDepth = 1.0f;
 		
 		// Define scissor rect
-		m_scissorRect.left = w - (w / 2);
+		m_scissorRect.left = static_cast<LONG>(w - (w / 2));
 		m_scissorRect.top = 19;
-		m_scissorRect.right = w + (w / 2);
+		m_scissorRect.right = static_cast<LONG>(w + (w / 2));
 		m_scissorRect.bottom = h + 19;
 		break;
 	case EngineState::ENGINE_STATE_GAME:

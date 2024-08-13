@@ -1,5 +1,5 @@
 #pragma once
-#include "../../3rdParty/DirectX-Headers-main/include/directx/d3dx12.h"
+#include "DirectX/include/directx/d3dx12.h"
 #include "D3D12Header.h"
 
 #define MAX_NUMBER_OF_DESCTRIPTORS 1000000

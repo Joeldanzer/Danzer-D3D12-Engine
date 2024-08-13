@@ -1,15 +1,17 @@
 #pragma once
 #include "../../Core/D3D12Header.h"
 
-#include "../3rdParty/DirectX-Headers-main/include/directx/d3dx12.h"
+#include "DirectX/include/directx/d3dx12.h"
 
 struct ID3D12Device;
-struct DescriptorHeapWrapper;
+class DescriptorHeapWrapper;
 
 class ConstantBufferData
 {
 public:
+#pragma warning ( suppress : 26495)
 	ConstantBufferData() : m_offsetID(0), m_sizeOfData(0){}
+
 	void IntializeBuffer(ID3D12Device* device, DescriptorHeapWrapper* cbvWrapper, const UINT sizeOfData);
 
 	void UpdateBuffer(UINT16* data,  const UINT frameIndex);
