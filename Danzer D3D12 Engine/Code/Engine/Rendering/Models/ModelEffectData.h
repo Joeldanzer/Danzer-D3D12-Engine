@@ -3,7 +3,7 @@
 #include "Core/D3D12Header.h"
 #include "DirectX/include/directx/d3d12.h"
 #include "Core/MathDefinitions.h"
-#include "../Buffers/EffectShaderBuffer.h"
+#include "Rendering/Buffers/EffectShaderBuffer.h"
 #include "Core/D3D12Framework.h"
 
 class ModelEffectData {
