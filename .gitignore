@@ -403,6 +403,9 @@ FodyWeavers.xsd
 *.cso
 *.exe
 *.recipe
-
+*.idb
+*Editor_Debug.lib
+*Engine_Debug.lib
+*Game_Debug.lib
 # End of https://www.toptal.com/developers/gitignore/api/visualstudio
 
