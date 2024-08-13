@@ -2,7 +2,7 @@
 #include "Core/D3D12Header.h"
 #include "Core/MathDefinitions.h"
 
-#include "DirectX-Headers-main\include\directx\d3dx12.h"
+#include "DirectX\include\directx\d3dx12.h"
 
 #include <array>
 #include <vector>

@@ -16,6 +16,7 @@
 #include "DirectXHelpers.h"
 #include "EffectPipelineStateDescription.h"
 #include "GraphicsMemory.h"
+#include "PlatformHelpers.h"
 #include "SharedResourcePool.h"
 
 using namespace DirectX;
@@ -26,8 +27,8 @@ namespace
 {
     constexpr int c_MaxSamples = 16;
 
-    constexpr int Dirty_ConstantBuffer  = 0x01;
-    constexpr int Dirty_Parameters      = 0x02;
+    constexpr int Dirty_ConstantBuffer = 0x01;
+    constexpr int Dirty_Parameters = 0x02;
 
     // Constant buffer layout. Must match the shader!
     XM_ALIGNED_STRUCT(16) PostProcessConstants
@@ -39,36 +40,37 @@ namespace
     static_assert((sizeof(PostProcessConstants) % 16) == 0, "CB size not padded correctly");
 }
 
+#pragma region Shaders
 // Include the precompiled shader code.
 namespace
 {
 #ifdef _GAMING_XBOX_SCARLETT
-    #include "XboxGamingScarlettPostProcess_VSQuadDual.inc"
+#include "XboxGamingScarlettPostProcess_VSQuadDual.inc"
 
-    #include "XboxGamingScarlettPostProcess_PSMerge.inc"
-    #include "XboxGamingScarlettPostProcess_PSBloomCombine.inc"
+#include "XboxGamingScarlettPostProcess_PSMerge.inc"
+#include "XboxGamingScarlettPostProcess_PSBloomCombine.inc"
 #elif defined(_GAMING_XBOX)
-    #include "XboxGamingXboxOnePostProcess_VSQuadDual.inc"
+#include "XboxGamingXboxOnePostProcess_VSQuadDual.inc"
 
-    #include "XboxGamingXboxOnePostProcess_PSMerge.inc"
-    #include "XboxGamingXboxOnePostProcess_PSBloomCombine.inc"
+#include "XboxGamingXboxOnePostProcess_PSMerge.inc"
+#include "XboxGamingXboxOnePostProcess_PSBloomCombine.inc"
 #elif defined(_XBOX_ONE) && defined(_TITLE)
-    #include "XboxOnePostProcess_VSQuadDual.inc"
+#include "XboxOnePostProcess_VSQuadDual.inc"
 
-    #include "XboxOnePostProcess_PSMerge.inc"
-    #include "XboxOnePostProcess_PSBloomCombine.inc"
+#include "XboxOnePostProcess_PSMerge.inc"
+#include "XboxOnePostProcess_PSBloomCombine.inc"
 #else
-    #include "PostProcess_VSQuadDual.inc"
+#include "PostProcess_VSQuadDual.inc"
 
-    #include "PostProcess_PSMerge.inc"
-    #include "PostProcess_PSBloomCombine.inc"
+#include "PostProcess_PSMerge.inc"
+#include "PostProcess_PSBloomCombine.inc"
 #endif
 }
 
 namespace
 {
     const D3D12_SHADER_BYTECODE vertexShader =
-        { PostProcess_VSQuadDual,       sizeof(PostProcess_VSQuadDual) };
+    { PostProcess_VSQuadDual,       sizeof(PostProcess_VSQuadDual) };
 
     const D3D12_SHADER_BYTECODE pixelShaders[] =
     {
@@ -84,19 +86,20 @@ namespace
     public:
         DeviceResources(_In_ ID3D12Device* device) noexcept
             : mDevice(device)
-        { }
+        {
+        }
 
         ID3D12RootSignature* GetRootSignature(const D3D12_ROOT_SIGNATURE_DESC& desc)
         {
             return DemandCreate(mRootSignature, mMutex, [&](ID3D12RootSignature** pResult) noexcept -> HRESULT
-            {
-                HRESULT hr = CreateRootSignature(mDevice.Get(), &desc, pResult);
+                {
+                    HRESULT hr = CreateRootSignature(mDevice.Get(), &desc, pResult);
 
-                if (SUCCEEDED(hr))
-                    SetDebugObjectName(*pResult, L"DualPostProcess");
+                    if (SUCCEEDED(hr))
+                        SetDebugObjectName(*pResult, L"DualPostProcess");
 
-                return hr;
-            });
+                    return hr;
+                });
         }
 
         ID3D12Device* GetDevice() const noexcept { return mDevice.Get(); }
@@ -107,6 +110,7 @@ namespace
         std::mutex                  mMutex;
     };
 }
+#pragma endregion
 
 class DualPostProcess::Impl : public AlignedNew<PostProcessConstants>
 {
@@ -180,14 +184,19 @@ DualPostProcess::Impl::Impl(_In_ ID3D12Device* device, const RenderTargetState& 
 
     // Create root signature.
     {
-        D3D12_ROOT_SIGNATURE_FLAGS rootSignatureFlags =
-            D3D12_ROOT_SIGNATURE_FLAG_DENY_VERTEX_SHADER_ROOT_ACCESS |
-            D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
-            D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS |
-            D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS;
+        ENUM_FLAGS_CONSTEXPR D3D12_ROOT_SIGNATURE_FLAGS rootSignatureFlags =
+            D3D12_ROOT_SIGNATURE_FLAG_DENY_VERTEX_SHADER_ROOT_ACCESS
+            | D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS
+            | D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS
+            | D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS
+#ifdef _GAMING_XBOX_SCARLETT
+            | D3D12_ROOT_SIGNATURE_FLAG_DENY_AMPLIFICATION_SHADER_ROOT_ACCESS
+            | D3D12_ROOT_SIGNATURE_FLAG_DENY_MESH_SHADER_ROOT_ACCESS
+#endif
+            ;
 
         // Same as CommonStates::StaticLinearClamp
-        CD3DX12_STATIC_SAMPLER_DESC sampler(
+        const CD3DX12_STATIC_SAMPLER_DESC sampler(
             0, // register
             D3D12_FILTER_MIN_MAG_MIP_LINEAR,
             D3D12_TEXTURE_ADDRESS_MODE_CLAMP,
@@ -203,10 +212,10 @@ DualPostProcess::Impl::Impl(_In_ ID3D12Device* device, const RenderTargetState& 
 
         CD3DX12_ROOT_PARAMETER rootParameters[RootParameterIndex::RootParameterCount] = {};
 
-        CD3DX12_DESCRIPTOR_RANGE texture1Range(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
+        const CD3DX12_DESCRIPTOR_RANGE texture1Range(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
         rootParameters[RootParameterIndex::TextureSRV].InitAsDescriptorTable(1, &texture1Range, D3D12_SHADER_VISIBILITY_PIXEL);
 
-        CD3DX12_DESCRIPTOR_RANGE texture2Range(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1);
+        const CD3DX12_DESCRIPTOR_RANGE texture2Range(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1);
         rootParameters[RootParameterIndex::TextureSRV2].InitAsDescriptorTable(1, &texture2Range, D3D12_SHADER_VISIBILITY_PIXEL);
 
         // Root parameter descriptor
@@ -223,7 +232,7 @@ DualPostProcess::Impl::Impl(_In_ ID3D12Device* device, const RenderTargetState& 
     assert(mRootSignature != nullptr);
 
     // Create pipeline state.
-    EffectPipelineStateDescription psd(nullptr,
+    const EffectPipelineStateDescription psd(nullptr,
         CommonStates::Opaque,
         CommonStates::DepthNone,
         CommonStates::CullNone,
@@ -299,7 +308,7 @@ void DualPostProcess::Impl::Process(_In_ ID3D12GraphicsCommandList* commandList)
 
 // Public constructor.
 DualPostProcess::DualPostProcess(_In_ ID3D12Device* device, const RenderTargetState& rtState, Effect fx)
-  : pImpl(std::make_unique<Impl>(device, rtState, fx))
+    : pImpl(std::make_unique<Impl>(device, rtState, fx))
 {
 }
 

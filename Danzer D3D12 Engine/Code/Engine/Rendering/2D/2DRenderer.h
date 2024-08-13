@@ -17,7 +17,10 @@ class Renderer2D
 {
 public:
 	Renderer2D() : 
-		m_framework(nullptr){}
+		m_framework(nullptr),
+		m_pso(0),
+		m_rs(0)
+	{}
 	~Renderer2D();
 
 	void Init(D3D12Framework& framework, PSOHandler& psoHandler);

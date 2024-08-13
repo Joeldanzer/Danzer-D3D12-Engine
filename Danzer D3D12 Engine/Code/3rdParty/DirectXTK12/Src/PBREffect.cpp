@@ -113,81 +113,82 @@ private:
 };
 
 
+#pragma region Shaders
 // Include the precompiled shader code.
 namespace
 {
 #ifdef _GAMING_XBOX_SCARLETT
-    #include "XboxGamingScarlettPBREffect_VSConstant.inc"
-    #include "XboxGamingScarlettPBREffect_VSConstantBn.inc"
+#include "XboxGamingScarlettPBREffect_VSConstant.inc"
+#include "XboxGamingScarlettPBREffect_VSConstantBn.inc"
 
-    #include "XboxGamingScarlettPBREffect_VSConstantInst.inc"
-    #include "XboxGamingScarlettPBREffect_VSConstantBnInst.inc"
+#include "XboxGamingScarlettPBREffect_VSConstantInst.inc"
+#include "XboxGamingScarlettPBREffect_VSConstantBnInst.inc"
 
-    #include "XboxGamingScarlettPBREffect_VSConstantVelocity.inc"
-    #include "XboxGamingScarlettPBREffect_VSConstantVelocityBn.inc"
+#include "XboxGamingScarlettPBREffect_VSConstantVelocity.inc"
+#include "XboxGamingScarlettPBREffect_VSConstantVelocityBn.inc"
 
-    #include "XboxGamingScarlettPBREffect_VSSkinned.inc"
-    #include "XboxGamingScarlettPBREffect_VSSkinnedBn.inc"
+#include "XboxGamingScarlettPBREffect_VSSkinned.inc"
+#include "XboxGamingScarlettPBREffect_VSSkinnedBn.inc"
 
-    #include "XboxGamingScarlettPBREffect_PSConstant.inc"
-    #include "XboxGamingScarlettPBREffect_PSTextured.inc"
-    #include "XboxGamingScarlettPBREffect_PSTexturedEmissive.inc"
-    #include "XboxGamingScarlettPBREffect_PSTexturedVelocity.inc"
-    #include "XboxGamingScarlettPBREffect_PSTexturedEmissiveVelocity.inc"
+#include "XboxGamingScarlettPBREffect_PSConstant.inc"
+#include "XboxGamingScarlettPBREffect_PSTextured.inc"
+#include "XboxGamingScarlettPBREffect_PSTexturedEmissive.inc"
+#include "XboxGamingScarlettPBREffect_PSTexturedVelocity.inc"
+#include "XboxGamingScarlettPBREffect_PSTexturedEmissiveVelocity.inc"
 #elif defined(_GAMING_XBOX)
-    #include "XboxGamingXboxOnePBREffect_VSConstant.inc"
-    #include "XboxGamingXboxOnePBREffect_VSConstantBn.inc"
+#include "XboxGamingXboxOnePBREffect_VSConstant.inc"
+#include "XboxGamingXboxOnePBREffect_VSConstantBn.inc"
 
-    #include "XboxGamingXboxOnePBREffect_VSConstantInst.inc"
-    #include "XboxGamingXboxOnePBREffect_VSConstantBnInst.inc"
+#include "XboxGamingXboxOnePBREffect_VSConstantInst.inc"
+#include "XboxGamingXboxOnePBREffect_VSConstantBnInst.inc"
 
-    #include "XboxGamingXboxOnePBREffect_VSConstantVelocity.inc"
-    #include "XboxGamingXboxOnePBREffect_VSConstantVelocityBn.inc"
+#include "XboxGamingXboxOnePBREffect_VSConstantVelocity.inc"
+#include "XboxGamingXboxOnePBREffect_VSConstantVelocityBn.inc"
 
-    #include "XboxGamingXboxOnePBREffect_VSSkinned.inc"
-    #include "XboxGamingXboxOnePBREffect_VSSkinnedBn.inc"
+#include "XboxGamingXboxOnePBREffect_VSSkinned.inc"
+#include "XboxGamingXboxOnePBREffect_VSSkinnedBn.inc"
 
-    #include "XboxGamingXboxOnePBREffect_PSConstant.inc"
-    #include "XboxGamingXboxOnePBREffect_PSTextured.inc"
-    #include "XboxGamingXboxOnePBREffect_PSTexturedEmissive.inc"
-    #include "XboxGamingXboxOnePBREffect_PSTexturedVelocity.inc"
-    #include "XboxGamingXboxOnePBREffect_PSTexturedEmissiveVelocity.inc"
+#include "XboxGamingXboxOnePBREffect_PSConstant.inc"
+#include "XboxGamingXboxOnePBREffect_PSTextured.inc"
+#include "XboxGamingXboxOnePBREffect_PSTexturedEmissive.inc"
+#include "XboxGamingXboxOnePBREffect_PSTexturedVelocity.inc"
+#include "XboxGamingXboxOnePBREffect_PSTexturedEmissiveVelocity.inc"
 #elif defined(_XBOX_ONE) && defined(_TITLE)
-    #include "XboxOnePBREffect_VSConstant.inc"
-    #include "XboxOnePBREffect_VSConstantBn.inc"
+#include "XboxOnePBREffect_VSConstant.inc"
+#include "XboxOnePBREffect_VSConstantBn.inc"
 
-    #include "XboxOnePBREffect_VSConstantInst.inc"
-    #include "XboxOnePBREffect_VSConstantBnInst.inc"
+#include "XboxOnePBREffect_VSConstantInst.inc"
+#include "XboxOnePBREffect_VSConstantBnInst.inc"
 
-    #include "XboxOnePBREffect_VSConstantVelocity.inc"
-    #include "XboxOnePBREffect_VSConstantVelocityBn.inc"
+#include "XboxOnePBREffect_VSConstantVelocity.inc"
+#include "XboxOnePBREffect_VSConstantVelocityBn.inc"
 
-    #include "XboxOnePBREffect_VSSkinned.inc"
-    #include "XboxOnePBREffect_VSSkinnedBn.inc"
+#include "XboxOnePBREffect_VSSkinned.inc"
+#include "XboxOnePBREffect_VSSkinnedBn.inc"
 
-    #include "XboxOnePBREffect_PSConstant.inc"
-    #include "XboxOnePBREffect_PSTextured.inc"
-    #include "XboxOnePBREffect_PSTexturedEmissive.inc"
-    #include "XboxOnePBREffect_PSTexturedVelocity.inc"
-    #include "XboxOnePBREffect_PSTexturedEmissiveVelocity.inc"
+#include "XboxOnePBREffect_PSConstant.inc"
+#include "XboxOnePBREffect_PSTextured.inc"
+#include "XboxOnePBREffect_PSTexturedEmissive.inc"
+#include "XboxOnePBREffect_PSTexturedVelocity.inc"
+#include "XboxOnePBREffect_PSTexturedEmissiveVelocity.inc"
 #else
-    #include "PBREffect_VSConstant.inc"
-    #include "PBREffect_VSConstantBn.inc"
+#include "PBREffect_VSConstant.inc"
+#include "PBREffect_VSConstantBn.inc"
 
-    #include "PBREffect_VSConstantInst.inc"
-    #include "PBREffect_VSConstantBnInst.inc"
+#include "PBREffect_VSConstantInst.inc"
+#include "PBREffect_VSConstantBnInst.inc"
 
-    #include "PBREffect_VSConstantVelocity.inc"
-    #include "PBREffect_VSConstantVelocityBn.inc"
+#include "PBREffect_VSConstantVelocity.inc"
+#include "PBREffect_VSConstantVelocityBn.inc"
 
-    #include "PBREffect_VSSkinned.inc"
-    #include "PBREffect_VSSkinnedBn.inc"
+#include "PBREffect_VSSkinned.inc"
+#include "PBREffect_VSSkinnedBn.inc"
 
-    #include "PBREffect_PSConstant.inc"
-    #include "PBREffect_PSTextured.inc"
-    #include "PBREffect_PSTexturedEmissive.inc"
-    #include "PBREffect_PSTexturedVelocity.inc"
-    #include "PBREffect_PSTexturedEmissiveVelocity.inc"
+#include "PBREffect_PSConstant.inc"
+#include "PBREffect_PSTextured.inc"
+#include "PBREffect_PSTexturedEmissive.inc"
+#include "PBREffect_PSTexturedVelocity.inc"
+#include "PBREffect_PSTexturedEmissiveVelocity.inc"
 #endif
 }
 
@@ -287,6 +288,7 @@ const int EffectBase<PBREffectTraits>::PixelShaderIndices[] =
     3,      // textured + velocity (biased vertex normals)
     4,      // textured + emissive + velocity (biased vertex normals)
 };
+#pragma endregion
 
 // Global pool of per-device PBREffect resources. Required by EffectBase<>, but not used.
 template<>
@@ -295,12 +297,12 @@ SharedResourcePool<ID3D12Device*, EffectBase<PBREffectTraits>::DeviceResources> 
 // Constructor.
 PBREffect::Impl::Impl(_In_ ID3D12Device* device)
     : EffectBase(device),
-        weightsPerVertex(0),
-        textureEnabled(false),
-        emissiveMap(false),
-        descriptors{},
-        lightColor{},
-        boneConstants{}
+    weightsPerVertex(0),
+    textureEnabled(false),
+    emissiveMap(false),
+    descriptors{},
+    lightColor{},
+    boneConstants{}
 {
     static_assert(static_cast<int>(std::size(EffectBase<PBREffectTraits>::VertexShaderIndices)) == PBREffectTraits::ShaderPermutationCount, "array/max mismatch");
     static_assert(static_cast<int>(std::size(EffectBase<PBREffectTraits>::VertexShaderBytecode)) == PBREffectTraits::VertexShaderCount, "array/max mismatch");
@@ -371,11 +373,16 @@ void PBREffect::Impl::Initialize(
 
     // Create root signature
     {
-        D3D12_ROOT_SIGNATURE_FLAGS rootSignatureFlags =
-            D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT | // Only the input assembler stage needs access to the constant buffer.
-            D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
-            D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS |
-            D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS;
+        ENUM_FLAGS_CONSTEXPR D3D12_ROOT_SIGNATURE_FLAGS rootSignatureFlags =
+            D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT
+            | D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS
+            | D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS
+            | D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS
+#ifdef _GAMING_XBOX_SCARLETT
+            | D3D12_ROOT_SIGNATURE_FLAG_DENY_AMPLIFICATION_SHADER_ROOT_ACCESS
+            | D3D12_ROOT_SIGNATURE_FLAG_DENY_MESH_SHADER_ROOT_ACCESS
+#endif
+            ;
 
         CD3DX12_ROOT_PARAMETER rootParameters[RootParametersCount] = {};
         CD3DX12_DESCRIPTOR_RANGE textureSRV[6] = {
@@ -430,14 +437,14 @@ void PBREffect::Impl::Initialize(
     }
 
     // Create pipeline state.
-    int sp = GetPipelineStatePermutation(effectFlags);
+    const int sp = GetPipelineStatePermutation(effectFlags);
     assert(sp >= 0 && sp < PBREffectTraits::ShaderPermutationCount);
     _Analysis_assume_(sp >= 0 && sp < PBREffectTraits::ShaderPermutationCount);
 
-    int vi = EffectBase<PBREffectTraits>::VertexShaderIndices[sp];
+    const int vi = EffectBase<PBREffectTraits>::VertexShaderIndices[sp];
     assert(vi >= 0 && vi < PBREffectTraits::VertexShaderCount);
     _Analysis_assume_(vi >= 0 && vi < PBREffectTraits::VertexShaderCount);
-    int pi = EffectBase<PBREffectTraits>::PixelShaderIndices[sp];
+    const int pi = EffectBase<PBREffectTraits>::PixelShaderIndices[sp];
     assert(pi >= 0 && pi < PBREffectTraits::PixelShaderCount);
     _Analysis_assume_(pi >= 0 && pi < PBREffectTraits::PixelShaderCount);
 
@@ -515,7 +522,7 @@ void PBREffect::Impl::Apply(_In_ ID3D12GraphicsCommandList* commandList)
     {
         constants.world = XMMatrixTranspose(matrices.world);
 
-        XMMATRIX worldInverse = XMMatrixInverse(nullptr, matrices.world);
+        const XMMATRIX worldInverse = XMMatrixInverse(nullptr, matrices.world);
 
         constants.worldInverseTranspose[0] = worldInverse.r[0];
         constants.worldInverseTranspose[1] = worldInverse.r[1];
@@ -528,7 +535,7 @@ void PBREffect::Impl::Apply(_In_ ID3D12GraphicsCommandList* commandList)
     // Eye position vector.
     if (dirtyFlags & EffectDirtyFlags::EyePosition)
     {
-        XMMATRIX viewInverse = XMMatrixInverse(nullptr, matrices.view);
+        const XMMATRIX viewInverse = XMMatrixInverse(nullptr, matrices.view);
 
         constants.eyePosition = viewInverse.r[3];
 
@@ -628,7 +635,7 @@ void PBREffect::Impl::Apply(_In_ ID3D12GraphicsCommandList* commandList)
     }
 
     // Set constants
-    auto cbuffer = GetConstantBufferGpuAddress();
+    auto const cbuffer = GetConstantBufferGpuAddress();
     commandList->SetGraphicsRootConstantBufferView(RootParameterIndex::ConstantBuffer, cbuffer);
     commandList->SetGraphicsRootConstantBufferView(RootParameterIndex::ConstantBufferBones,
         (weightsPerVertex > 0) ? mBones.GpuAddress() : cbuffer);
@@ -821,9 +828,9 @@ void PBREffect::SetSurfaceTextures(
     D3D12_GPU_DESCRIPTOR_HANDLE roughnessMetallicAmbientOcclusion,
     D3D12_GPU_DESCRIPTOR_HANDLE sampler)
 {
-    pImpl->descriptors[Impl::RootParameterIndex::AlbedoTexture]  = albedo;
-    pImpl->descriptors[Impl::RootParameterIndex::NormalTexture]  = normal;
-    pImpl->descriptors[Impl::RootParameterIndex::RMATexture]     = roughnessMetallicAmbientOcclusion;
+    pImpl->descriptors[Impl::RootParameterIndex::AlbedoTexture] = albedo;
+    pImpl->descriptors[Impl::RootParameterIndex::NormalTexture] = normal;
+    pImpl->descriptors[Impl::RootParameterIndex::RMATexture] = roughnessMetallicAmbientOcclusion;
     pImpl->descriptors[Impl::RootParameterIndex::SurfaceSampler] = sampler;
 }
 
@@ -858,6 +865,10 @@ void PBREffect::SetRenderTargetSizeInPixels(int width, int height)
 // SkinnedPBREffect
 //--------------------------------------------------------------------------------------
 
+SkinnedPBREffect::~SkinnedPBREffect()
+{
+}
+
 // Animation settings.
 void SkinnedPBREffect::SetBoneTransforms(_In_reads_(count) XMMATRIX const* value, size_t count)
 {
@@ -868,16 +879,16 @@ void SkinnedPBREffect::SetBoneTransforms(_In_reads_(count) XMMATRIX const* value
 
     for (size_t i = 0; i < count; i++)
     {
-#if DIRECTX_MATH_VERSION >= 313
+    #if DIRECTX_MATH_VERSION >= 313
         XMStoreFloat3x4A(reinterpret_cast<XMFLOAT3X4A*>(&boneConstant[i]), value[i]);
-#else
-        // Xbox One XDK has an older version of DirectXMath
+    #else
+            // Xbox One XDK has an older version of DirectXMath
         XMMATRIX boneMatrix = XMMatrixTranspose(value[i]);
 
         boneConstant[i][0] = boneMatrix.r[0];
         boneConstant[i][1] = boneMatrix.r[1];
         boneConstant[i][2] = boneMatrix.r[2];
-#endif
+    #endif
     }
 
     pImpl->dirtyFlags |= EffectDirtyFlags::ConstantBufferBones;

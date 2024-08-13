@@ -20,8 +20,8 @@ public:
 
 	struct Frame {
 		Vect2f m_framePosition;
-		unsigned int m_width;
-		unsigned int m_height;
+		unsigned int m_width = 0;
+		unsigned int m_height = 0;
 	};
 
 	struct Sheet {
@@ -29,7 +29,7 @@ public:
 		unsigned int m_width  = 0;
 		unsigned int m_height = 0;
 
-		UINT m_texture;
+		UINT m_texture = 0;
 	};
 
 	SpriteData() = delete;

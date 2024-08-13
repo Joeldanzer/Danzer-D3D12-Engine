@@ -188,36 +188,36 @@ ModelMesh::~ModelMesh()
 }
 
 // Draw the mesh
-void __cdecl ModelMesh::DrawOpaque(_In_ ID3D12GraphicsCommandList* commandList) const
+void ModelMesh::DrawOpaque(_In_ ID3D12GraphicsCommandList* commandList) const
 {
     ModelMeshPart::DrawMeshParts(commandList, opaqueMeshParts);
 }
 
-void __cdecl ModelMesh::DrawAlpha(_In_ ID3D12GraphicsCommandList* commandList) const
+void ModelMesh::DrawAlpha(_In_ ID3D12GraphicsCommandList* commandList) const
 {
     ModelMeshPart::DrawMeshParts(commandList, alphaMeshParts);
 }
 
 
 // Draw the mesh with an effect
-void __cdecl ModelMesh::DrawOpaque(_In_ ID3D12GraphicsCommandList* commandList, _In_ IEffect* effect) const
+void ModelMesh::DrawOpaque(_In_ ID3D12GraphicsCommandList* commandList, _In_ IEffect* effect) const
 {
     ModelMeshPart::DrawMeshParts(commandList, opaqueMeshParts, effect);
 }
 
-void __cdecl ModelMesh::DrawAlpha(_In_ ID3D12GraphicsCommandList* commandList, _In_ IEffect* effect) const
+void ModelMesh::DrawAlpha(_In_ ID3D12GraphicsCommandList* commandList, _In_ IEffect* effect) const
 {
     ModelMeshPart::DrawMeshParts(commandList, alphaMeshParts, effect);
 }
 
 
 // Draw the mesh with a callback for each mesh part
-void __cdecl ModelMesh::DrawOpaque(_In_ ID3D12GraphicsCommandList* commandList, ModelMeshPart::DrawCallback callback) const
+void ModelMesh::DrawOpaque(_In_ ID3D12GraphicsCommandList* commandList, ModelMeshPart::DrawCallback callback) const
 {
     ModelMeshPart::DrawMeshParts(commandList, opaqueMeshParts, callback);
 }
 
-void __cdecl ModelMesh::DrawAlpha(_In_ ID3D12GraphicsCommandList* commandList, ModelMeshPart::DrawCallback callback) const
+void ModelMesh::DrawAlpha(_In_ ID3D12GraphicsCommandList* commandList, ModelMeshPart::DrawCallback callback) const
 {
     ModelMeshPart::DrawMeshParts(commandList, alphaMeshParts, callback);
 }
@@ -335,7 +335,7 @@ void Model::LoadStaticBuffers(
         }
     }
 
-    CD3DX12_HEAP_PROPERTIES heapProperties(D3D12_HEAP_TYPE_DEFAULT);
+    const CD3DX12_HEAP_PROPERTIES heapProperties(D3D12_HEAP_TYPE_DEFAULT);
 
     for (auto it = uniqueParts.cbegin(); it != uniqueParts.cend(); ++it)
     {
@@ -352,13 +352,13 @@ void Model::LoadStaticBuffers(
 
             part->vertexBufferSize = static_cast<uint32_t>(part->vertexBuffer.Size());
 
-            auto desc = CD3DX12_RESOURCE_DESC::Buffer(part->vertexBuffer.Size());
+            auto const desc = CD3DX12_RESOURCE_DESC::Buffer(part->vertexBuffer.Size());
 
             ThrowIfFailed(device->CreateCommittedResource(
                 &heapProperties,
                 D3D12_HEAP_FLAG_NONE,
                 &desc,
-                D3D12_RESOURCE_STATE_COPY_DEST,
+                c_initialCopyTargetState,
                 nullptr,
                 IID_GRAPHICS_PPV_ARGS(part->staticVertexBuffer.GetAddressOf())
             ));
@@ -408,13 +408,13 @@ void Model::LoadStaticBuffers(
 
             part->indexBufferSize = static_cast<uint32_t>(part->indexBuffer.Size());
 
-            auto desc = CD3DX12_RESOURCE_DESC::Buffer(part->indexBuffer.Size());
+            auto const desc = CD3DX12_RESOURCE_DESC::Buffer(part->indexBuffer.Size());
 
             ThrowIfFailed(device->CreateCommittedResource(
                 &heapProperties,
                 D3D12_HEAP_FLAG_NONE,
                 &desc,
-                D3D12_RESOURCE_STATE_COPY_DEST,
+                c_initialCopyTargetState,
                 nullptr,
                 IID_GRAPHICS_PPV_ARGS(part->staticIndexBuffer.GetAddressOf())
             ));
@@ -590,7 +590,7 @@ void Model::CopyAbsoluteBoneTransformsTo(
 
     memset(boneTransforms, 0, sizeof(XMMATRIX) * nbones);
 
-    XMMATRIX id = XMMatrixIdentity();
+    const XMMATRIX id = XMMatrixIdentity();
     size_t visited = 0;
     ComputeAbsolute(0, id, bones.size(), boneMatrices.get(), boneTransforms, visited);
 }
@@ -620,7 +620,7 @@ void Model::CopyAbsoluteBoneTransforms(
 
     memset(outBoneTransforms, 0, sizeof(XMMATRIX) * nbones);
 
-    XMMATRIX id = XMMatrixIdentity();
+    const XMMATRIX id = XMMatrixIdentity();
     size_t visited = 0;
     ComputeAbsolute(0, id, bones.size(), inBoneTransforms, outBoneTransforms, visited);
 }
@@ -830,3 +830,21 @@ void Model::Transition(
         commandList->ResourceBarrier(count, barrier);
     }
 }
+
+
+//--------------------------------------------------------------------------------------
+// Adapters for /Zc:wchar_t- clients
+
+#if defined(_MSC_VER) && !defined(_NATIVE_WCHAR_T_DEFINED)
+
+_Use_decl_annotations_
+std::unique_ptr<EffectTextureFactory> Model::LoadTextures(
+    ID3D12Device* device,
+    ResourceUploadBatch& resourceUploadBatch,
+    const __wchar_t* texturesPath,
+    D3D12_DESCRIPTOR_HEAP_FLAGS flags) const
+{
+    return LoadTextures(device, resourceUploadBatch, reinterpret_cast<const unsigned short*>(texturesPath), flags);
+}
+
+#endif

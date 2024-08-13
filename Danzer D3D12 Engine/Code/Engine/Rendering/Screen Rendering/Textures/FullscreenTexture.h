@@ -1,5 +1,5 @@
 #pragma once
-#include "../3rdParty/DirectX-Headers-main/include/directx/d3dx12.h"
+#include "DirectX/include/directx/d3dx12.h"
 #include "Core/MathDefinitions.h"
 #include "Core/D3D12Header.h"
 

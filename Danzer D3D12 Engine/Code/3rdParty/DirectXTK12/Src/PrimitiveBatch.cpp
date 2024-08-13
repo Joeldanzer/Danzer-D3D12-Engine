@@ -14,7 +14,7 @@
 #include "GraphicsMemory.h"
 
 using namespace DirectX;
-using namespace DirectX::Internal;
+using namespace DirectX::DX12::Private;
 using Microsoft::WRL::ComPtr;
 
 
@@ -120,15 +120,15 @@ static bool CanBatchPrimitives(D3D_PRIMITIVE_TOPOLOGY topology) noexcept
 {
     switch (topology)
     {
-        case D3D_PRIMITIVE_TOPOLOGY_POINTLIST:
-        case D3D_PRIMITIVE_TOPOLOGY_LINELIST:
-        case D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST:
-            // Lists can easily be merged.
-            return true;
+    case D3D_PRIMITIVE_TOPOLOGY_POINTLIST:
+    case D3D_PRIMITIVE_TOPOLOGY_LINELIST:
+    case D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST:
+        // Lists can easily be merged.
+        return true;
 
-        default:
-            // Strips cannot.
-            return false;
+    default:
+        // Strips cannot.
+        return false;
     }
 
     // We could also merge indexed strips by inserting degenerates,
@@ -155,8 +155,8 @@ void PrimitiveBatchBase::Impl::Draw(D3D_PRIMITIVE_TOPOLOGY topology, bool isInde
     assert(pMappedVertices != nullptr);
 
     // Can we merge this primitive in with an existing batch, or must we flush first?
-    bool wrapIndexBuffer = (mIndexCount + indexCount > mMaxIndices);
-    bool wrapVertexBuffer = (mVertexCount + vertexCount > mMaxVertices);
+    const bool wrapIndexBuffer = (mIndexCount + indexCount > mMaxIndices);
+    const bool wrapVertexBuffer = (mVertexCount + vertexCount > mMaxVertices);
 
     if ((topology != mCurrentTopology) ||
         (isIndexed != mCurrentlyIndexed) ||
@@ -178,9 +178,11 @@ void PrimitiveBatchBase::Impl::Draw(D3D_PRIMITIVE_TOPOLOGY topology, bool isInde
 
         // Allocate a page for the primitive data
         if (isIndexed)
-            mIndexSegment = GraphicsMemory::Get(mDevice.Get()).Allocate(mIndexPageSize);
+        {
+            mIndexSegment = GraphicsMemory::Get(mDevice.Get()).Allocate(mIndexPageSize, 16, GraphicsMemory::TAG_INDEX);
+        }
 
-        mVertexSegment = GraphicsMemory::Get(mDevice.Get()).Allocate(mVertexPageSize);
+        mVertexSegment = GraphicsMemory::Get(mDevice.Get()).Allocate(mVertexPageSize, 16, GraphicsMemory::TAG_VERTEX);
     }
 
     // Copy over the index data.

@@ -3,7 +3,6 @@
 #include "Core/Engine.h"
 #include "Core/WindowHandler.h"
 #include "Rendering/RenderManager.h"
-//#include "Rendering/RenderUtility.h"
 #include "Rendering/2D/SpriteHandler.h"
 #include "SceneManager.h"
 #include "Rendering/Models/ModelData.h"
@@ -21,7 +20,7 @@
 #include "Core/input.hpp"
 
 #include <tchar.h>
-#include "../3rdParty/imgui-master/imgui.h"
+#include "imgui/imgui.h"
 
 ImguiHandler::ImguiHandler(Engine& engine) :
 	m_engine(engine),
@@ -55,15 +54,15 @@ void ImguiHandler::Init()
 {
 	m_rightWindow.m_height = WindowHandler::WindowData().m_h;
 	m_rightWindow.m_width = 400;
-	m_rightWindow.m_positon.x = WindowHandler::WindowData().m_w - (m_rightWindow.m_width/2);
-	m_rightWindow.m_positon.y = (m_rightWindow.m_height / 2) + 19;
+	m_rightWindow.m_positon.x = static_cast<float>(WindowHandler::WindowData().m_w - (m_rightWindow.m_width/2));
+	m_rightWindow.m_positon.y = static_cast<float>((m_rightWindow.m_height / 2) + 19);
 
 	m_leftWindow.m_height = WindowHandler::WindowData().m_h / 2;
 	m_leftWindow.m_width = 400;
-	m_leftWindow.m_positon.x = m_leftWindow.m_width / 2;
-	m_leftWindow.m_positon.y = (m_leftWindow.m_height / 2) + 19;
+	m_leftWindow.m_positon.x = static_cast<float>(m_leftWindow.m_width / 2);
+	m_leftWindow.m_positon.y = static_cast<float>((m_leftWindow.m_height / 2) + 19);
 
-	m_tag = new char;
+	m_tag  = new char;
 	m_name = new char;
 }
 
@@ -106,11 +105,9 @@ void ImguiHandler::Update(const float dt)
 			ImGui::DragFloat3("Light Direction", &rotation[0], 0.1f, -180.0f, 180.0f);
 
 			transform.m_rotation = DirectX::XMQuaternionRotationRollPitchYaw(ToRadians(rotation[0]), ToRadians(rotation[1]), ToRadians(rotation[2]));
-
 			//transform.m_rotation  = Quat4f::CreateFromAxisAngle(Vect3f::Right, ToRadians(rotation[0]));
 			//transform.m_rotation *= Quat4f::CreateFromAxisAngle(Vect3f::Backward, ToRadians(rotation[2]));
 			//transform.m_rotation *= Quat4f::CreateFromAxisAngle(Vect3f::Up, ToRadians(rotation[1]));
-
 			//transform.m_rotation = Quat4f::CreateFromYawPitchRoll({ ToRadians(rotation[0]), ToRadians(rotation[1]), ToRadians(rotation[2]) });
 
 			ImGui::Text("Volumetric Lighting");
@@ -214,10 +211,6 @@ void ImguiHandler::Update(const float dt)
 		//}
 	}
 	ImGui::EndMainMenuBar();	
-
-	//StaticWindows();
-	//
-	//m_removeEntity = false;
 }
 
 
@@ -236,8 +229,6 @@ void ImguiHandler::StaticWindows()
 		ImGui::SetNextWindowPos({ m_leftWindow.m_positon.x, m_leftWindow.m_positon.y }, 0, { 0.5f, 0.5f });
 		ImGui::SetNextWindowBgAlpha(1.f);
 		bool isOpen = true;
-
-		//static bool selectedEntity = false;
 
 		if (ImGui::Begin("Scene View", &isOpen, staticWindowFlags)) {
 			if (ImGui::Button("Create Empty Object")) {
@@ -396,7 +387,7 @@ bool ImguiHandler::ModelDataSettings(entt::registry& reg)
 				if (m_currentMesh > data.GetMeshes().size() - 1)
 					m_currentMesh = 0;
 				
-				ImGui::SliderInt("Mesh", &m_currentMesh, 0, data.GetMeshes().size() - 1);
+				ImGui::SliderInt("Mesh", &m_currentMesh, 0, (UINT)data.GetMeshes().size() - 1);
 				ModelData::Mesh& currentMesh = data.GetMeshes()[m_currentMesh];
 
 				Material& material = currentMesh.m_material;
@@ -506,7 +497,7 @@ bool ImguiHandler::ObjectSettings(entt::registry& reg)
 	ImGui::Separator();
 	if (ImGui::CollapsingHeader("Object")) {
 
-		int len = strlen(obj.m_tag.c_str());
+		int len = (int)strlen(obj.m_tag.c_str());
 		memcpy(m_tag, obj.m_tag.c_str(), len + 1);
 		ImGui::InputText("Tag", m_tag, 30);
 		obj.m_tag = m_tag;

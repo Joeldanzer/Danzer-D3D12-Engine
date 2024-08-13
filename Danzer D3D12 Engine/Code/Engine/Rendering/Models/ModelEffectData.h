@@ -1,9 +1,9 @@
 #pragma once
 #include <vector>
 #include "Core/D3D12Header.h"
-#include "../3rdParty/DirectX-Headers-main/include/directx/d3d12.h"
+#include "DirectX/include/directx/d3d12.h"
 #include "Core/MathDefinitions.h"
-#include "../Buffers/EffectShaderBuffer.h"
+#include "Rendering/Buffers/EffectShaderBuffer.h"
 #include "Core/D3D12Framework.h"
 
 class ModelEffectData {
@@ -15,7 +15,9 @@ public:
 		m_model(model), m_textures(textures),
 		m_hasBuffer(hasBuffer),
 		m_bufferData(),
-		m_sizeOfData(0)
+		m_sizeOfData(0),
+		m_pso(0),
+		m_rs(0)
 	{
 		if (hasBuffer)
 			m_buffer.Init(framework.GetDevice(), &framework.CbvSrvHeap(), m_buffer.FetchData(), sizeof(EffectShaderBuffer::Data));

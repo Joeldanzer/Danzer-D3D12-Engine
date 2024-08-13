@@ -26,9 +26,9 @@ namespace
     void SetPBRProperties(
         _In_ T* effect,
         const EffectFactory::EffectInfo& info,
-        _In_ DescriptorHeap* textures,
+        _In_ const DescriptorHeap* textures,
         int textureDescriptorOffset,
-        _In_ DescriptorHeap* samplers,
+        _In_ const DescriptorHeap* samplers,
         int samplerDescriptorOffset)
     {
         // We don't use EnableDefaultLighting generally for PBR as it uses Image-Based Lighting instead.
@@ -59,7 +59,7 @@ namespace
         else
         {
             // Untextured material (for PBR this still requires texture coordinates)
-            XMVECTOR color = XMLoadFloat3(&info.diffuseColor);
+            const XMVECTOR color = XMLoadFloat3(&info.diffuseColor);
             effect->SetConstantAlbedo(color);
 
             if (info.specularColor.x != 0 || info.specularColor.y != 0 || info.specularColor.z != 0)
@@ -67,7 +67,7 @@ namespace
                 // Derived from specularPower = 2 / roughness ^ 4 - 2
                 // http://graphicrants.blogspot.com/2013/08/specular-brdf-reference.html
 
-                float roughness = powf(2.f / (info.specularPower + 2.f), 1.f / 4.f);
+                const float roughness = powf(2.f / (info.specularPower + 2.f), 1.f / 4.f);
                 effect->SetConstantRoughness(roughness);
             }
 
@@ -166,7 +166,7 @@ std::shared_ptr<IEffect> PBREffectFactory::Impl::CreateEffect(
         std::wstring cacheName;
         if (mSharing && !info.name.empty())
         {
-            uint32_t hash = derivedPSD.ComputeHash();
+            const uint32_t hash = derivedPSD.ComputeHash();
             cacheName = std::to_wstring(effectflags) + info.name + std::to_wstring(hash);
 
             auto it = mEffectCacheSkinning.find(cacheName);
@@ -202,7 +202,7 @@ std::shared_ptr<IEffect> PBREffectFactory::Impl::CreateEffect(
         std::wstring cacheName;
         if (mSharing && !info.name.empty())
         {
-            uint32_t hash = derivedPSD.ComputeHash();
+            const uint32_t hash = derivedPSD.ComputeHash();
             cacheName = std::to_wstring(effectflags) + info.name + std::to_wstring(hash);
 
             auto it = mEffectCache.find(cacheName);
@@ -257,11 +257,20 @@ PBREffectFactory::PBREffectFactory(_In_ ID3D12DescriptorHeap* textureDescriptors
         throw std::invalid_argument("Descriptor heap cannot be null if no device is provided. Use the alternative PBREffectFactory constructor instead.");
     }
 
-    if (textureDescriptors->GetDesc().Type != D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV)
+#if defined(_MSC_VER) || !defined(_WIN32)
+    const D3D12_DESCRIPTOR_HEAP_TYPE textureHeapType = textureDescriptors->GetDesc().Type;
+    const D3D12_DESCRIPTOR_HEAP_TYPE samplerHeapType = samplerDescriptors->GetDesc().Type;
+#else
+    D3D12_DESCRIPTOR_HEAP_DESC tmpDesc1, tmpDesc2;
+    const D3D12_DESCRIPTOR_HEAP_TYPE textureHeapType = textureDescriptors->GetDesc(&tmpDesc1)->Type;
+    const D3D12_DESCRIPTOR_HEAP_TYPE samplerHeapType = samplerDescriptors->GetDesc(&tmpDesc2)->Type;
+#endif
+
+    if (textureHeapType != D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV)
     {
         throw std::invalid_argument("PBREffectFactory::CreateEffect requires a CBV_SRV_UAV descriptor heap for textureDescriptors.");
     }
-    if (samplerDescriptors->GetDesc().Type != D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER)
+    if (samplerHeapType != D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER)
     {
         throw std::invalid_argument("PBREffectFactory::CreateEffect requires a SAMPLER descriptor heap for samplerDescriptors.");
     }
@@ -270,11 +279,8 @@ PBREffectFactory::PBREffectFactory(_In_ ID3D12DescriptorHeap* textureDescriptors
 #if (defined(_XBOX_ONE) && defined(_TITLE)) || defined(_GAMING_XBOX)
     textureDescriptors->GetDevice(IID_GRAPHICS_PPV_ARGS(device.GetAddressOf()));
 #else
-    HRESULT hresult = textureDescriptors->GetDevice(IID_PPV_ARGS(device.GetAddressOf()));
-    if (FAILED(hresult))
-    {
-        throw com_exception(hresult);
-    }
+    HRESULT hr = textureDescriptors->GetDevice(IID_PPV_ARGS(device.GetAddressOf()));
+    ThrowIfFailed(hr);
 #endif
 
     pImpl = std::make_shared<Impl>(device.Get(), textureDescriptors, samplerDescriptors);

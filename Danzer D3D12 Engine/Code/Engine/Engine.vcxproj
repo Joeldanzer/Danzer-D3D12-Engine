@@ -120,9 +120,9 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;JPH_FLOATING_POINT_EXCEPTIONS_ENABLED;JPH_DEBUG_RENDERER;JPH_PROFILE_ENABLED;JPH_OBJECT_STREAM;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)3rdParty\;$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Editor\;$(SolutionDir)3rdParty\;$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -157,6 +157,7 @@
     <ClInclude Include="Components\PointLight.h" />
     <ClInclude Include="Components\Script.h" />
     <ClInclude Include="Components\WaterPlaneBufferData.h" />
+    <ClInclude Include="Physics\PhysicsHeader.h" />
     <ClInclude Include="Physics\PhysicsLayers.h" />
     <ClInclude Include="Physics\PhysicsWrapper.h" />
     <ClInclude Include="Rendering\Screen Rendering\Textures\DirectionalLightTexture.h" />

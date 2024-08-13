@@ -2,7 +2,11 @@
 #include "Core/MathDefinitions.h"
 
 struct PointLight {
-	PointLight() : m_id(0)
+	PointLight() :
+		m_id(0),
+		m_color(),
+		m_range(0.0f),
+		m_offsetPosition()
 	{}
 	//PointLight(const UINT id, Vect3f color, float intensity, float range) : 
 	//	m_id(id),

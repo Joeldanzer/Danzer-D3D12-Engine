@@ -13,6 +13,9 @@
 #include <d3d12_xs.h>
 #elif (defined(_XBOX_ONE) && defined(_TITLE)) || defined(_GAMING_XBOX)
 #include <d3d12_x.h>
+#elif defined(USING_DIRECTX_HEADERS)
+#include <directx/d3d12.h>
+#include <dxguids/dxguids.h>
 #else
 #include <d3d12.h>
 #endif
@@ -27,12 +30,8 @@
 
 #include <DirectXMath.h>
 
-#ifndef _GAMING_XBOX
+#if !defined(_GAMING_XBOX) && defined(_MSC_VER)
 #pragma comment(lib,"dxguid.lib")
-#endif
-
-#ifndef IID_GRAPHICS_PPV_ARGS
-#define IID_GRAPHICS_PPV_ARGS(x) IID_PPV_ARGS(x)
 #endif
 
 //
@@ -40,9 +39,9 @@
 //  CD3DX12_RECT
 //  CD3DX12_VIEWPORT
 //  CD3DX12_BOX
-//  CD3DX12_DEPTH_STENCIL_DESC / CD3DX12_DEPTH_STENCIL_DESC1
+//  CD3DX12_DEPTH_STENCIL_DESC / CD3DX12_DEPTH_STENCIL_DESC1 / CD3DX12_DEPTH_STENCIL_DESC2
 //  CD3DX12_BLEND_DESC
-//  CD3DX12_RASTERIZER_DESC
+//  CD3DX12_RASTERIZER_DESC / CD3DX12_RASTERIZER_DESC1
 //  CD3DX12_RESOURCE_ALLOCATION_INFO
 //  CD3DX12_HEAP_PROPERTIES
 //  CD3DX12_HEAP_DESC
@@ -73,9 +72,9 @@
 //  CD3DX12_VIEW_INSTANCING_DESC
 //  CD3DX12_RT_FORMAT_ARRAY
 //  CD3DX12_MESH_SHADER_PIPELINE_STATE_DESC
-//  CD3DX12_PIPELINE_STATE_STREAM / CD3DX12_PIPELINE_STATE_STREAM1 / CD3DX12_PIPELINE_STATE_STREAM2
+//  CD3DX12_PIPELINE_STATE_STREAM - CD3DX12_PIPELINE_STATE_STREAM4
 //  CD3DX12_PIPELINE_MESH_STATE_STREAM
-//  CD3DX12_PIPELINE_STATE_STREAM_PARSE_HELPER / CD3DX12_PIPELINE_STATE_STREAM2_PARSE_HELPER
+//  CD3DX12_PIPELINE_STATE_STREAM_PARSE_HELPER - CD3DX12_PIPELINE_STATE_STREAM4_PARSE_HELPER
 //  D3D12CalcSubresource
 //  D3D12DecomposeSubresource
 //  D3D12GetFormatPlaneCount
@@ -101,11 +100,31 @@
 //  CD3DX12_STATE_OBJECT_CONFIG_SUBOBJECT
 //  CD3DX12_NODE_MASK_SUBOBJECT
 //
+//  CD3DX12_BARRIER_SUBRESOURCE_RANGE
+//  CD3DX12_GLOBAL_BARRIER
+//  CD3DX12_BUFFER_BARRIER
+//  CD3DX12_TEXTURE_BARRIER
+//  CD3DX12_BARRIER_GROUP
+//
 //  CD3DX12FeatureSupport
 //
 
+#ifndef IID_GRAPHICS_PPV_ARGS
+#define IID_GRAPHICS_PPV_ARGS(x) IID_PPV_ARGS(x)
+#endif
+
 namespace DirectX
 {
+#if (defined(_XBOX_ONE) && defined(_TITLE)) || defined(_GAMING_XBOX)
+    constexpr D3D12_RESOURCE_STATES c_initialCopyTargetState = D3D12_RESOURCE_STATE_COPY_DEST;
+    constexpr D3D12_RESOURCE_STATES c_initialReadTargetState = D3D12_RESOURCE_STATE_GENERIC_READ;
+    constexpr D3D12_RESOURCE_STATES c_initialUAVTargetState = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+#else
+    constexpr D3D12_RESOURCE_STATES c_initialCopyTargetState = D3D12_RESOURCE_STATE_COMMON;
+    constexpr D3D12_RESOURCE_STATES c_initialReadTargetState = D3D12_RESOURCE_STATE_COMMON;
+    constexpr D3D12_RESOURCE_STATES c_initialUAVTargetState = D3D12_RESOURCE_STATE_COMMON;
+#endif
+
     constexpr D3D12_CPU_DESCRIPTOR_HANDLE D3D12_CPU_DESCRIPTOR_HANDLE_ZERO = {};
 
     // Creates a shader resource view from an arbitrary resource
@@ -114,6 +133,37 @@ namespace DirectX
         _In_ ID3D12Resource* tex,
         D3D12_CPU_DESCRIPTOR_HANDLE srvDescriptor,
         bool isCubeMap = false);
+
+    // Creates an unordered access view from an arbitrary resource
+    void __cdecl CreateUnorderedAccessView(
+        _In_ ID3D12Device* device,
+        _In_ ID3D12Resource* tex,
+        D3D12_CPU_DESCRIPTOR_HANDLE uavDescriptor,
+        uint32_t mipLevel = 0);
+
+    // Creates an render target view from an arbitrary resource
+    void __cdecl CreateRenderTargetView(
+        _In_ ID3D12Device* device,
+        _In_ ID3D12Resource* tex,
+        D3D12_CPU_DESCRIPTOR_HANDLE rtvDescriptor,
+        uint32_t mipLevel = 0);
+
+    // Creates a shader resource view from a buffer resource
+    void __cdecl CreateBufferShaderResourceView(
+        _In_ ID3D12Device* device,
+        _In_ ID3D12Resource* buffer,
+        D3D12_CPU_DESCRIPTOR_HANDLE srvDescriptor,
+        uint32_t stride = 0);
+
+    // Creates a unordered access view from a buffer resource
+    void __cdecl CreateBufferUnorderedAccessView(
+        _In_ ID3D12Device* device,
+        _In_ ID3D12Resource* buffer,
+        D3D12_CPU_DESCRIPTOR_HANDLE uavDescriptor,
+        uint32_t stride,
+        D3D12_BUFFER_UAV_FLAGS flag = D3D12_BUFFER_UAV_FLAG_NONE,
+        uint32_t counterOffset = 0,
+        _In_opt_ ID3D12Resource* counterResource = nullptr);
 
     // Shorthand for creating a root signature
     inline HRESULT CreateRootSignature(
@@ -128,7 +178,7 @@ namespace DirectX
         {
             hr = device->CreateRootSignature(0, pSignature->GetBufferPointer(), pSignature->GetBufferSize(),
                 IID_GRAPHICS_PPV_ARGS(rootSignature)
-                );
+            );
         }
         return hr;
     }
@@ -136,7 +186,12 @@ namespace DirectX
     // Helper for obtaining texture size
     inline XMUINT2 GetTextureSize(_In_ ID3D12Resource* tex) noexcept
     {
+#if defined(_MSC_VER) || !defined(_WIN32)
         const auto desc = tex->GetDesc();
+#else
+        D3D12_RESOURCE_DESC tmpDesc;
+        const auto& desc = *tex->GetDesc(&tmpDesc);
+#endif
         return XMUINT2(static_cast<uint32_t>(desc.Width), static_cast<uint32_t>(desc.Height));
     }
 
@@ -161,32 +216,34 @@ namespace DirectX
 #endif
 
     // Helper sets a D3D resource name string (used by PIX and debug layer leak reporting).
+    #if !defined(NO_D3D12_DEBUG_NAME) && (defined(_DEBUG) || defined(PROFILE))
     template<UINT TNameLength>
     inline void SetDebugObjectName(_In_ ID3D12DeviceChild* resource, _In_z_ const char(&name)[TNameLength]) noexcept
     {
-    #if !defined(NO_D3D12_DEBUG_NAME) && (defined(_DEBUG) || defined(PROFILE))
         wchar_t wname[MAX_PATH];
         int result = MultiByteToWideChar(CP_UTF8, 0, name, TNameLength, wname, MAX_PATH);
         if (result > 0)
         {
             resource->SetName(wname);
         }
-    #else
-        UNREFERENCED_PARAMETER(resource);
-        UNREFERENCED_PARAMETER(name);
-    #endif
     }
 
     template<UINT TNameLength>
     inline void SetDebugObjectName(_In_ ID3D12DeviceChild* resource, _In_z_ const wchar_t(&name)[TNameLength]) noexcept
     {
-    #if !defined(NO_D3D12_DEBUG_NAME) && (defined(_DEBUG) || defined(PROFILE))
         resource->SetName(name);
-    #else
-        UNREFERENCED_PARAMETER(resource);
-        UNREFERENCED_PARAMETER(name);
-    #endif
     }
+    #else
+    template<UINT TNameLength>
+    inline void SetDebugObjectName(_In_ ID3D12DeviceChild*, _In_z_ const char(&)[TNameLength]) noexcept
+    {
+    }
+
+    template<UINT TNameLength>
+    inline void SetDebugObjectName(_In_ ID3D12DeviceChild*, _In_z_ const wchar_t(&)[TNameLength]) noexcept
+    {
+    }
+    #endif
 
     // Helper for resource barrier.
     inline void TransitionResource(
@@ -276,32 +333,35 @@ namespace DirectX
         std::vector<D3D12_RESOURCE_BARRIER> mBarriers;
     };
 
-    // Helper to check for power-of-2
-    template<typename T>
-    constexpr bool IsPowerOf2(T x) noexcept { return ((x != 0) && !(x & (x - 1))); }
-
-    // Helpers for aligning values by a power of 2
-    template<typename T>
-    inline T AlignDown(T size, size_t alignment) noexcept
+    inline namespace DX12
     {
-        if (alignment > 0)
-        {
-            assert(((alignment - 1) & alignment) == 0);
-            auto mask = static_cast<T>(alignment - 1);
-            return size & ~mask;
-        }
-        return size;
-    }
+        // Helper to check for power-of-2
+        template<typename T>
+        constexpr bool IsPowerOf2(T x) noexcept { return ((x != 0) && !(x & (x - 1))); }
 
-    template<typename T>
-    inline T AlignUp(T size, size_t alignment) noexcept
-    {
-        if (alignment > 0)
+        // Helpers for aligning values by a power of 2
+        template<typename T>
+        inline T AlignDown(T size, size_t alignment) noexcept
         {
-            assert(((alignment - 1) & alignment) == 0);
-            auto mask = static_cast<T>(alignment - 1);
-            return (size + mask) & ~mask;
+            if (alignment > 0)
+            {
+                assert(((alignment - 1) & alignment) == 0);
+                auto mask = static_cast<T>(alignment - 1);
+                return size & ~mask;
+            }
+            return size;
         }
-        return size;
+
+        template<typename T>
+        inline T AlignUp(T size, size_t alignment) noexcept
+        {
+            if (alignment > 0)
+            {
+                assert(((alignment - 1) & alignment) == 0);
+                auto mask = static_cast<T>(alignment - 1);
+                return (size + mask) & ~mask;
+            }
+            return size;
+        }
     }
 }

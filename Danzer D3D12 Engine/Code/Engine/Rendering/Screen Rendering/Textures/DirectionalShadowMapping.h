@@ -20,7 +20,7 @@ public:
 
 	void SetModelsData(std::vector<ModelData>& models) {
 		m_models = &models[0];
-		modelCount = models.size();
+		modelCount = UINT(models.size());
 	}
 
 private:

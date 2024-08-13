@@ -26,7 +26,7 @@
     <Keyword>Win32Proj</Keyword>
     <ProjectGuid>{a05d71af-4d60-4cf1-b58c-45e1dd240b41}</ProjectGuid>
     <RootNamespace>Launcher</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.22621.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -46,7 +46,8 @@
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
-    <CharacterSet>Unicode</CharacterSet>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PreferredToolArchitecture>x64</PreferredToolArchitecture>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -128,12 +129,14 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
       <AdditionalIncludeDirectories>$(SolutionDir)3rdParty\;$(SolutionDir)Engine\;$(SolutionDir)Editor\;$(SolutionDir)Game\</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
-      <AdditionalDependencies>$(SolutionDir)..\Libs\$(Configuration)\Engine_$(Configuration).lib;$(SolutionDir)..\Libs\$(Configuration)\Game_$(Configuration).lib;$(SolutionDir)..\Libs\$(Configuration)\3rdParty_$(Configuration).lib;$(SolutionDir)..\Libs\$(Configuration)\Editor_$(Configuration).lib;$(SolutionDir)..\Libs\$(Configuration)\assimp-vc142-mtd.lib;$(SolutionDir)..\Libs\$(Configuration)\Jolt.lib;$(SolutionDir)..\Libs\$(Configuration)\DirectXTK12.lib;$(SolutionDir)..\Libs\$(Configuration)\fmod_vc.lib;d3d12.lib;dxgi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Engine_$(Configuration).lib;Game_$(Configuration).lib;Editor_$(Configuration).lib;assimp-vc142-mtd.lib;Jolt.lib;DirectXTK12.lib;fmod_vc.lib;d3d12.lib;dxgi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)..\Libs\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">

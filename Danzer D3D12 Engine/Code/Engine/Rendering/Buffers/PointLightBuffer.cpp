@@ -2,7 +2,7 @@
 #include "PointLightBuffer.h"
 
 #include "../Engine/Core/D3D12Header.h"
-#include "../3rdParty/DirectX-Headers-main/include/directx/d3dx12.h"
+#include "DirectX/include/directx/d3dx12.h"
 
 void PointLightBuffer::UpdateBuffer(void* cbvData, unsigned int frame)
 {

@@ -6,8 +6,11 @@
 
 #include "Rendering/Screen Rendering/GBuffer.h"
 
-#include "../3rdParty/imgui-master/backends/imgui_impl_dx12.h"
-#include "../3rdParty/imgui-master/backends/imgui_impl_win32.h"
+#include "imgui/backends/imgui_impl_dx12.h"
+#include "imgui/backends/imgui_impl_win32.h"
+
+#pragma warning ( push )
+#pragma warning ( disable : 6387) // Only disable this warning in D3D12Framework
 
 D3D12Framework::D3D12Framework() : 
 	m_frameIndex(0),
@@ -194,7 +197,7 @@ void D3D12Framework::TransitionAllResources()
 			transition.second.m_newState)
 		);
 	}
-	m_frameResources[m_frameIndex]->CmdList()->ResourceBarrier(transitionList.size(), &transitionList[0]);
+	m_frameResources[m_frameIndex]->CmdList()->ResourceBarrier(static_cast<UINT>(transitionList.size()), &transitionList[0]);
 	m_transitionQeueu.clear();
 }
 
@@ -214,6 +217,8 @@ void D3D12Framework::EndInitFrame()
 	m_fenceValue++;
 
 	CHECK_HR(m_fence->SetEventOnCompletion(fenceToWaitFor, m_fenceEvent));
+
+#pragma warning( suppress: 6387) 
 	WaitForSingleObject(m_fenceEvent, INFINITE);
 }
 
@@ -319,3 +324,5 @@ void D3D12Framework::ScanAdapter(IDXGIAdapter1* adapter, IDXGIFactory4* factory)
 	}
 #endif // 
 }
+
+#pragma warning ( pop ) // Only disable this warning in D3D12Framework

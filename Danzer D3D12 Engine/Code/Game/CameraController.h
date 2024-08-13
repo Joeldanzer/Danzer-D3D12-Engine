@@ -2,8 +2,8 @@
 #include "../Engine/Core/MathDefinitions.h"
 
 class Camera;
-class Object;
 class AABBCollider;
+struct Object;
 
 class CameraController 
 {

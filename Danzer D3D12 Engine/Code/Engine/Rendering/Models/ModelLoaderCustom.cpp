@@ -113,7 +113,7 @@ void ModelLoaderCustom::FetchAllModelsInScene(const aiScene* scene, std::vector<
     while (rootNode->mParent != nullptr)
         rootNode = rootNode->mParent;
 
-    for (int i = 0; i < rootNode->mNumChildren; i++)
+    for (UINT i = 0; i < rootNode->mNumChildren; i++)
     {
         // First check if we have already created this model.
         std::string modelName = rootNode->mChildren[i]->mName.C_Str();
@@ -127,7 +127,7 @@ void ModelLoaderCustom::FetchAllModelsInScene(const aiScene* scene, std::vector<
         //GetAllModelProperties(models[index].get(), rootNode->mChildren[i], scene, ConvertToEngineMat4(rootNode->mTransformation), uvFlipped);
 
         models.emplace_back(std::make_unique<LoaderModel>());
-        int index = models.size() - 1;
+        int index = UINT(models.size()) - 1;
         
         models[index]->m_name  = modelName;
         models[index]->m_scene = scene;
@@ -315,7 +315,6 @@ void ModelLoaderCustom::LoadMaterials(const aiScene* scene, LoaderModel* model)
         if (!model->m_isTransparent) {
             ai_real opacity = 1.0f;
             aiReturn check = scene->mMaterials[model->m_meshes[m]->m_textureIndex]->Get(AI_MATKEY_OPACITY, opacity);
-            printf("%f \n", opacity);
             if(check != AI_FAILURE)
                 model->m_isTransparent = opacity != 1.0f ? true : false;
         }

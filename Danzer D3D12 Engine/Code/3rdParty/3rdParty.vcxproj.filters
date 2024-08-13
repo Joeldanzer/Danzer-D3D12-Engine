@@ -1,40 +1,16 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Imgui">
-      <UniqueIdentifier>{48839575-0033-40de-b438-450550e6d18d}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Entt">
       <UniqueIdentifier>{bc0b3484-a08b-41fd-b859-4169048b482a}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Jolt">
-      <UniqueIdentifier>{2baeea3f-dce6-4eb1-81c5-7e7b93e27c6c}</UniqueIdentifier>
     </Filter>
     <Filter Include="Fmod">
       <UniqueIdentifier>{bf115d58-2bf1-4c3a-a14a-3e739e44fdda}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="imgui-master\imconfig.h">
-      <Filter>Imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="imgui-master\imgui.h">
-      <Filter>Imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="imgui-master\imgui_internal.h">
-      <Filter>Imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="imgui-master\backends\imgui_impl_dx12.h">
-      <Filter>Imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="imgui-master\backends\imgui_impl_win32.h">
-      <Filter>Imgui</Filter>
-    </ClInclude>
     <ClInclude Include="entt\entt.hpp">
       <Filter>Entt</Filter>
-    </ClInclude>
-    <ClInclude Include="Jolt\Jolt.h">
-      <Filter>Jolt</Filter>
     </ClInclude>
     <ClInclude Include="Fmod\fmod.h">
       <Filter>Fmod</Filter>
@@ -60,29 +36,6 @@
     <ClInclude Include="Fmod\fmod_output.h">
       <Filter>Fmod</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="imgui-master\imgui.cpp">
-      <Filter>Imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="imgui-master\imgui_demo.cpp">
-      <Filter>Imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="imgui-master\imgui_draw.cpp">
-      <Filter>Imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="imgui-master\imgui_tables.cpp">
-      <Filter>Imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="imgui-master\imgui_widgets.cpp">
-      <Filter>Imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="imgui-master\backends\imgui_impl_dx12.cpp">
-      <Filter>Imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="imgui-master\backends\imgui_impl_win32.cpp">
-      <Filter>Imgui</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Fmod\fmod.cs">

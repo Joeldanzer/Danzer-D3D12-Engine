@@ -4,7 +4,7 @@
 #include "Rendering/PSOHandler.h"
 #include "Core/WindowHandler.h"
 
-#include "../3rdParty/DirectX-Headers-main/include/directx/d3dx12.h"
+#include "DirectX/include/directx/d3dx12.h"
 #pragma comment(lib, "dxguid.lib")
 #pragma comment(lib, "d3dcompiler.lib")
 #include <d3dcompiler.h>
@@ -63,7 +63,7 @@ ModelEffect ModelEffectHandler::CreateModelEffect(std::array<std::wstring, 2> sh
 		memcpy(&effectData.m_bufferData, bufferData, sizeOfData);
 	}
 	
-	effectData.m_rs  = m_psoHandler->CreateRootSignature(2, textures.size() + 1, PSOHandler::SAMPLER_DESC_WRAP, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT, L"Model Effect RS: " + std::to_wstring(m_modelEffects.size() - 1));
+	effectData.m_rs  = m_psoHandler->CreateRootSignature(2, (UINT)textures.size() + 1, PSOHandler::SAMPLER_DESC_WRAP, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT, L"Model Effect RS: " + std::to_wstring(m_modelEffects.size() - 1));
 	
 	std::array<DXGI_FORMAT, GBUFFER_COUNT> formats = GBuffer::GBufferFormats();
 	effectData.m_pso = m_psoHandler->CreatePSO(
@@ -79,5 +79,5 @@ ModelEffect ModelEffectHandler::CreateModelEffect(std::array<std::wstring, 2> sh
 		L"Model Effect PSO: " + std::to_wstring(m_modelEffects.size() - 1)
 	);
 
-	return ModelEffect(m_modelEffects.size());
+	return ModelEffect(UINT(m_modelEffects.size()));
 }

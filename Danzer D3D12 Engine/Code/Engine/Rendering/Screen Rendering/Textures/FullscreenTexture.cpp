@@ -36,7 +36,7 @@ void FullscreenTexture::InitAsDepth(ID3D12Device* device, DescriptorHeapWrapper*
 
 		D3D12_CLEAR_VALUE clearValue;
 		clearValue.DepthStencil.Depth   = 1.0f;	
-		clearValue.DepthStencil.Stencil = 0.0f;	
+		clearValue.DepthStencil.Stencil = 0;	
 		clearValue.Format = DXGI_FORMAT_D32_FLOAT;
 
 		D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
@@ -71,7 +71,7 @@ void FullscreenTexture::InitAsDepth(ID3D12Device* device, DescriptorHeapWrapper*
 		m_resource[i]->SetName(std::wstring(name + std::to_wstring(i)).c_str());
 	}
 
-	m_viewPort = CD3DX12_VIEWPORT(0.0f, 0.0f, width, height);
+	m_viewPort = CD3DX12_VIEWPORT(0.0f, 0.0f, FLOAT(width), FLOAT(height));
 }
 
 void FullscreenTexture::InitAsTexture(ID3D12Device* device, DescriptorHeapWrapper* cbvSrvHeap, DescriptorHeapWrapper* rtvHeap, const UINT width, const UINT height, DXGI_FORMAT textureDesc, DXGI_FORMAT srvFormat, D3D12_RESOURCE_FLAGS flag, std::wstring name)
@@ -132,7 +132,7 @@ void FullscreenTexture::InitAsTexture(ID3D12Device* device, DescriptorHeapWrappe
 		m_resource[i]->SetName(std::wstring(name + std::to_wstring(i)).c_str());
 	}
 
-	m_viewPort = CD3DX12_VIEWPORT(0.0f, 0.0f, width, height);
+	m_viewPort = CD3DX12_VIEWPORT(0.0f, 0.0f, FLOAT(width), FLOAT(height));
 }
 
 void FullscreenTexture::InitBuffers(ID3D12Device* device, DescriptorHeapWrapper& cbvWrapper)
