@@ -10,14 +10,14 @@
 #include "Rendering/TextureHandler.h"
 #include "Rendering/2D/SpriteHandler.h"
 #include "Rendering/Screen Rendering/LightHandler.h"
-#include "Components/WaterPlaneBufferData.h"
+#include "Components/Render & Effects/WaterPlaneBufferData.h"
 
-#include "Components/PointLight.h"
-#include "Components/Transform2D.h"
+#include "Components/Light/PointLight.h"
+#include "Components/2D/Transform2D.h"
 #include "Components/Model.h"
 #include "Components/Transform.h"
-#include "Components/DirectionalLight.h"
-#include "Components/Sprite.h"
+#include "Components/Light/DirectionalLight.h"
+#include "Components/2D/Sprite.h"
 
 
 class Game::Impl {

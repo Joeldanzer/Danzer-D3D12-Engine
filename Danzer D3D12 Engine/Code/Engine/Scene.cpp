@@ -85,6 +85,8 @@ void Scene::UpdateTransforms()
 	}
 }
 
+
+
 void Scene::ResetAllObjectsInScene()
 {
 
@@ -93,6 +95,16 @@ void Scene::ResetAllObjectsInScene()
 	//	if(m_objects[i]->GetState() != Object::STATE::DESTROY)
 	//		m_objects[i]->Reset();
 	//}
+}
+
+void Scene::CleanUpDestroyedObj()
+{
+	auto view = m_sceneRegistry.view<GameEntity>();
+	for (auto entity : view) {
+		GameEntity& gEntt = view.get<GameEntity>(entity);
+		if (gEntt.m_state == GameEntity::STATE::DESTROY)
+			m_sceneRegistry.destroy(entity);
+	}
 }
 
 //Object* Scene::GetSpecificObject(std::string objectName)

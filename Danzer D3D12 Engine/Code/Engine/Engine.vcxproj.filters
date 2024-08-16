@@ -85,6 +85,8 @@
     <ClCompile Include="Rendering\Screen Rendering\Textures\DirectionalLightTexture.cpp" />
     <ClCompile Include="Physics\PhysicsEngine.cpp" />
     <ClCompile Include="Physics\PhysicsHandler.cpp" />
+    <ClCompile Include="Physics\PhysicsBody.cpp" />
+    <ClCompile Include="Physics\Body Contacts\ContactListener.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Core\DirectX12Framework.h">
@@ -198,5 +200,7 @@
     <ClInclude Include="Physics\Body Contacts\BodyActivationListener.h" />
     <ClInclude Include="Physics\PhysicsHandler.h" />
     <ClInclude Include="Components\AllComponents.h" />
+    <ClInclude Include="Components\Physics\BoxCollider.h" />
+    <ClInclude Include="Physics\PhysicsBody.h" />
   </ItemGroup>
 </Project>

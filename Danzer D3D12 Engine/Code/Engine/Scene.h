@@ -27,6 +27,7 @@ public:
 	
 	void UpdateTransforms();
 	void ResetAllObjectsInScene();
+	void CleanUpDestroyedObj();
 private:
 	friend class SceneManager;
 	

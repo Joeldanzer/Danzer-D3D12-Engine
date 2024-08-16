@@ -83,7 +83,7 @@ Engine::Impl::Impl(unsigned int width, unsigned int height) :
 		0,     // Max body mutexes
 		65536, // Max body pairs
 		20480, // Max Contact Constraints
-		1      // Max Number of jobs(AKA threads)
+		3      // Max Number of jobs(AKA threads)
 	),
 	m_collisionManager(),
 	m_camera(65.f, (float)m_windowHandler.WindowData().m_w / (float)m_windowHandler.WindowData().m_h),

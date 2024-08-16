@@ -1,9 +1,6 @@
 #pragma once
 #include "PhysicsLayers.h"
 
-#include <thread>
-#include <iostream>
-
 #define PHYSICS_THREADED
 
 namespace JPH {
@@ -20,6 +17,7 @@ private:
 	static constexpr uint32_t s_MaxPhysicsJobs     = 2048; // Maximum amount of jobs to allow
 	static constexpr uint32_t s_MaxPhysicsBarriers = 8;    // Maximum amount of barriers to Allow
 
+	const uint32_t m_numberOfSteps = 1;
 	const uint32_t m_maxConcurrentJobs;
 
 public:
@@ -46,6 +44,5 @@ private:
 	LayerInterfaceImpl				  m_layerInterface;
 	ObjectVsBroadPhaseLayerFilterImpl m_objectVsBroadPhaseLayerFilter;
 	ObjectLayerPairFilterImpl         m_layerPairFilter;
-
 };
 
