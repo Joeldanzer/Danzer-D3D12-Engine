@@ -1,6 +1,6 @@
 #pragma once
 #include "FullscreenTexture.h"
-#include "Components/DirectionalLight.h"
+#include "Components/Light/DirectionalLight.h"
 #include "Rendering/Buffers/ConstantBufferData.h"
 
 class  Camera;

@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "SceneManager.h"
 
-#include "Components/DirectionalLight.h"
+#include "Components/Light/DirectionalLight.h"
 #include "Components/Transform.h"
 
 void SceneManager::Init(Camera& cam)

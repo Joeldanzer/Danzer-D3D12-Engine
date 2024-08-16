@@ -171,7 +171,7 @@ void ModelHandler::LoadModelsToScene(entt::registry& reg, std::wstring fileName,
 		{
 			if (transforms[i].first == m_models[j].m_name) {
 				auto entity = reg.create();
-				reg.emplace<Object>(entity);
+				reg.emplace<GameEntity>(entity);
 				reg.emplace<Model>(entity, m_models[j].GetID());
 				Transform& transform = reg.emplace<Transform>(entity);
 				transform.SetTransform(transforms[i].second);

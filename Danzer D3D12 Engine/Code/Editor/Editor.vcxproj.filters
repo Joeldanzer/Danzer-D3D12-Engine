@@ -4,7 +4,6 @@
     <ClInclude Include="Editor.h" />
     <ClInclude Include="ImguiHandler.h" />
     <ClInclude Include="EditorLoadAndSave.h" />
-    <ClInclude Include="AllComponents.h" />
     <ClInclude Include="FileExplorer.h" />
   </ItemGroup>
   <ItemGroup>

@@ -120,7 +120,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;JPH_FLOATING_POINT_EXCEPTIONS_ENABLED;JPH_DEBUG_RENDERER;JPH_PROFILE_ENABLED;JPH_OBJECT_STREAM;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>DEBUG;_DEBUG;_CONSOLE;JPH_FLOATING_POINT_EXCEPTIONS_ENABLED;JPH_DEBUG_RENDERER;JPH_PROFILE_ENABLED;JPH_OBJECT_STREAM;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)Editor\;$(SolutionDir)3rdParty\;$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
@@ -138,7 +138,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>RELEASE;_CONSOLE;JPH_FLOATING_POINT_EXCEPTIONS_ENABLED;JPH_DEBUG_RENDERER;JPH_PROFILE_ENABLED;JPH_OBJECT_STREAM;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)3rdParty\entt-master\single_include\;$(SolutionDir)3rdParty\;$(ProjectDir)</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
@@ -152,14 +152,18 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Components\AllComponents.h" />
     <ClInclude Include="Components\Collision\Collider.h" />
-    <ClInclude Include="Components\ModelEffect.h" />
-    <ClInclude Include="Components\PointLight.h" />
+    <ClInclude Include="Components\Render &amp; Effects\ModelEffect.h" />
+    <ClInclude Include="Components\Light\PointLight.h" />
     <ClInclude Include="Components\Script.h" />
-    <ClInclude Include="Components\WaterPlaneBufferData.h" />
+    <ClInclude Include="Components\Render &amp; Effects\WaterPlaneBufferData.h" />
+    <ClInclude Include="Physics\PhysicsHandler.h" />
+    <ClInclude Include="Physics\Body Contacts\BodyActivationListener.h" />
+    <ClInclude Include="Physics\Body Contacts\ContactListener.h" />
     <ClInclude Include="Physics\PhysicsHeader.h" />
     <ClInclude Include="Physics\PhysicsLayers.h" />
-    <ClInclude Include="Physics\PhysicsWrapper.h" />
+    <ClInclude Include="Physics\PhysicsEngine.h" />
     <ClInclude Include="Rendering\Screen Rendering\Textures\DirectionalLightTexture.h" />
     <ClInclude Include="Rendering\Screen Rendering\Fullscreen Shaders\KuwaharaFilter.h" />
     <ClInclude Include="Rendering\Buffers\ConstantBufferData.h" />
@@ -177,11 +181,11 @@
     <ClInclude Include="Rendering\Screen Rendering\Fullscreen Shaders\FullscreenShader.h" />
     <ClInclude Include="Rendering\Models\Material.h" />
     <ClInclude Include="Components\Model.h" />
-    <ClInclude Include="Components\Object.h" />
+    <ClInclude Include="Components\GameEntity.h" />
     <ClInclude Include="Components\Transform.h" />
-    <ClInclude Include="Components\Transform2D.h" />
+    <ClInclude Include="Components\2D\Transform2D.h" />
     <ClInclude Include="Core\input.hpp" />
-    <ClInclude Include="Components\DirectionalLight.h" />
+    <ClInclude Include="Components\Light\DirectionalLight.h" />
     <ClInclude Include="Rendering\Buffers\MaterialBuffer.h" />
     <ClInclude Include="Rendering\Buffers\LightBuffer.h" />
     <ClInclude Include="Rendering\Screen Rendering\GBuffer.h" />
@@ -195,8 +199,8 @@
     <ClInclude Include="Rendering\2D\Fonts\FontBuffer.h" />
     <ClInclude Include="Core\FrameTimer.h" />
     <ClInclude Include="Rendering\2D\Fonts\Font.h" />
-    <ClInclude Include="Components\Text.h" />
-    <ClInclude Include="Components\Sprite.h" />
+    <ClInclude Include="Components\2D\Text.h" />
+    <ClInclude Include="Components\2D\Sprite.h" />
     <ClInclude Include="Rendering\Models\ModelLoaderCustom.h" />
     <ClInclude Include="Rendering\Camera.h" />
     <ClInclude Include="Rendering\Buffers\CameraBuffer.h" />
@@ -235,8 +239,8 @@
     <ClInclude Include="Rendering\Screen Rendering\Textures\VolumetricLightBlur.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Physics\PhysicsLayers.cpp" />
-    <ClCompile Include="Physics\PhysicsWrapper.cpp" />
+    <ClCompile Include="Physics\PhysicsHandler.cpp" />
+    <ClCompile Include="Physics\PhysicsEngine.cpp" />
     <ClCompile Include="Rendering\Screen Rendering\Textures\DirectionalLightTexture.cpp" />
     <ClCompile Include="Rendering\Screen Rendering\Fullscreen Shaders\KuwaharaFilter.cpp" />
     <ClCompile Include="Rendering\Buffers\ConstantBufferData.cpp" />

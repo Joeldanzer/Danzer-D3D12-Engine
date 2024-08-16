@@ -3,7 +3,7 @@
 
 #include "Rendering/PSOHandler.h"
 #include "Rendering/Camera.h"
-#include "Components/DirectionalLight.h"
+#include "Components/Light/DirectionalLight.h"
 #include "Components/Transform.h"
 
 #include "Core/DesriptorHeapWrapper.h"

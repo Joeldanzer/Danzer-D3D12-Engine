@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "Engine.h"
-#include "Level Loader/LevelLoaderCustom.h"
 
+#include "Level Loader/LevelLoaderCustom.h"
 #include "Components/Transform.h"
 #include "Core/input.hpp"
 #include "Rendering/TextureHandler.h"
@@ -12,18 +12,18 @@
 #include "Rendering/Models/ModelHandler.h"
 #include "Rendering/Models/ModelEffectHandler.h"
 #include "Rendering/Screen Rendering/LightHandler.h"
-#include "Scene.h"
-#include "FrameTimer.h"
 #include "Rendering/2D/SpriteHandler.h"
 #include "Rendering/SkyBox.h"
+#include "Scene.h"
+#include "FrameTimer.h"
 #include "CollisionManager.h"
 #include "Rendering/Camera.h"
 #include "D3D12Framework.h"
-#include "Physics/PhysicsWrapper.h"
+#include "Physics/PhysicsEngine.h"
 
 // ImGui
-#include "imgui-master/backends/imgui_impl_dx12.h"
-#include "imgui-master/backends/imgui_impl_win32.h"
+#include "imgui/backends/imgui_impl_dx12.h"
+#include "imgui/backends/imgui_impl_win32.h"
 
 
 class Engine::Impl {
@@ -57,7 +57,7 @@ private:
 	ModelHandler	   m_modelHandler;
 	SpriteHandler	   m_spriteHandler;
 	SceneManager	   m_sceneManager;
-	PhysicsWrapper	   m_physicsManager;
+	PhysicsEngine	   m_physicsEngine;
 	CollisionManager   m_collisionManager;
 	ModelEffectHandler m_modelEffectHandler;
 	LightHandler	   m_lightHandler;
@@ -78,7 +78,13 @@ Engine::Impl::Impl(unsigned int width, unsigned int height) :
 	m_spriteHandler(m_framework, m_textureHandler),
 	m_lightHandler(m_framework),
 	m_sceneManager(),
-	m_physicsManager(10240, 0, 65536, 20480),
+	m_physicsEngine(
+		10240, // Max number of bodies
+		0,     // Max body mutexes
+		65536, // Max body pairs
+		20480, // Max Contact Constraints
+		1      // Max Number of jobs(AKA threads)
+	),
 	m_collisionManager(),
 	m_camera(65.f, (float)m_windowHandler.WindowData().m_w / (float)m_windowHandler.WindowData().m_h),
 	m_skybox(m_textureHandler),

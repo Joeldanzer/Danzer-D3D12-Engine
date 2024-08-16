@@ -1,7 +1,6 @@
 #include "FullscreenHeader.hlsli"
 #include "SSAOHeader.hlsli"
 
-
 float4 main(VertexToPixel input) : SV_TARGET
 {	
 	float4 worldPos = PositionTexture.Sample(defaultSample, input.m_uv);

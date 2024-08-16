@@ -1,6 +1,6 @@
 #pragma once
 #include "../3rdParty/entt/entt.hpp"
-#include "Components/Object.h"
+#include "Components/GameEntity.h"
 
 class Scene
 {
@@ -13,7 +13,7 @@ public:
 		return m_sceneRegistry;
 	}
 	entt::entity CreateBasicEntity(
-		std::string name, std::string tag = "default", unsigned int layer = 0, bool isStatic = false, Object::STATE state = Object::STATE::ACTIVE);
+		std::string name, std::string tag = "default", unsigned int layer = 0, bool isStatic = false, GameEntity::STATE state = GameEntity::STATE::ACTIVE);
 
 	//void UpdateAllObjectsInScene(const float dt);
 	entt::entity GetMainCamera() {

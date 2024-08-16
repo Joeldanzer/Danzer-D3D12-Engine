@@ -1,24 +1,24 @@
 #include "stdafx.h"
 #include "Scene.h"
 
-#include "Components/Object.h"
+#include "Components/GameEntity.h"
 #include "Components/Transform.h"
 
 #include <string>
 
 Scene::Scene(){}
 Scene::~Scene(){}
-entt::entity Scene::CreateBasicEntity(std::string name, std::string tag, unsigned int layer, bool isStatic, Object::STATE state)
+entt::entity Scene::CreateBasicEntity(std::string name, std::string tag, unsigned int layer, bool isStatic, GameEntity::STATE state)
 {
 	auto entity = m_sceneRegistry.create();
 
-	Object obj;
+	GameEntity obj;
 	obj.m_name = name;
 	obj.m_layer = layer;
 	obj.m_tag = tag;
 	obj.m_static = isStatic;
 	obj.m_state = state;
-	m_sceneRegistry.emplace<Object>(entity, obj);
+	m_sceneRegistry.emplace<GameEntity>(entity, obj);
 
 	Transform transform;
 	m_sceneRegistry.emplace<Transform>(entity, transform);

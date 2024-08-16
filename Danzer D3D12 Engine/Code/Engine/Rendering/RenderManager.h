@@ -17,7 +17,7 @@ class LightHandler;
 class PSOHandler;
 class VolumetricLight;
 
-struct Object;
+struct GameEntity;
 struct Sprite;
 struct Text;
 struct Transform2D;

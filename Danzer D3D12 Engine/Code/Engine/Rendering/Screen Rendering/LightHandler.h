@@ -1,5 +1,5 @@
 #pragma once
-#include "Components/PointLight.h"
+#include "Components/Light/PointLight.h"
 #include "Rendering/Buffers/PointLightBuffer.h"
 
 class D3D12Framework;

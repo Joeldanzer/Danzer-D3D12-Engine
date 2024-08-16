@@ -12,7 +12,7 @@
 #include <vector>
 
 class Engine;
-struct Object;
+struct GameEntity;
 struct Object2D;
 
 class ImguiHandler

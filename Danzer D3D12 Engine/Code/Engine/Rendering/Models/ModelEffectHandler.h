@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Components/ModelEffect.h"
+#include "Components/Render & Effects/ModelEffect.h"
 #include "ModelEffectData.h"
 #include <vector>
 
@@ -23,7 +23,7 @@ public:
 		bool transparent
 	);
 	
-	ModelEffect GetModelEffect(std::wstring shaderName);
+	//ModelEffect GetModelEffect(std::wstring shaderName);
 	ModelEffectData& GetModelEffectData(UINT effectID) {
 		return m_modelEffects[effectID - 1];
 	}

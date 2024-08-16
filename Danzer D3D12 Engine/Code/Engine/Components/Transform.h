@@ -1,6 +1,7 @@
 #pragma once
 #include "Core/MathDefinitions.h"
 
+// Transform entity. Required component to render and update in scene
 class Transform {
 public:
 	Transform() : 

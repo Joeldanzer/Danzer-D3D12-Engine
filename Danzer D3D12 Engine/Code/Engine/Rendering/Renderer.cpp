@@ -1,10 +1,7 @@
 #include "stdafx.h"
 #include "Renderer.h"
 
-#include "Components/PointLight.h"
-#include "Components/Transform.h"
-#include "Components/Object.h"
-#include "Components/DirectionalLight.h"
+#include "Components/AllComponents.h"
 
 #include "Scene.h"
 #include "Camera.h"
@@ -167,11 +164,11 @@ void Renderer::RenderPointLights(ID3D12GraphicsCommandList* cmdList, LightHandle
 	D3D12_GPU_DESCRIPTOR_HANDLE cbvSrvHeapStart = m_framework->CbvSrvHeap().GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
 	const UINT cbvSrvDescSize = m_framework->CbvSrvHeap().DESCRIPTOR_SIZE();
 
-	auto view = registry.view<PointLight, Transform, Object>();
+	auto view = registry.view<PointLight, Transform, GameEntity>();
 	for (auto i : view)
 	{
-		const Object& obj = registry.get<Object>(i);
-		if (obj.m_state != Object::STATE::ACTIVE)
+		const GameEntity& obj = registry.get<GameEntity>(i);
+		if (obj.m_state != GameEntity::STATE::ACTIVE)
 			continue;
 	
 		const PointLight& light = registry.get<PointLight>(i);

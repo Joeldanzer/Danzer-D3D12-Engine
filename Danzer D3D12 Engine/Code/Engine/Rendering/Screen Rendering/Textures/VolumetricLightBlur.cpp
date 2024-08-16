@@ -3,7 +3,6 @@
 #include "Rendering/PSOHandler.h"
 
 #include "Core/DesriptorHeapWrapper.h"
-#include "Core/WindowHandler.h"
 
 void VolumetricLightBlur::InitBuffers(ID3D12Device* device, DescriptorHeapWrapper& cbvWrapper)
 {

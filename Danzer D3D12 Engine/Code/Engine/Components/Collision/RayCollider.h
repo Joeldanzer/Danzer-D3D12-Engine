@@ -4,7 +4,7 @@
 class Transform;
 class AABBCollider;
 class SphereCollider;
-struct Object;
+struct GameEntity;
 
 class RayCollider : public Collider
 {

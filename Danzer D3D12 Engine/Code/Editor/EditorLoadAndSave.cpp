@@ -1,6 +1,6 @@
 #include "EditorLoadAndSave.h"
 
-#include "AllComponents.h"
+#include "Components/AllComponents.h"
 
 #include "Core/Engine.h"
 #include "Rendering/Models/ModelHandler.h"
@@ -37,7 +37,7 @@ bool EditorLoadAndSave::LoadScene(std::string scene, entt::registry& reg)
 			entt::entity entity = reg.create();
 
 			auto& objectData = object["Object"];
-			Object& obj = reg.emplace<Object>(entity);
+			GameEntity& obj = reg.emplace<GameEntity>(entity);
 
 			obj.m_name = objectData["Name"].GetString();
 			obj.m_layer = (UINT)objectData["Layer"].GetInt();
@@ -45,11 +45,11 @@ bool EditorLoadAndSave::LoadScene(std::string scene, entt::registry& reg)
 			obj.m_static = objectData["Static"].GetBool();
 			
 			if (objectData["State"] == "ACTIVE") 
-				obj.m_state = Object::STATE::ACTIVE;
+				obj.m_state = GameEntity::STATE::ACTIVE;
 			else if (objectData["State"] == "NOT_ACTIVE") 
-				obj.m_state = Object::STATE::NOT_ACTIVE;
+				obj.m_state = GameEntity::STATE::NOT_ACTIVE;
 			else
-				obj.m_state = Object::STATE::NOT_ACTIVE;
+				obj.m_state = GameEntity::STATE::NOT_ACTIVE;
 
 			auto& transformData = object["Transform"];
 			Transform& transform = reg.emplace<Transform>(entity);
@@ -96,7 +96,7 @@ void EditorLoadAndSave::SaveScene(std::string scene, entt::registry& reg)
 	{
 		writer.Key("3D-Scene-Entities");
 		writer.StartArray();
-		auto list = reg.view<Transform, Object>();
+		auto list = reg.view<Transform, GameEntity>();
 		for (auto entity : list)
 		{
 			if (reg.try_get<Camera>(entity)) {
@@ -105,7 +105,7 @@ void EditorLoadAndSave::SaveScene(std::string scene, entt::registry& reg)
 
 			writer.StartObject();
 			{
-				Object& obj = reg.get<Object>(entity);
+				GameEntity& obj = reg.get<GameEntity>(entity);
 				
 				writer.Key("Object");
 				writer.StartObject(); 
@@ -125,10 +125,10 @@ void EditorLoadAndSave::SaveScene(std::string scene, entt::registry& reg)
 					writer.Key("State");
 					switch (obj.m_state)
 					{
-					case Object::STATE::ACTIVE:
+					case GameEntity::STATE::ACTIVE:
 						writer.String("ACTIVE");
 						break;
-					case Object::STATE::NOT_ACTIVE:
+					case GameEntity::STATE::NOT_ACTIVE:
 						writer.String("NOT_ACTIVE");
 						break;
 					default:

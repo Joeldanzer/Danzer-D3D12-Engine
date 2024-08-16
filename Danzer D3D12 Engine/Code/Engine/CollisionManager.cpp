@@ -3,7 +3,7 @@
 #include "Components/Collision/AABBCollider.h"
 #include "Components/Collision/RayCollider.h"
 #include "Components/Collision/SphereCollider.h"
-#include "Components/Object.h"
+#include "Components/GameEntity.h"
 #include "Components/Transform.h"
 
 #include "Scene.h"
@@ -18,10 +18,10 @@ void CollisionManager::UpdateCollisions(Scene& scene)
 
 	//* AABBCollider view start 
 	{
-		auto aabbView = reg.view<Transform, Object, AABBCollider>();
+		auto aabbView = reg.view<Transform, GameEntity, AABBCollider>();
 		for (auto entity : aabbView)
 		{
-			Object& obj = reg.get<Object>(entity);
+			GameEntity& obj = reg.get<GameEntity>(entity);
 			if (!ObjectIsActive(obj))
 				continue;
 
@@ -39,10 +39,10 @@ void CollisionManager::UpdateCollisions(Scene& scene)
 
 	//* SphereCollider view start 
 	{
-		auto sphereView = reg.view<Transform, Object, AABBCollider>();
+		auto sphereView = reg.view<Transform, GameEntity, AABBCollider>();
 		for (auto entity : sphereView)
 		{
-			Object& obj = reg.get<Object>(entity);
+			GameEntity& obj = reg.get<GameEntity>(entity);
 			if (!ObjectIsActive(obj))
 				continue;
 
@@ -56,18 +56,18 @@ void CollisionManager::UpdateCollisions(Scene& scene)
 	//* SphereCollider view end 
 }
 
-void CollisionManager::CheckAABBCollision(Scene& scene, AABBCollider& col, Object& colObj, entt::entity colEntity)
+void CollisionManager::CheckAABBCollision(Scene& scene, AABBCollider& col, GameEntity& colObj, entt::entity colEntity)
 {
 	entt::registry& reg = scene.Registry();
 
 	//* AABBCollider view start 
 	{
-		auto aabbView = reg.view<Transform, Object, AABBCollider>();
+		auto aabbView = reg.view<Transform, GameEntity, AABBCollider>();
 		for (auto entity : aabbView)
 		{
 			if (entity != colEntity) {
-				Object& obj = reg.get<Object>(entity);
-				if (obj.m_state != Object::STATE::ACTIVE || HasIntersectedWithEachother(col, entity))
+				GameEntity& obj = reg.get<GameEntity>(entity);
+				if (obj.m_state != GameEntity::STATE::ACTIVE || HasIntersectedWithEachother(col, entity))
 					continue;
 
 				Transform& transform = reg.get<Transform>(entity);
@@ -87,12 +87,12 @@ void CollisionManager::CheckAABBCollision(Scene& scene, AABBCollider& col, Objec
 
 	//* SphereCollider view start 
 	{
-		auto aabbView = reg.view<Transform, Object, SphereCollider>();
+		auto aabbView = reg.view<Transform, GameEntity, SphereCollider>();
 		for (auto entity : aabbView)
 		{
 			if (entity != colEntity) {
-				Object& obj = reg.get<Object>(entity);
-				if (obj.m_state != Object::STATE::ACTIVE || HasIntersectedWithEachother(col, entity))
+				GameEntity& obj = reg.get<GameEntity>(entity);
+				if (obj.m_state != GameEntity::STATE::ACTIVE || HasIntersectedWithEachother(col, entity))
 					continue;
 
 				Transform& transform = reg.get<Transform>(entity);
@@ -111,12 +111,12 @@ void CollisionManager::CheckAABBCollision(Scene& scene, AABBCollider& col, Objec
 
 	//* RayCollider view start 
 	{
-		auto aabbView = reg.view<Transform, Object, RayCollider>();
+		auto aabbView = reg.view<Transform, GameEntity, RayCollider>();
 		for (auto entity : aabbView)
 		{
 			if (entity != colEntity) {
-				Object& obj = reg.get<Object>(entity);
-				if (obj.m_state != Object::STATE::ACTIVE || HasIntersectedWithEachother(col, entity))
+				GameEntity& obj = reg.get<GameEntity>(entity);
+				if (obj.m_state != GameEntity::STATE::ACTIVE || HasIntersectedWithEachother(col, entity))
 					continue;
 
 				Transform& transform = reg.get<Transform>(entity);
@@ -134,18 +134,18 @@ void CollisionManager::CheckAABBCollision(Scene& scene, AABBCollider& col, Objec
 	//* RayCollider view end 
 }
 
-void CollisionManager::CheckRayCollision(Scene& scene, RayCollider& col, Object& colObj, entt::entity colEntity)
+void CollisionManager::CheckRayCollision(Scene& scene, RayCollider& col, GameEntity& colObj, entt::entity colEntity)
 {
 	entt::registry& reg = scene.Registry();
 
 	//* AABBCollider view start 
 	{
-		auto aabbView = reg.view<Transform, Object, AABBCollider>();
+		auto aabbView = reg.view<Transform, GameEntity, AABBCollider>();
 		for (auto entity : aabbView)
 		{
 			if (entity != colEntity) {
-				Object& obj = reg.get<Object>(entity);
-				if (obj.m_state != Object::STATE::ACTIVE || HasIntersectedWithEachother(col, entity))
+				GameEntity& obj = reg.get<GameEntity>(entity);
+				if (obj.m_state != GameEntity::STATE::ACTIVE || HasIntersectedWithEachother(col, entity))
 					continue;
 
 				Transform& transform = reg.get<Transform>(entity);
@@ -164,18 +164,18 @@ void CollisionManager::CheckRayCollision(Scene& scene, RayCollider& col, Object&
 	//* AABBCollider view end 
 }
 
-void CollisionManager::CheckSphereCollision(Scene& scene, SphereCollider& col, Object& colObj, entt::entity colEntity)
+void CollisionManager::CheckSphereCollision(Scene& scene, SphereCollider& col, GameEntity& colObj, entt::entity colEntity)
 {
 	entt::registry& reg = scene.Registry();
 
 	//* AABBCollider view start 
 	{
-		auto aabbView = reg.view<Transform, Object, AABBCollider>();
+		auto aabbView = reg.view<Transform, GameEntity, AABBCollider>();
 		for (auto entity : aabbView)
 		{
 			if (entity != colEntity) {
-				Object& obj = reg.get<Object>(entity);
-				if (obj.m_state != Object::STATE::ACTIVE || HasIntersectedWithEachother(col, entity))
+				GameEntity& obj = reg.get<GameEntity>(entity);
+				if (obj.m_state != GameEntity::STATE::ACTIVE || HasIntersectedWithEachother(col, entity))
 					continue;
 
 				Transform& transform = reg.get<Transform>(entity);
@@ -195,12 +195,12 @@ void CollisionManager::CheckSphereCollision(Scene& scene, SphereCollider& col, O
 
 	//* SphereCollider view start 
 	{
-		auto aabbView = reg.view<Transform, Object, SphereCollider>();
+		auto aabbView = reg.view<Transform, GameEntity, SphereCollider>();
 		for (auto entity : aabbView)
 		{
 			if (entity != colEntity) {
-				Object& obj = reg.get<Object>(entity);
-				if (obj.m_state != Object::STATE::ACTIVE || HasIntersectedWithEachother(col, entity))
+				GameEntity& obj = reg.get<GameEntity>(entity);
+				if (obj.m_state != GameEntity::STATE::ACTIVE || HasIntersectedWithEachother(col, entity))
 					continue;
 
 				Transform& transform = reg.get<Transform>(entity);
@@ -332,9 +332,9 @@ bool CollisionManager::HasIntersectedWithEachother(Collider& col1, entt::entity 
 	return false;
 }
 
-bool CollisionManager::ObjectIsActive(Object& obj)
+bool CollisionManager::ObjectIsActive(GameEntity& obj)
 {
-	if (obj.m_static || obj.m_state != Object::STATE::ACTIVE)
+	if (obj.m_static || obj.m_state != GameEntity::STATE::ACTIVE)
 		return false;
 
 	return true;

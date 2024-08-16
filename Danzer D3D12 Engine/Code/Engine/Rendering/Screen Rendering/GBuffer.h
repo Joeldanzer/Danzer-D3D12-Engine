@@ -33,7 +33,7 @@ public:
 	GBuffer(D3D12Framework& framework, PSOHandler& psoHandler);
 	~GBuffer();
 
-	static std::array<DXGI_FORMAT, GBUFFER_COUNT> GBufferFormats(){
+	static const std::array<DXGI_FORMAT, GBUFFER_COUNT> GBufferFormats(){
 		std::array<DXGI_FORMAT, GBUFFER_COUNT> format = {
 		DXGI_FORMAT_R8G8B8A8_UNORM_SRGB, //* ALBEDO
 		DXGI_FORMAT_R16G16B16A16_SNORM,  //* NORMAL

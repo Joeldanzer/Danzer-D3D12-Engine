@@ -27,7 +27,7 @@ class FullscreenTexture;
 class Transform;
 
 struct DirectionalLight;
-struct Object;
+struct GameEntity;
 
 class Renderer
 {

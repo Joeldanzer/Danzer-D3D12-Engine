@@ -1,29 +1,19 @@
 #include "stdafx.h"
 
-#include "../3rdParty/imgui-master/backends/imgui_impl_dx12.h"
-#include "../3rdParty/imgui-master/backends/imgui_impl_win32.h"
+#include "imgui/backends/imgui_impl_dx12.h"
+#include "imgui/backends/imgui_impl_win32.h"
 
 #include "PSOHandler.h"
 #include "RenderManager.h"
-#include "Core/D3D12Framework.h"
-#include "Core/MathDefinitions.h"
-#include "Core/WindowHandler.h"
 #include "Models/ModelHandler.h"
 #include "2D/SpriteHandler.h"
 #include "Core/FrameResource.h"
 #include "Models/ModelEffectHandler.h"
 
-#include "Components/Sprite.h"
-#include "Components/Text.h"
-#include "Components/Object.h"
-#include "Components/Transform.h"
-#include "Components/ModelEffect.h"
-#include "Components/Transform2D.h"
-#include "Components/DirectionalLight.h"
+#include "Components/AllComponents.h"
 
 #include "Screen Rendering/GBuffer.h"
 #include "Screen Rendering/LightHandler.h"
-
 #include "Screen Rendering/Textures/DirectionalShadowMapping.h"
 #include "Screen Rendering/Textures/SSAOTexture.h"
 #include "Screen Rendering/Textures/SSAOBlur.h"
@@ -33,7 +23,6 @@
 #include "Screen Rendering/Fullscreen Shaders/KuwaharaFilter.h"
 
 #include "Camera.h"
-
 #include "SkyBox.h"
 #include "Scene.h"
 
@@ -84,7 +73,6 @@ private:
 	D3D12Framework& m_framework;
 
 	KuwaharaFilter			 m_kuwaharaFilter;
-
 	DirectionalShadowMapping m_shadowMap;
 	DirectionalLightTexture  m_dirLight;
 	VolumetricLightBlur		 m_volumetricLightBlur;
@@ -459,8 +447,7 @@ void RenderManager::Impl::RenderScene(LightHandler& lightHandler, TextureHandler
 			m_volumetricLight.RenderTexture(cmdList, &m_framework.CbvSrvHeap(), nullptr, frameIndex);
 		} // Volumetric Light End
 
-		{ // SSAO Rendering
-			
+		{ // SSAO Rendering	
 			m_ssao.SetViewportAndPSO(cmdList, m_psoHandler);
 			m_ssao.SetAsRenderTarget(cmdList, &m_framework.RTVHeap(), nullptr, frameIndex);
 
@@ -620,13 +607,13 @@ void RenderManager::Impl::Update3DInstances(Scene& scene, ModelHandler& modelHan
 	entt::registry& reg = scene.Registry();
 	Transform& cam = reg.get<Transform>(scene.GetMainCamera());
 
-	auto view = reg.view<Transform, Model, Object>();
+	auto view = reg.view<Transform, Model, GameEntity>();
 
 	for (auto entity : view)
 	{
-		Object& obj = reg.get<Object>(entity);
+		GameEntity& obj = reg.get<GameEntity>(entity);
 
-		if (obj.m_state == Object::STATE::ACTIVE) {
+		if (obj.m_state == GameEntity::STATE::ACTIVE) {
 			Model& model = reg.get<Model>(entity);
 			if (model.m_modelID != 0) {
 				Transform& transform = reg.get<Transform>(entity);
@@ -684,17 +671,17 @@ void RenderManager::Impl::Update2DInstances(Scene& scene, SpriteHandler& spriteH
 
 	auto spriteView = reg.view<Transform2D, Sprite>();
 	for (auto entity : spriteView) {
-		Object& obj = reg.get<Object>(entity);
-		if(obj.m_state == Object::STATE::ACTIVE){
+		GameEntity& obj = reg.get<GameEntity>(entity);
+		if(obj.m_state == GameEntity::STATE::ACTIVE){
 			Sprite& sprite = reg.get<Sprite>(entity);
 			AddSpriteSheetInstance(sprite, reg.get<Transform2D>(entity), spriteHandler);
 		}
 	}
 
-	auto textView = reg.view<Transform2D, Object, Text>();
+	auto textView = reg.view<Transform2D, GameEntity, Text>();
 	for (auto entity : textView) {
-		Object& obj = reg.get<Object>(entity);
-		if (obj.m_state == Object::STATE::ACTIVE) {
+		GameEntity& obj = reg.get<GameEntity>(entity);
+		if (obj.m_state == GameEntity::STATE::ACTIVE) {
 			Text& text = reg.get<Text>(entity);
 			if (text.m_fontID != 0) {
 				AddFontInstance(text, reg.get<Transform2D>(entity), spriteHandler);

@@ -8,13 +8,13 @@
 #include "Rendering/Models/ModelData.h"
 #include "Core/D3D12Framework.h"
 #include "Rendering/Models/ModelHandler.h"
-#include "Components/DirectionalLight.h"
+#include "Components/Light/DirectionalLight.h"
 #include "Rendering/TextureHandler.h"
 #include "Rendering/Screen Rendering/Textures/VolumetricLight.h"
 
-#include "Components/Text.h"
-#include "Components/Object.h"
-#include "Components/Sprite.h"
+#include "Components/2D/Text.h"
+#include "Components/GameEntity.h"
+#include "Components/2D/Sprite.h"
 #include "Components/Transform.h"
 
 #include "Core/input.hpp"
@@ -250,14 +250,14 @@ void ImguiHandler::StaticWindows()
 
 
 			if (ImGui::ListBoxHeader("##", {(float)m_leftWindow.m_width, (float)m_leftWindow.m_width})) {
-				auto scene = reg.view<Transform, Object>();
+				auto scene = reg.view<Transform, GameEntity>();
 				entt::entity previousEntity;
 				for (auto entity : scene) {
 					if (reg.try_get<Camera>(entity)) {
 						continue;
 					}
 
-					Object& obj = reg.get<Object>(entity);
+					GameEntity& obj = reg.get<GameEntity>(entity);
 					bool isSelected = (entity == m_currentEntity);
 					if (ImGui::Selectable(obj.m_name.c_str(), isSelected)) {
 						m_currentEntity = entity;
@@ -492,7 +492,7 @@ bool ImguiHandler::ModelDataSettings(entt::registry& reg)
 
 bool ImguiHandler::ObjectSettings(entt::registry& reg)
 {	
-	Object& obj = reg.get<Object>(m_currentEntity);
+	GameEntity& obj = reg.get<GameEntity>(m_currentEntity);
 	ImGui::Text(obj.m_name.c_str());
 	ImGui::Separator();
 	if (ImGui::CollapsingHeader("Object")) {
@@ -520,15 +520,15 @@ bool ImguiHandler::ObjectSettings(entt::registry& reg)
 					ImGui::SetItemDefaultFocus();
 
 					if (currentState == m_stateNames[0]) {
-						obj.m_state = Object::STATE::ACTIVE;
+						obj.m_state = GameEntity::STATE::ACTIVE;
 					}
 
 					if (currentState == m_stateNames[1]) {
-						obj.m_state = Object::STATE::NOT_ACTIVE;
+						obj.m_state = GameEntity::STATE::NOT_ACTIVE;
 					}
 
 					if (currentState == m_stateNames[2]) {
-						obj.m_state = Object::STATE::DESTROY;
+						obj.m_state = GameEntity::STATE::DESTROY;
 					}
 				}
 			}

@@ -3,7 +3,7 @@
 
 class Camera;
 class AABBCollider;
-struct Object;
+struct GameEntity;
 
 class CameraController 
 {
@@ -13,7 +13,7 @@ public:
 	~CameraController();
 
 	void SetCamera(Camera* cam);
-	void SetTarget(Object& target) {
+	void SetTarget(GameEntity& target) {
 		m_target = &target;
 	}
 	void SetCameraBoundingBox(AABBCollider* boundigArea);
@@ -26,7 +26,7 @@ private:
 
 	Vect3f  m_offset;
 	Camera* m_camera;
-	Object* m_target;
+	GameEntity* m_target;
 	AABBCollider* m_boundingArea;
 
 	Vect3f m_points[4];

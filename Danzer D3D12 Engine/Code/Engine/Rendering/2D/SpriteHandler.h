@@ -1,6 +1,6 @@
 #pragma once
-#include "Components/Sprite.h"
-#include "Components/Text.h"
+#include "Components/2D/Sprite.h"
+#include "Components/2D/Text.h"
 
 #include "Fonts/Font.h"
 #include "SpriteData.h"

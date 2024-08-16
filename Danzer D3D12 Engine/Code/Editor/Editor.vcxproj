@@ -149,7 +149,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="AllComponents.h" />
     <ClInclude Include="Editor.h" />
     <ClInclude Include="EditorLoadAndSave.h" />
     <ClInclude Include="FileExplorer.h" />

@@ -83,8 +83,8 @@
     <ClCompile Include="Rendering\Screen Rendering\Textures\VolumetricLightBlur.cpp" />
     <ClCompile Include="Rendering\Screen Rendering\Fullscreen Shaders\KuwaharaFilter.cpp" />
     <ClCompile Include="Rendering\Screen Rendering\Textures\DirectionalLightTexture.cpp" />
-    <ClCompile Include="Physics\PhysicsWrapper.cpp" />
-    <ClCompile Include="Physics\PhysicsLayers.cpp" />
+    <ClCompile Include="Physics\PhysicsEngine.cpp" />
+    <ClCompile Include="Physics\PhysicsHandler.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Core\DirectX12Framework.h">
@@ -140,8 +140,8 @@
     <ClInclude Include="Rendering\Buffers\SpriteSheetBuffer.h" />
     <ClInclude Include="Rendering\Buffers\WindowSizeBuffer.h" />
     <ClInclude Include="Rendering\Buffers\VertexBuffer.h" />
-    <ClInclude Include="Components\Text.h" />
-    <ClInclude Include="Components\Sprite.h" />
+    <ClInclude Include="Components\2D\Text.h" />
+    <ClInclude Include="Components\2D\Sprite.h" />
     <ClInclude Include="Level Loader\LevelLoaderCustom.h" />
     <ClInclude Include="Level Loader\LevelLoader.h" />
     <ClInclude Include="Rendering\TextureHandler.h" />
@@ -155,14 +155,14 @@
     <ClInclude Include="SceneManager.h" />
     <ClInclude Include="Components\Collision\SphereCollider.h" />
     <ClInclude Include="Components\Transform.h" />
-    <ClInclude Include="Components\Object.h" />
+    <ClInclude Include="Components\GameEntity.h" />
     <ClInclude Include="Components\Model.h" />
-    <ClInclude Include="Components\Transform2D.h" />
+    <ClInclude Include="Components\2D\Transform2D.h" />
     <ClInclude Include="Components\Collision\Collider.h" />
     <ClInclude Include="Core\input.hpp" />
     <ClInclude Include="Rendering\Screen Rendering\GBuffer.h" />
     <ClInclude Include="Rendering\Screen Rendering\ScreenTexture.h" />
-    <ClInclude Include="Components\DirectionalLight.h" />
+    <ClInclude Include="Components\Light\DirectionalLight.h" />
     <ClInclude Include="Rendering\Buffers\LightBuffer.h" />
     <ClInclude Include="Rendering\Buffers\MaterialBuffer.h" />
     <ClInclude Include="Rendering\Models\Material.h" />
@@ -175,11 +175,11 @@
     <ClInclude Include="ShaderEffectRenderer.h" />
     <ClInclude Include="Rendering\Screen Rendering\Textures\FullscreenTexture.h" />
     <ClInclude Include="Rendering\Models\ModelEffectHandler.h" />
-    <ClInclude Include="Components\ModelEffect.h" />
+    <ClInclude Include="Components\Render &amp; Effects\ModelEffect.h" />
     <ClInclude Include="Rendering\Models\ModelEffectData.h" />
     <ClInclude Include="Rendering\Buffers\EffectShaderBuffer.h" />
-    <ClInclude Include="Components\WaterPlaneBufferData.h" />
-    <ClInclude Include="Components\PointLight.h" />
+    <ClInclude Include="Components\Render &amp; Effects\WaterPlaneBufferData.h" />
+    <ClInclude Include="Components\Light\PointLight.h" />
     <ClInclude Include="Rendering\Buffers\PointLightBuffer.h" />
     <ClInclude Include="Rendering\Screen Rendering\LightHandler.h" />
     <ClInclude Include="Rendering\Screen Rendering\Textures\SSAOTexture.h" />
@@ -191,8 +191,12 @@
     <ClInclude Include="Rendering\Screen Rendering\Textures\VolumetricLightBlur.h" />
     <ClInclude Include="Rendering\Screen Rendering\Fullscreen Shaders\KuwaharaFilter.h" />
     <ClInclude Include="Rendering\Screen Rendering\Textures\DirectionalLightTexture.h" />
-    <ClInclude Include="Physics\PhysicsWrapper.h" />
+    <ClInclude Include="Physics\PhysicsEngine.h" />
     <ClInclude Include="Physics\PhysicsLayers.h" />
     <ClInclude Include="Physics\PhysicsHeader.h" />
+    <ClInclude Include="Physics\Body Contacts\ContactListener.h" />
+    <ClInclude Include="Physics\Body Contacts\BodyActivationListener.h" />
+    <ClInclude Include="Physics\PhysicsHandler.h" />
+    <ClInclude Include="Components\AllComponents.h" />
   </ItemGroup>
 </Project>
