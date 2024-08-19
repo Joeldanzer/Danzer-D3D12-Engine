@@ -3,7 +3,6 @@
 #include "entt/entt.hpp"
 #include "PhysicsBody.h"
 
-#include <Jolt/Physics/Body/BodyID.h>
 #include <Jolt/Physics/EActivation.h>
 #include <Jolt/Physics/Body/MotionType.h>
 #include <Jolt/Physics/Collision/ObjectLayer.h>
@@ -24,7 +23,7 @@ public:
 	~PhysicsHandler();
 
 	PhysicsBody CreatePhyscisSphere(float radius, JPH::EMotionType motionType, JPH::EActivation activation, JPH::ObjectLayer layer);
-	PhysicsBody CreatePhysicsBox   (Vect3f size, JPH::EMotionType motionType, JPH::EActivation activation, ObjectLayer layer);
+	PhysicsBody CreatePhysicsBox   (Vect3f size,  JPH::EMotionType motionType, JPH::EActivation activation, JPH::ObjectLayer layer);
 
 private:
 	// Sets Physics Position and Rotation before PhysicsSystem.Update()

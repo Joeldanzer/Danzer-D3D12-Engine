@@ -9,6 +9,7 @@ namespace JPH {
 	class TempAllocator;
 	class ContactListenerImpl;
 	class BodyActivationListenerImpl;
+	class DebugRenderer;
 }
 
 class PhysicsEngine
@@ -44,5 +45,7 @@ private:
 	LayerInterfaceImpl				  m_layerInterface;
 	ObjectVsBroadPhaseLayerFilterImpl m_objectVsBroadPhaseLayerFilter;
 	ObjectLayerPairFilterImpl         m_layerPairFilter;
+
+	bool m_drawDebug;
 };
 

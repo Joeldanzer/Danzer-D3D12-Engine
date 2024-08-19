@@ -81,7 +81,6 @@ void Scene::UpdateTransforms()
 		mat *= DirectX::XMMatrixTranslation(pos.x, pos.y, pos.z);
 		transform.m_local = mat;
 		transform.m_world = !transform.Parent() ? transform.m_world = transform.m_local : transform.m_local * transform.Parent()->m_world;
-		//}
 	}
 }
 

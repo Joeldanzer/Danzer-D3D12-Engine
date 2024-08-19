@@ -1,7 +1,5 @@
 #pragma once
 
-#include "PhysicsHandler.h"
-
 #include <Jolt/Physics/EActivation.h>
 #include <Jolt/Physics/Body/BodyID.h>
 
@@ -13,7 +11,7 @@ namespace JPH {
 struct PhysicsBody {
 	PhysicsBody() = delete;
 	explicit PhysicsBody(JPH::BodyInterface& bodyInterface, const JPH::BodyCreationSettings& settings, JPH::EActivation activation);
-	explicit PhysicsBody(const PhysicsBody&) = default;
+	//explicit PhysicsBody(const PhysicsBody&) = default;
 	~PhysicsBody();
 
 	void AddForce(Vect3f force);

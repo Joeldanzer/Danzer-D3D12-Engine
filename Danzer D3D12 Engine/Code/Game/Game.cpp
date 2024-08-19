@@ -12,6 +12,8 @@
 #include "Rendering/Screen Rendering/LightHandler.h"
 #include "Components/Render & Effects/WaterPlaneBufferData.h"
 
+#include "Physics/PhysicsHeader.h"
+
 #include "Components/Light/PointLight.h"
 #include "Components/2D/Transform2D.h"
 #include "Components/Model.h"
@@ -66,6 +68,12 @@ Game::Impl::Impl(Engine& engine) :
 	//auto entity = reg.create();
     //reg.emplace<Model>(entity, engine.GetModelHandler().LoadModel(L"Models/BlenderSponzaAtriumOld.fbx", "Sponza Atrium"));
 	
+	auto physicsSphere = engine.GetSceneManager().GetCurrentScene().CreateBasicEntity("Physics Sphere");
+	reg.emplace<PhysicsBody>(physicsSphere, engine.GetPhysicsHandler().CreatePhyscisSphere(1.0f, EMotionType::Dynamic, EActivation::Activate, Layers::MOVING));
+	reg.emplace<Model>(physicsSphere, engine.GetModelHandler().LoadModel(L"Models/sphere.fbx"));
+	Transform& sphereT = reg.get<Transform>(physicsSphere);
+	sphereT.m_position = { 0.0f, 10.0f, 0.0f };
+
 	auto waterPlane = engine.GetSceneManager().GetCurrentScene().CreateBasicEntity("WaterPlane");
 	Model waterModel = reg.emplace<Model>(waterPlane, engine.GetModelHandler().LoadModel(L"Models/WaterPlane.fbx", "Water Plane"));
 	std::vector<UINT> textures = {
@@ -89,6 +97,7 @@ Game::Impl::Impl(Engine& engine) :
 	waterData.m_far				  = 1000.0f;
 	waterData.m_edgeScale	      = 1.0f;
 	waterData.m_edgeColor	      = { 1.0f, 1.0f, 1.0f };
+	
 	//reg.emplace<ModelEffect>(waterPlane, engine.GetModelEffectHandler().CreateModelEffect({L"Shaders/WaterPlaneVS.cso", L"Shaders/WaterPlanePS.cso"}, waterModel.m_modelID, &waterData, sizeof(WaterPlaneData), textures, true));
 	//Transform& waterTransform = reg.get<Transform>(waterPlane);
 	//waterTransform.m_position = { 0.0f, 2.0f, 0.0f };

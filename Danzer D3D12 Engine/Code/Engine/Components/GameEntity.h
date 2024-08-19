@@ -4,6 +4,7 @@
 // Game Entity holds general information of the object. Required component to render and update in scene
 struct GameEntity{
 	GameEntity(){}
+	
 
 	enum class STATE { // Game Entities state, 
 		ACTIVE,
