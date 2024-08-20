@@ -14,6 +14,7 @@ public:
 	FullscreenTexture() : 
 		m_dsvOffsetID(0), m_srvOffsetID(0), m_viewPort({}), m_pso(0), m_rs(0), m_rtvOffsetID(0)
 	{}
+	~FullscreenTexture();
 
 	void InitAsDepth(
 		ID3D12Device* device,

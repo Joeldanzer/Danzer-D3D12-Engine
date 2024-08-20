@@ -4,6 +4,12 @@
 #include "Core/DesriptorHeapWrapper.h"
 #include "Rendering/PSOHandler.h"
 
+FullscreenTexture::~FullscreenTexture()
+{
+	for (size_t i = 0; i < FrameCount; i++)
+		m_resource[i]->Release();	
+}
+
 void FullscreenTexture::InitAsDepth(ID3D12Device* device, DescriptorHeapWrapper* cbvSrvHeap, DescriptorHeapWrapper* dsvHeap, const UINT width, const UINT height, DXGI_FORMAT textureDesc, DXGI_FORMAT srvFormat, D3D12_RESOURCE_FLAGS flag, std::wstring name)
 {
 	CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle = cbvSrvHeap->GET_CPU_DESCRIPTOR(0);

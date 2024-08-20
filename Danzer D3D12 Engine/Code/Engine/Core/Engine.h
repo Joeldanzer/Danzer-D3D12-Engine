@@ -25,7 +25,7 @@ public:
 	explicit Engine(unsigned int width, unsigned int height);
 	~Engine();
 
-	bool StartEngine(bool editor = true);
+	//bool StartEngine(bool editor = true);
 
 	void BeginUpdate();
 	void MidUpdate();

@@ -49,8 +49,7 @@ PhysicsEngine::PhysicsEngine(const UINT maxBodies, const UINT maxBodyMutexes, co
 	m_physicsSystem = new PhysicsSystem();
 	m_physicsSystem->Init(maxBodies, maxBodyMutexes, maxBodyPairs, maxContactConstraints, m_layerInterface, m_objectVsBroadPhaseLayerFilter, m_layerPairFilter);
 	
-	m_contactListener = new ContactListenerImpl;
-	m_physicsSystem->SetContactListener(m_contactListener);
+	m_bodyInterface.SetBodyInterface(m_physicsSystem->GetBodyInterface());
 
 	m_bodyActivationListener = new BodyActivationListenerImpl;
 	m_physicsSystem->SetBodyActivationListener(m_bodyActivationListener);
@@ -74,4 +73,15 @@ PhysicsEngine::~PhysicsEngine()
 void PhysicsEngine::Update(const float physicsDT, const int collisionSteps)
 {
 	m_physicsSystem->Update(physicsDT, m_numberOfSteps, m_tempAllocator, m_jobSystem);
+}
+
+void PhysicsEngine::OptimizeBroadPhase()
+{
+	m_physicsSystem->OptimizeBroadPhase();
+}
+
+void PhysicsEngine::SetRegistry(entt::registry& registry)
+{
+	m_contactListener = new ContactListenerImpl(registry, m_bodyInterface);
+	m_physicsSystem->SetContactListener(m_contactListener);
 }

@@ -117,11 +117,11 @@ Engine::Impl::Impl(unsigned int width, unsigned int height) :
 	m_spriteHandler.CreateSpriteSheet(L"Sprites/testSpriteSheet.dds", 4, 4);
 	
 	m_sceneManager.Init(m_camera);
+	m_physicsEngine.SetRegistry(m_sceneManager.GetCurrentScene().Registry());
 }
 
 Engine::Impl::~Impl()
 {
-	m_framework.~D3D12Framework();
 	m_sceneManager.~SceneManager();
 	m_renderManager.~RenderManager();
 	m_windowHandler.~WindowHandler();
@@ -131,6 +131,7 @@ Engine::Impl::~Impl()
 	m_physicsEngine.~PhysicsEngine();
 	m_physicsHandler.~PhysicsHandler();
 	m_skybox.~Skybox();
+	m_framework.~D3D12Framework();
 }
 
 Engine::Engine(unsigned int width, unsigned int height)
@@ -138,7 +139,7 @@ Engine::Engine(unsigned int width, unsigned int height)
 	m_Impl = new Engine::Impl(width, height);
 }
 Engine::~Engine(){
-	delete m_Impl;
+	//delete m_Impl;
 }
 
 void Engine::Impl::BeginUpdate()
@@ -173,18 +174,20 @@ void Engine::Impl::LateUpdate()
 
 void Engine::Impl::EndInitFrame()
 {
+	m_physicsHandler.UpdateStaticColliders(m_sceneManager.GetCurrentScene().Registry());
+	m_physicsEngine.OptimizeBroadPhase();
 	m_framework.EndInitFrame();
 }
 
-bool Engine::StartEngine(bool editor)
-{
-	if (editor)
-		s_engineState = EngineState::ENGINE_STATE_EDITOR;
-	else
-		s_engineState = EngineState::ENGINE_STATE_GAME;
-	
-	return true;
-}
+//bool Engine::StartEngine(bool editor)
+//{
+//	if (editor)
+//		s_engineState = EngineState::ENGINE_STATE_EDITOR;
+//	else
+//		s_engineState = EngineState::ENGINE_STATE_GAME;
+//	
+//	return true;
+//}
 
 void Engine::BeginUpdate()
 {

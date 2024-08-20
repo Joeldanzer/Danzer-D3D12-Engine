@@ -152,6 +152,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Physics\BodyInterfaceImpl.h" />
     <ClInclude Include="Components\AllComponents.h" />
     <ClInclude Include="Components\Collision\Collider.h" />
     <ClInclude Include="Components\Physics\BoxCollider.h" />
@@ -241,6 +242,7 @@
     <ClInclude Include="Rendering\Screen Rendering\Textures\VolumetricLightBlur.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Physics\BodyInterfaceImpl.cpp" />
     <ClCompile Include="Physics\Body Contacts\ContactListener.cpp" />
     <ClCompile Include="Physics\PhysicsBody.cpp" />
     <ClCompile Include="Physics\PhysicsHandler.cpp" />

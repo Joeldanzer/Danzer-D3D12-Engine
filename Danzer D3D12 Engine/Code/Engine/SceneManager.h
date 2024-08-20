@@ -30,6 +30,8 @@ public:
 		return m_scenes[m_currentScene]; 
 	}	
 
+	GameEntity& CreateBasicEntity(std::string name, bool isStatic, GameEntity::STATE state = GameEntity::STATE::ACTIVE);
+
 private:
 	std::unordered_map<std::string, Scene> m_scenes;
 	std::string m_currentScene;

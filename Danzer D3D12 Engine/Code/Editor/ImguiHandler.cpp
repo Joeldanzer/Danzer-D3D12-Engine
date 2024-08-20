@@ -230,62 +230,62 @@ void ImguiHandler::StaticWindows()
 		ImGui::SetNextWindowBgAlpha(1.f);
 		bool isOpen = true;
 
-		if (ImGui::Begin("Scene View", &isOpen, staticWindowFlags)) {
-			if (ImGui::Button("Create Empty Object")) {
-				m_currentEntity = scene.CreateBasicEntity("Empty Object");
-			}
-			ImGui::SameLine();
-			if(ImGui::Button("Create Cube")) {
-				m_currentEntity = scene.CreateBasicEntity("Cube");
-				reg.emplace<Model>(m_currentEntity, m_engine.GetModelHandler().LoadModel(L"Models/Cube.fbx"));
-			}
-			ImGui::SameLine();
-			if (ImGui::Button("Create Sphere")) {
-				m_currentEntity = scene.CreateBasicEntity("Sphere");
-				reg.emplace<Model>(m_currentEntity, m_engine.GetModelHandler().LoadModel(L"Models/Sphere.fbx"));
-			}
-
-			ImGui::Separator();
-
-
-
-			if (ImGui::ListBoxHeader("##", {(float)m_leftWindow.m_width, (float)m_leftWindow.m_width})) {
-				auto scene = reg.view<Transform, GameEntity>();
-				entt::entity previousEntity;
-				for (auto entity : scene) {
-					if (reg.try_get<Camera>(entity)) {
-						continue;
-					}
-
-					GameEntity& obj = reg.get<GameEntity>(entity);
-					bool isSelected = (entity == m_currentEntity);
-					if (ImGui::Selectable(obj.m_name.c_str(), isSelected)) {
-						m_currentEntity = entity;
-						m_currentMesh = 0;
-						Transform& transform = reg.get<Transform>(entity);
-
-						if (m_removeEntity) {
-							if (previousEntity != entity) {
-								m_currentEntity = previousEntity;
-							}
-
-							reg.destroy(entity);
-							m_removeEntity = false;
-						}
-						//memcpy(m_currentRotation, &transform.m_rotation.x, sizeof(float) * 3);
-
-						if (!m_itemsHasBeenSelected)
-							m_itemsHasBeenSelected = true;
-					}
-
-					previousEntity = entity;
-				}
-				
-				ImGui::ListBoxFooter();
-			}
-
-			ImGui::End();
-		}
+		//if (ImGui::Begin("Scene View", &isOpen, staticWindowFlags)) {
+		//	if (ImGui::Button("Create Empty Object")) {
+		//		m_currentEntity = scene.CreateBasicEntity("Empty Object");
+		//	}
+		//	ImGui::SameLine();
+		//	if(ImGui::Button("Create Cube")) {
+		//		m_currentEntity = scene.CreateBasicEntity("Cube");
+		//		reg.emplace<Model>(m_currentEntity, m_engine.GetModelHandler().LoadModel(L"Models/Cube.fbx"));
+		//	}
+		//	ImGui::SameLine();
+		//	if (ImGui::Button("Create Sphere")) {
+		//		m_currentEntity = scene.CreateBasicEntity("Sphere");
+		//		reg.emplace<Model>(m_currentEntity, m_engine.GetModelHandler().LoadModel(L"Models/Sphere.fbx"));
+		//	}
+		//
+		//	ImGui::Separator();
+		//
+		//
+		//
+		//	if (ImGui::ListBoxHeader("##", {(float)m_leftWindow.m_width, (float)m_leftWindow.m_width})) {
+		//		auto scene = reg.view<Transform, GameEntity>();
+		//		entt::entity previousEntity;
+		//		for (auto entity : scene) {
+		//			if (reg.try_get<Camera>(entity)) {
+		//				continue;
+		//			}
+		//
+		//			GameEntity& obj = reg.get<GameEntity>(entity);
+		//			bool isSelected = (entity == m_currentEntity);
+		//			if (ImGui::Selectable(obj.m_name.c_str(), isSelected)) {
+		//				m_currentEntity = entity;
+		//				m_currentMesh = 0;
+		//				Transform& transform = reg.get<Transform>(entity);
+		//
+		//				if (m_removeEntity) {
+		//					if (previousEntity != entity) {
+		//						m_currentEntity = previousEntity;
+		//					}
+		//
+		//					reg.destroy(entity);
+		//					m_removeEntity = false;
+		//				}
+		//				//memcpy(m_currentRotation, &transform.m_rotation.x, sizeof(float) * 3);
+		//
+		//				if (!m_itemsHasBeenSelected)
+		//					m_itemsHasBeenSelected = true;
+		//			}
+		//
+		//			previousEntity = entity;
+		//		}
+		//		
+		//		ImGui::ListBoxFooter();
+		//	}
+		//
+		//	ImGui::End();
+		//}
 	}
 	//* Left Side window End
 
