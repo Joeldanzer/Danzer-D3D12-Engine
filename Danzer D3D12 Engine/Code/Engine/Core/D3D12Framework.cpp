@@ -92,6 +92,9 @@ D3D12Framework::D3D12Framework() :
 
 D3D12Framework::~D3D12Framework()
 {
+	//ExecuteCommandList();
+	//WaitForGPU();
+
 	m_rtvHeap.~DescriptorHeapWrapper();
 	m_dsvHeap.~DescriptorHeapWrapper();
 	m_cbvSrvHeap.~DescriptorHeapWrapper();
@@ -111,7 +114,7 @@ D3D12Framework::~D3D12Framework()
 		m_frameResources[i]->~FrameResource();
 		delete m_frameResources[i];
 
-		m_renderTargets[i].~ComPtr();
+		m_renderTargets[i].ReleaseAndGetAddressOf();
 	}
 	delete m_imguiDesc;
 }
@@ -137,7 +140,6 @@ void D3D12Framework::ExecuteCommandList()
 
 void D3D12Framework::WaitForGPU()
 {
-
 	m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
 
 	UINT64 completedValue = m_fence->GetCompletedValue();

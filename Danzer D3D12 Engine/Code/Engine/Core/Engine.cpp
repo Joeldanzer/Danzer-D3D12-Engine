@@ -48,6 +48,7 @@ public:
 	CollisionManager&   GetCollisionManager()   noexcept;
 	ModelEffectHandler& GetModelEffectHandler() noexcept;
 	LightHandler&		GetLightHandler()	    noexcept;
+	PhysicsHandler&		GetPhysicsHandler()		noexcept;
 
 private:
 	WindowHandler	   m_windowHandler;
@@ -58,6 +59,7 @@ private:
 	SpriteHandler	   m_spriteHandler;
 	SceneManager	   m_sceneManager;
 	PhysicsEngine	   m_physicsEngine;
+	PhysicsHandler     m_physicsHandler;
 	CollisionManager   m_collisionManager;
 	ModelEffectHandler m_modelEffectHandler;
 	LightHandler	   m_lightHandler;
@@ -83,15 +85,15 @@ Engine::Impl::Impl(unsigned int width, unsigned int height) :
 		0,     // Max body mutexes
 		65536, // Max body pairs
 		20480, // Max Contact Constraints
-		1      // Max Number of jobs(AKA threads)
+		3      // Max Number of jobs(AKA threads)
 	),
+	m_physicsHandler(m_physicsEngine),
 	m_collisionManager(),
 	m_camera(65.f, (float)m_windowHandler.WindowData().m_w / (float)m_windowHandler.WindowData().m_h),
 	m_skybox(m_textureHandler),
 	m_deltaTime(0.f)
 {
-	//JPH::PhysicsSystem physicsSystem;
-	//physicsSystem.Init(1000, 0, 1000, 1000, )
+	// Test to get FMOD loaded correctly
 	FMOD_RESULT fResult;
 	FMOD::System* fmodSystem = nullptr;
 	FMOD::System_Create(&fmodSystem);
@@ -108,32 +110,37 @@ Engine::Impl::Impl(unsigned int width, unsigned int height) :
 	io->DisplaySize = vec;
 	io->Fonts->Build();
 
+	// Set default skybox, this should be changed to in scene instead,
 	CustomModel skyboxCube = ModelData::GetCube();
 	skyboxCube.m_customModelName = "skybox";
 	m_skybox.Init(m_renderManager.GetPSOHandler(), m_modelHandler.CreateCustomModel(skyboxCube).m_modelID, L"Sprites/defaultRedSkybox.dds", true);
 	m_spriteHandler.CreateSpriteSheet(L"Sprites/testSpriteSheet.dds", 4, 4);
 	
 	m_sceneManager.Init(m_camera);
+	m_physicsEngine.SetRegistry(m_sceneManager.GetCurrentScene().Registry());
 }
 
 Engine::Impl::~Impl()
 {
-	m_framework.~D3D12Framework();
 	m_sceneManager.~SceneManager();
 	m_renderManager.~RenderManager();
 	m_windowHandler.~WindowHandler();
 	m_modelHandler.~ModelHandler();
 	m_spriteHandler.~SpriteHandler();
 	m_collisionManager.~CollisionManager();
+	m_physicsEngine.~PhysicsEngine();
+	m_physicsHandler.~PhysicsHandler();
 	m_skybox.~Skybox();
+	m_framework.~D3D12Framework();
 }
 
-Engine::Engine() : m_Impl(nullptr){}
 Engine::Engine(unsigned int width, unsigned int height)
 {
 	m_Impl = new Engine::Impl(width, height);
 }
-Engine::~Engine(){}
+Engine::~Engine(){
+	//delete m_Impl;
+}
 
 void Engine::Impl::BeginUpdate()
 {
@@ -148,7 +155,13 @@ void Engine::Impl::MidUpdate()
 	const float deltaTime = m_frameTimer.GetRealDeltaTime();
 	m_skybox.Update(deltaTime);
 
+
 	m_sceneManager.GetCurrentScene().UpdateTransforms();
+
+	m_physicsHandler.SetPhysicsPositionAndRotation(m_sceneManager.GetCurrentScene().Registry());
+	m_physicsEngine.Update(1.0f / 60.0f, 0);
+	m_physicsHandler.UpdatePhysicsEntities(m_sceneManager.GetCurrentScene().Registry());
+
 	m_renderManager.RenderFrame(m_lightHandler, m_textureHandler, m_modelHandler, m_modelEffectHandler, m_spriteHandler, m_skybox, m_sceneManager.GetCurrentScene());
 }
 
@@ -161,18 +174,20 @@ void Engine::Impl::LateUpdate()
 
 void Engine::Impl::EndInitFrame()
 {
+	m_physicsHandler.UpdateStaticColliders(m_sceneManager.GetCurrentScene().Registry());
+	m_physicsEngine.OptimizeBroadPhase();
 	m_framework.EndInitFrame();
 }
 
-bool Engine::StartEngine(bool editor)
-{
-	if (editor)
-		s_engineState = EngineState::ENGINE_STATE_EDITOR;
-	else
-		s_engineState = EngineState::ENGINE_STATE_GAME;
-	
-	return true;
-}
+//bool Engine::StartEngine(bool editor)
+//{
+//	if (editor)
+//		s_engineState = EngineState::ENGINE_STATE_EDITOR;
+//	else
+//		s_engineState = EngineState::ENGINE_STATE_GAME;
+//	
+//	return true;
+//}
 
 void Engine::BeginUpdate()
 {
@@ -239,6 +254,10 @@ LightHandler& Engine::GetLightHandler() const noexcept
 {
 	return m_Impl->GetLightHandler();
 }
+PhysicsHandler& Engine::GetPhysicsHandler() const noexcept
+{
+	return m_Impl->GetPhysicsHandler();
+}
 const float Engine::Impl::GetFPS() noexcept
 {
 	return m_frameTimer.GetRealFrameRate();
@@ -288,4 +307,9 @@ ModelEffectHandler& Engine::Impl::GetModelEffectHandler() noexcept
 LightHandler& Engine::Impl::GetLightHandler() noexcept
 {
 	return m_lightHandler;
+}
+
+PhysicsHandler& Engine::Impl::GetPhysicsHandler() noexcept
+{
+	return m_physicsHandler;
 }

@@ -1,15 +1,17 @@
 #include "stdafx.h"
+
 #include "PhysicsEngine.h"
+#include "PhysicsHandler.h"
+
 #include "Body Contacts/ContactListener.h"
 #include "Body Contacts/BodyActivationListener.h"
 
 #include <Jolt/RegisterTypes.h>
 #include <Jolt/Physics/PhysicsSystem.h>
-
 #include <Jolt/Core/JobSystemThreadPool.h>
 #include <Jolt/Core/JobSystemSingleThreaded.h>
 
-#include "PhysicsHandler.h"
+#include <thread>
 
 using namespace JPH;
 
@@ -17,7 +19,7 @@ PhysicsEngine::PhysicsEngine(const UINT maxBodies, const UINT maxBodyMutexes, co
 	m_layerInterface(),
 	m_layerPairFilter(),
 	m_objectVsBroadPhaseLayerFilter(),
-	m_maxConcurrentJobs(maxConcurrentJobs > std::thread::hardware_concurrency() - 1 ? std::thread::hardware_concurrency() : maxConcurrentJobs)
+	m_maxConcurrentJobs(maxConcurrentJobs > std::thread::hardware_concurrency() - 1 ? std::thread::hardware_concurrency() - 1 : maxConcurrentJobs)
 
 {
 	RegisterDefaultAllocator();
@@ -47,8 +49,7 @@ PhysicsEngine::PhysicsEngine(const UINT maxBodies, const UINT maxBodyMutexes, co
 	m_physicsSystem = new PhysicsSystem();
 	m_physicsSystem->Init(maxBodies, maxBodyMutexes, maxBodyPairs, maxContactConstraints, m_layerInterface, m_objectVsBroadPhaseLayerFilter, m_layerPairFilter);
 	
-	m_contactListener = new ContactListenerImpl;
-	m_physicsSystem->SetContactListener(m_contactListener);
+	m_bodyInterface.SetBodyInterface(m_physicsSystem->GetBodyInterface());
 
 	m_bodyActivationListener = new BodyActivationListenerImpl;
 	m_physicsSystem->SetBodyActivationListener(m_bodyActivationListener);
@@ -58,7 +59,6 @@ PhysicsEngine::PhysicsEngine(const UINT maxBodies, const UINT maxBodyMutexes, co
 
 	m_physicsSystem->SetPhysicsSettings(m_physicsSettings);
 }
-
 
 PhysicsEngine::~PhysicsEngine()
 {
@@ -72,5 +72,16 @@ PhysicsEngine::~PhysicsEngine()
 
 void PhysicsEngine::Update(const float physicsDT, const int collisionSteps)
 {
-	m_physicsSystem->Update(physicsDT, collisionSteps, m_tempAllocator, m_jobSystem);
+	m_physicsSystem->Update(physicsDT, m_numberOfSteps, m_tempAllocator, m_jobSystem);
+}
+
+void PhysicsEngine::OptimizeBroadPhase()
+{
+	m_physicsSystem->OptimizeBroadPhase();
+}
+
+void PhysicsEngine::SetRegistry(entt::registry& registry)
+{
+	m_contactListener = new ContactListenerImpl(registry, m_bodyInterface);
+	m_physicsSystem->SetContactListener(m_contactListener);
 }

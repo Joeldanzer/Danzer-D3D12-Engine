@@ -353,6 +353,7 @@ namespace DirectX
             explicit Vector4(_In_reads_(4) const float *pArray) noexcept : XMFLOAT4(pArray) {}
             Vector4(FXMVECTOR V) noexcept { XMStoreFloat4(this, V); }
             Vector4(const XMFLOAT4& V) noexcept { this->x = V.x; this->y = V.y; this->z = V.z; this->w = V.w; }
+            Vector4(const XMFLOAT3& V) noexcept { this->x = V.x; this->y = V.y; this->z = V.z; this->w = 1.0f; }
             explicit Vector4(const XMVECTORF32& F) noexcept { this->x = F.f[0]; this->y = F.f[1]; this->z = F.f[2]; this->w = F.f[3]; }
 
             Vector4(const Vector4&) = default;

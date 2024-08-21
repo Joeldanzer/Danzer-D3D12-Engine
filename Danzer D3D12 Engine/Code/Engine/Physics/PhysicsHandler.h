@@ -1,41 +1,42 @@
 #pragma once
 
 #include "entt/entt.hpp"
-#include <Jolt/Physics/Body/BodyID.h>
+#include "PhysicsBody.h"
 
+#include <Jolt/Physics/EActivation.h>
+#include <Jolt/Physics/Body/MotionType.h>
+#include <Jolt/Physics/Collision/ObjectLayer.h>
+
+#include <Core/MathDefinitions.h>
+
+class BodyInterfaceImpl;
 class PhysicsEngine;
-
-namespace JPH {
-	class PhysicsSystem;
-	class BodyInterface;
-}
+struct GameEntity;
 
 class PhysicsHandler
 {
 public:
 	PhysicsHandler(PhysicsEngine& physicsEngine);
-	
-	// Physics body is a pure virtual class
-	struct PhysicsBody {	
-		PhysicsBody(JPH::BodyInterface& bodyInterface) :
-			m_interface(bodyInterface)
-		{}
-	protected:
-		friend class PhysicsHandler;
-		JPH::BodyID m_id;
-		JPH::BodyInterface& m_interface;
-	};
+	~PhysicsHandler();
+
+	PhysicsBody CreatePhyscisSphere(const GameEntity& gameEntity, float radius, JPH::EMotionType motionType, JPH::EActivation activation, JPH::ObjectLayer layer);
+	PhysicsBody CreatePhysicsBox   (const GameEntity& gameEntity, Vect3f size,  JPH::EMotionType motionType, JPH::EActivation activation, JPH::ObjectLayer layer);
 
 private:
+	// Sets Physics Position and Rotation before PhysicsSystem.Update()
+	void SetPhysicsPositionAndRotation(entt::registry& reg);
+	void UpdateStaticColliders(entt::registry& reg);
+
+	// Update all the transform of entites after PhysicsSystem.Update() so the that the results are repclicated in rendering
 	void UpdatePhysicsEntities(entt::registry& reg);
 
-	JPH::PhysicsSystem* m_physicsSystem = nullptr;
-	JPH::BodyInterface& m_bodyInterface;
+	BodyInterfaceImpl&  m_bodyInterface;
 
 	// Used to optimize simulation when many bodies have been created when for example,
 	// loading a new level.
 	bool optimizeBroadPhase = false; 
 	
+
 	friend class Engine;
 };
 

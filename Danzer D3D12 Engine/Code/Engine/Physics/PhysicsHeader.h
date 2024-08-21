@@ -4,12 +4,15 @@
 
 #include <Jolt/Jolt.h> // Jolt main header, needs to be included first
 
+#include "PhysicsHandler.h"
+
 #include <Jolt/Physics/Collision/ObjectLayer.h>
 #include <Jolt/Physics/Collision/BroadPhase/BroadPhaseLayer.h>
 
 // RigidBodies and Shapes Includes
 #include <Jolt/Physics/Body/MotionType.h>
 #include <Jolt/Physics/Body/Body.h>
+#include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Jolt/Physics/Collision/Shape/BoxShape.h>
 #include <Jolt/Physics/Collision/Shape/SphereShape.h>
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
@@ -60,6 +63,7 @@ static void TraceImpl(const char* inFMT, ...)
 	std::cout << buffer << std::endl;
 }
 
+// Jolt Assert override, only load in debug 
 #ifdef DEBUG
 static bool AssertFailedImpl(const char* inExpression, const char* inMessage, const char* inFile, unsigned int inLine)
 {

@@ -38,6 +38,9 @@ public:
 
 private:
 
+	Vect3f m_dirLightRot     =  {0.0f, 0.0f, 0.0f};
+	Vect3f m_dirLightLastRot =  {0.0f, 0.0f, 0.0f};
+
 	Vect3f m_kuwaharaOffset = { 0.0f, 0.0f, 0.0f };
 	int m_kuwaharaRadius = 1;
 	int m_kuwaharaScale =  1;

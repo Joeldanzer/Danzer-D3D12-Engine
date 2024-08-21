@@ -17,8 +17,8 @@ FrameResource::FrameResource(ID3D12Device* device, const UINT index) :
 
 FrameResource::~FrameResource()
 {
-	m_cmdAllocator.~ComPtr();
-	m_cmdList.~ComPtr();
+	m_cmdAllocator.ReleaseAndGetAddressOf();
+	m_cmdList.ReleaseAndGetAddressOf();
 }
 
 void FrameResource::Initiate(ID3D12PipelineState* pso)

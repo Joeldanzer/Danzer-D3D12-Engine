@@ -9,14 +9,14 @@ void SceneManager::Init(Camera& cam)
 	// Create a default empty scene that the games start with.
 	Scene& scene = CreateEmptyScene("default");
 
-	auto entity = scene.CreateBasicEntity("MainCamera");
+	auto entity = scene.CreateBasicEntity("MainCamera").m_entity;
 	scene.Registry().emplace<Camera>(entity, cam);
 
 	Transform& transform = scene.Registry().get<Transform>(entity);
 	transform.m_position = { 0.f, 10.0f, 0.f };
 
 	SetScene("default", entity, false);
-	entt::entity dirLight = scene.CreateBasicEntity("DirectionalLight", "Light");
+	auto dirLight = scene.CreateBasicEntity("DirectionalLight", "Light").m_entity;
 	scene.Registry().emplace<DirectionalLight>(dirLight, DirectionalLight(
 		{ 255.0f/255.0f, 214.0f/255.f, 165.f/255.f, 4.0f}, 
 		{1.0f, 1.0f, 1.0f, 0.25f}));
@@ -54,4 +54,9 @@ bool SceneManager::SetScene(std::string name, entt::entity camera, bool resetSce
 	}
 
 	return false;
+}
+
+GameEntity& SceneManager::CreateBasicEntity(std::string name, bool isStatic, GameEntity::STATE state)
+{
+	return m_scenes[m_currentScene].CreateBasicEntity(name, isStatic, state);
 }

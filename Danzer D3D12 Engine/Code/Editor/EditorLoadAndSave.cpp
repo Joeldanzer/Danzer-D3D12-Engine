@@ -21,67 +21,67 @@ EditorLoadAndSave::~EditorLoadAndSave()
 
 bool EditorLoadAndSave::LoadScene(std::string scene, entt::registry& reg)
 {
-	m_currentScene = scene;
-
+	//m_currentScene = scene;
+	//
 	bool success = false;
-
-	rapidjson::Document doc;
-	success = ReadJsonDocument(scene, doc);
-
-	rapidjson::Value& sceneEntities = doc["3D-Scene-Entities"];
-	for (rapidjson::SizeType i = 0; i < sceneEntities.Size(); i++)
-	{
-		auto& object = sceneEntities[i];
-		
-		if (object.IsObject()) {
-			entt::entity entity = reg.create();
-
-			auto& objectData = object["Object"];
-			GameEntity& obj = reg.emplace<GameEntity>(entity);
-
-			obj.m_name = objectData["Name"].GetString();
-			obj.m_layer = (UINT)objectData["Layer"].GetInt();
-			obj.m_tag = objectData["Tag"].GetString();
-			obj.m_static = objectData["Static"].GetBool();
-			
-			if (objectData["State"] == "ACTIVE") 
-				obj.m_state = GameEntity::STATE::ACTIVE;
-			else if (objectData["State"] == "NOT_ACTIVE") 
-				obj.m_state = GameEntity::STATE::NOT_ACTIVE;
-			else
-				obj.m_state = GameEntity::STATE::NOT_ACTIVE;
-
-			auto& transformData = object["Transform"];
-			Transform& transform = reg.emplace<Transform>(entity);
-
-			auto pos = transformData["Position"].GetArray();
-			transform.m_position = {
-				(float)pos[0].GetDouble(), 
-				(float)pos[1].GetDouble(), 
-				(float)pos[2].GetDouble()
-			};
-			
-			auto rot = transformData["Rotation"].GetArray();
-			Vect3f euler = { 
-				ToRadians((float)rot[0].GetDouble()),
-				ToRadians((float)rot[1].GetDouble()),
-				ToRadians((float)rot[2].GetDouble()) 
-			};
-			
-			transform.m_rotation = Quat4f::CreateFromYawPitchRoll(euler);
-
-			auto scale = transformData["Scale"].GetArray();
-			transform.m_scale = {
-				(float)scale[0].GetDouble(),
-				(float)scale[1].GetDouble(),
-				(float)scale[2].GetDouble()
-			};
-
-			GetDirectionalLightSettings(entity, reg, object);
-			GetModelSettings(entity, reg, object);
-		}	
-	}
-
+	//
+	//rapidjson::Document doc;
+	//success = ReadJsonDocument(scene, doc);
+	//
+	//rapidjson::Value& sceneEntities = doc["3D-Scene-Entities"];
+	//for (rapidjson::SizeType i = 0; i < sceneEntities.Size(); i++)
+	//{
+	//	auto& object = sceneEntities[i];
+	//	
+	//	if (object.IsObject()) {
+	//		entt::entity entity = reg.create();
+	//
+	//		auto& objectData = object["Object"];
+	//		GameEntity& obj = reg.emplace<GameEntity>(entity);
+	//
+	//		obj.m_name = objectData["Name"].GetString();
+	//		obj.m_layer = (UINT)objectData["Layer"].GetInt();
+	//		obj.m_tag = objectData["Tag"].GetString();
+	//		obj.m_static = objectData["Static"].GetBool();
+	//		
+	//		if (objectData["State"] == "ACTIVE") 
+	//			obj.m_state = GameEntity::STATE::ACTIVE;
+	//		else if (objectData["State"] == "NOT_ACTIVE") 
+	//			obj.m_state = GameEntity::STATE::NOT_ACTIVE;
+	//		else
+	//			obj.m_state = GameEntity::STATE::NOT_ACTIVE;
+	//
+	//		auto& transformData = object["Transform"];
+	//		Transform& transform = reg.emplace<Transform>(entity);
+	//
+	//		auto pos = transformData["Position"].GetArray();
+	//		transform.m_position = {
+	//			(float)pos[0].GetDouble(), 
+	//			(float)pos[1].GetDouble(), 
+	//			(float)pos[2].GetDouble()
+	//		};
+	//		
+	//		auto rot = transformData["Rotation"].GetArray();
+	//		Vect3f euler = { 
+	//			ToRadians((float)rot[0].GetDouble()),
+	//			ToRadians((float)rot[1].GetDouble()),
+	//			ToRadians((float)rot[2].GetDouble()) 
+	//		};
+	//		
+	//		transform.m_rotation = Quat4f::CreateFromYawPitchRoll(euler);
+	//
+	//		auto scale = transformData["Scale"].GetArray();
+	//		transform.m_scale = {
+	//			(float)scale[0].GetDouble(),
+	//			(float)scale[1].GetDouble(),
+	//			(float)scale[2].GetDouble()
+	//		};
+	//
+	//		GetDirectionalLightSettings(entity, reg, object);
+	//		GetModelSettings(entity, reg, object);
+	//	}	
+	//}
+	//
 	return success;
 }
 

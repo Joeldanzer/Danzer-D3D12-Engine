@@ -12,8 +12,6 @@ public:
 	entt::registry& Registry() {
 		return m_sceneRegistry;
 	}
-	entt::entity CreateBasicEntity(
-		std::string name, std::string tag = "default", unsigned int layer = 0, bool isStatic = false, GameEntity::STATE state = GameEntity::STATE::ACTIVE);
 
 	//void UpdateAllObjectsInScene(const float dt);
 	entt::entity GetMainCamera() {
@@ -27,8 +25,11 @@ public:
 	
 	void UpdateTransforms();
 	void ResetAllObjectsInScene();
+	void CleanUpDestroyedObj();
 private:
 	friend class SceneManager;
+	
+	GameEntity& CreateBasicEntity(std::string name, bool isStatic = false, GameEntity::STATE state = GameEntity::STATE::ACTIVE);
 	
 	void SetMainCamera(entt::entity camera) {
 		m_mainCamera = camera;
