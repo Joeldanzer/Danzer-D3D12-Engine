@@ -78,7 +78,6 @@ void ImguiHandler::Init()
 	m_dirLightRot	   = transform.m_rotation.ToEuler();
 	m_dirLightRot	   = { ToDegrees(m_dirLightRot.x), ToDegrees(m_dirLightRot.y), ToDegrees(m_dirLightRot.z) };
 	m_dirLightLastRot  = m_dirLightRot;
-	m_dirLightInitQuat = transform.m_rotation;
 }
 
 void ImguiHandler::Update(const float dt)
