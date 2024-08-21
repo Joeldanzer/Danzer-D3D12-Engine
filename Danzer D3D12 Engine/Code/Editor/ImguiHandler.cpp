@@ -64,6 +64,21 @@ void ImguiHandler::Init()
 
 	m_tag  = new char;
 	m_name = new char;
+
+	Scene& scene = m_engine.GetSceneManager().GetCurrentScene();
+	entt::registry& reg = scene.Registry();
+
+	auto dirLightList = reg.view<DirectionalLight, Transform>();
+
+	entt::entity ent;
+	for (auto entity : dirLightList)
+		ent = entity;
+	
+	Transform& transform = reg.get<Transform>(ent);
+	m_dirLightRot	   = transform.m_rotation.ToEuler();
+	m_dirLightRot	   = { ToDegrees(m_dirLightRot.x), ToDegrees(m_dirLightRot.y), ToDegrees(m_dirLightRot.z) };
+	m_dirLightLastRot  = m_dirLightRot;
+	m_dirLightInitQuat = transform.m_rotation;
 }
 
 void ImguiHandler::Update(const float dt)
@@ -99,17 +114,21 @@ void ImguiHandler::Update(const float dt)
 			light.m_lightColor   = { lightColor[0], lightColor[1], lightColor[2], lightStrength };
 			light.m_ambientColor = { ambientColor[0], ambientColor[1], ambientColor[2], ambientStrength };
 
-			Vect3f euler = transform.m_rotation.ToEuler();
-			euler = { ToDegrees(euler.x), ToDegrees(euler.y), ToDegrees(euler.z) };
-			float rotation[3] = { euler.x, euler.y, euler.z };
-			ImGui::DragFloat3("Light Direction", &rotation[0], 0.1f, -180.0f, 180.0f);
+			float rotation[3] = { m_dirLightRot.x, m_dirLightRot.y, m_dirLightRot.z };
+			if (ImGui::DragFloat3("Light Direction", &rotation[0], 0.1f, -0.001f, 360.001f)) {
+				rotation[0] = rotation[0] > 360.0f ? 0.0f : rotation[0] < 0.0f ? 360.0f : rotation[0];
+				rotation[1] = rotation[1] > 360.0f ? 0.0f : rotation[1] < 0.0f ? 360.0f : rotation[1];
+				rotation[2] = rotation[2] > 360.0f ? 0.0f : rotation[2] < 0.0f ? 360.0f : rotation[2];
 
-			transform.m_rotation = DirectX::XMQuaternionRotationRollPitchYaw(ToRadians(rotation[0]), ToRadians(rotation[1]), ToRadians(rotation[2]));
-			//transform.m_rotation  = Quat4f::CreateFromAxisAngle(Vect3f::Right, ToRadians(rotation[0]));
-			//transform.m_rotation *= Quat4f::CreateFromAxisAngle(Vect3f::Backward, ToRadians(rotation[2]));
-			//transform.m_rotation *= Quat4f::CreateFromAxisAngle(Vect3f::Up, ToRadians(rotation[1]));
-			//transform.m_rotation = Quat4f::CreateFromYawPitchRoll({ ToRadians(rotation[0]), ToRadians(rotation[1]), ToRadians(rotation[2]) });
-
+				m_dirLightRot   = { rotation[0], rotation[1], rotation[2] };
+				Vect3f deltaRot = m_dirLightRot - m_dirLightLastRot; 
+				
+				Quat4f ddeltaQuat    = DirectX::XMQuaternionRotationRollPitchYaw(ToRadians(deltaRot.x), ToRadians(deltaRot.y), ToRadians(deltaRot.z));
+				transform.m_rotation = DirectX::XMQuaternionMultiply(transform.m_rotation, ddeltaQuat);
+				
+				m_dirLightLastRot = m_dirLightRot;
+			}
+		
 			ImGui::Text("Volumetric Lighting");
 			VolumetricLight& vl = renderManager.GetVolumetricLight();
 			

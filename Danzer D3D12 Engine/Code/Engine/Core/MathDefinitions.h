@@ -52,15 +52,3 @@ inline Vect4f Mul(const Mat4f& mat, const Vect4f& pos) {
 	    //pos.x* mat._41 + pos.y * mat._42 + pos.z * mat._43 + pos.w * mat._44,
 	};
 }
-
-//inline float YawFromQuat(Quat4f quat) {
-//
-//}
-//
-//inline float PitchFromQuat(Quat4f quat) {
-//
-//}
-//
-//inline float RollFromQuat(Quat4f quat) {
-//
-//}

@@ -19,16 +19,11 @@ void ContactListenerImpl::OnContactAdded(const Body& inBody1, const Body& inBody
 {
 	auto entity = m_interface->FetchEntityFromBodyID(inBody1.GetID().GetIndexAndSequenceNumber());
 	PhysicsBody& body1      = m_registry.get<PhysicsBody>(entity);
-	GameEntity& gameEntity1 = m_registry.get<GameEntity>(entity);
 
 	entity = m_interface->FetchEntityFromBodyID(inBody2.GetID().GetIndexAndSequenceNumber());
 	GameEntity& gameEntity2 = m_registry.get<GameEntity>(entity);
-	PhysicsBody& body2      = m_registry.get<PhysicsBody>(entity);
-	
-	if(body1.OnContactAdded)
-		body1.OnContactAdded(gameEntity2);
 
-	//std::cout << gameEntity1.m_name + " has collided with " + gameEntity2.m_name << std::endl;
+	body1.m_onContactAddedList.emplace_back(&gameEntity2);
 }
 
 void ContactListenerImpl::OnContactPersisted(const Body& inBody1, const Body& inBody2, const ContactManifold& inManifold, ContactSettings& ioSettings)
@@ -40,12 +35,9 @@ void ContactListenerImpl::OnContactRemoved(const SubShapeIDPair& inSubShapePair)
 {
 	auto entity = m_interface->FetchEntityFromBodyID(inSubShapePair.GetBody1ID().GetIndexAndSequenceNumber());
 	PhysicsBody& body1 = m_registry.get<PhysicsBody>(entity);
-	GameEntity& gameEntity1 = m_registry.get<GameEntity>(entity);
-
+	
 	entity = m_interface->FetchEntityFromBodyID(inSubShapePair.GetBody2ID().GetIndexAndSequenceNumber());
 	GameEntity& gameEntity2 = m_registry.get<GameEntity>(entity);
-	PhysicsBody& body2 = m_registry.get<PhysicsBody>(entity);
 
-	//if(body1.OnConcactRemoved)
-	std::cout << gameEntity1.m_name + " has stopped colliding with " + gameEntity2.m_name << std::endl;
+	body1.m_onContactRemovedList.emplace_back(&gameEntity2);
 }

@@ -13,7 +13,6 @@ class BodyInterfaceImpl;
 struct PhysicsBody {
 	PhysicsBody() = delete;
 	explicit PhysicsBody(const GameEntity& entity, BodyInterfaceImpl& bodyInterface, const JPH::BodyCreationSettings& settings, JPH::EActivation activation);
-	//explicit PhysicsBody(const PhysicsBody&) = default;
 	~PhysicsBody();
 
 	void AddForce(const Vect3f force);
@@ -26,17 +25,20 @@ struct PhysicsBody {
 	//	OnContactAdded = contactAdded;
 	//}
 
-	std::function<void(GameEntity&)> OnContactAdded = nullptr;
-
+	// void* function for this PhysicsComponent, override it with a function for it to be called.
+	std::function<void(GameEntity&)> OnContactRemoved = nullptr;
+	std::function<void(GameEntity&)> OnContactAdded   = nullptr; 
+	
 	//void (*OnContactAdded)(GameEntity&) = nullptr;
 
 	void ActivateBody();
 
 private:
 	friend class PhysicsHandler;
-
-	void (*OnConcactRemoved)(GameEntity& collidedEntity) = nullptr;
+	friend class ContactListenerImpl;
 	
+	std::vector<GameEntity*> m_onContactRemovedList;
+	std::vector<GameEntity*> m_onContactAddedList;
 
 	JPH::BodyID m_id;
 	BodyInterfaceImpl* m_interface = nullptr;

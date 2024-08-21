@@ -83,6 +83,8 @@ void PhysicsHandler::UpdateStaticColliders(entt::registry& reg)
 			Quat4f rot = transform->m_rotation;
 
 			m_bodyInterface.GetInterface()->SetPositionAndRotation(body.m_id, Vec3(pos.x, pos.y, pos.z), Quat(rot.x, rot.y, rot.z, rot.w), EActivation::Activate);
+			
+			
 			//}
 		}
 		else {
@@ -112,6 +114,17 @@ void PhysicsHandler::UpdatePhysicsEntities(entt::registry& reg)
 
 			transform.m_position = { pos.GetX(), pos.GetY(), pos.GetZ() };
 			transform.m_rotation = { rot.GetX(), rot.GetY(), rot.GetZ(), rot.GetW() };
+
+			if(body.OnContactAdded)
+				for (size_t i = 0; i < body.m_onContactAddedList.size(); i++)
+					body.OnContactAdded(*body.m_onContactAddedList[i]);
+
+			if(body.OnContactRemoved)
+				for (size_t i = 0; i < body.m_onContactRemovedList.size(); i++)
+					body.OnContactRemoved(*body.m_onContactRemovedList[i]);
+
+			body.m_onContactRemovedList.clear();
+			body.m_onContactAddedList.clear();
 		}
 	}
 }

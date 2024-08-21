@@ -184,9 +184,9 @@ void Game::Impl::Update(const float dt)
 
 void Game::Impl::OnSphereContact(GameEntity& collidedEntity)
 {
-	std::cout << "Sphere will do something!" << std::endl;
-	//PhysicsBody& body = m_engine.GetSceneManager().GetCurrentScene().Registry().get<PhysicsBody>(enttTest->m_entity);
-	//body.AddLinearVelocity({ 0.0f, 5.0f, 0.0f });
+	//std::cout << "Sphere will do something!" << std::endl;
+	PhysicsBody& body = m_engine.GetSceneManager().GetCurrentScene().Registry().get<PhysicsBody>(enttTest->m_entity);
+	body.AddLinearVelocity({ 0.0f, 15.0f, 0.0f });
 }
 
 Game::Game(Engine& engine) :
