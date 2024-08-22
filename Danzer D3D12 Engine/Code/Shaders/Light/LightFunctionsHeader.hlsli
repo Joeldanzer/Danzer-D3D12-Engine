@@ -3,8 +3,8 @@
 #define PI 3.14159265359f
 #define FLT_EPSILON 1.192092896e-07f
 #define nMipOffset 3
-#define MAX_SHADOW_DEPTH_BIAS 0.0001f
-#define MIN_SHADOW_DEPTH_BIAS 0.00001f
+#define MAX_SHADOW_DEPTH_BIAS 0.0005f
+#define MIN_SHADOW_DEPTH_BIAS 0.00005f
 
 static float ditherPattern[4][4] = {
                             { 0.0f, 0.5f, 0.125f, 0.625f},
@@ -28,19 +28,24 @@ float invLerp(float a, float b, float c)
     return (c - a) / (b - a);
 }
 
-float ShadowCalculation(uint2 screenPositon, float4 worldPos, float3 normal, float3 dir, float4x4 transform, float4x4 projection)
+float3 ShadowCalculation(uint2 screenPositon, float4 worldPos, float3 normal, float3 dir, float4x4 transform, float4x4 projection)
 { 
+    //float4x4 lightSpaceMatrix = transform * projection;
+    
     float4 lightSpacePos = mul(worldPos, transform);
     lightSpacePos        = mul(lightSpacePos, projection);
     
     lightSpacePos.xyz /= lightSpacePos.w;
     
-    float2 shadowTexCoord = 0.5f * lightSpacePos.xy + 0.5f;
+    float2 shadowTexCoord = lightSpacePos.xy * 0.5f + 0.5f;
     shadowTexCoord.y      = 1.0f - shadowTexCoord.y;
+    
+    if (shadowTexCoord.y > 1.0f || shadowTexCoord.y < 0.0f || shadowTexCoord.x > 1.0f || shadowTexCoord.x < 0.0f)
+        return 0.0f;
     
     //float ditherValue = ditherPattern[screenPositon.x % 4][screenPositon.y % 4];
     float bias = max(MAX_SHADOW_DEPTH_BIAS * (1.0f - dot(normal, dir.xyz)), MIN_SHADOW_DEPTH_BIAS);
-    float currentDepth = lightSpacePos.z - bias; // * ditherValue;
+    float currentDepth = lightSpacePos.z;
     
     float closestDepth = shadowMap.Sample(defaultSample, shadowTexCoord.xy).r;
     
@@ -49,18 +54,19 @@ float ShadowCalculation(uint2 screenPositon, float4 worldPos, float3 normal, flo
     shadowMap.GetDimensions(texelSize.x, texelSize.y);
     texelSize = 1.0f / texelSize; 
     float scale = 0.0f;
-    
-    for (float x = -1; x <= 1; x++)
+   
+    for (float x = -1; x <= 1; x+=0.5f)
     {
         for (float y = -1; y <= 1; y++)
         {   
-            float pcfDepth = shadowMap.SampleLevel(defaultSample, shadowTexCoord.xy + float2(x, y) * texelSize, 0).r;
-            shadow += currentDepth > pcfDepth ? 0.0f : 1.0f;
+            float pcfDepth = shadowMap.Sample(defaultSample, shadowTexCoord.xy + float2(x, y) * texelSize).r;
+            shadow += currentDepth - bias > pcfDepth ? 0.0f : 1.0f;
             scale++;
         }
     }
     
     shadow /= scale;
+
     return shadow;
      
     //float2 shadowTexCoord = 0.5f + lightSpacePos.xy + 0.5f;

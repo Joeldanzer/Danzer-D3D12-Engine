@@ -16,10 +16,10 @@
 #include "Rendering/SkyBox.h"
 #include "Scene.h"
 #include "FrameTimer.h"
-#include "CollisionManager.h"
 #include "Rendering/Camera.h"
 #include "D3D12Framework.h"
 #include "Physics/PhysicsEngine.h"
+#include "Sound/SoundEngine.h"
 
 // ImGui
 #include "imgui/backends/imgui_impl_dx12.h"
@@ -45,12 +45,12 @@ public:
 	RenderManager&	    GetRenderManager()	    noexcept;
 	D3D12Framework&     GetFramework()		    noexcept;
 	TextureHandler&		GetTextureHandler()	    noexcept;
-	CollisionManager&   GetCollisionManager()   noexcept;
 	ModelEffectHandler& GetModelEffectHandler() noexcept;
 	LightHandler&		GetLightHandler()	    noexcept;
 	PhysicsHandler&		GetPhysicsHandler()		noexcept;
 
 private:
+	SoundEngine		   m_soundEngine;
 	WindowHandler	   m_windowHandler;
 	D3D12Framework	   m_framework;
 	TextureHandler	   m_textureHandler;
@@ -60,7 +60,6 @@ private:
 	SceneManager	   m_sceneManager;
 	PhysicsEngine	   m_physicsEngine;
 	PhysicsHandler     m_physicsHandler;
-	CollisionManager   m_collisionManager;
 	ModelEffectHandler m_modelEffectHandler;
 	LightHandler	   m_lightHandler;
 	FrameTimer		   m_frameTimer;
@@ -88,20 +87,11 @@ Engine::Impl::Impl(unsigned int width, unsigned int height) :
 		3      // Max Number of jobs(AKA threads)
 	),
 	m_physicsHandler(m_physicsEngine),
-	m_collisionManager(),
+	m_soundEngine(),
 	m_camera(65.f, (float)m_windowHandler.WindowData().m_w / (float)m_windowHandler.WindowData().m_h),
 	m_skybox(m_textureHandler),
 	m_deltaTime(0.f)
 {
-	// Test to get FMOD loaded correctly
-	FMOD_RESULT fResult;
-	FMOD::System* fmodSystem = nullptr;
-	FMOD::System_Create(&fmodSystem);
-	fResult = fmodSystem->init(256, FMOD_INIT_3D_RIGHTHANDED, nullptr);
-	if (fResult != FMOD_OK)
-		throw fResult;
-	
-
 	ImGuiIO* io = &ImGui::GetIO();
 	ImVec2 vec;
 	vec.x = (float)width;
@@ -127,7 +117,6 @@ Engine::Impl::~Impl()
 	m_windowHandler.~WindowHandler();
 	m_modelHandler.~ModelHandler();
 	m_spriteHandler.~SpriteHandler();
-	m_collisionManager.~CollisionManager();
 	m_physicsEngine.~PhysicsEngine();
 	m_physicsHandler.~PhysicsHandler();
 	m_skybox.~Skybox();
@@ -242,10 +231,7 @@ TextureHandler& Engine::GetTextureHandler() const noexcept
 {
 	return m_Impl->GetTextureHandler();
 }
-CollisionManager& Engine::GetCollisionManager() const noexcept
-{
-	return m_Impl->GetCollisionManager();
-}
+
 ModelEffectHandler& Engine::GetModelEffectHandler() const noexcept
 {
 	return m_Impl->GetModelEffectHandler();
@@ -286,17 +272,10 @@ D3D12Framework& Engine::Impl::GetFramework() noexcept
 {
 	return m_framework;
 }
-//LevelLoaderCustom& Engine::Impl::GetLevelLoader() noexcept
-//{
-//	return m_levelLoader;
-//}
+
 TextureHandler& Engine::Impl::GetTextureHandler() noexcept
 {
 	return m_textureHandler;
-}
-CollisionManager& Engine::Impl::GetCollisionManager() noexcept
-{
-	return m_collisionManager;
 }
 
 ModelEffectHandler& Engine::Impl::GetModelEffectHandler() noexcept

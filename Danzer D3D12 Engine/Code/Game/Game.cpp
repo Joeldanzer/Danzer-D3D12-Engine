@@ -91,7 +91,7 @@ Game::Impl::Impl(Engine& engine) :
 
 	Transform& boxT = reg.get<Transform>(staticbox.m_entity);
 	boxT.m_scale = { 20.0f, 0.2f, 20.0f };
-	boxT.m_rotation = Quat4f::CreateFromAxisAngle(Vect3f::Right, ToRadians(20.0f));
+	boxT.m_rotation = Quat4f::CreateFromAxisAngle(Vect3f::Right, ToRadians(0.0f));
 	//auto waterPlane = engine.GetSceneManager().GetCurrentScene().CreateBasicEntity("WaterPlane");
 	//Model waterModel = reg.emplace<Model>(waterPlane, engine.GetModelHandler().LoadModel(L"Models/WaterPlane.fbx", "Water Plane"));
 	//std::vector<UINT> textures = {

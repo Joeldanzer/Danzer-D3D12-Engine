@@ -7,8 +7,6 @@
 #include "Rendering/TextureHandler.h"
 
 #include "Buffers/MaterialBuffer.h"
-#include "Buffers/AABBBuffer.h"
-#include "Buffers/RayBuffer.h"
 #include "Buffers/CameraBuffer.h"
 #include "Buffers/LightBuffer.h"
 #include "Buffers/EffectShaderBuffer.h"
@@ -46,7 +44,7 @@ public:
 	void Init(D3D12Framework& framework);
 
 	CD3DX12_GPU_DESCRIPTOR_HANDLE UpdateDefaultBuffers(Camera& camera, Transform&, UINT frameIndex);
-	CD3DX12_GPU_DESCRIPTOR_HANDLE UpdateShadowMapBuffer(Mat4f& projection, Mat4f& transform, UINT frameIndex);
+	CD3DX12_GPU_DESCRIPTOR_HANDLE UpdateShadowMapBuffer(const Mat4f& projection, const Mat4f& transform, const Vect4f& position, UINT frameIndex);
 	CD3DX12_GPU_DESCRIPTOR_HANDLE UpdateLightBuffer(Mat4f& projection, Transform& transform, const DirectionalLight& light, const Vect4f& direction, UINT frameIndex);
 	
 	void RenderToGbuffer(ID3D12GraphicsCommandList* cmdList, std::vector<ModelData>& models, UINT frameIndex, std::vector<TextureHandler::Texture>& textures, bool renderTransparency, UINT startLocation);
@@ -63,8 +61,6 @@ private:
 
 	D3D12Framework* m_framework;
 
-	AABBBuffer		   m_aabbBuffer;
-	RayBuffer		   m_rayBuffer;
 	CameraBuffer	   m_cameraBuffer;
 	CameraBuffer	   m_shadowBuffer;
 	TransformBuffer    m_transformBuffer;

@@ -8,7 +8,6 @@ class SceneManager;
 class LevelLoaderCustom;
 class PhysicsHandler;
 class TextureHandler;
-class CollisionManager;
 class Skybox;
 class D3D12Framework;
 class ModelEffectHandler;
@@ -42,7 +41,6 @@ public:
 	RenderManager&	    GetRenderManager()	    const noexcept;
 	D3D12Framework&		GetFramework()		    const noexcept;
 	TextureHandler&		GetTextureHandler()	    const noexcept;
-	CollisionManager&	GetCollisionManager()   const noexcept;
 	ModelEffectHandler& GetModelEffectHandler() const noexcept;
 	LightHandler&		GetLightHandler()       const noexcept;
 	PhysicsHandler&		GetPhysicsHandler()		const noexcept;

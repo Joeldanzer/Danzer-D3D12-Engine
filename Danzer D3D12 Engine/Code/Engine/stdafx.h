@@ -11,6 +11,7 @@
 #include "entt/entt.hpp"
 #include "Fmod/fmod.hpp"
 #include "Physics/PhysicsHeader.h"
+#include "Sound/SoundHeader.h"
 
 // This needs to be reworked.
 enum class EngineState {

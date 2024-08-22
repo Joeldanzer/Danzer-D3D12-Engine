@@ -11,7 +11,12 @@ struct DirectionalLight
 	{}
 
 	void SetShadowProjection(const float scale, const float increase) {
-		m_lightProjection = DirectX::XMMatrixOrthographicLH(scale, scale, -(scale * increase), scale * increase);
+		//float scaleIncreas = scale * increase;
+		//m_lightProjection = DirectX::XMMatrixOrthographicLH(scale, scale, 1.0f, 2.0f);
+
+		//m_lightProjection = DirectX::XMMatrixOrthographicOffCenterLH(scale, -scale, scale, -scale, scale, -scale);
+		//m_lightProjection = DirectX::XMMatrixO
+		int s = 1;
 	}
 
 	Vect3f m_lightPosition;
@@ -19,6 +24,5 @@ struct DirectionalLight
 	Vect4f m_ambientColor;
 
 	Mat4f  m_lightTransform;
-	Mat4f  m_lightProjection;
 };
 

@@ -38,8 +38,8 @@ float4 main(VertexToPixel input) : SV_TARGET
     
     float2 screenPosition = float2(1920, 1080) * input.m_uv;
     //float3 ambient        = EvaluateAmbience(skyboxTexture, defaultSample, vertexNormal, normal.rgb, toEye, roughness, metallic, albedo.rgb, ao, diffusecolor, specualrcolor, AmbientColor);
-    float  shadowData       = ShadowCalculation(screenPosition, float4(worldPosition, 1.0f), normal.xyz, LightDirection.xyz, LightTransform, LightProjection);
-    float3 directionalLight = EvaluateDirectionalLight(diffusecolor, specualrcolor, normal.xyz, roughness, LightColor.rgb * LightColor.w, LightDirection.xyz, toEye, metallic) * shadowData;    
+    float3  shadowData      = ShadowCalculation(screenPosition, float4(worldPosition, 1.0f), normal.xyz, LightDirection.xyz, LightTransform, LightProjection);
+    float3 directionalLight = EvaluateDirectionalLight(diffusecolor, specualrcolor, normal.xyz, roughness, LightColor.rgb * LightColor.w, LightDirection.xyz, toEye, metallic) * shadowData.rrr;    
     
    
     float3 kS = FresnelSchlickRoughness(max(dot(normal.xyz, toEye.xyz), 0.0), specualrcolor, roughness);
@@ -80,10 +80,10 @@ float4 main(VertexToPixel input) : SV_TARGET
     switch (CameraPosition.w)
     {
         case 0:
-            color.rgb = radiance;    
+            color.rgb = radiance.rgb;    
             break;
         case 1:
-            color.rgb = vl.rgb;
+            color.rgb = shadowData.rrr;
             break;
         case 2:
             color.rgb = normal.xyz;

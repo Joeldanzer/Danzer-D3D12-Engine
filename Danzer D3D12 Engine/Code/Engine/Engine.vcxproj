@@ -152,9 +152,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Components\Sound\SoundListener.h" />
     <ClInclude Include="Physics\BodyInterfaceImpl.h" />
     <ClInclude Include="Components\AllComponents.h" />
-    <ClInclude Include="Components\Collision\Collider.h" />
     <ClInclude Include="Components\Physics\BoxCollider.h" />
     <ClInclude Include="Components\Render &amp; Effects\ModelEffect.h" />
     <ClInclude Include="Components\Light\PointLight.h" />
@@ -192,13 +192,8 @@
     <ClInclude Include="Rendering\Buffers\MaterialBuffer.h" />
     <ClInclude Include="Rendering\Buffers\LightBuffer.h" />
     <ClInclude Include="Rendering\Screen Rendering\GBuffer.h" />
-    <ClInclude Include="Rendering\Buffers\RayBuffer.h" />
-    <ClInclude Include="Rendering\Buffers\AABBBuffer.h" />
-    <ClInclude Include="CollisionManager.h" />
-    <ClInclude Include="Components\Collision\AABBCollider.h" />
     <ClInclude Include="Level Loader\LevelLoaderCustom.h" />
     <ClInclude Include="Level Loader\LevelLoader.h" />
-    <ClInclude Include="Components\Collision\RayCollider.h" />
     <ClInclude Include="Rendering\2D\Fonts\FontBuffer.h" />
     <ClInclude Include="Core\FrameTimer.h" />
     <ClInclude Include="Rendering\2D\Fonts\Font.h" />
@@ -224,12 +219,13 @@
     <ClInclude Include="Rendering\SkyBox.h" />
     <ClInclude Include="Scene.h" />
     <ClInclude Include="SceneManager.h" />
-    <ClInclude Include="Components\Collision\SphereCollider.h" />
     <ClInclude Include="Rendering\Screen Rendering\ScreenTexture.h" />
     <ClInclude Include="ShaderEffectRenderer.h" />
     <ClInclude Include="Rendering\Screen Rendering\Textures\SSAOTexture.h" />
     <ClInclude Include="Rendering\Buffers\SSAOBuffer.h" />
     <ClInclude Include="Rendering\Screen Rendering\Textures\SSAOBlur.h" />
+    <ClInclude Include="Sound\SoundEngine.h" />
+    <ClInclude Include="Sound\SoundHeader.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="Rendering\Buffers\TransformBuffer.h" />
     <ClInclude Include="Rendering\Buffers\VertexBuffer.h" />
@@ -266,9 +262,6 @@
     <ClCompile Include="Rendering\Buffers\MaterialBuffer.cpp" />
     <ClCompile Include="Rendering\Buffers\LightBuffer.cpp" />
     <ClCompile Include="Rendering\Screen Rendering\GBuffer.cpp" />
-    <ClCompile Include="Rendering\Buffers\RayBuffer.cpp" />
-    <ClCompile Include="Rendering\Buffers\AABBBuffer.cpp" />
-    <ClCompile Include="CollisionManager.cpp" />
     <ClCompile Include="Level Loader\LevelLoaderCustom.cpp" />
     <ClCompile Include="Level Loader\LevelLoader.cpp" />
     <ClCompile Include="Rendering\2D\Fonts\FontBuffer.cpp" />
@@ -292,6 +285,7 @@
     <ClCompile Include="Rendering\Screen Rendering\Textures\SSAOTexture.cpp" />
     <ClCompile Include="Rendering\Buffers\SSAOBuffer.cpp" />
     <ClCompile Include="Rendering\Screen Rendering\Textures\SSAOBlur.cpp" />
+    <ClCompile Include="Sound\SoundEngine.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>

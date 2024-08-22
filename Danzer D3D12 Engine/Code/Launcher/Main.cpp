@@ -8,7 +8,6 @@
 #include "..\Game\Game.h"
 
 void DebugWindow() {
- // The only warnings that we are disabling
 #pragma warning( push )
 #pragma warning( disable : 4996 )
 #pragma warning ( push )
@@ -32,13 +31,17 @@ int main(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ PWSTR 
 	MSG msg;
 	ZeroMemory(&msg, sizeof(MSG));
 
-#ifdef _DEBUG
+#ifdef DEBUG
 	DebugWindow();
 #endif // _DEBUG
 
+	// Fetch default desktop Resolution
+	RECT desktop;
+	const HWND hDesktop = GetDesktopWindow();
+	GetWindowRect(hDesktop, &desktop);
 
 	// Will thread this
-	Engine engine = Engine(1920, 1080);	
+	Engine engine = Engine(desktop.right, desktop.bottom);	
 	Editor editor(engine);
 	Game game(engine);
 

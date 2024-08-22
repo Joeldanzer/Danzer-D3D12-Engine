@@ -66,4 +66,6 @@ void DirectionalShadowMapping::SetPipelineAndRootSignature(PSOHandler& psoHandle
 void DirectionalShadowMapping::CreateProjection(float projectionScale, float increase)
 {
 	m_projectionMatrix = DirectX::XMMatrixOrthographicLH(projectionScale, projectionScale, -(projectionScale * increase), projectionScale * increase);
+	
+	//m_projectionMatrix = DirectX::XMMatrixOrthographicLH(projectionScale, projectionScale, -10.0f, 10.0f);
 }

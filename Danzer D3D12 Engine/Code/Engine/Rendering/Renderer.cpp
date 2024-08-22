@@ -64,15 +64,15 @@ CD3DX12_GPU_DESCRIPTOR_HANDLE Renderer::UpdateDefaultBuffers(Camera& camera, Tra
 	return cbvHandle;
 }
 
-CD3DX12_GPU_DESCRIPTOR_HANDLE Renderer::UpdateShadowMapBuffer(Mat4f& projection, Mat4f& transform, UINT frameIndex)
+CD3DX12_GPU_DESCRIPTOR_HANDLE Renderer::UpdateShadowMapBuffer(const Mat4f& projection, const Mat4f& transform, const Vect4f& position, UINT frameIndex)
 {
 	CameraBuffer::Data bufferData;
 	bufferData.m_transform  = transform.Invert();
 	bufferData.m_transform  = DirectX::XMMatrixTranspose(bufferData.m_transform);
 	bufferData.m_projection = DirectX::XMMatrixTranspose(projection);
-	bufferData.m_position = { 0.0f, 100.0f, 0.0f, 0.0f };
+	bufferData.m_position   = position;
 	Vect4f eye = { transform.Forward()};
-	eye.w = 1.f;
+	eye.w = position.w;
 	bufferData.m_direction = eye;
 
 	m_shadowBuffer.UpdateBuffer(&bufferData, frameIndex);
