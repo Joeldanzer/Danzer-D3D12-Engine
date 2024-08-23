@@ -109,6 +109,7 @@ Engine::Impl::Impl(unsigned int width, unsigned int height) :
 	
 	m_sceneManager.Init(m_camera);
 	m_physicsEngine.SetRegistry(m_sceneManager.GetCurrentScene().Registry());
+	m_soundEngine.SetRegistry(m_sceneManager.GetCurrentScene().Registry());
 }
 
 Engine::Impl::~Impl()
@@ -151,7 +152,7 @@ void Engine::Impl::MidUpdate()
 	m_physicsEngine.Update(1.0f / 60.0f, 0);
 	m_physicsHandler.UpdatePhysicsEntities(m_sceneManager.GetCurrentScene().Registry());
 
-	m_soundEngine.UpdateSound(m_sceneManager.GetCurrentScene().Registry(), deltaTime);
+	m_soundEngine.UpdateSound(deltaTime);
 
 	m_renderManager.RenderFrame(m_lightHandler, m_textureHandler, m_modelHandler, m_modelEffectHandler, m_spriteHandler, m_skybox, m_sceneManager.GetCurrentScene());
 }

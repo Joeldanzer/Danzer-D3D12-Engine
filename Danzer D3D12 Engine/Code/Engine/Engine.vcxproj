@@ -153,6 +153,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Components\Sound\SoundListener.h" />
+    <ClInclude Include="Components\Sound\SoundSource.h" />
     <ClInclude Include="Physics\BodyInterfaceImpl.h" />
     <ClInclude Include="Components\AllComponents.h" />
     <ClInclude Include="Components\Physics\BoxCollider.h" />

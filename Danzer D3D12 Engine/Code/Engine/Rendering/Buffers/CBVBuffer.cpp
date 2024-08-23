@@ -5,15 +5,6 @@
 
 CBVBuffer::~CBVBuffer()
 {
-	if (m_isInitialized) {
-		for (UINT i = 0; i < FrameCount; i++)
-		{
-			//m_bufferUpload[i]->Unmap(0, 0);
-			//m_bufferUpload[i]->Release();
-
-			//delete m_bufferGPUAddress[i];
-		}
-	}
 }
 
 void CBVBuffer::Init(ID3D12Device* device, DescriptorHeapWrapper* cbvWrapper, UINT sizeOfData)
@@ -52,13 +43,22 @@ void CBVBuffer::Init(ID3D12Device* device, DescriptorHeapWrapper* cbvWrapper, UI
 		CD3DX12_RANGE readRange(0, 0); // Don't intend to read this resource on the CPU
 		CHECK_HR(m_bufferUpload[i]->Map(0, &readRange, reinterpret_cast<void**>(&m_bufferGPUAddress[i])));
 	}
-
-	m_isInitialized = true;
 }
 
 void CBVBuffer::UpdateBuffer(UINT16* cbvData, const UINT frame)
 {
 	memcpy(m_bufferGPUAddress[frame], cbvData, m_sizeOfData);
+}
+
+void CBVBuffer::Release()
+{
+	for (UINT i = 0; i < FrameCount; i++)
+	{
+		m_bufferUpload[i]->Unmap(0, 0);
+		m_bufferUpload[i]->Release();
+
+		delete m_bufferGPUAddress[i];
+	}
 }
 
 UINT CBVBuffer::AssignBufferSize(const UINT sizeOfData)

@@ -198,5 +198,6 @@
     <ClInclude Include="Sound\SoundHeader.h" />
     <ClInclude Include="Sound\SoundEngine.h" />
     <ClInclude Include="Components\Sound\SoundListener.h" />
+    <ClInclude Include="Components\Sound\SoundSource.h" />
   </ItemGroup>
 </Project>

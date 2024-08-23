@@ -19,7 +19,7 @@ public:
 	// Takes current frameIndex as well as Specific buffer Data(Check CameraBuffer for example)
 	void UpdateBuffer(UINT16* cbvData, const UINT frame); //= 0 { cbvData; frame; }
 
-
+	void Release();
 
 	const UINT OffsetID() { return m_offsetID; }
 protected:
@@ -31,5 +31,4 @@ protected:
 	UINT						  m_offsetID = 0; 
 	UINT						  m_sizeOfData = 0;
 
-	bool m_isInitialized          = false;
 };
