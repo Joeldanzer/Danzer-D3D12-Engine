@@ -48,6 +48,7 @@ public:
 	ModelEffectHandler& GetModelEffectHandler() noexcept;
 	LightHandler&		GetLightHandler()	    noexcept;
 	PhysicsHandler&		GetPhysicsHandler()		noexcept;
+	SoundEngine&		GetSoundEngine()	    noexcept;
 
 private:
 	SoundEngine		   m_soundEngine;
@@ -144,12 +145,13 @@ void Engine::Impl::MidUpdate()
 	const float deltaTime = m_frameTimer.GetRealDeltaTime();
 	m_skybox.Update(deltaTime);
 
-
 	m_sceneManager.GetCurrentScene().UpdateTransforms();
 
 	m_physicsHandler.SetPhysicsPositionAndRotation(m_sceneManager.GetCurrentScene().Registry());
 	m_physicsEngine.Update(1.0f / 60.0f, 0);
 	m_physicsHandler.UpdatePhysicsEntities(m_sceneManager.GetCurrentScene().Registry());
+
+	m_soundEngine.UpdateSound(m_sceneManager.GetCurrentScene().Registry(), deltaTime);
 
 	m_renderManager.RenderFrame(m_lightHandler, m_textureHandler, m_modelHandler, m_modelEffectHandler, m_spriteHandler, m_skybox, m_sceneManager.GetCurrentScene());
 }
@@ -223,10 +225,7 @@ D3D12Framework& Engine::GetFramework() const noexcept
 {
 	return m_Impl->GetFramework();
 }
-//LevelLoaderCustom& Engine::GetLevelLoader() const noexcept
-//{
-//	return m_Impl->GetLevelLoader();
-//}
+
 TextureHandler& Engine::GetTextureHandler() const noexcept
 {
 	return m_Impl->GetTextureHandler();
@@ -243,6 +242,10 @@ LightHandler& Engine::GetLightHandler() const noexcept
 PhysicsHandler& Engine::GetPhysicsHandler() const noexcept
 {
 	return m_Impl->GetPhysicsHandler();
+}
+SoundEngine& Engine::GetSoundEngine() const noexcept
+{
+	return m_Impl->GetSoundEngine();
 }
 const float Engine::Impl::GetFPS() noexcept
 {
@@ -291,4 +294,9 @@ LightHandler& Engine::Impl::GetLightHandler() noexcept
 PhysicsHandler& Engine::Impl::GetPhysicsHandler() noexcept
 {
 	return m_physicsHandler;
+}
+
+SoundEngine& Engine::Impl::GetSoundEngine() noexcept
+{
+	return m_soundEngine;
 }

@@ -36,74 +36,54 @@ PhysicsBody PhysicsHandler::CreatePhysicsBox(const GameEntity& gameEntity, Vect3
 
 void PhysicsHandler::SetPhysicsPositionAndRotation(entt::registry& reg)
 {
-	auto view = reg.view<PhysicsBody>();
+	auto view = reg.view<PhysicsBody, GameEntity, Transform>();
 	for (entt::entity entity : view) {
 		PhysicsBody& body = reg.get<PhysicsBody>(entity);	
+		GameEntity& gameEntt = reg.get<GameEntity>(entity);
 		
-		if (m_bodyInterface.GetInterface()->GetMotionType(body.m_id) == EMotionType::Static)
+		if (m_bodyInterface.GetInterface()->GetMotionType(body.m_id) == EMotionType::Static ||
+			gameEntt.m_state == GameEntity::STATE::NOT_ACTIVE)
 			continue;
 		
-		Transform* transform = reg.try_get<Transform>(entity);
-		GameEntity* gameEntt = reg.try_get<GameEntity>(entity);
-		if (gameEntt || transform) {
-
-			if (m_bodyInterface.GetInterface()->IsActive(body.m_id)) {
-				Vect3f pos = transform->m_position;
-				Quat4f rot = transform->m_rotation;
-				m_bodyInterface.GetInterface()->SetPositionAndRotation(body.m_id, Vec3(pos.x, pos.y, pos.z ), Quat(rot.x, rot.y, rot.z, rot.w), EActivation::Activate);
-			}
-		}
-		else {
-			m_bodyInterface.GetInterface()->RemoveBody(body.m_id);
-			m_bodyInterface.GetInterface()->DestroyBody(body.m_id);
-			reg.destroy(entity);
-#ifdef DEBUG
-			assert(gameEntt, "Entity with PhysicsBody component is missing 'GameEntity' and/or 'Transform' component!");
-#endif 
-		}
+		Transform& transform = reg.get<Transform>(entity);
+		if (m_bodyInterface.GetInterface()->IsActive(body.m_id)) {
+			Vect3f pos = transform.m_position;
+			Quat4f rot = transform.m_rotation;
+			m_bodyInterface.GetInterface()->SetPositionAndRotation(body.m_id, Vec3(pos.x, pos.y, pos.z ), Quat(rot.x, rot.y, rot.z, rot.w), EActivation::Activate);
+		}	
 	}
 }
 
 // Only called once and thats at the end of the Initilize frame
 void PhysicsHandler::UpdateStaticColliders(entt::registry& reg)
 {
-	auto view = reg.view<PhysicsBody>();
+	auto view = reg.view<PhysicsBody, GameEntity, Transform>();
 	for (entt::entity entity : view) {
 		PhysicsBody& body = reg.get<PhysicsBody>(entity);
+		GameEntity& gameEntt = reg.get<GameEntity>(entity);
 
-		if (m_bodyInterface.GetInterface()->GetMotionType(body.m_id) != EMotionType::Static)
+		if (m_bodyInterface.GetInterface()->GetMotionType(body.m_id) != EMotionType::Static ||
+			gameEntt.m_state == GameEntity::STATE::NOT_ACTIVE)
 			continue;
 
-		Transform* transform = reg.try_get<Transform>(entity);
-		GameEntity* gameEntt = reg.try_get<GameEntity>(entity);
-		if (gameEntt || transform) {
+		Transform& transform = reg.get<Transform>(entity);
 
 			//if (m_bodyInterface.IsActive(body.m_id)) {
-			Vect3f pos = transform->m_position;
-			Quat4f rot = transform->m_rotation;
+		Vect3f pos = transform.m_position;
+		Quat4f rot = transform.m_rotation;
 
-			m_bodyInterface.GetInterface()->SetPositionAndRotation(body.m_id, Vec3(pos.x, pos.y, pos.z), Quat(rot.x, rot.y, rot.z, rot.w), EActivation::Activate);
-			
-			
-			//}
-		}
-		else {
-			m_bodyInterface.GetInterface()->RemoveBody(body.m_id);
-			m_bodyInterface.GetInterface()->DestroyBody(body.m_id);
-			reg.destroy(entity);
-#ifdef DEBUG
-			assert(gameEntt, "Entity with PhysicsBody component is missing 'GameEntity' and/or 'Transform' component!");
-#endif 
-		}
+		m_bodyInterface.GetInterface()->SetPositionAndRotation(body.m_id, Vec3(pos.x, pos.y, pos.z), Quat(rot.x, rot.y, rot.z, rot.w), EActivation::Activate);		
 	}
 }
 
 void PhysicsHandler::UpdatePhysicsEntities(entt::registry& reg)
 {
-	auto view = reg.view<PhysicsBody>();
+	auto view = reg.view<PhysicsBody, Transform, GameEntity>();
 	for (entt::entity entity : view) {
 		PhysicsBody& body = reg.get<PhysicsBody>(entity);
-		if (m_bodyInterface.GetInterface()->GetMotionType(body.m_id) == EMotionType::Static)
+		GameEntity& gameEntt = reg.get<GameEntity>(entity);
+		if (m_bodyInterface.GetInterface()->GetMotionType(body.m_id) == EMotionType::Static ||
+			gameEntt.m_state == GameEntity::STATE::NOT_ACTIVE)
 			continue;
 		
 		Transform& transform = reg.get<Transform>(entity);
@@ -115,16 +95,18 @@ void PhysicsHandler::UpdatePhysicsEntities(entt::registry& reg)
 			transform.m_position = { pos.GetX(), pos.GetY(), pos.GetZ() };
 			transform.m_rotation = { rot.GetX(), rot.GetY(), rot.GetZ(), rot.GetW() };
 
-			if(body.OnContactAdded)
+			if (body.OnContactAdded) {
 				for (size_t i = 0; i < body.m_onContactAddedList.size(); i++)
 					body.OnContactAdded(*body.m_onContactAddedList[i]);
+				body.m_onContactAddedList.clear();
+			}
 
-			if(body.OnContactRemoved)
+			if (body.OnContactRemoved) {
 				for (size_t i = 0; i < body.m_onContactRemovedList.size(); i++)
 					body.OnContactRemoved(*body.m_onContactRemovedList[i]);
+				body.m_onContactRemovedList.clear();
+			}
 
-			body.m_onContactRemovedList.clear();
-			body.m_onContactAddedList.clear();
 		}
 	}
 }

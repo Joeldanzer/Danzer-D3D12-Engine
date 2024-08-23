@@ -1,6 +1,6 @@
 #pragma once
 
-static const char s_invalidListener = 0xff;
+static const UINT s_invalidListener = 0xff;
 
 struct SoundListener {
 	SoundListener() : m_id(s_invalidListener) {};
@@ -9,7 +9,7 @@ struct SoundListener {
 
 private:
 	friend class SoundEngine;
-	SoundListener(unsigned int listenerID);
+	SoundListener(UINT8 listenerID);
 
-	unsigned char m_id = 0xff;
+	UINT8 m_id = 0xff;
 };
