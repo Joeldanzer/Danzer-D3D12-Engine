@@ -81,15 +81,15 @@ void SSAOTexture::RenderTexture(ID3D12GraphicsCommandList* cmdList, DescriptorHe
 	D3D12_GPU_DESCRIPTOR_HANDLE cbvSrvHeapStart = srvWrapper->GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
 	const UINT cbvSrvDescSize = srvWrapper->DESCRIPTOR_SIZE();
 
-	m_bufferOne.UpdateBuffer(&m_bufferDataOne, frameIndex);
+	m_bufferOne.UpdateBuffer(reinterpret_cast<UINT16*>(&m_bufferDataOne), frameIndex);
 	CD3DX12_GPU_DESCRIPTOR_HANDLE bufferHandleOne(cbvSrvHeapStart, m_bufferOne.OffsetID(), cbvSrvDescSize);
 	cmdList->SetGraphicsRootDescriptorTable(1, bufferHandleOne);
 
-	m_bufferTwo.UpdateBuffer(&m_bufferDataTwo, frameIndex);
+	m_bufferTwo.UpdateBuffer(reinterpret_cast<UINT16*>(&m_bufferDataTwo), frameIndex);
 	CD3DX12_GPU_DESCRIPTOR_HANDLE bufferHandleTwo(cbvSrvHeapStart, m_bufferTwo.OffsetID(), cbvSrvDescSize);
 	cmdList->SetGraphicsRootDescriptorTable(2, bufferHandleTwo);
 
-	m_noiseScaleBuffer.UpdateBuffer(&m_noiseScaleData, frameIndex);
+	m_noiseScaleBuffer.UpdateBuffer(reinterpret_cast<UINT16*>(&m_noiseScaleData), frameIndex);
 	CD3DX12_GPU_DESCRIPTOR_HANDLE noiseScaleHandle(cbvSrvHeapStart, m_noiseScaleBuffer.OffsetID(), cbvSrvDescSize);
 	cmdList->SetGraphicsRootDescriptorTable(3, noiseScaleHandle);
 
@@ -111,7 +111,7 @@ void SSAOTexture::SetBufferData(D3D12Framework& framework, const std::vector<Vec
 	}	
 	m_noiseScaleData.m_windowSize = { WindowHandler::WindowData().m_w / sqrtf((float)samples.size()), WindowHandler::WindowData().m_h / sqrtf((float)samples.size()) };
 	
-	m_noiseScaleBuffer.Init(framework.GetDevice(), &framework.CbvSrvHeap(), m_noiseScaleBuffer.FetchData(), sizeof(Vect2f));
-	m_bufferOne.Init(framework.GetDevice(), &framework.CbvSrvHeap(), m_bufferOne.FetchData(), sizeof(SSAOBuffer::Data));
-	m_bufferTwo.Init(framework.GetDevice(), &framework.CbvSrvHeap(), m_bufferTwo.FetchData(), sizeof(SSAOBuffer::Data));
+	m_noiseScaleBuffer.Init(framework.GetDevice(), &framework.CbvSrvHeap(), sizeof(Vect2f));
+	m_bufferOne.Init(framework.GetDevice(),        &framework.CbvSrvHeap(),	sizeof(SSAOBuffer::Data));
+	m_bufferTwo.Init(framework.GetDevice(),        &framework.CbvSrvHeap(),	sizeof(SSAOBuffer::Data));
 }

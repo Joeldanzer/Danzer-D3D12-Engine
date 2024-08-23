@@ -5,11 +5,6 @@
 class MaterialBuffer : public CBVBuffer
 {
 public:
-	MaterialBuffer();
-	~MaterialBuffer();
-
-	void UpdateBuffer(void* cbvData, unsigned int frame) override;
-
 	// Camera Buffer Data
 	struct Data {	
 		float m_metallic  = 0.0f;

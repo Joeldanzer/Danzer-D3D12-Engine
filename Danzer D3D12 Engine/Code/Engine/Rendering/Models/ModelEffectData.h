@@ -20,7 +20,7 @@ public:
 		m_rs(0)
 	{
 		if (hasBuffer)
-			m_buffer.Init(framework.GetDevice(), &framework.CbvSrvHeap(), m_buffer.FetchData(), sizeof(EffectShaderBuffer::Data));
+			m_buffer.Init(framework.GetDevice(), &framework.CbvSrvHeap(), sizeof(EffectShaderBuffer::Data));
 	}
 
 	const UINT ModelID() {
@@ -36,7 +36,7 @@ public:
 	}
 	
 	void UpdateData(UINT frameIndex) {
-		m_buffer.UpdateBuffer(&m_bufferData, frameIndex);
+		m_buffer.UpdateBuffer(reinterpret_cast<UINT16*>(&m_bufferData), frameIndex);
 	}
 
 	const std::vector<UINT>& GetTextures() {

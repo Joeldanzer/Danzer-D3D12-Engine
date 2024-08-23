@@ -32,11 +32,11 @@ void Renderer::Init(D3D12Framework& framework)
 {
 	m_framework = &framework;
 	
-	m_shadowBuffer.Init(framework.GetDevice(),	   &framework.CbvSrvHeap(),	m_shadowBuffer.FetchData(),		sizeof(CameraBuffer::Data));
-	m_cameraBuffer.Init(framework.GetDevice(),	   &framework.CbvSrvHeap(),	m_cameraBuffer.FetchData(),		sizeof(CameraBuffer::Data));
-	m_lightBuffer.Init(framework.GetDevice(),	   &framework.CbvSrvHeap(),	m_lightBuffer.FetchData(),		sizeof(LightBuffer::Data));
-	m_materialBuffer.Init(framework.GetDevice(),   &framework.CbvSrvHeap(),	m_materialBuffer.FetchData(),   sizeof(MaterialBuffer::Data));
-	m_pointLightBuffer.Init(framework.GetDevice(), &framework.CbvSrvHeap(), m_pointLightBuffer.FetchData(), sizeof(PointLightBuffer::Data));
+	m_shadowBuffer.Init(framework.GetDevice(),	   &framework.CbvSrvHeap(),	sizeof(CameraBuffer::Data));
+	m_cameraBuffer.Init(framework.GetDevice(),	   &framework.CbvSrvHeap(),	sizeof(CameraBuffer::Data));
+	m_lightBuffer.Init(framework.GetDevice(),	   &framework.CbvSrvHeap(),	sizeof(LightBuffer::Data));
+	m_materialBuffer.Init(framework.GetDevice(),   &framework.CbvSrvHeap(),	sizeof(MaterialBuffer::Data));
+	m_pointLightBuffer.Init(framework.GetDevice(), &framework.CbvSrvHeap(), sizeof(PointLightBuffer::Data));
 }
 
 //* Default Buffers for all existing 3D models. Should only be updated once per frame!
@@ -57,7 +57,7 @@ CD3DX12_GPU_DESCRIPTOR_HANDLE Renderer::UpdateDefaultBuffers(Camera& camera, Tra
 	bufferData.m_width  = static_cast<float>(WindowHandler::WindowData().m_w);
 	bufferData.m_height = static_cast<float>(WindowHandler::WindowData().m_h);
 	
-	m_cameraBuffer.UpdateBuffer(&bufferData, frameIndex);
+	m_cameraBuffer.UpdateBuffer(reinterpret_cast<UINT16*>(&bufferData), frameIndex);
 
 	D3D12_GPU_DESCRIPTOR_HANDLE cbvSrvHeapStart = m_framework->CbvSrvHeap().GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
 	CD3DX12_GPU_DESCRIPTOR_HANDLE cbvHandle(cbvSrvHeapStart, m_cameraBuffer.OffsetID() + frameIndex, m_framework->CbvSrvHeap().DESCRIPTOR_SIZE());
@@ -75,7 +75,7 @@ CD3DX12_GPU_DESCRIPTOR_HANDLE Renderer::UpdateShadowMapBuffer(const Mat4f& proje
 	eye.w = position.w;
 	bufferData.m_direction = eye;
 
-	m_shadowBuffer.UpdateBuffer(&bufferData, frameIndex);
+	m_shadowBuffer.UpdateBuffer(reinterpret_cast<UINT16*>(&bufferData), frameIndex);
 
 	CD3DX12_GPU_DESCRIPTOR_HANDLE cbvHandle = m_framework->CbvSrvHeap().GET_GPU_DESCRIPTOR(0);
 	cbvHandle.Offset((m_shadowBuffer.OffsetID() + frameIndex) * m_framework->CbvSrvHeap().DESCRIPTOR_SIZE());
@@ -95,7 +95,7 @@ CD3DX12_GPU_DESCRIPTOR_HANDLE Renderer::UpdateLightBuffer(Mat4f& projection, Tra
 	lightData.m_lightColor     = light.m_lightColor;
 	lightData.m_lightDirection = direction;
 
-	m_lightBuffer.UpdateBuffer(&lightData, frameIndex);
+	m_lightBuffer.UpdateBuffer(reinterpret_cast<UINT16*>(&lightData), frameIndex);
 	CD3DX12_GPU_DESCRIPTOR_HANDLE cbvHandle(cbvSrvHeapStart, m_lightBuffer.OffsetID() + frameIndex, cbvSrvDescSize);
 	return cbvHandle;
 }
@@ -179,7 +179,7 @@ void Renderer::RenderPointLights(ID3D12GraphicsCommandList* cmdList, LightHandle
 		lightData.m_range	 = light.m_range;
 		lightData.m_position = transform.m_position + light.m_offsetPosition;
 		PointLightBuffer& buffer = lightHandler.GetLightBuffer(light);
-		buffer.UpdateBuffer(&lightData, frameIndex);
+		buffer.UpdateBuffer(reinterpret_cast<UINT16*>(& lightData), frameIndex);
 
 		CD3DX12_GPU_DESCRIPTOR_HANDLE cbvHandle(cbvSrvHeapStart, buffer.OffsetID(), cbvSrvDescSize);
 		cmdList->SetGraphicsRootDescriptorTable(1, cbvHandle);
@@ -282,7 +282,7 @@ void Renderer::RenderToGbuffer(ID3D12GraphicsCommandList* cmdList, std::vector<M
 						for (UINT i = 0; i < 4; i++)
 							materialData.m_color[i] = mesh.m_material.m_color[i];
 						
-						m_materialBuffer.UpdateBuffer(&materialData, frameIndex);
+						m_materialBuffer.UpdateBuffer(reinterpret_cast<UINT16*>(&materialData), frameIndex);
 						CD3DX12_GPU_DESCRIPTOR_HANDLE cbvHandle(cbvSrvHeapStart, m_materialBuffer.OffsetID() + frameIndex, cbvSrvDescSize);
 						cmdList->SetGraphicsRootDescriptorTable(1, cbvHandle);
 

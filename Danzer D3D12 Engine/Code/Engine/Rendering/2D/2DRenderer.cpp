@@ -34,8 +34,8 @@ void Renderer2D::Init(D3D12Framework& framework, PSOHandler& psoHandler)
 
 	m_framework = &framework;
 	
-	m_windowBuffer.Init(framework.GetDevice(), &framework.CbvSrvHeap(), m_windowBuffer.FetchData(), sizeof(WindowBuffer::Data));
-	m_spriteSheetBuffer.Init(framework.GetDevice(), &framework.CbvSrvHeap(), m_spriteSheetBuffer.FetchData(), sizeof(WindowBuffer::Data));
+	m_windowBuffer.Init(framework.GetDevice(), &framework.CbvSrvHeap(), sizeof(WindowBuffer::Data));
+	m_spriteSheetBuffer.Init(framework.GetDevice(), &framework.CbvSrvHeap(), sizeof(WindowBuffer::Data));
 	CreateUIVertexAndIndexBuffers(framework);
 }
 
@@ -65,7 +65,7 @@ void Renderer2D::RenderUI(ID3D12GraphicsCommandList* cmdList, std::vector<Sprite
 	data.m_windowSize.x = (float)WindowHandler::WindowData().m_w / 2.f;
 	data.m_windowSize.y = (float)WindowHandler::WindowData().m_h / 2.f;
 
-	m_windowBuffer.UpdateBuffer(&data, frameIndex);
+	m_windowBuffer.UpdateBuffer(reinterpret_cast<UINT16*>(&data), frameIndex);
 
 	CD3DX12_GPU_DESCRIPTOR_HANDLE cbvHandle(cbvSrvHeapStart, m_windowBuffer.OffsetID() + frameIndex, cbvSrvDescSize);
 	cmdList->SetGraphicsRootDescriptorTable(0, cbvHandle);

@@ -3,10 +3,15 @@
 
 VertexBuffer::~VertexBuffer()
 {
-	for (UINT i = 0; i < FrameCount; i++)
-	{
-		m_vertexBuffer[i] = nullptr;
-	}
+		for (UINT i = 0; i < FrameCount; i++)
+		{
+			//delete m_data[i];
+			//m_data[i] = nullptr;
+			//delete m_vertexBuffer[i];
+			//m_vertexBuffer[i] = nullptr;
+
+		}
+	
 }
 
 void VertexBuffer::CreateHeap(ID3D12Device* device, ID3D12Resource** resource, D3D12_HEAP_TYPE type, D3D12_RESOURCE_STATES resourceState, UINT size)
@@ -25,6 +30,7 @@ void VertexBuffer::CreateHeap(ID3D12Device* device, ID3D12Resource** resource, D
 		IID_PPV_ARGS(resource)
 	);
 	CHECK_HR(result);
+
 }
 
 

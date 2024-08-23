@@ -5,10 +5,10 @@
 class CameraBuffer : public CBVBuffer
 {
 public:
-	CameraBuffer();
-	~CameraBuffer();
+	//CameraBuffer();
+	//~CameraBuffer();
 
-	void UpdateBuffer(void* cbvData, unsigned int frame) override;
+	//void UpdateBuffer(void* cbvData, unsigned int frame) override;
 
 	// Camera Buffer Data
 	struct Data {

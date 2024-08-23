@@ -15,6 +15,7 @@ SoundEngine::SoundEngine()
 	FmodResultCheck(result);
 
 	FmodResultCheck(m_soundSystem->set3DNumListeners(s_maxNum3DListeners));
+
 }
 SoundEngine::~SoundEngine()
 {

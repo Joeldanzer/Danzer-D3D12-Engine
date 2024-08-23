@@ -15,10 +15,8 @@ PhysicsHandler::PhysicsHandler(PhysicsEngine& physicsEngine) :
 	m_bodyInterface(physicsEngine.GetBodyInterface())
 {
 }
-
 PhysicsHandler::~PhysicsHandler()
-{
-	
+{	
 }
 
 PhysicsBody PhysicsHandler::CreatePhyscisSphere(const GameEntity& gameEntity, float radius, EMotionType motionType, EActivation activation, ObjectLayer layer)
@@ -68,7 +66,6 @@ void PhysicsHandler::UpdateStaticColliders(entt::registry& reg)
 
 		Transform& transform = reg.get<Transform>(entity);
 
-			//if (m_bodyInterface.IsActive(body.m_id)) {
 		Vect3f pos = transform.m_position;
 		Quat4f rot = transform.m_rotation;
 

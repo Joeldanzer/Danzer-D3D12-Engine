@@ -35,5 +35,7 @@ public:
 private:
 	std::unordered_map<std::string, Scene> m_scenes;
 	std::string m_currentScene;
+
+	entt::registry m_registry;
 };
 

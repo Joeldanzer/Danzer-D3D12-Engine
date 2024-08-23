@@ -5,10 +5,6 @@
 class EffectShaderBuffer : public CBVBuffer
 {
 public:
-	EffectShaderBuffer();
-	~EffectShaderBuffer();
-
-	void UpdateBuffer(void* cbvData, unsigned int frame) override;
 	void SetDataSize(UINT size){
 		m_sizeOfData = size;
 	}

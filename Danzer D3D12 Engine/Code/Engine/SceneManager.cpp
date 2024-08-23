@@ -20,11 +20,9 @@ void SceneManager::Init(Camera& cam)
 	scene.Registry().emplace<DirectionalLight>(dirLight, DirectionalLight(
 		{ 255.0f/255.0f, 214.0f/255.f, 165.f/255.f, 4.0f}, 
 		{1.0f, 1.0f, 1.0f, 0.25f}));
-	//scene.Registry().get<DirectionalLight>(dirLight).SetShadowProjection(128.0f, 1.0f);
 	Transform& lightTransform  = scene.Registry().get<Transform>(dirLight);
-	lightTransform.m_rotation  = Quat4f::CreateFromAxisAngle(Vect3f::Right,  ToRadians(70.0f));//Quat4f::CreateFromYawPitchRoll({ -65.0f, 40.0f, 0.0f });
-	lightTransform.m_rotation *= Quat4f::CreateFromAxisAngle(Vect3f::Up,  ToRadians(0.0f));//Quat4f::CreateFromYawPitchRoll({ -65.0f, 40.0f, 0.0f });
-	
+	lightTransform.m_rotation  = Quat4f::CreateFromAxisAngle(Vect3f::Right,  ToRadians(70.0f));
+	lightTransform.m_rotation *= Quat4f::CreateFromAxisAngle(Vect3f::Up,  ToRadians(0.0f));
 	lightTransform.m_position = { 0.0f, 0.0f, 0.0f };
 }
 

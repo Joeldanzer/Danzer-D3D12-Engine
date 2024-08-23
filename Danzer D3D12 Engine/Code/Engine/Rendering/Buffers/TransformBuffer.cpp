@@ -8,10 +8,6 @@ TransformBuffer::TransformBuffer()
 {
 }
 
-TransformBuffer::~TransformBuffer()
-{
-}
-
 void TransformBuffer::Init(ID3D12Device* device)
 {
 	UINT size = sizeof(Mat4f) * MAX_INSTANCES_PER_MODEL;
