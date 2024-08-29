@@ -85,6 +85,7 @@
     <OutDir>$(SolutionDir)..\Bin\</OutDir>
     <TargetName>Direct3D12_$(Configuration)</TargetName>
     <IntDir>$(SolutionDir)..\Dump\$(ProjectName)\$(Configuration)\</IntDir>
+    <CopyCppRuntimeToOutputDir>false</CopyCppRuntimeToOutputDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>

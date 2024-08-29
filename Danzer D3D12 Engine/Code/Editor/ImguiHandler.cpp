@@ -127,7 +127,11 @@ void ImguiHandler::Update(const float dt)
 				
 				m_dirLightLastRot = m_dirLightRot;
 			}
-		
+			
+			float lightPosition[3] = { transform.m_position.x, transform.m_position.y, transform.m_position.z };
+			ImGui::DragFloat3("Light Position", &lightPosition[0], 0.1f);
+			transform.m_position = { lightPosition[0], lightPosition[1], lightPosition[2] };
+
 			ImGui::Text("Volumetric Lighting");
 			VolumetricLight& vl = renderManager.GetVolumetricLight();
 			

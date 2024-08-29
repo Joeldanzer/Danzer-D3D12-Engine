@@ -11,6 +11,7 @@
 #include "Rendering/2D/SpriteHandler.h"
 #include "Rendering/Screen Rendering/LightHandler.h"
 #include "Components/Render & Effects/WaterPlaneBufferData.h"
+#include "Sound/SoundHeader.h"
 
 #include "Physics/PhysicsHeader.h"
 
@@ -20,6 +21,8 @@
 #include "Components/Transform.h"
 #include "Components/Light/DirectionalLight.h"
 #include "Components/2D/Sprite.h"
+#include "Components/Sound/SoundListener.h"
+#include "Components/Sound/SoundSource.h"
 
 
 
@@ -39,6 +42,10 @@ private:
 
 	PhysicsBody* m_sphere = nullptr;
 	GameEntity* enttTest;
+
+	SOUND_ID pipeSound;
+
+	//FMOD::Sound* m_pipeSound = nullptr;
 
 	float m_currentTime;
 	float m_time = 0.2f;
@@ -76,8 +83,15 @@ Game::Impl::Impl(Engine& engine) :
 	//auto entity = reg.create();
     //reg.emplace<Model>(entity, engine.GetModelHandler().LoadModel(L"Models/BlenderSponzaAtriumOld.fbx", "Sponza Atrium"));
 	
+	//engine.GetSoundEngine().CreateSound("Sound/MetalPipe.wav", FMOD_DEFAULT, nullptr, &m_pipeSound);
+	pipeSound = engine.GetSoundEngine().LoadSound("Sound/MetalPipe.wav", false);
+
+	auto camEntt = engine.GetSceneManager().GetCurrentScene().GetMainCamera();
+	engine.GetSoundEngine().CreateSoundListener(reg.emplace<SoundListener>(camEntt));
+
 	enttTest = &engine.GetSceneManager().CreateBasicEntity("Physics Sphere", false);
 	m_sphere = &reg.emplace<PhysicsBody>(enttTest->m_entity, engine.GetPhysicsHandler().CreatePhyscisSphere(*enttTest, 1.0f, EMotionType::Dynamic, EActivation::DontActivate, Layers::MOVING));
+	reg.emplace<SoundSource>(enttTest->m_entity);
 	m_sphere->OnContactAdded = std::bind(&Game::Impl::OnSphereContact, this, std::placeholders::_1);
 
 	reg.emplace<Model>(enttTest->m_entity, engine.GetModelHandler().LoadModel(L"Models/sphere.fbx"));
@@ -91,7 +105,7 @@ Game::Impl::Impl(Engine& engine) :
 
 	Transform& boxT = reg.get<Transform>(staticbox.m_entity);
 	boxT.m_scale = { 20.0f, 0.2f, 20.0f };
-	boxT.m_rotation = Quat4f::CreateFromAxisAngle(Vect3f::Right, ToRadians(20.0f));
+	boxT.m_rotation = Quat4f::CreateFromAxisAngle(Vect3f::Right, ToRadians(0.0f));
 	//auto waterPlane = engine.GetSceneManager().GetCurrentScene().CreateBasicEntity("WaterPlane");
 	//Model waterModel = reg.emplace<Model>(waterPlane, engine.GetModelHandler().LoadModel(L"Models/WaterPlane.fbx", "Water Plane"));
 	//std::vector<UINT> textures = {
@@ -187,6 +201,9 @@ void Game::Impl::OnSphereContact(GameEntity& collidedEntity)
 	//std::cout << "Sphere will do something!" << std::endl;
 	PhysicsBody& body = m_engine.GetSceneManager().GetCurrentScene().Registry().get<PhysicsBody>(enttTest->m_entity);
 	body.AddLinearVelocity({ 0.0f, 15.0f, 0.0f });
+
+	m_engine.GetSoundEngine().PlaySoundAtEntt(enttTest->m_entity, pipeSound);
+	//m_engine.GetSoundEngine().PlayFSound(m_pipeSound);
 }
 
 Game::Game(Engine& engine) :

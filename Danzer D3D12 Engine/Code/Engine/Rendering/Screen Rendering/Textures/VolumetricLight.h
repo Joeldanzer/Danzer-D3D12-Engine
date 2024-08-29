@@ -17,7 +17,7 @@ public:
 	void SetVolumetricData(const UINT steps, const float gScattering, const float scatteringStrength) { 
 		m_volumetricData = { steps, gScattering, scatteringStrength };
 	}
-	void UpdateBufferData(Transform& camTransform, Camera& cam, DirectionalLight& directionalLight, const UINT frameIndex);
+	void UpdateBufferData(const Mat4f& shadowProj, Transform& camTransform, Camera& cam, DirectionalLight& directionalLight, const UINT frameIndex);
 
 	void SetPipelineAndRootSignature(PSOHandler& psoHandler) override;
 	void RenderTexture(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper* handle, TextureHandler* textureHandler, const UINT frameIndex) override;

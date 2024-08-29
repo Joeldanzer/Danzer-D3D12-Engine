@@ -8,11 +8,11 @@ class SceneManager;
 class LevelLoaderCustom;
 class PhysicsHandler;
 class TextureHandler;
-class CollisionManager;
 class Skybox;
 class D3D12Framework;
 class ModelEffectHandler;
 class LightHandler;
+class SoundEngine;
 
 /*
 * Want to turn Engine into a static class so it can be accessed anywhere without needing to send it through
@@ -42,10 +42,10 @@ public:
 	RenderManager&	    GetRenderManager()	    const noexcept;
 	D3D12Framework&		GetFramework()		    const noexcept;
 	TextureHandler&		GetTextureHandler()	    const noexcept;
-	CollisionManager&	GetCollisionManager()   const noexcept;
 	ModelEffectHandler& GetModelEffectHandler() const noexcept;
 	LightHandler&		GetLightHandler()       const noexcept;
 	PhysicsHandler&		GetPhysicsHandler()		const noexcept;
+	SoundEngine&		GetSoundEngine()		const noexcept;
 	
 
 private:

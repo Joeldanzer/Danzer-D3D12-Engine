@@ -60,12 +60,12 @@ void DirectionalLightTexture::RenderTexture(ID3D12GraphicsCommandList* cmdList, 
 	cmdList->DrawInstanced(3, 1, 0, 0);
 }
 
-void DirectionalLightTexture::SetBufferData(DirectionalLight& dirLight, Camera& cam, Transform& camTransform)
+void DirectionalLightTexture::SetBufferData(const Mat4f& shadowProj, DirectionalLight& dirLight, Camera& cam, Transform& camTransform)
 {
 	Vect3f dir = dirLight.m_lightTransform.Forward();
 	m_lightData = {
 		DirectX::XMMatrixTranspose(dirLight.m_lightTransform.Invert()),
-		DirectX::XMMatrixTranspose(dirLight.m_lightProjection),
+		DirectX::XMMatrixTranspose(shadowProj),
 		dirLight.m_lightColor,
 		dirLight.m_ambientColor,
 		{dir.x, dir.y, dir.z, 1.0f },
@@ -76,7 +76,7 @@ void DirectionalLightTexture::SetBufferData(DirectionalLight& dirLight, Camera& 
 	m_cameraData = {
 		DirectX::XMMatrixTranspose(camTransform.World().Invert()),
 		DirectX::XMMatrixTranspose(cam.GetProjection()),
-		{camTransform.m_position.x, camTransform.m_position.y, camTransform.m_position.z, 0.0f},
+		{camTransform.m_position.x, camTransform.m_position.y, camTransform.m_position.z, float(cam.RenderTarget())},
 		{camTransform.World().Forward().x, camTransform.World().Forward().y, camTransform.World().Forward().z, 1.0f},
 		{},
 		0,

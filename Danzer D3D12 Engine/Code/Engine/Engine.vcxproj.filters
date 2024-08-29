@@ -52,9 +52,6 @@
     <ClCompile Include="Level Loader\LevelLoader.cpp" />
     <ClCompile Include="Rendering\TextureHandler.cpp" />
     <ClCompile Include="Rendering\SkyBox.cpp" />
-    <ClCompile Include="CollisionManager.cpp" />
-    <ClCompile Include="Rendering\Buffers\AABBBuffer.cpp" />
-    <ClCompile Include="Rendering\Buffers\RayBuffer.cpp" />
     <ClCompile Include="Scene.cpp" />
     <ClCompile Include="SceneManager.cpp" />
     <ClCompile Include="Core\input.cpp" />
@@ -88,6 +85,7 @@
     <ClCompile Include="Physics\PhysicsBody.cpp" />
     <ClCompile Include="Physics\Body Contacts\ContactListener.cpp" />
     <ClCompile Include="Physics\BodyInterfaceImpl.cpp" />
+    <ClCompile Include="Sound\SoundEngine.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Core\DirectX12Framework.h">
@@ -149,19 +147,12 @@
     <ClInclude Include="Level Loader\LevelLoader.h" />
     <ClInclude Include="Rendering\TextureHandler.h" />
     <ClInclude Include="Rendering\SkyBox.h" />
-    <ClInclude Include="Components\Collision\AABBCollider.h" />
-    <ClInclude Include="Components\Collision\RayCollider.h" />
-    <ClInclude Include="CollisionManager.h" />
-    <ClInclude Include="Rendering\Buffers\AABBBuffer.h" />
-    <ClInclude Include="Rendering\Buffers\RayBuffer.h" />
     <ClInclude Include="Scene.h" />
     <ClInclude Include="SceneManager.h" />
-    <ClInclude Include="Components\Collision\SphereCollider.h" />
     <ClInclude Include="Components\Transform.h" />
     <ClInclude Include="Components\GameEntity.h" />
     <ClInclude Include="Components\Model.h" />
     <ClInclude Include="Components\2D\Transform2D.h" />
-    <ClInclude Include="Components\Collision\Collider.h" />
     <ClInclude Include="Core\input.hpp" />
     <ClInclude Include="Rendering\Screen Rendering\GBuffer.h" />
     <ClInclude Include="Rendering\Screen Rendering\ScreenTexture.h" />
@@ -204,5 +195,9 @@
     <ClInclude Include="Components\Physics\BoxCollider.h" />
     <ClInclude Include="Physics\PhysicsBody.h" />
     <ClInclude Include="Physics\BodyInterfaceImpl.h" />
+    <ClInclude Include="Sound\SoundHeader.h" />
+    <ClInclude Include="Sound\SoundEngine.h" />
+    <ClInclude Include="Components\Sound\SoundListener.h" />
+    <ClInclude Include="Components\Sound\SoundSource.h" />
   </ItemGroup>
 </Project>

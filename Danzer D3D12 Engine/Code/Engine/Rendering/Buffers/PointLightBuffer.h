@@ -5,9 +5,6 @@
 class PointLightBuffer : public CBVBuffer
 {
 public:
-	void UpdateBuffer(void* cbvData, unsigned int frame) override;
-
-	// Camera Buffer Data
 	struct Data {
 		Vect4f m_color = Vect4f::Zero;
 		float  m_range = 0.0f;

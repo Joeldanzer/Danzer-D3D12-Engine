@@ -12,6 +12,6 @@ UINT LightHandler::CreatePointLight()
 {
     m_pointLightBuffer.emplace_back(PointLightBuffer());
     UINT id = (UINT)m_pointLightBuffer.size() - 1;
-    m_pointLightBuffer[id].Init(m_framework.GetDevice(), &m_framework.CbvSrvHeap(), m_pointLightBuffer[id].FetchData(), sizeof(PointLightBuffer::Data));
+    m_pointLightBuffer[id].Init(m_framework.GetDevice(), &m_framework.CbvSrvHeap(), sizeof(PointLightBuffer::Data));
     return (UINT)m_pointLightBuffer.size() - 1;
 }

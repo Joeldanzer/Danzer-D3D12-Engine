@@ -85,10 +85,6 @@ private:
 	//	Transform m_transform;
 	//	UINT      m_model;
 	//};
-
-	//std::vector<ModelData*>			      m_transparentObjects;
-	std::vector<AABBBuffer::AABBInstance> m_aabbInstances;
-	std::vector<RayBuffer::RayInstance>   m_rayInstances;
 };
 
 
@@ -133,7 +129,7 @@ RenderManager::Impl::Impl(D3D12Framework& framework, TextureHandler& textureHand
 		L"Shadow Map Buffer: "
 	);
 	m_shadowMap.SetPipelineAndRootSignature(m_psoHandler);
-	m_shadowMap.CreateProjection(32.0f, 8.f);
+	m_shadowMap.CreateProjection(64.0f, 4.0f);
 
 	m_ssao.InitAsTexture(
 		framework.GetDevice(),
@@ -346,10 +342,12 @@ void RenderManager::Impl::RenderScene(LightHandler& lightHandler, TextureHandler
 
 	auto list = scene.Registry().view<DirectionalLight, Transform>();
 	DirectionalLight directionalLight;
+	Vect4f dirLightPos = { 0.0f, 0.0f, 0.0f, 1.0f };
 	Vect4f directionaLightdir = { 0.f, 0.f, 0.f, 1.f };
 	for (auto entity : list) {
 		directionalLight = reg.get<DirectionalLight>(entity);
 	    directionalLight.m_lightTransform = reg.get<Transform>(entity).m_world;
+		dirLightPos = reg.get<Transform>(entity).m_position;
 	}
 	
 	
@@ -424,7 +422,7 @@ void RenderManager::Impl::RenderScene(LightHandler& lightHandler, TextureHandler
 			cmdList->SetGraphicsRootSignature(m_psoHandler.GetRootSignature(m_shadowMap.GetRootSignature()));
 			cmdList->SetPipelineState(m_psoHandler.GetPipelineState(m_shadowMap.GetPSO()));
 			
-			CD3DX12_GPU_DESCRIPTOR_HANDLE shadowBuffer = m_mainRenderer.UpdateShadowMapBuffer(m_shadowMap.GetProjectionMatrix(), directionalLight.m_lightTransform, frameIndex);
+			CD3DX12_GPU_DESCRIPTOR_HANDLE shadowBuffer = m_mainRenderer.UpdateShadowMapBuffer(m_shadowMap.GetProjectionMatrix(), directionalLight.m_lightTransform, dirLightPos, frameIndex);
 			cmdList->SetGraphicsRootDescriptorTable(0, shadowBuffer);
 					
 			m_shadowMap.SetModelsData(modelHandler.GetAllModels());
@@ -441,7 +439,7 @@ void RenderManager::Impl::RenderScene(LightHandler& lightHandler, TextureHandler
 			m_volumetricLight.SetViewportAndPSO(cmdList, m_psoHandler);
 			m_volumetricLight.SetAsRenderTarget(cmdList, &m_framework.RTVHeap(), nullptr, frameIndex);
 
-			m_volumetricLight.UpdateBufferData(camTransform, cam, directionalLight, frameIndex);
+			m_volumetricLight.UpdateBufferData(m_shadowMap.GetProjectionMatrix(), camTransform, cam, directionalLight, frameIndex);
 			m_gBuffer.SetTextureAtSlot(cmdList, GBUFFER_WORLD_POSITION, &m_framework.CbvSrvHeap(), 3);
 			m_shadowMap.SetTextureAtSlot(cmdList, &m_framework.CbvSrvHeap(), 4, frameIndex);
 			m_volumetricLight.RenderTexture(cmdList, &m_framework.CbvSrvHeap(), nullptr, frameIndex);
@@ -527,7 +525,7 @@ void RenderManager::Impl::RenderScene(LightHandler& lightHandler, TextureHandler
 
 		//startLocation = 0;
 		m_dirLight.SetViewportAndPSO(cmdList, m_psoHandler);
-		m_dirLight.SetBufferData(directionalLight, cam, camTransform);
+		m_dirLight.SetBufferData(m_shadowMap.GetProjectionMatrix(), directionalLight, cam, camTransform);
 
 		startLocation = 2;
 		m_gBuffer.AssignSRVSlots(cmdList, &m_framework.CbvSrvHeap(), startLocation);
@@ -754,9 +752,6 @@ void RenderManager::Impl::ClearAllInstances(ModelHandler& modelHandler, SpriteHa
 		font.ClearInstances();
 	}
 
-	m_aabbInstances.clear();
-	//m_transparentObjects.clear();
-	m_rayInstances.clear();
 }
 
 RenderManager::RenderManager(D3D12Framework& framework, TextureHandler& textureHandler)

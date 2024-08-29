@@ -5,11 +5,6 @@
 class WindowBuffer : public CBVBuffer
 {
 public:
-	WindowBuffer();
-	~WindowBuffer();
-
-	void UpdateBuffer(void* cbvData, unsigned int frame) override;
-
 	struct Data {
 		Vect2f m_windowSize;
 	};

@@ -5,11 +5,6 @@
 class LightBuffer : public CBVBuffer
 {
 public:
-	LightBuffer();
-	~LightBuffer();
-
-	void UpdateBuffer(void* cbvData, unsigned int frame) override;
-
 	// Camera Buffer Data
 	struct Data {
 		Mat4f  m_projection;

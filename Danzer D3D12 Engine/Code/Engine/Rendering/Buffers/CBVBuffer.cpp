@@ -3,8 +3,13 @@
 
 #include "../../Core/D3D12Framework.h"
 
-void CBVBuffer::Init(ID3D12Device* device, DescriptorHeapWrapper* cbvWrapper, void* data, UINT sizeOfData)
+CBVBuffer::~CBVBuffer()
+{
+}
+
+void CBVBuffer::Init(ID3D12Device* device, DescriptorHeapWrapper* cbvWrapper, UINT sizeOfData)
 {	
+	m_sizeOfData = sizeOfData;
 	UINT size = AssignBufferSize(sizeOfData);
 	m_offsetID = 0;
 
@@ -12,7 +17,6 @@ void CBVBuffer::Init(ID3D12Device* device, DescriptorHeapWrapper* cbvWrapper, vo
 	cbvHandle.Offset(cbvWrapper->m_handleCurrentOffset * cbvWrapper->DESCRIPTOR_SIZE());
 	
 	const UINT actualSize = sizeOfData;
-	ZeroMemory(&data, sizeOfData);
 	for (unsigned int i = 0; i < FrameCount; i++)
 	{
 		CD3DX12_HEAP_PROPERTIES uploadHeap = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
@@ -38,7 +42,22 @@ void CBVBuffer::Init(ID3D12Device* device, DescriptorHeapWrapper* cbvWrapper, vo
 
 		CD3DX12_RANGE readRange(0, 0); // Don't intend to read this resource on the CPU
 		CHECK_HR(m_bufferUpload[i]->Map(0, &readRange, reinterpret_cast<void**>(&m_bufferGPUAddress[i])));
-		memcpy(m_bufferGPUAddress[i], &data, sizeOfData);
+	}
+}
+
+void CBVBuffer::UpdateBuffer(UINT16* cbvData, const UINT frame)
+{
+	memcpy(m_bufferGPUAddress[frame], cbvData, m_sizeOfData);
+}
+
+void CBVBuffer::Release()
+{
+	for (UINT i = 0; i < FrameCount; i++)
+	{
+		m_bufferUpload[i]->Unmap(0, 0);
+		m_bufferUpload[i]->Release();
+
+		delete m_bufferGPUAddress[i];
 	}
 }
 

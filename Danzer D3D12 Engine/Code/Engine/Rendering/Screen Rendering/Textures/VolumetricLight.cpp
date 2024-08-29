@@ -17,7 +17,7 @@ void VolumetricLight::InitBuffers(ID3D12Device* device, DescriptorHeapWrapper& c
 	m_volumetricLightBuffer.IntializeBuffer(device, &cbvWrapper, sizeof(VolumetricData));
 }
 
-void VolumetricLight::UpdateBufferData(Transform& camTransform, Camera& cam, DirectionalLight& directionalLight, const UINT frameIndex)
+void VolumetricLight::UpdateBufferData(const Mat4f& shadowProj, Transform& camTransform, Camera& cam, DirectionalLight& directionalLight, const UINT frameIndex)
 {
 	Mat4f lightTransform = directionalLight.m_lightTransform;
 	CameraAndLightBuffer camData;
@@ -28,7 +28,7 @@ void VolumetricLight::UpdateBufferData(Transform& camTransform, Camera& cam, Dir
 
 	CameraAndLightBuffer lightData;
 	lightData.m_view	   = DirectX::XMMatrixTranspose(lightTransform.Invert());
-	lightData.m_projection = DirectX::XMMatrixTranspose(directionalLight.m_lightProjection);
+	lightData.m_projection = DirectX::XMMatrixTranspose(shadowProj);
 	lightData.m_float4 = { lightTransform.Forward().x,  lightTransform.Forward().y, lightTransform.Forward().z, 1.0f};	
 	lightData.m_color  = directionalLight.m_lightColor;
 	m_lightBuffer.UpdateBuffer(reinterpret_cast<UINT16*>(&lightData), frameIndex);

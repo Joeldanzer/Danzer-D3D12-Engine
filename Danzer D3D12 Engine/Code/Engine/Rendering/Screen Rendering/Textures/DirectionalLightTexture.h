@@ -17,7 +17,7 @@ public:
 	void SetPipelineAndRootSignature(PSOHandler& psoHandler) override;
 	void RenderTexture(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper* handle, TextureHandler* textureHandler, const UINT frameIndex) override;
 
-	void SetBufferData(DirectionalLight& dirLight, Camera& cam, Transform& camTransform);
+	void SetBufferData(const Mat4f& shadowProj, DirectionalLight& dirLight, Camera& cam, Transform& camTransform);
 
 private:
 	struct Data {
