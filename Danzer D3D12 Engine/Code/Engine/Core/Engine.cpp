@@ -71,7 +71,7 @@ private:
 };
 
 Engine::Impl::Impl(unsigned int width, unsigned int height) :
-	m_windowHandler({ 0, 0, width, height }),
+	m_windowHandler({ 0, 0, width, height }), 
 	m_framework(),
 	m_textureHandler(m_framework),
 	m_renderManager(m_framework, m_textureHandler),
@@ -79,7 +79,7 @@ Engine::Impl::Impl(unsigned int width, unsigned int height) :
 	m_modelEffectHandler(m_framework, m_renderManager.GetPSOHandler()),
 	m_spriteHandler(m_framework, m_textureHandler),
 	m_lightHandler(m_framework),
-	m_sceneManager(),
+	m_sceneManager(m_camera),
 	m_physicsEngine(
 		10240, // Max number of bodies
 		0,     // Max body mutexes
@@ -89,7 +89,6 @@ Engine::Impl::Impl(unsigned int width, unsigned int height) :
 	),
 	m_physicsHandler(m_physicsEngine),
 	m_soundEngine(),
-	m_camera(65.f, (float)m_windowHandler.WindowData().m_w / (float)m_windowHandler.WindowData().m_h),
 	m_skybox(m_textureHandler),
 	m_deltaTime(0.f)
 {
@@ -101,15 +100,14 @@ Engine::Impl::Impl(unsigned int width, unsigned int height) :
 	io->DisplaySize = vec;
 	io->Fonts->Build();
 
-	// Set default skybox, this should be changed to in scene instead,
+	// Set default skybox, need to find a way to make this easier, Makes skybox an entity in the world perhaps?
 	CustomModel skyboxCube = ModelData::GetCube();
 	skyboxCube.m_customModelName = "skybox";
 	m_skybox.Init(m_renderManager.GetPSOHandler(), m_modelHandler.CreateCustomModel(skyboxCube).m_modelID, L"Sprites/defaultRedSkybox.dds", true);
 	m_spriteHandler.CreateSpriteSheet(L"Sprites/testSpriteSheet.dds", 4, 4);
-	
-	m_sceneManager.Init(m_camera);
-	m_physicsEngine.SetRegistry(m_sceneManager.GetCurrentScene().Registry());
-	m_soundEngine.SetRegistry(m_sceneManager.GetCurrentScene().Registry());
+
+	m_physicsEngine.SetRegistry(m_sceneManager.Registry());
+	m_soundEngine.SetRegistry(m_sceneManager.Registry());
 }
 
 Engine::Impl::~Impl()
@@ -146,19 +144,21 @@ void Engine::Impl::MidUpdate()
 	const float deltaTime = m_frameTimer.GetRealDeltaTime();
 	m_skybox.Update(deltaTime);
 
-	m_sceneManager.GetCurrentScene().UpdateTransforms();
+	m_sceneManager.UpdateTransformsForRendering();
 
-	m_physicsHandler.SetPhysicsPositionAndRotation(m_sceneManager.GetCurrentScene().Registry());
+	m_physicsHandler.SetPhysicsPositionAndRotation(m_sceneManager.Registry());
 	m_physicsEngine.Update(1.0f / 60.0f, 0);
-	m_physicsHandler.UpdatePhysicsEntities(m_sceneManager.GetCurrentScene().Registry());
+	m_physicsHandler.UpdatePhysicsEntities(m_sceneManager.Registry());
 
 	m_soundEngine.UpdateSound(deltaTime);
 
-	m_renderManager.RenderFrame(m_lightHandler, m_textureHandler, m_modelHandler, m_modelEffectHandler, m_spriteHandler, m_skybox, m_sceneManager.GetCurrentScene());
+	m_renderManager.RenderFrame(m_lightHandler, m_textureHandler, m_modelHandler, m_modelEffectHandler, m_spriteHandler, m_skybox, m_sceneManager);
 }
 
 void Engine::Impl::LateUpdate()
 {
+	m_sceneManager.UpdateLastPositions();
+
 	m_framework.ExecuteCommandList();
 	m_framework.GetSwapChain()->Present(1, 0);
 	m_framework.WaitForGPU();
@@ -166,7 +166,9 @@ void Engine::Impl::LateUpdate()
 
 void Engine::Impl::EndInitFrame()
 {
-	m_physicsHandler.UpdateStaticColliders(m_sceneManager.GetCurrentScene().Registry());
+	m_sceneManager.UpdateTransformsForRendering(true);
+
+	m_physicsHandler.UpdateStaticColliders(m_sceneManager.Registry());
 	m_physicsEngine.OptimizeBroadPhase();
 	m_framework.EndInitFrame();
 }

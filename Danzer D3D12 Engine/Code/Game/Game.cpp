@@ -5,6 +5,7 @@
 
 #include "Engine/Core/input.hpp"
 
+#include "Rendering/Camera.h"
 #include "SceneManager.h"
 #include "Rendering/Models/ModelHandler.h"
 #include "Rendering/TextureHandler.h"
@@ -23,8 +24,6 @@
 #include "Components/2D/Sprite.h"
 #include "Components/Sound/SoundListener.h"
 #include "Components/Sound/SoundSource.h"
-
-
 
 class Game::Impl {
 public:
@@ -55,7 +54,7 @@ private:
 Game::Impl::Impl(Engine& engine) :
 	m_engine(engine)
 {
-	entt::registry& reg = engine.GetSceneManager().GetCurrentScene().Registry();
+	entt::registry& reg = engine.GetSceneManager().Registry();
 
 	//engine.GetSpriteHandler().CreateSpriteSheet(L"Sprites/RunTestAnimation.dds", 8, 8);
 	//
@@ -86,7 +85,7 @@ Game::Impl::Impl(Engine& engine) :
 	//engine.GetSoundEngine().CreateSound("Sound/MetalPipe.wav", FMOD_DEFAULT, nullptr, &m_pipeSound);
 	pipeSound = engine.GetSoundEngine().LoadSound("Sound/MetalPipe.wav", false);
 
-	auto camEntt = engine.GetSceneManager().GetCurrentScene().GetMainCamera();
+	auto camEntt = engine.GetSceneManager().GetMainCamera();
 	engine.GetSoundEngine().CreateSoundListener(reg.emplace<SoundListener>(camEntt));
 
 	enttTest = &engine.GetSceneManager().CreateBasicEntity("Physics Sphere", false);
@@ -151,8 +150,8 @@ Game::Impl::~Impl(){}
 
 void Game::Impl::Update(const float dt)
 {
-	entt::registry& reg = m_engine.GetSceneManager().GetCurrentScene().Registry();
-	Transform& transform = reg.get<Transform>(m_engine.GetSceneManager().GetCurrentScene().GetMainCamera());
+	entt::registry& reg = m_engine.GetSceneManager().Registry();
+	Transform& transform = reg.get<Transform>(m_engine.GetSceneManager().GetMainCamera());
 	
 	float speed = 5.0f;
 
@@ -199,7 +198,7 @@ void Game::Impl::Update(const float dt)
 void Game::Impl::OnSphereContact(GameEntity& collidedEntity)
 {
 	//std::cout << "Sphere will do something!" << std::endl;
-	PhysicsBody& body = m_engine.GetSceneManager().GetCurrentScene().Registry().get<PhysicsBody>(enttTest->m_entity);
+	PhysicsBody& body = m_engine.GetSceneManager().Registry().get<PhysicsBody>(enttTest->m_entity);
 	body.AddLinearVelocity({ 0.0f, 15.0f, 0.0f });
 
 	m_engine.GetSoundEngine().PlaySoundAtEntt(enttTest->m_entity, pipeSound);

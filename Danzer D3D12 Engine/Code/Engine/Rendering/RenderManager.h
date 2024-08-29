@@ -6,8 +6,8 @@
 
 #include <map>
 
-class Scene;
 class Skybox;
+class SceneManager;
 class ModelHandler;
 class SpriteHandler;
 class TextureHandler;
@@ -31,7 +31,7 @@ public:
 
 	void BeginFrame();
 	void RenderFrame(LightHandler& lightHandler, TextureHandler& textureHandler, ModelHandler& modelHandler, ModelEffectHandler& effectHandler,
-		SpriteHandler& SpriteHandler, Skybox& skybox, Scene& scene/*Camera, Ligthing, GameObjects, etc...*/);
+		SpriteHandler& SpriteHandler, Skybox& skybox, SceneManager& scene/*Camera, Ligthing, GameObjects, etc...*/);
 
 	PSOHandler& GetPSOHandler() const noexcept;
 	VolumetricLight& GetVolumetricLight() const noexcept;

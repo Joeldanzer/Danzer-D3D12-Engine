@@ -24,7 +24,7 @@
 
 #include "Camera.h"
 #include "SkyBox.h"
-#include "Scene.h"
+#include "SceneManager.h"
 
 #include <queue>
 #include <algorithm>
@@ -42,7 +42,7 @@ public:
 
 	void BeginFrame();
 	void RenderFrame(LightHandler& lightHandler, TextureHandler& textureHandler, ModelHandler& modelHandler, ModelEffectHandler& effectHandler,
-		SpriteHandler& SpriteHandler, Skybox& skybox, Scene& scene/*Camera, Ligthing, GameObjects, etc...*/);
+		SpriteHandler& SpriteHandler, Skybox& skybox, SceneManager& scene/*Camera, Ligthing, GameObjects, etc...*/);
 
 	PSOHandler& GetPSOHandler();
 	VolumetricLight& GetVolumetricLight();
@@ -51,10 +51,10 @@ public:
 	}
 
 private:
-	void RenderScene(LightHandler& lightHandler, TextureHandler& textureHandler, SpriteHandler& spriteHandler, ModelHandler& modelHandler, ModelEffectHandler& effectHandler, Scene& scene, Skybox& skybox);
+	void RenderScene(LightHandler& lightHandler, TextureHandler& textureHandler, SpriteHandler& spriteHandler, ModelHandler& modelHandler, ModelEffectHandler& effectHandler, SceneManager& scene, Skybox& skybox);
 
-	void Update3DInstances(Scene& scene, ModelHandler& modelHandler, ModelEffectHandler& effectHandler);
-	void Update2DInstances(Scene& scene, SpriteHandler& spriteHandler);
+	void Update3DInstances(SceneManager& scene, ModelHandler& modelHandler, ModelEffectHandler& effectHandler);
+	void Update2DInstances(SceneManager& scene, SpriteHandler& spriteHandler);
 
 	void AddSpriteSheetInstance(Sprite& data, Transform2D& transform, SpriteHandler& spriteHandler);
 	void AddFontInstance(Text& data, Transform2D& trransform, SpriteHandler& spriteHandler);
@@ -312,7 +312,7 @@ void RenderManager::Impl::BeginFrame()
 // DirectX12Framework pipeline needs to be fully reworked it seems >:(
 
 void RenderManager::Impl::RenderFrame(LightHandler& lightHandler, TextureHandler& textureHandler, ModelHandler& modelHandler, ModelEffectHandler& effectHandler,
-	 SpriteHandler& spriteHandler, Skybox& skybox, Scene& scene)
+	 SpriteHandler& spriteHandler, Skybox& skybox, SceneManager& scene)
 {	
 	ImGui::Render();
 	RenderScene(lightHandler, textureHandler, spriteHandler, modelHandler, effectHandler, scene, skybox);
@@ -330,7 +330,7 @@ VolumetricLight& RenderManager::Impl::GetVolumetricLight()
 	return m_volumetricLight;
 }
 
-void RenderManager::Impl::RenderScene(LightHandler& lightHandler, TextureHandler& textureHandler, SpriteHandler& spriteHandler, ModelHandler& modelHandler, ModelEffectHandler& effectHandler, Scene& scene, Skybox& skybox)
+void RenderManager::Impl::RenderScene(LightHandler& lightHandler, TextureHandler& textureHandler, SpriteHandler& spriteHandler, ModelHandler& modelHandler, ModelEffectHandler& effectHandler, SceneManager& scene, Skybox& skybox)
 {
 	ID3D12GraphicsCommandList* cmdList = m_framework.CurrentFrameResource()->CmdList();
 
@@ -599,7 +599,7 @@ void RenderManager::Impl::RenderScene(LightHandler& lightHandler, TextureHandler
 	m_framework.TransitionRenderTarget(D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
 }
 
-void RenderManager::Impl::Update3DInstances(Scene& scene, ModelHandler& modelHandler, ModelEffectHandler& effectHandler)
+void RenderManager::Impl::Update3DInstances(SceneManager& scene, ModelHandler& modelHandler, ModelEffectHandler& effectHandler)
 {
 
 	entt::registry& reg = scene.Registry();
@@ -663,7 +663,7 @@ void RenderManager::Impl::Update3DInstances(Scene& scene, ModelHandler& modelHan
 	// Sorts object from closest to furthes for transparent rendering
 
 }
-void RenderManager::Impl::Update2DInstances(Scene& scene, SpriteHandler& spriteHandler)
+void RenderManager::Impl::Update2DInstances(SceneManager& scene, SpriteHandler& spriteHandler)
 {
 	entt::registry& reg = scene.Registry();
 
@@ -769,7 +769,7 @@ void RenderManager::BeginFrame()
 	m_Impl->BeginFrame();
 }
 
-void RenderManager::RenderFrame(LightHandler& lightHandler, TextureHandler& textureHandler, ModelHandler& modelHandler, ModelEffectHandler& effectHandler, SpriteHandler& SpriteHandler, Skybox& skybox, Scene& scene)
+void RenderManager::RenderFrame(LightHandler& lightHandler, TextureHandler& textureHandler, ModelHandler& modelHandler, ModelEffectHandler& effectHandler, SpriteHandler& SpriteHandler, Skybox& skybox, SceneManager& scene)
 {
 	m_Impl->RenderFrame(lightHandler, textureHandler, modelHandler, effectHandler, SpriteHandler, skybox, scene);
 }
