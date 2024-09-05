@@ -28,7 +28,7 @@ SceneManager::SceneManager(Camera& cam)
 		{ 1.0f, 1.0f, 1.0f, 0.25f }));
 	Transform& lightTransform  = m_registry.get<Transform>(dirLight);
 	lightTransform.m_rotation  = Quat4f::CreateFromAxisAngle(Vect3f::Right, ToRadians(70.0f));
-	lightTransform.m_rotation *= Quat4f::CreateFromAxisAngle(Vect3f::Up, ToRadians(0.0f));
+	lightTransform.m_rotation *= Quat4f::CreateFromAxisAngle(Vect3f::Up,    ToRadians(0.0f));
 	lightTransform.m_position  = { 0.0f, 0.0f, 0.0f };
 }
 
@@ -113,6 +113,16 @@ void SceneManager::UpdateTransformsForRendering(bool updateStaticObjects)
 		mat *= DirectX::XMMatrixTranslation(pos.x, pos.y, pos.z);
 		transform.m_local = mat;
 		transform.m_world = !transform.Parent() ? transform.m_world = transform.m_local : transform.m_local * transform.Parent()->m_world;
+	}
+
+	const Transform& camTransform = m_registry.get<Transform>(m_mainCamera);
+
+	auto lightView = m_registry.view<Transform, DirectionalLight>();
+	for (auto entity : lightView )
+	{
+		Transform& transform = m_registry.get<Transform>(entity);
+		transform.m_position.x = camTransform.m_position.x;
+		transform.m_position.y = camTransform.m_position.z;
 	}
 }
 
