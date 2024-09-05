@@ -49,7 +49,7 @@ public:
 	}
 
 private:
-	friend class Scene;
+	friend class SceneManager;
 	friend class RenderManager;
 
 	Vect3f m_lastPosition;

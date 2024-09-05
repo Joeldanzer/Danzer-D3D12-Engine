@@ -65,7 +65,7 @@ void ImguiHandler::Init()
 	m_tag  = new char;
 	m_name = new char;
 
-	Scene& scene = m_engine.GetSceneManager().GetCurrentScene();
+	SceneManager& scene = m_engine.GetSceneManager();
 	entt::registry& reg = scene.Registry();
 
 	auto dirLightList = reg.view<DirectionalLight, Transform>();
@@ -84,7 +84,7 @@ void ImguiHandler::Update(const float dt)
 {
 	D3D12Framework&  framework   = m_engine.GetFramework();
 	RenderManager& renderManager = m_engine.GetRenderManager();
-	Scene& scene = m_engine.GetSceneManager().GetCurrentScene();
+	SceneManager& scene = m_engine.GetSceneManager();
 	entt::registry& reg = scene.Registry();
 
 	if (ImGui::BeginMainMenuBar()) {
@@ -243,8 +243,7 @@ void ImguiHandler::StaticWindows()
 		ImGuiWindowFlags_NoResize |
 		ImGuiWindowFlags_NoCollapse;
 
-	Scene& scene = m_engine.GetSceneManager().GetCurrentScene();
-	entt::registry& reg = m_engine.GetSceneManager().GetCurrentScene().Registry();
+	entt::registry& reg = m_engine.GetSceneManager().Registry();
 	//* Left Side window Begin
 	{
 		ImGui::SetNextWindowSize({ (float)m_leftWindow.m_width, (float)m_leftWindow.m_height });
