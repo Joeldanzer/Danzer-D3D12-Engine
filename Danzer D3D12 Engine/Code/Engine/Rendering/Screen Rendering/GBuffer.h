@@ -46,6 +46,12 @@ public:
 		return format;
 	}
 
+	const uint32_t GetSRVOffset(GBUFFER_TEXTURES texture) {
+		if(texture != GBUFFER_COUNT)
+			return m_resources[texture].m_offsetID;
+		return UINT32_MAX;
+	}
+
 	std::array<ID3D12Resource*, GBUFFER_COUNT> GetGbufferResources();
 	std::array<CD3DX12_CPU_DESCRIPTOR_HANDLE, GBUFFER_COUNT> GetRTVDescriptorHandles(DescriptorHeapWrapper& rtvDesc);
 
@@ -73,14 +79,15 @@ private:
 	void InitializeGBuffers(D3D12Framework& framework, PSOHandler& psoHandler);
 	void InitPipelineAndRootSignature(PSOHandler& psoHandler);
 
-	UINT m_rtvDescSize;
-	UINT m_srvDescSize;
+	uint32_t m_rtvDescSize;
+	uint32_t m_srvDescSize;
 
-	UINT m_pso;
-	UINT m_transparentPso;
-	UINT m_rs;
+	uint32_t m_pso;
+	uint32_t m_transparentPso;
+	uint32_t m_rs;
 
-	UINT m_rtvOffsetID;
+	uint32_t m_rtvOffsetID;
+	uint32_t m_srvOffsetID;
 
 	std::array<UINT, GBUFFER_COUNT>        m_rtvHeapSize; 
 	std::array<Resource, GBUFFER_COUNT>    m_resources;

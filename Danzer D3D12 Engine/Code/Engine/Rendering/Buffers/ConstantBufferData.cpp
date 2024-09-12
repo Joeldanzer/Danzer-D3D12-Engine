@@ -1,8 +1,6 @@
 #include "stdafx.h"
 #include "ConstantBufferData.h"
 
-#include "../../Core/D3D12Framework.h"
-
 void ConstantBufferData::IntializeBuffer(ID3D12Device* device, DescriptorHeapWrapper* cbvWrapper, const UINT sizeOfData)
 {
 	UINT size    = AssignBufferSize(sizeOfData);
@@ -42,20 +40,30 @@ void ConstantBufferData::IntializeBuffer(ID3D12Device* device, DescriptorHeapWra
 	}
 }
 
-void ConstantBufferData::UpdateBuffer(UINT16* data, const UINT frameIndex)
+void ConstantBufferData::UpdateBufferData(uint16_t* data)
 {
-	memcpy(m_bufferGPUAddress[frameIndex], data, m_sizeOfData);
+	m_newBufferData = data;
+}
+
+void ConstantBufferData::UpdateBufferToGPU(const UINT frameIndex)
+{
+	if(m_newBufferData)
+		memcpy(m_bufferGPUAddress[frameIndex], m_newBufferData, m_sizeOfData);
 }
 
 UINT ConstantBufferData::AssignBufferSize(const UINT sizeOfData)
 {
-	UINT size = 0;
-	if (sizeOfData > 256 && sizeOfData < 512)
-		size = (sizeOfData + 511) & ~511;
-	else if (sizeOfData > 512 && sizeOfData < 1024)
-		size = (sizeOfData + 1023) & ~1023;
-	else
-		size = (sizeOfData + 255) & ~255;
+	uint16 newSize = 256;
+	uint16 size	   = 0;
+
+	while (size == 0 && newSize < UINT16_MAX) {
+		if (sizeOfData > newSize) 
+			newSize *= 2;
+		else {
+			const uint16_t threshHold = newSize - 1;
+			size = (sizeOfData + threshHold) & ~threshHold;
+		}
+	}
 
 	return size;
 }

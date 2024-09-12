@@ -1,12 +1,12 @@
 #pragma once
-#include "FullscreenTexture.h"
+#include "FullscreenTextureOLD.h"
 #include "Rendering/Buffers/SSAOBuffer.h"
 #include "Rendering/Buffers/WindowSizeBuffer.h"
 
 class TextureHandler;
 class D3D12Framework;
 
-class SSAOTexture : public FullscreenTexture
+class SSAOTexture : public FullscreenTextureOLD
 {
 public:
 	SSAOTexture() : m_textureID(0), m_bufferOne(), m_bufferTwo()

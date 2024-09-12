@@ -86,6 +86,11 @@
     <ClCompile Include="Physics\Body Contacts\ContactListener.cpp" />
     <ClCompile Include="Physics\BodyInterfaceImpl.cpp" />
     <ClCompile Include="Sound\SoundEngine.cpp" />
+    <ClCompile Include="Rendering\Screen Rendering\Textures\TextureRenderingHandler.cpp" />
+    <ClCompile Include="Rendering\Buffers\BufferHandler.cpp" />
+    <ClCompile Include="Rendering\Screen Rendering\Textures\FullscreenTextureOLD.cpp" />
+    <ClCompile Include="Rendering\SSAOData.cpp" />
+    <ClCompile Include="Rendering\VolumetricLightData.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Core\DirectX12Framework.h">
@@ -199,5 +204,10 @@
     <ClInclude Include="Sound\SoundEngine.h" />
     <ClInclude Include="Components\Sound\SoundListener.h" />
     <ClInclude Include="Components\Sound\SoundSource.h" />
+    <ClInclude Include="Rendering\Screen Rendering\Textures\TextureRenderingHandler.h" />
+    <ClInclude Include="Rendering\Buffers\BufferHandler.h" />
+    <ClInclude Include="Rendering\Screen Rendering\Textures\FullscreenTextureOLD.h" />
+    <ClInclude Include="Rendering\SSAOData.h" />
+    <ClInclude Include="Rendering\VolumetricLightData.h" />
   </ItemGroup>
 </Project>

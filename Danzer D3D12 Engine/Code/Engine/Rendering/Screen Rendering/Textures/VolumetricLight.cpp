@@ -24,16 +24,19 @@ void VolumetricLight::UpdateBufferData(const Mat4f& shadowProj, Transform& camTr
 	camData.m_view       = DirectX::XMMatrixTranspose(camTransform.World().Invert());
 	camData.m_projection = DirectX::XMMatrixTranspose(cam.GetProjection());
 	camData.m_float4 = { camTransform.m_position.x, camTransform.m_position.y, camTransform.m_position.z, 1.0f };
-	m_cameraBuffer.UpdateBuffer(reinterpret_cast<UINT16*>(&camData), frameIndex);
+	m_cameraBuffer.UpdateBufferData(reinterpret_cast<UINT16*>(&camData));
+	m_cameraBuffer.UpdateBufferToGPU(frameIndex);
 
 	CameraAndLightBuffer lightData;
 	lightData.m_view	   = DirectX::XMMatrixTranspose(lightTransform.Invert());
 	lightData.m_projection = DirectX::XMMatrixTranspose(shadowProj);
 	lightData.m_float4 = { lightTransform.Forward().x,  lightTransform.Forward().y, lightTransform.Forward().z, 1.0f};	
 	lightData.m_color  = directionalLight.m_lightColor;
-	m_lightBuffer.UpdateBuffer(reinterpret_cast<UINT16*>(&lightData), frameIndex);
+	m_lightBuffer.UpdateBufferData(reinterpret_cast<UINT16*>(&lightData));
+	m_lightBuffer.UpdateBufferToGPU(frameIndex);
 
-	m_volumetricLightBuffer.UpdateBuffer(reinterpret_cast<UINT16*>(&m_volumetricData), frameIndex);
+	m_volumetricLightBuffer.UpdateBufferData(reinterpret_cast<UINT16*>(&m_volumetricData));
+	m_volumetricLightBuffer.UpdateBufferToGPU(frameIndex);
 }
 
 void VolumetricLight::SetPipelineAndRootSignature(PSOHandler& psoHandler)
@@ -43,17 +46,17 @@ void VolumetricLight::SetPipelineAndRootSignature(PSOHandler& psoHandler)
 	depth.DepthEnable = false;
 	auto flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
 		         D3D12_ROOT_SIGNATURE_FLAG_DENY_VERTEX_SHADER_ROOT_ACCESS;
-	m_rs  = psoHandler.CreateRootSignature(3, 2, PSOHandler::SAMPLER_DESC_CLAMP, flags, L"Volumetric Light Root Signature");
+	m_rs  = psoHandler.CreateRootSignature(3, 2, PSOHandler::SAMPLER_CLAMP, flags, L"Volumetric Light Root Signature");
 	m_pso = psoHandler.CreatePSO(
 		{ L"Shaders/FullscreenVS.cso", L"Shaders/VolumetricLightingPS.cso" },
-		CD3DX12_BLEND_DESC(D3D12_DEFAULT),
-		CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT),
+		PSOHandler::BLEND_DEFAULT,
+		PSOHandler::RASTERIZER_BACK,
 		depth,
 		DXGI_FORMAT_UNKNOWN,
 		&format[0],
 		1,
 		m_rs,
-		PSOHandler::INPUT_LAYOUT_NONE,
+		PSOHandler::IL_NONE,
 		L"Volumetric Light PSO"
 	);
 }

@@ -1,8 +1,8 @@
 #pragma once
-#include "FullscreenTexture.h"
+#include "FullscreenTextureOLD.h"
 #include "Rendering/Buffers/ConstantBufferData.h"
 
-class VolumetricLightBlur : public FullscreenTexture
+class VolumetricLightBlur : public FullscreenTextureOLD
 {
 public:
 	VolumetricLightBlur(){}

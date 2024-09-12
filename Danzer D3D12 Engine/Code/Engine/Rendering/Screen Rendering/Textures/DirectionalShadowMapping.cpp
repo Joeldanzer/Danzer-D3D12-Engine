@@ -48,17 +48,17 @@ void DirectionalShadowMapping::SetPipelineAndRootSignature(PSOHandler& psoHandle
 				 D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS     |
 				 D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS   |
 				 D3D12_ROOT_SIGNATURE_FLAG_DENY_PIXEL_SHADER_ROOT_ACCESS;
-	m_rs  = psoHandler.CreateRootSignature(1, 0, PSOHandler::SAMPLER_DESC_BORDER, flags, L"Dirrectional Shadow Mapping Root Signature");
+	m_rs  = psoHandler.CreateRootSignature(1, 0, PSOHandler::SAMPLER_BORDER, flags, L"Dirrectional Shadow Mapping Root Signature");
 	m_pso = psoHandler.CreatePSO(
 		{ L"Shaders/ShadowDepthVS.cso", L"" },
-		CD3DX12_BLEND_DESC(D3D12_DEFAULT),
-		psoHandler.RastDescs(PSOHandler::RASTERIZER_NONE),
+		PSOHandler::BLEND_DEFAULT,
+		PSOHandler::RASTERIZER_NONE, 
 		depth,
 		DXGI_FORMAT_D32_FLOAT,
 		nullptr,
 		0,
 		m_rs,
-		PSOHandler::INPUT_LAYOUT_INSTANCE_DEFFERED,
+		PSOHandler::IL_INSTANCE_DEFFERED,
 		L"Directional Shadow Mapping PSO"
 	);
 }

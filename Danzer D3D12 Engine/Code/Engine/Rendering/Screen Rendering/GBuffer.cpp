@@ -125,6 +125,7 @@ void GBuffer::InitializeGBuffers(D3D12Framework& framework, PSOHandler& psoHandl
 	rtvHandle.Offset(rtvWrapper.m_handleCurrentOffset * rtvWrapper.DESCRIPTOR_SIZE());
 
 	m_rtvOffsetID = rtvWrapper.m_handleCurrentOffset;
+	m_srvOffsetID = srvWrapper.m_handleCurrentOffset;
 
 	for (UINT i = 0; i < GBUFFER_COUNT; i++)
 	{
@@ -163,7 +164,7 @@ void GBuffer::InitPipelineAndRootSignature(PSOHandler& psoHandler)
 	auto flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
 				 D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
 				 D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS;
-	m_rs = psoHandler.CreateRootSignature(2, GBUFFER_COUNT, PSOHandler::SAMPLER_DESC_WRAP, flags, L"GBuffer Root Signature");
+	m_rs = psoHandler.CreateRootSignature(2, GBUFFER_COUNT, PSOHandler::SAMPLER_WRAP, flags, L"GBuffer Root Signature");
 
 	CD3DX12_DEPTH_STENCIL_DESC depth(D3D12_DEFAULT);
 	depth.DepthEnable	 = true;
@@ -173,27 +174,27 @@ void GBuffer::InitPipelineAndRootSignature(PSOHandler& psoHandler)
 
 	m_pso = psoHandler.CreatePSO(
 		{ L"Shaders/GbufferVS.cso", L"Shaders/GbufferPS.cso" }, 
-		psoHandler.BlendDescs(PSOHandler::BLEND_DEFAULT),
-		psoHandler.RastDescs(PSOHandler::RASTERIZER_FRONT),
+		PSOHandler::BLEND_DEFAULT,
+		PSOHandler::RASTERIZER_FRONT,
 		depth,
 		DXGI_FORMAT_D32_FLOAT,
 		&m_formats[0],
 		GBUFFER_COUNT,
 		m_rs,
-		PSOHandler::INPUT_LAYOUT_INSTANCE_DEFFERED,
+		PSOHandler::IL_INSTANCE_DEFFERED,
 		L"GBuffer PSO"
 	);
 
 	m_pso = psoHandler.CreatePSO(
 		{ L"Shaders/GbufferVS.cso", L"Shaders/GbufferPS.cso" },
-		psoHandler.BlendDescs(PSOHandler::BLEND_TRANSPARENT),
-		psoHandler.RastDescs(PSOHandler::RASTERIZER_NONE),
+		PSOHandler::BLEND_TRANSPARENT,
+		PSOHandler::RASTERIZER_NONE,
 		depth,
 		DXGI_FORMAT_D32_FLOAT,
 		&m_formats[0],
 		GBUFFER_COUNT,
 		m_rs,
-		PSOHandler::INPUT_LAYOUT_INSTANCE_DEFFERED,
+		PSOHandler::IL_INSTANCE_DEFFERED,
 		L"GBuffer Transparent PSO"
 	);
 

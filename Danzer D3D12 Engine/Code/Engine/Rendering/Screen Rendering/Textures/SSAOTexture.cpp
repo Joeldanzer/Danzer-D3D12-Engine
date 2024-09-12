@@ -61,17 +61,17 @@ void SSAOTexture::SetPipelineAndRootSignature(PSOHandler& psoHandler)
 				 D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS     |
 				 D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS       |
 				 D3D12_ROOT_SIGNATURE_FLAG_DENY_VERTEX_SHADER_ROOT_ACCESS ;
-	m_rs  = psoHandler.CreateRootSignature(4, 4, PSOHandler::SAMPLER_DESC_CLAMP, flags, L"SSAO Root Signature");
+	m_rs  = psoHandler.CreateRootSignature(4, 4, PSOHandler::SAMPLER_CLAMP, flags, L"SSAO Root Signature");
 	m_pso = psoHandler.CreatePSO(
-		{ L"Shaders/FullscreenVS.cso", L"Shaders/SSAOPS.cso" },
-		CD3DX12_BLEND_DESC(D3D12_DEFAULT),
-		CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT),
+		{ L"Shaders/FullscreenVS.cso", L"Shaders/OLD_SSAOPS.cso" },
+		PSOHandler::BLEND_DEFAULT,
+		PSOHandler::RASTERIZER_BACK,
 		depth,
 		DXGI_FORMAT_UNKNOWN,
 		&format[0],
 		1,
 		m_rs,
-		PSOHandler::INPUT_LAYOUT_NONE,
+		PSOHandler::IL_NONE,
 		L"SSAO PSO"
 	);
 }

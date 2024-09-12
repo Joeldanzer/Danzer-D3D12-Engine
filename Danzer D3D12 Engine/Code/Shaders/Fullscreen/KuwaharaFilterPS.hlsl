@@ -1,13 +1,13 @@
 #include "FullscreenHeader.hlsli"
 
-cbuffer FilterData : register(b0)
+cbuffer FilterData : register(b1)
 {
     float3 Offset;
     uint   Radius;
     uint2  WindowSize;
     
-    float2 trashOne;
-    float4 trashTwo[14];
+    float2 trashFilterOne;
+    float4 trashFilterTwo[14];
 }
 
 SamplerState Sampler   : register(s0);

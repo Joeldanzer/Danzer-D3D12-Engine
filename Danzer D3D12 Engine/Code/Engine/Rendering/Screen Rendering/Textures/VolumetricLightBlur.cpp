@@ -16,17 +16,17 @@ void VolumetricLightBlur::SetPipelineAndRootSignature(PSOHandler& psoHandler)
 	depth.DepthEnable = false;
 	auto flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
 		D3D12_ROOT_SIGNATURE_FLAG_DENY_VERTEX_SHADER_ROOT_ACCESS;
-	m_rs  = psoHandler.CreateRootSignature(1, 2, PSOHandler::SAMPLER_DESC_CLAMP, flags, L"Volumetric Light Blur Root Signature");
+	m_rs  = psoHandler.CreateRootSignature(1, 2, PSOHandler::SAMPLER_CLAMP, flags, L"Volumetric Light Blur Root Signature");
 	m_pso = psoHandler.CreatePSO(
 		{ L"Shaders/FullscreenVS.cso", L"Shaders/VolumetricLightBlurPS.cso" },
-		CD3DX12_BLEND_DESC(D3D12_DEFAULT),
-		CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT),
+		PSOHandler::BLEND_DEFAULT,
+		PSOHandler::RASTERIZER_NONE,
 		depth,
 		DXGI_FORMAT_UNKNOWN,
 		&format[0],
 		1,
 		m_rs,
-		PSOHandler::INPUT_LAYOUT_NONE,
+		PSOHandler::IL_NONE,
 		L"Volumetric Light Blur PSO"
 	);
 }
@@ -39,7 +39,8 @@ void VolumetricLightBlur::RenderTexture(ID3D12GraphicsCommandList* cmdList, Desc
 		UINT(m_viewPort.Width  / 2),
 		UINT(m_viewPort.Height / 2)
 	};
-	m_constantBuffer.UpdateBuffer(reinterpret_cast<UINT16*>(&data), frameIndex);
+	m_constantBuffer.UpdateBufferData(reinterpret_cast<UINT16*>(&data));
+	m_constantBuffer.UpdateBufferToGPU(frameIndex);
 
 	CD3DX12_GPU_DESCRIPTOR_HANDLE cbHandle = handle->GET_GPU_DESCRIPTOR(m_constantBuffer.OffsetID() + frameIndex);
 	cmdList->SetGraphicsRootDescriptorTable(0, cbHandle);

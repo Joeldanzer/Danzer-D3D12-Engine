@@ -7,23 +7,14 @@ class D3D12Framework;
 class DescriptorHeapWrapper;
 class TextureHandler;
 class PSOHandler;
-class ConstantBufferData;
 
-struct Texture;
-
-class FullscreenTexture
+class FullscreenTextureOLD
 {
 public:
-	FullscreenTexture() : 
-		m_dsvOffsetID(0), 
-		m_srvOffsetID(0),
-		m_viewPort({}), 
-		m_pso(0), 
-		m_rs(0), 
-		m_rtvOffsetID(0), 
-		m_textureType(TextureType::RTV_TEXTURE)
+	FullscreenTextureOLD() : 
+		m_dsvOffsetID(0), m_srvOffsetID(0), m_viewPort({}), m_pso(0), m_rs(0), m_rtvOffsetID(0)
 	{}
-	~FullscreenTexture();
+	~FullscreenTextureOLD();
 
 	void InitAsDepth(
 		ID3D12Device* device,
@@ -48,6 +39,9 @@ public:
 		std::wstring name
 	);
 
+	virtual void InitBuffers(ID3D12Device* device, DescriptorHeapWrapper& cbvWrapper);
+	virtual void SetPipelineAndRootSignature(PSOHandler& psoHandler) {};
+
 	void SetPipelineAndRootSignature(
 		std::wstring			   vertexShader,
 		std::wstring			   pixelShader,
@@ -64,20 +58,19 @@ public:
 		std::wstring			   textureName,
 		PSOHandler&				   psoHandler
 	);
-	
-	void SetTextureAtSlot(const Texture*		   texture, const uint8_t slot, bool frameIndex = false);
-	void SetTextureAtSlot(const FullscreenTexture* texture, const uint8_t slot, bool frameIndex = false);
-	void SetTextureAtSlot(const uint32_t descriptorIndex,   const uint8_t slot, bool frameIndex = false);
-	void SetBufferAtSlot(ConstantBufferData* buffer,		const uint8_t slot, bool frameIndex = false);
-	void SetBufferAtSlot(const uint32_t descriptorIndex,	const uint8_t slot, bool frameIndex = false);
 
-	void RenderTexture(bool render) {
-		m_renderTexture = render;
-	}
+
+	void SetAsRenderTarget(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper* rtvWrapper, D3D12_CPU_DESCRIPTOR_HANDLE* dsvHandle, const UINT frameIndex);
+	void SetViewportAndPSO(ID3D12GraphicsCommandList* cmdList, PSOHandler& psoHandler);
+	
+	void SetTextureAtSlot(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper* srvWrapper, const UINT slot, const UINT frameIndex);
+	//void SetTextureAtSlot(DescriptorHeapWrapper* srvWrapper, const uint16_t slot);
+	virtual void RenderTexture(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper* handle, TextureHandler* textureHandler, const UINT frameIndex){}
 
 	ID3D12Resource* GetResource(const UINT frameIndex) {
 		return m_resource[frameIndex].Get();
 	}
+
 	const UINT SRVOffsetID() {
 		return m_srvOffsetID;
 	}
@@ -96,6 +89,7 @@ public:
 	const UINT GetRootSignature() {
 		return m_rs;
 	}
+
 	enum class TextureType {
 		RTV_TEXTURE,
 		DSV_TEXTURE
@@ -104,21 +98,14 @@ public:
 protected:
 	friend class TextureRenderingHandler;
 
-	void SetTextureAndBufferSlots(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper& wrapper, const uint8_t frameIndex);
-
 	TextureType m_textureType;
 
-	bool m_renderTexture = true;
+	UINT m_dsvOffsetID;
+	UINT m_srvOffsetID; 
+	UINT m_rtvOffsetID;
 
-	uint32_t m_dsvOffsetID;
-	uint32_t m_srvOffsetID; 
-	uint32_t m_rtvOffsetID;
-
-	uint32_t m_pso;
-	uint32_t m_rs;
-
-	std::vector<std::pair<uint32_t, bool>> m_textureSlots;
-	std::vector<std::pair<uint32_t, bool>> m_bufferSlots;
+	UINT m_pso;
+	UINT m_rs;
 
 	D3D12_VIEWPORT m_viewPort;
 	ComPtr<ID3D12Resource> m_resource[FrameCount];

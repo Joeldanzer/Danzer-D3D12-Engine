@@ -1,9 +1,9 @@
 #pragma once
-#include "FullscreenTexture.h"
+#include "FullscreenTextureOLD.h"
 
 #include "Rendering/Models/ModelData.h"
 
-class DirectionalShadowMapping : public FullscreenTexture
+class DirectionalShadowMapping : public FullscreenTextureOLD
 {
 public:	
 	DirectionalShadowMapping() :

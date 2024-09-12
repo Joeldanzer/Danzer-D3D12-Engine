@@ -246,6 +246,12 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
     </FxCompile>
+    <FxCompile Include="Fullscreen\OLD_SSAOPS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+    </FxCompile>
     <FxCompile Include="Fullscreen\SSAOBlurPS.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
@@ -375,6 +381,7 @@
     <None Include="Gbuffer\GbufferHeader.hlsli" />
     <None Include="Light\PointLightHeader.hlsli" />
     <None Include="Light\VolumetricLightHeader.hlsli" />
+    <None Include="Fullscreen\OLD_SSAOHeader.hlsli" />
     <None Include="UI\UIstructs.hlsli" />
     <None Include="Colliders\AABB\AABBStructs.hlsli" />
     <None Include="Colliders\Ray\RayStructs.hlsli" />

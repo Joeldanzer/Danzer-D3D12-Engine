@@ -1,5 +1,5 @@
 #pragma once
-#include "FullscreenTexture.h"
+#include "FullscreenTextureOLD.h"
 
 #include "Rendering/Buffers/ConstantBufferData.h"
 
@@ -8,7 +8,7 @@ class Transform;
 
 struct DirectionalLight;
 
-class VolumetricLight : public FullscreenTexture
+class VolumetricLight : public FullscreenTextureOLD
 {
 public:
 	VolumetricLight();

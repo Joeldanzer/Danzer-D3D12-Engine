@@ -12,6 +12,14 @@
 
 class D3D12Framework;
 
+struct Texture {
+	std::wstring m_texturePath;
+	bool m_cubeMap = false;
+	UINT m_offsetID = 0;
+
+	ComPtr<ID3D12Resource> m_textureBuffer;
+};
+
 class TextureHandler
 {
 public:
@@ -20,14 +28,6 @@ public:
 	~TextureHandler();
 
 	void Init(D3D12Framework& framework, bool loadAllTexures = false);
-
-	struct Texture {
-		std::wstring m_texturePath;
-		bool m_cubeMap = false;
-		UINT m_offsetID = 0;
-
-		ComPtr<ID3D12Resource> m_textureBuffer;
-	};
 
 	void LoadAllExistingTextures();
 	void LoadAllCreatedTexuresToGPU();
@@ -53,6 +53,7 @@ private:
 	CD3DX12_RESOURCE_BARRIER LoadTextures(std::wstring file, ID3D12Resource** textureBuffer, bool isCubeMap);
 	CD3DX12_RESOURCE_BARRIER LoadTextures(void* data, const UINT sizeOfData, ID3D12Resource** textureBuffer);
 
+	std::unordered_map<uint32_t, std::wstring> m_textureMap;
 	std::vector<Texture> m_textures;
 	std::vector<Texture> m_tempTextures;
 

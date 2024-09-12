@@ -11,6 +11,8 @@ Camera::Camera(float fov, float aspectRatio, float nearPlane, float farPlane)
 	m_nearPlane = nearPlane;
 	m_farPlane = farPlane;
 
+	m_renderTarget = 0;
+
 	ConstructProjection();
 }
 Camera::~Camera(){}

@@ -1,7 +1,7 @@
 #pragma once
-#include "FullscreenTexture.h"
+#include "FullscreenTextureOLD.h"
 
-class SSAOBlur : public FullscreenTexture
+class SSAOBlur : public FullscreenTextureOLD
 {
 public:
 	SSAOBlur();

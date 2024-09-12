@@ -1,13 +1,13 @@
-cbuffer MainCamera : register(b0)
-{
-    float4x4 CameraTransform;
-    float4x4 CameraProjection;
-    float4   CameraPosition;
-    float4   Eye;
-    
-    // Needs to be 256-byte alligned
-    float4 trashCameraBuffer[6];
-};
+//cbuffer MainCamera : register(b0)
+//{
+//    float4x4 CameraTransform;
+//    float4x4 CameraProjection;
+//    float4   CameraPosition;
+//    float4   Eye;
+//    
+//    // Needs to be 256-byte alligned
+//    float4 trashCameraBuffer[6];
+//};
 
 SamplerState defaultSample     : register(s0);
 

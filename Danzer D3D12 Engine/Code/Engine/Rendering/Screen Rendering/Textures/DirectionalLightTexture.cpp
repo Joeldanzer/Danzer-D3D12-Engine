@@ -27,30 +27,32 @@ void DirectionalLightTexture::SetPipelineAndRootSignature(PSOHandler& psoHandler
 	CD3DX12_DEPTH_STENCIL_DESC depth(D3D12_DEFAULT);
 	depth.DepthEnable = false;
 	auto flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
-				 D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
-				 D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS |
+				 D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS	  |
+				 D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS		  |
 				 D3D12_ROOT_SIGNATURE_FLAG_DENY_VERTEX_SHADER_ROOT_ACCESS;
-	m_rs  = psoHandler.CreateRootSignature(2, GBUFFER_COUNT + 4, PSOHandler::SAMPLER_DESC_CLAMP, flags, L"Light Root Signature");
+	m_rs  = psoHandler.CreateRootSignature(2, GBUFFER_COUNT + 4, PSOHandler::SAMPLER_CLAMP, flags, L"Light Root Signature");
 	m_pso = psoHandler.CreatePSO(
 		{ L"Shaders/FullscreenVS.cso", L"Shaders/DirectionalLightPS.cso" },
-		CD3DX12_BLEND_DESC(D3D12_DEFAULT),
-		CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT),
+		PSOHandler::BLEND_DEFAULT,
+		PSOHandler::RASTERIZER_DEFAULT,
 		depth,
 		DXGI_FORMAT_UNKNOWN,
 		&format[0],
 		1,
 		m_rs,
-		PSOHandler::INPUT_LAYOUT_NONE,
+		PSOHandler::IL_NONE,
 		L"Directional Light PSO"
 	);
 }
 
 void DirectionalLightTexture::RenderTexture(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper* handle, TextureHandler* textureHandler, const UINT frameIndex)
 {
-	m_camCbvData.UpdateBuffer(reinterpret_cast<UINT16*>(&m_cameraData), frameIndex);
+	m_camCbvData.UpdateBufferData(reinterpret_cast<UINT16*>(&m_cameraData));
+	m_camCbvData.UpdateBufferToGPU(frameIndex);
 	cmdList->SetGraphicsRootDescriptorTable(0, handle->GET_GPU_DESCRIPTOR(m_camCbvData.OffsetID() + frameIndex));
 
-	m_lightCbvData.UpdateBuffer(reinterpret_cast<UINT16*>(&m_lightData), frameIndex);
+	m_lightCbvData.UpdateBufferData(reinterpret_cast<UINT16*>(&m_lightData));
+	m_lightCbvData.UpdateBufferToGPU(frameIndex);
 	cmdList->SetGraphicsRootDescriptorTable(1, handle->GET_GPU_DESCRIPTOR(m_lightCbvData.OffsetID() + frameIndex));
 
 	cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);

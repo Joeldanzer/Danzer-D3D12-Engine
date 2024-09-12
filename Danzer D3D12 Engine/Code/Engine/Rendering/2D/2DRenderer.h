@@ -26,8 +26,8 @@ public:
 	void Init(D3D12Framework& framework, PSOHandler& psoHandler);
 
 	void UpdateDefaultUIBuffers(UINT frameIndex);
-	void RenderUI(ID3D12GraphicsCommandList* cmdList, std::vector<SpriteData>& sprites, UINT frameIndex, std::vector<TextureHandler::Texture> m_textures);
-	void RenderFontUI(ID3D12GraphicsCommandList* cmdList, std::vector<Font>& fonts, UINT frameIndex, std::vector<TextureHandler::Texture> m_textures);
+	void RenderUI(ID3D12GraphicsCommandList* cmdList, std::vector<SpriteData>& sprites, UINT frameIndex, std::vector<Texture> m_textures);
+	void RenderFontUI(ID3D12GraphicsCommandList* cmdList, std::vector<Font>& fonts, UINT frameIndex, std::vector<Texture> m_textures);
 
 	const UINT GetPSO() {
 		return m_pso;

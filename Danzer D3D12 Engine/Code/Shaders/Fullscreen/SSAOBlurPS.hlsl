@@ -1,7 +1,7 @@
 #include "FullscreenHeader.hlsli"
 
 SamplerState defaultSampler : register(s0);
-Texture2D SSAOTexture       : register(t0);
+Texture2D    SSAOTexture    : register(t0);
 
 float4 main(VertexToPixel input) : SV_TARGET
 {

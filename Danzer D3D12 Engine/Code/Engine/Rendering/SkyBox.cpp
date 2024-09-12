@@ -13,17 +13,17 @@ void Skybox::Init(PSOHandler& psoHandler, UINT cubeModel, std::wstring skyBoxTex
 	auto flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
 				 D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
 				 D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS;
-	m_rs  = psoHandler.CreateRootSignature(1, 1, PSOHandler::SAMPLER_DESC_WRAP, flags, L"Skybox Root Signature");
+	m_rs  = psoHandler.CreateRootSignature(1, 1, PSOHandler::SAMPLER_WRAP, flags, L"Skybox Root Signature");
 	m_pso = psoHandler.CreatePSO(
 		{ L"Shaders/skyboxVS.cso", L"Shaders/skyboxPS.cso" },
-		CD3DX12_BLEND_DESC(D3D12_DEFAULT),
-		psoHandler.RastDescs(PSOHandler::RASTERIZER_NONE),
+		PSOHandler::BLEND_DEFAULT,
+		PSOHandler::RASTERIZER_NONE,
 		depth,
 		DXGI_FORMAT_UNKNOWN,
 		&format[0],
 		1,
 		m_rs,
-		PSOHandler::INPUT_LAYOUT_INSTANCE_FORWARD,
+		PSOHandler::IL_INSTANCE_FORWARD,
 		L"Skybox PSO"
 	);
 

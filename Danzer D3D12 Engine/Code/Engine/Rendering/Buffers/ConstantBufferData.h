@@ -10,23 +10,27 @@ class ConstantBufferData
 {
 public:
 #pragma warning ( suppress : 26495)
-	ConstantBufferData() : m_offsetID(0), m_sizeOfData(0){}
+	ConstantBufferData() : m_offsetID(0), m_sizeOfData(0)
+	{}
 
+	void UpdateBufferData(uint16_t* data);
 	void IntializeBuffer(ID3D12Device* device, DescriptorHeapWrapper* cbvWrapper, const UINT sizeOfData);
+	void UpdateBufferToGPU(const UINT frameIndex);
 
-	void UpdateBuffer(UINT16* data,  const UINT frameIndex);
-
-	const UINT OffsetID() {
+	const uint32_t OffsetID() {
 		return m_offsetID;
 	}
-
+	
 private:
+	friend class BufferHandler;
+	
 	UINT AssignBufferSize(const UINT sizeOfData);
 
 	ComPtr<ID3D12Resource> m_bufferUpload[FrameCount];
-	UINT16*				   m_bufferGPUAddress[FrameCount];
-	UINT				   m_offsetID = 0;
+	uint16_t*			   m_bufferGPUAddress[FrameCount];
+	uint16_t*			   m_newBufferData = nullptr;
+	uint32_t			   m_offsetID = 0;
 
-    UINT m_sizeOfData;
+    uint16_t m_sizeOfData;
 };
 

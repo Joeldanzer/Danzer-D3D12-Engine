@@ -5,13 +5,14 @@
 #include "Components/Transform.h"
 #include "Core/input.hpp"
 #include "Rendering/TextureHandler.h"
-#include "DirectX12Framework.h"
 #include "WindowHandler.h"
 #include "SceneManager.h"
 #include "Rendering/RenderManager.h"
 #include "Rendering/Models/ModelHandler.h"
 #include "Rendering/Models/ModelEffectHandler.h"
 #include "Rendering/Screen Rendering/LightHandler.h"
+#include "Rendering/Buffers/BufferHandler.h"
+#include "Rendering/Screen Rendering/Textures/TextureRenderingHandler.h"
 #include "Rendering/2D/SpriteHandler.h"
 #include "Rendering/SkyBox.h"
 #include "Scene.h"
@@ -37,35 +38,39 @@ public:
 
 	void EndInitFrame();
 
-	const float			GetFPS()			    noexcept;
-	const float		    GetDeltaTime()		    noexcept;
-	SceneManager&		GetSceneManager()	    noexcept;
-	ModelHandler&		GetModelFactory()	    noexcept;
-	SpriteHandler&		GetSpriteFactory()	    noexcept;
-	RenderManager&	    GetRenderManager()	    noexcept;
-	D3D12Framework&     GetFramework()		    noexcept;
-	TextureHandler&		GetTextureHandler()	    noexcept;
-	ModelEffectHandler& GetModelEffectHandler() noexcept;
-	LightHandler&		GetLightHandler()	    noexcept;
-	PhysicsHandler&		GetPhysicsHandler()		noexcept;
-	SoundEngine&		GetSoundEngine()	    noexcept;
+	const float				 GetFPS()					  noexcept;
+	const float				 GetDeltaTime()				  noexcept;
+	SceneManager&			 GetSceneManager()			  noexcept;
+	ModelHandler&			 GetModelFactory()			  noexcept;
+	SpriteHandler&			 GetSpriteFactory()			  noexcept;
+	RenderManager&			 GetRenderManager()			  noexcept;
+	D3D12Framework&			 GetFramework()				  noexcept;
+	TextureHandler&			 GetTextureHandler()		  noexcept;
+	ModelEffectHandler&		 GetModelEffectHandler()	  noexcept;
+	LightHandler&			 GetLightHandler()			  noexcept;
+	PhysicsHandler&			 GetPhysicsHandler()		  noexcept;
+	SoundEngine&			 GetSoundEngine()			  noexcept;
+	BufferHandler&			 GetBufferHandler()			  noexcept;
+	TextureRenderingHandler& GetTextureRenderingHandler() noexcept;
+
 
 private:
-	SoundEngine		   m_soundEngine;
-	WindowHandler	   m_windowHandler;
-	D3D12Framework	   m_framework;
-	TextureHandler	   m_textureHandler;
-	RenderManager      m_renderManager;
-	ModelHandler	   m_modelHandler;
-	SpriteHandler	   m_spriteHandler;
-	SceneManager	   m_sceneManager;
-	PhysicsEngine	   m_physicsEngine;
-	PhysicsHandler     m_physicsHandler;
-	ModelEffectHandler m_modelEffectHandler;
-	LightHandler	   m_lightHandler;
-	FrameTimer		   m_frameTimer;
-	Skybox			   m_skybox;	
-	Camera			   m_camera;
+	SoundEngine				m_soundEngine;
+	WindowHandler			m_windowHandler;
+	D3D12Framework			m_framework;
+	TextureHandler			m_textureHandler;
+	RenderManager			m_renderManager;
+	BufferHandler			m_bufferHandler;
+	ModelHandler			m_modelHandler;
+	SpriteHandler			m_spriteHandler;
+	SceneManager			m_sceneManager;
+	PhysicsEngine			m_physicsEngine;
+	PhysicsHandler			m_physicsHandler;
+	ModelEffectHandler		m_modelEffectHandler;
+	LightHandler			m_lightHandler;
+	FrameTimer				m_frameTimer;
+	Skybox					m_skybox;	
+	Camera					m_camera;
 
 	float m_deltaTime;
 };
@@ -78,6 +83,7 @@ Engine::Impl::Impl(unsigned int width, unsigned int height) :
 	m_modelHandler(m_framework, m_textureHandler),
 	m_modelEffectHandler(m_framework, m_renderManager.GetPSOHandler()),
 	m_spriteHandler(m_framework, m_textureHandler),
+	m_bufferHandler(m_framework),
 	m_lightHandler(m_framework),
 	m_sceneManager(m_camera),
 	m_physicsEngine(
@@ -92,6 +98,8 @@ Engine::Impl::Impl(unsigned int width, unsigned int height) :
 	m_skybox(m_textureHandler),
 	m_deltaTime(0.f)
 {
+	m_renderManager.InitializeRenderTextures(m_textureHandler);
+
 	ImGuiIO* io = &ImGui::GetIO();
 	ImVec2 vec;
 	vec.x = (float)width;
@@ -250,6 +258,14 @@ SoundEngine& Engine::GetSoundEngine() const noexcept
 {
 	return m_Impl->GetSoundEngine();
 }
+BufferHandler& Engine::GetBufferHandler() const noexcept
+{
+	return m_Impl->GetBufferHandler();
+}
+TextureRenderingHandler& Engine::GetTextureRenderingHandler() const noexcept
+{
+	return m_Impl->GetTextureRenderingHandler();
+}
 const float Engine::Impl::GetFPS() noexcept
 {
 	return m_frameTimer.GetRealFrameRate();
@@ -302,4 +318,14 @@ PhysicsHandler& Engine::Impl::GetPhysicsHandler() noexcept
 SoundEngine& Engine::Impl::GetSoundEngine() noexcept
 {
 	return m_soundEngine;
+}
+
+BufferHandler& Engine::Impl::GetBufferHandler() noexcept
+{
+	return m_bufferHandler;
+}
+
+TextureRenderingHandler& Engine::Impl::GetTextureRenderingHandler() noexcept
+{
+	return m_renderManager.GetTextureRendering();
 }

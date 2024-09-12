@@ -6,7 +6,7 @@ cbuffer DirectionalLight : register(b1)
     float4 AmbientColor;
     float4 LightDirection;
     uint2  WindowSize;
-    float2 trashTwo;
+    float2 trashDirTwo;
     
     float4 trashDirectionalLightBuffer[4];
 };

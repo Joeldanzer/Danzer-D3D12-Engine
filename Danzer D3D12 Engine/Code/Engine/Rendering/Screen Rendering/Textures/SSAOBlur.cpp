@@ -14,17 +14,17 @@ void SSAOBlur::SetPipelineAndRootSignature(PSOHandler& psoHandler)
 		D3D12_ROOT_SIGNATURE_FLAG_DENY_VERTEX_SHADER_ROOT_ACCESS			  |
 		D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS				  |
 		D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS;
-	m_rs  = psoHandler.CreateRootSignature(0, 1, PSOHandler::SAMPLER_DESC_CLAMP, flags, L"SSAO Blur Root Signature");
+	m_rs  = psoHandler.CreateRootSignature(0, 1, PSOHandler::SAMPLER_CLAMP, flags, L"SSAO Blur Root Signature");
 	m_pso = psoHandler.CreatePSO(
 		{ L"Shaders/FullscreenVS.cso", L"Shaders/SSAOBlurPS.cso" },
-		CD3DX12_BLEND_DESC(D3D12_DEFAULT),
-		CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT),
+		PSOHandler::BLEND_DEFAULT,
+		PSOHandler::RASTERIZER_BACK,
 		depth,
 		DXGI_FORMAT_UNKNOWN,
 		&format[0],
-		1,
+		_countof(format),
 		m_rs,
-		PSOHandler::INPUT_LAYOUT_NONE,
+		PSOHandler::IL_NONE,
 		L"SSAO Blur PSO"
 	);
 }

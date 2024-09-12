@@ -1,12 +1,12 @@
 #pragma once
-#include "FullscreenTexture.h"
+#include "FullscreenTextureOLD.h"
 #include "Components/Light/DirectionalLight.h"
 #include "Rendering/Buffers/ConstantBufferData.h"
 
 class  Camera;
 class Transform;
 
-class DirectionalLightTexture : public FullscreenTexture
+class DirectionalLightTexture : public FullscreenTextureOLD
 {
 public:
 	DirectionalLightTexture();

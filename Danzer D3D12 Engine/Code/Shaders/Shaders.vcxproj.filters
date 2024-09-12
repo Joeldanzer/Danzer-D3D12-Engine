@@ -55,6 +55,7 @@
     <FxCompile Include="Light\VolumetricLightingPS.hlsl" />
     <FxCompile Include="Light\VolumetricLightBlurPS.hlsl" />
     <FxCompile Include="Fullscreen\KuwaharaFilterPS.hlsl" />
+    <FxCompile Include="Fullscreen\OLD_SSAOPS.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="UI\UIstructs.hlsli">
@@ -79,5 +80,6 @@
     <None Include="Light\PointLightHeader.hlsli" />
     <None Include="Fullscreen\SSAOHeader.hlsli" />
     <None Include="Light\VolumetricLightHeader.hlsli" />
+    <None Include="Fullscreen\OLD_SSAOHeader.hlsli" />
   </ItemGroup>
 </Project>
