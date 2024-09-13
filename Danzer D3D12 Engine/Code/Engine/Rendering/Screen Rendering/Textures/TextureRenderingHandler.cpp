@@ -14,6 +14,18 @@ TextureRenderingHandler::TextureRenderingHandler(D3D12Framework& framework, PSOH
 	}
 }
 
+TextureRenderingHandler::~TextureRenderingHandler()
+{
+	for (uint8_t i = 0; i < RENDER_PASS_COUNT; i++)
+	{
+		for (uint16_t j = 0; j < m_renderList[i].size(); j++)
+		{
+			delete m_renderList[i][j];
+			m_renderList[i][j] = nullptr;
+		}
+	}
+}
+
 FullscreenTexture* TextureRenderingHandler::CreateRenderTexture(const uint16_t width, const uint16_t height, DXGI_FORMAT textureDesc, DXGI_FORMAT srvFormat, RENDER_PASS pass, TexturePipelineData pipelineData, const uint8_t numberOfBuffers, const uint8_t numberOfTextures, std::wstring textureName)
 {
 	FullscreenTexture* texture = m_renderList[pass].emplace_back(new FullscreenTexture());
