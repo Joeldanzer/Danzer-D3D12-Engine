@@ -1,5 +1,8 @@
 #include "stdafx.h"
 
+#include "Renderer.h"
+#include "Rendering/2D/2DRenderer.h"
+
 #include "imgui/backends/imgui_impl_dx12.h"
 #include "imgui/backends/imgui_impl_win32.h"
 
@@ -44,12 +47,14 @@ public:
 
 	D3D12Framework& GetFramework() { return m_framework; }
 
-	void InitializeRenderTextures(TextureHandler& textureHandler);
+	void InitializeRenderTextures(TextureHandler& textureHandler, ModelHandler& modelHandler);
 	void RenderImgui();
 
 	void BeginFrame();
-	void RenderFrame(LightHandler& lightHandler, TextureHandler& textureHandler, ModelHandler& modelHandler, ModelEffectHandler& effectHandler,
-		SpriteHandler& SpriteHandler, Skybox& skybox, SceneManager& scene/*Camera, Ligthing, GameObjects, etc...*/);
+	void RenderFrame(
+		LightHandler& lightHandler, TextureHandler& textureHandler, ModelHandler& modelHandler, 
+		ModelEffectHandler& effectHandler, SpriteHandler& SpriteHandler, SceneManager& scene/*Camera, Ligthing, GameObjects, etc...*/
+	);
 
 	PSOHandler&				 GetPSOHandler();
 	VolumetricLight&		 GetVolumetricLight();
@@ -61,7 +66,7 @@ public:
 	}
 
 private:
-	void RenderScene(LightHandler& lightHandler, TextureHandler& textureHandler, SpriteHandler& spriteHandler, ModelHandler& modelHandler, ModelEffectHandler& effectHandler, SceneManager& scene, Skybox& skybox);
+	void RenderScene(LightHandler& lightHandler, TextureHandler& textureHandler, SpriteHandler& spriteHandler, ModelHandler& modelHandler, ModelEffectHandler& effectHandler, SceneManager& scene);
 
 	void Render3DInstances(SceneManager& scene, ModelHandler& modelHandler, TextureHandler& textureHandler, ModelEffectHandler& effectHandler);
 
@@ -92,6 +97,8 @@ private:
 	ConstantBufferData*      m_cameraBuffer			   = nullptr;
 	ConstantBufferData*		 m_fullscreenTextureBuffer = nullptr;
 	ConstantBufferData*		 m_lightBuffer			   = nullptr;
+
+	Skybox					 m_skyboxRenderer;
 
 	KuwaharaFilter			 m_kuwaharaFilter;
 	DirectionalShadowMapping m_shadowMap;
@@ -132,7 +139,7 @@ RenderManager::Impl::Impl(D3D12Framework& framework, TextureHandler& textureHand
 {
 	m_2dRenderer.Init(framework, m_psoHandler);
 	m_mainRenderer.Init(framework);
-	
+
 	m_kuwaharaFilter.InitializeFullscreenShader(framework.GetDevice(), &framework.CbvSrvHeap());
 	m_kuwaharaFilter.CreatePipelineAndRootsignature(m_psoHandler);
 	m_kuwaharaFilter.SetFilterRadius(1, 1, {0.0f, 0.0f, 0.0f});
@@ -263,10 +270,12 @@ RenderManager::Impl::~Impl(){
 	m_psoHandler.~PSOHandler();
 }
 
-void RenderManager::Impl::InitializeRenderTextures(TextureHandler& textureHandler)
+void RenderManager::Impl::InitializeRenderTextures(TextureHandler& textureHandler, ModelHandler& modelHandler)
 {
-	m_cameraBuffer			  = m_bufferHandler.CreateBufferData(sizeof(DefaultBuffer));
-	m_lightBuffer			  = m_bufferHandler.CreateBufferData(sizeof(DefaultBuffer) - 12);
+	m_cameraBuffer = m_bufferHandler.CreateBufferData(sizeof(DefaultBuffer));
+	m_lightBuffer  = m_bufferHandler.CreateBufferData(sizeof(DefaultBuffer) - 12);
+
+	m_skyboxRenderer.Initialize(m_psoHandler, modelHandler, textureHandler);
 
 	TexturePipelineData textureData;
 	textureData.m_blendDesc    = PSOHandler::BLEND_DEFAULT;
@@ -359,10 +368,13 @@ void RenderManager::Impl::InitializeRenderTextures(TextureHandler& textureHandle
 	dirLightTexture->SetTextureAtSlot(m_gBuffer.GetSRVOffset(GBUFFER_VERTEX_NORMAL), 4);
 	dirLightTexture->SetTextureAtSlot(m_gBuffer.GetSRVOffset(GBUFFER_WORLD_POSITION), 5);
 	dirLightTexture->SetTextureAtSlot(m_gBuffer.GetSRVOffset(GBUFFER_DEPTH), 6);
+	dirLightTexture->SetTextureAtSlot(textureHandler.GetTextureData(m_skyboxRenderer.TextureID()).m_offsetID, 7);
 	dirLightTexture->SetTextureAtSlot(m_shadowMap.SRVOffsetID(), 8, true);
 	dirLightTexture->SetTextureAtSlot(ssaoBlur, 9, true);
 	dirLightTexture->SetTextureAtSlot(volumetricTexture, 10, true);
 
+	dirLightTexture->SetBufferAtSlot(m_cameraBuffer->OffsetID(), 0, true);
+	dirLightTexture->SetBufferAtSlot(m_lightBuffer->OffsetID(), 1, true);
 }
 
 void RenderManager::Impl::RenderImgui()
@@ -461,10 +473,10 @@ void RenderManager::Impl::BeginFrame()
 // DirectX12Framework pipeline needs to be fully reworked it seems >:(
 
 void RenderManager::Impl::RenderFrame(LightHandler& lightHandler, TextureHandler& textureHandler, ModelHandler& modelHandler, ModelEffectHandler& effectHandler,
-	 SpriteHandler& spriteHandler, Skybox& skybox, SceneManager& scene)
+	 SpriteHandler& spriteHandler, SceneManager& scene)
 {	
 	ImGui::Render();
-	RenderScene(lightHandler, textureHandler, spriteHandler, modelHandler, effectHandler, scene, skybox);
+	RenderScene(lightHandler, textureHandler, spriteHandler, modelHandler, effectHandler, scene);
 
 	ClearAllInstances(modelHandler, spriteHandler);
 }
@@ -489,7 +501,7 @@ BufferHandler& RenderManager::Impl::GetConstantBufferHandler()
 	return m_bufferHandler;
 }
 
-void RenderManager::Impl::RenderScene(LightHandler& lightHandler, TextureHandler& textureHandler, SpriteHandler& spriteHandler, ModelHandler& modelHandler, ModelEffectHandler& effectHandler, SceneManager& scene, Skybox& skybox)
+void RenderManager::Impl::RenderScene(LightHandler& lightHandler, TextureHandler& textureHandler, SpriteHandler& spriteHandler, ModelHandler& modelHandler, ModelEffectHandler& effectHandler, SceneManager& scene)
 {
 	ID3D12GraphicsCommandList* cmdList = m_framework.CurrentFrameResource()->CmdList();
 
@@ -512,8 +524,9 @@ void RenderManager::Impl::RenderScene(LightHandler& lightHandler, TextureHandler
 	camData.m_vectorOne	   = camTransform.m_position;
 	camData.m_vectorTwo	   = -camData.m_transformTwo.Forward();
 	camData.m_time		   = clock() / 1000.0f;
-	camData.m_windowSize = { static_cast<float>(WindowHandler::WindowData().m_w),
-							 static_cast<float>(WindowHandler::WindowData().m_h) 
+	camData.m_windowSize = { 
+		static_cast<float>(WindowHandler::WindowData().m_w),
+		static_cast<float>(WindowHandler::WindowData().m_h) 
 	};
 
 	for (auto entity : list) {
@@ -680,8 +693,8 @@ void RenderManager::Impl::RenderScene(LightHandler& lightHandler, TextureHandler
 
 	{ 
 		//* Render Skybox & Ligth start
-		cmdList->SetGraphicsRootSignature(m_psoHandler.GetRootSignature(skybox.GetRootSignature()));
-		cmdList->SetPipelineState(m_psoHandler.GetPipelineState(skybox.GetPSO()));
+		//cmdList->SetGraphicsRootSignature(m_psoHandler.GetRootSignature(skybox.GetRootSignature()));
+		//cmdList->SetPipelineState(m_psoHandler.GetPipelineState(skybox.GetPSO()));
 
 		//rtvHandle = m_framework.m_rtvHeap.GET_CPU_DESCRIPTOR(0);
 		//rtvHandle.Offset(frameIndex * m_framework.RTVHeap().DESCRIPTOR_SIZE());
@@ -690,29 +703,44 @@ void RenderManager::Impl::RenderScene(LightHandler& lightHandler, TextureHandler
 		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_framework.RTVHeap().GET_CPU_DESCRIPTOR(m_dirLight.RTVOffsetID() + frameIndex));
 		cmdList->OMSetRenderTargets(1, &rtvHandle, false, nullptr);
 
-		UINT startLocation = 0;
-		
-		D3D12_GPU_DESCRIPTOR_HANDLE defaultHandle = m_mainRenderer.UpdateDefaultBuffers(cam, camTransform, m_framework.GetFrameIndex());
-		cmdList->SetGraphicsRootDescriptorTable(startLocation, defaultHandle);
-		startLocation++;
-
-		m_mainRenderer.RenderSkybox(
+		m_skyboxRenderer.RenderSkybox(
 			cmdList,
+			m_psoHandler,
+			m_framework.CbvSrvHeap(),
+			textureHandler.GetTextureData(m_skyboxRenderer.TextureID()),
+			modelHandler.GetLoadedModelInformation(m_skyboxRenderer.ModelID()),
 			camTransform,
-			textureHandler.GetTextures()[skybox.GetCurrentSkyboxTexture() - 1],
-			modelHandler.GetAllModels()[skybox.GetSkyboxCube() - 1],
-			skybox,
-			m_framework.GetFrameIndex(),
-			startLocation
+			m_cameraBuffer->OffsetID(),
+			frameIndex
 		);
 
-		//startLocation = 0;
+		m_textureRendering.RenderPass(SCENE_PASS_0, SCENE_PASS_2, cmdList);
+		m_textureRendering.RenderPass(POST_PROCESS_0, POST_PROCESS_2, cmdList);
+
+		m_textureRendering.RenderToBackBuffer(cmdList);
+		//
+		//D3D12_GPU_DESCRIPTOR_HANDLE defaultHandle = m_mainRenderer.UpdateDefaultBuffers(cam, camTransform, m_framework.GetFrameIndex());
+		//cmdList->SetGraphicsRootDescriptorTable(startLocation, defaultHandle);
+		//startLocation++;
+		//
+		//m_mainRenderer.RenderSkybox(
+		//	cmdList,
+		//	camTransform,
+		//	textureHandler.GetTextures()[skybox.GetCurrentSkyboxTexture() - 1],
+		//	modelHandler.GetAllModels()[skybox.GetSkyboxCube() - 1],
+		//	skybox,
+		//	m_framework.GetFrameIndex(),
+		//	startLocation
+		//);
+
+		UINT startLocation = 0;
+		startLocation = 0;
 		m_dirLight.SetViewportAndPSO(cmdList, m_psoHandler);
 		m_dirLight.SetBufferData(m_shadowMap.GetProjectionMatrix(), directionalLight, cam, camTransform);
 
 		startLocation = 2;
 		m_gBuffer.AssignSRVSlots(cmdList, &m_framework.CbvSrvHeap(), startLocation);
-		UINT offset = textureHandler.GetTextures()[skybox.GetCurrentActiveSkybox()[1] - 1].m_offsetID;
+		UINT offset = textureHandler.GetTextureData(m_skyboxRenderer.TextureID()).m_offsetID;
 		cmdList->SetGraphicsRootDescriptorTable(startLocation, m_framework.CbvSrvHeap().GET_GPU_DESCRIPTOR(offset));
 		startLocation++;
 		m_shadowMap.SetTextureAtSlot(cmdList, &m_framework.CbvSrvHeap(), startLocation, frameIndex);
@@ -947,9 +975,9 @@ RenderManager::~RenderManager()
 	m_Impl->~Impl();
 }
 
-void RenderManager::InitializeRenderTextures(TextureHandler& textureHandler)
+void RenderManager::InitializeRenderTextures(TextureHandler& textureHandler, ModelHandler& modelHandler)
 {
-	m_Impl->InitializeRenderTextures(textureHandler);
+	m_Impl->InitializeRenderTextures(textureHandler, modelHandler);
 }
 
 void RenderManager::BeginFrame()
@@ -957,9 +985,9 @@ void RenderManager::BeginFrame()
 	m_Impl->BeginFrame();
 }
 
-void RenderManager::RenderFrame(LightHandler& lightHandler, TextureHandler& textureHandler, ModelHandler& modelHandler, ModelEffectHandler& effectHandler, SpriteHandler& SpriteHandler, Skybox& skybox, SceneManager& scene)
+void RenderManager::RenderFrame(LightHandler& lightHandler, TextureHandler& textureHandler, ModelHandler& modelHandler, ModelEffectHandler& effectHandler, SpriteHandler& SpriteHandler, SceneManager& scene)
 {
-	m_Impl->RenderFrame(lightHandler, textureHandler, modelHandler, effectHandler, SpriteHandler, skybox, scene);
+	m_Impl->RenderFrame(lightHandler, textureHandler, modelHandler, effectHandler, SpriteHandler, scene);
 }
 
 PSOHandler& RenderManager::GetPSOHandler() const noexcept

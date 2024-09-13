@@ -41,7 +41,7 @@ class TextureRenderingHandler
 {
 public:
 	TextureRenderingHandler(D3D12Framework& framework, PSOHandler& psoHandler);
-
+	~TextureRenderHandler();
 	//void AddToRenderPass(FullscreenTexture* texture, RENDER_PASS pass); // Add already existing FullscreenTexture to render pass
 	FullscreenTexture* CreateRenderTexture(
 		const uint16_t		 width, 
@@ -55,12 +55,15 @@ public:
 		std::wstring		 textureName
 	);
 
+	void AddFullscreenTextureToPipeline(FullscreenTexture* fullscreenTexture, RENDER_PASS renderPass);
+
 	const uint32_t DefaultBuffer()      { return m_defaultBufferOffset; }
 	const uint32_t DefaultLightBuffer() { return m_lightBufferOffset;   }
 
 private:
 	friend class RenderManager;
 
+	void RenderToBackBuffer(ID3D12GraphicsCommandList* cmdList);
 	void SetPSOHandler(PSOHandler* psoHandler);
 	void SetCurrentFrameindex(const uint8_t index) { m_frameIndex = index; }
 	void RenderPass(RENDER_PASS from, RENDER_PASS to, ID3D12GraphicsCommandList* cmdList);
@@ -74,10 +77,9 @@ private:
 	PSOHandler&		m_psoHandler;
 	D3D12Framework& m_framework;
 
-	
 	uint32_t m_defaultBufferOffset;
 	uint32_t m_lightBufferOffset;
 
-	std::array<std::vector<FullscreenTexture>, RENDER_PASS_COUNT> m_renderList;
+	std::array<std::vector<FullscreenTexture*>, RENDER_PASS_COUNT> m_renderList;
 };
 

@@ -14,7 +14,6 @@
 #include "Rendering/Buffers/BufferHandler.h"
 #include "Rendering/Screen Rendering/Textures/TextureRenderingHandler.h"
 #include "Rendering/2D/SpriteHandler.h"
-#include "Rendering/SkyBox.h"
 #include "Scene.h"
 #include "FrameTimer.h"
 #include "Rendering/Camera.h"
@@ -69,7 +68,6 @@ private:
 	ModelEffectHandler		m_modelEffectHandler;
 	LightHandler			m_lightHandler;
 	FrameTimer				m_frameTimer;
-	Skybox					m_skybox;	
 	Camera					m_camera;
 
 	float m_deltaTime;
@@ -95,10 +93,9 @@ Engine::Impl::Impl(unsigned int width, unsigned int height) :
 	),
 	m_physicsHandler(m_physicsEngine),
 	m_soundEngine(),
-	m_skybox(m_textureHandler),
 	m_deltaTime(0.f)
 {
-	m_renderManager.InitializeRenderTextures(m_textureHandler);
+	m_renderManager.InitializeRenderTextures(m_textureHandler, m_modelHandler);
 
 	ImGuiIO* io = &ImGui::GetIO();
 	ImVec2 vec;
@@ -108,10 +105,6 @@ Engine::Impl::Impl(unsigned int width, unsigned int height) :
 	io->DisplaySize = vec;
 	io->Fonts->Build();
 
-	// Set default skybox, need to find a way to make this easier, Makes skybox an entity in the world perhaps?
-	CustomModel skyboxCube = ModelData::GetCube();
-	skyboxCube.m_customModelName = "skybox";
-	m_skybox.Init(m_renderManager.GetPSOHandler(), m_modelHandler.CreateCustomModel(skyboxCube).m_modelID, L"Sprites/defaultRedSkybox.dds", true);
 	m_spriteHandler.CreateSpriteSheet(L"Sprites/testSpriteSheet.dds", 4, 4);
 
 	m_physicsEngine.SetRegistry(m_sceneManager.Registry());
@@ -127,7 +120,6 @@ Engine::Impl::~Impl()
 	m_spriteHandler.~SpriteHandler();
 	m_physicsEngine.~PhysicsEngine();
 	m_physicsHandler.~PhysicsHandler();
-	m_skybox.~Skybox();
 	m_framework.~D3D12Framework();
 }
 
@@ -150,7 +142,6 @@ void Engine::Impl::BeginUpdate()
 void Engine::Impl::MidUpdate()
 {
 	const float deltaTime = m_frameTimer.GetRealDeltaTime();
-	m_skybox.Update(deltaTime);
 
 	m_sceneManager.UpdateTransformsForRendering();
 
@@ -160,7 +151,7 @@ void Engine::Impl::MidUpdate()
 
 	m_soundEngine.UpdateSound(deltaTime);
 
-	m_renderManager.RenderFrame(m_lightHandler, m_textureHandler, m_modelHandler, m_modelEffectHandler, m_spriteHandler, m_skybox, m_sceneManager);
+	m_renderManager.RenderFrame(m_lightHandler, m_textureHandler, m_modelHandler, m_modelEffectHandler, m_spriteHandler, m_sceneManager);
 }
 
 void Engine::Impl::LateUpdate()

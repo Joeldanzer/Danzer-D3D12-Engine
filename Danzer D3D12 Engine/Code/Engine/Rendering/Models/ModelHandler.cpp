@@ -4,6 +4,8 @@
 
 #include "assimp/Scene.h"
 
+#include "Rendering/TextureHandler.h"
+
 #include "../RenderManager.h"
 #include "../RenderUtility.h"
 #include "../../Core/D3D12Framework.h"
@@ -28,9 +30,6 @@ Model ModelHandler::CreateCustomModel(CustomModel customModel, bool transparent)
 	if (modelExist != 0) {
 		return modelExist;
 	}
-	
-	 //if(!m_framework.CmdListIsRecording())
-	 //	m_framework.ResetCommandListAndAllocator(nullptr, L"ModelHandler: Line 30");
 	
 	std::vector<CD3DX12_RESOURCE_BARRIER> resourceBarriers;
 	VertexIndexBufferInfo bufferInfo = GetIndexAndVertexBuffer(ToWstring(customModel.m_customModelName), sizeof(Vertex) * (unsigned int)customModel.m_verticies.size(),

@@ -1,6 +1,6 @@
 #include "defaultStruct.hlsli"
 
-VertexToPixel main( InputToVertex input )
+VertexToPixel main(InputToVertex input )
 {
     VertexToPixel returnValue;
     

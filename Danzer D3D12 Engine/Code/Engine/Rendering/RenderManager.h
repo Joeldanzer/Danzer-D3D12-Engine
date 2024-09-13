@@ -1,10 +1,4 @@
 #pragma once
-#include "../Core/D3D12Header.h"
-
-#include "Renderer.h"
-#include "2D/2DRenderer.h"
-
-#include <map>
 
 class Skybox;
 class SceneManager;
@@ -18,6 +12,7 @@ class PSOHandler;
 class VolumetricLight;
 class TextureRenderingHandler;
 class BufferHandler;
+class Skybox;
 
 struct GameEntity;
 struct Sprite;
@@ -31,11 +26,11 @@ public:
 	RenderManager(D3D12Framework& framework, TextureHandler& textureHandler);
 	~RenderManager();
 
-	void InitializeRenderTextures(TextureHandler& textureHandler);
+	void InitializeRenderTextures(TextureHandler& textureHandler, ModelHandler& modelHandler);
 
 	void BeginFrame();
 	void RenderFrame(LightHandler& lightHandler, TextureHandler& textureHandler, ModelHandler& modelHandler, ModelEffectHandler& effectHandler,
-		SpriteHandler& SpriteHandler, Skybox& skybox, SceneManager& scene/*Camera, Ligthing, GameObjects, etc...*/);
+		SpriteHandler& SpriteHandler, SceneManager& scene/*Camera, Ligthing, GameObjects, etc...*/);
 
 	PSOHandler&				 GetPSOHandler()	   const noexcept;
 	BufferHandler&		     GetConstantHandler()  const noexcept;

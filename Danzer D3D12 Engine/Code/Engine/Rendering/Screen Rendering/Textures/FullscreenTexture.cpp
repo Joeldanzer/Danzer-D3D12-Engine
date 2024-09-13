@@ -6,6 +6,7 @@
 
 #include "Rendering/TextureHandler.h"
 #include "Rendering/Buffers/ConstantBufferData.h"
+#include "Rendering/PSOHandler.h"
 
 FullscreenTexture::~FullscreenTexture()
 {
@@ -208,6 +209,25 @@ void FullscreenTexture::SetBufferAtSlot(const uint32_t descriptorIndex, const ui
 		assert(slot >= m_bufferSlots.size(), "Given Buffer slot exceeds the number of defined slots!");
 	}
 	m_bufferSlots[slot] = { descriptorIndex, frameIndex };
+}
+
+void FullscreenTexture::RenderToTexture(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper& wrapper, PSOHandler& psohandler, const uint8_t frameIndex)
+{
+	cmdList->SetGraphicsRootSignature(psohandler.GetRootSignature(m_rs));
+	cmdList->SetPipelineState(psohandler.GetPipelineState(m_pso));
+
+	cmdList->RSSetViewports(1, &m_viewPort);
+
+	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle = wrapper.GET_CPU_DESCRIPTOR((m_rtvOffsetID + frameIndex));
+	cmdList->OMSetRenderTargets(1, &rtvHandle, false, nullptr);
+
+	SetTextureAndBufferSlots(cmdList, wrapper, frameIndex);
+
+	cmdList->IASetVertexBuffers(0, 0, nullptr);
+	cmdList->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	cmdList->IASetIndexBuffer(nullptr);
+
+	cmdList->DrawInstanced(3, 1, 0, 0);
 }
 
 void FullscreenTexture::SetTextureAndBufferSlots(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper& wrapper, const uint8_t frameIndex)

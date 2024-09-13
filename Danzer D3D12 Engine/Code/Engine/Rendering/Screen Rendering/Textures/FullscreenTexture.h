@@ -6,8 +6,8 @@
 class D3D12Framework;
 class DescriptorHeapWrapper;
 class TextureHandler;
-class PSOHandler;
 class ConstantBufferData;
+class PSOHandler;
 
 struct Texture;
 
@@ -104,6 +104,7 @@ public:
 protected:
 	friend class TextureRenderingHandler;
 
+	virtual void RenderToTexture(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper& wrapper, PSOHandler& psoHandler, const uint8_t frameIndex);
 	void SetTextureAndBufferSlots(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper& wrapper, const uint8_t frameIndex);
 
 	TextureType m_textureType;
@@ -113,6 +114,9 @@ protected:
 	uint32_t m_dsvOffsetID;
 	uint32_t m_srvOffsetID; 
 	uint32_t m_rtvOffsetID;
+
+	std::vector<uint32_t> m_pipelineStates;
+	std::vector<uint32_t> m_rootSignatures;
 
 	uint32_t m_pso;
 	uint32_t m_rs;
