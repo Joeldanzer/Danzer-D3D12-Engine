@@ -83,7 +83,7 @@ float4 main(VertexToPixel input) : SV_TARGET
             color.rgb = radiance.rgb;    
             break;
         case 1:
-            color.rgb = shadowData.rrr;
+            color.rgb = radiance.rgb;
             break;
         case 2:
             color.rgb = normal.xyz;

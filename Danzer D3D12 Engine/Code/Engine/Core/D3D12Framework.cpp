@@ -4,6 +4,7 @@
 #include "WindowHandler.h"
 #include "FrameResource.h"
 
+#include "Rendering/PSOHandler.h"
 #include "Rendering/Screen Rendering/GBuffer.h"
 
 #include "imgui/backends/imgui_impl_dx12.h"
@@ -222,6 +223,63 @@ void D3D12Framework::EndInitFrame()
 
 #pragma warning( suppress: 6387) 
 	WaitForSingleObject(m_fenceEvent, INFINITE);
+}
+
+//* Render the last texture rendered to back buffer.
+//* textureToPresent = Descriptor Offset ID
+void D3D12Framework::RenderToBackBuffer(const uint32_t textureToPresent, PSOHandler& psoHandler)
+{
+	ID3D12GraphicsCommandList* cmdList = CurrentFrameResource()->CmdList();
+
+	CD3DX12_CPU_DESCRIPTOR_HANDLE backBuffer(RTVHeap().GET_CPU_DESCRIPTOR(m_frameIndex));
+	cmdList->RSSetViewports(1, &m_viewport);
+	cmdList->OMSetRenderTargets(1, &backBuffer, false, nullptr);
+
+	cmdList->SetGraphicsRootSignature(psoHandler.GetRootSignature(m_backBufferRS));
+	cmdList->SetPipelineState(psoHandler.GetPipelineState(m_backBufferPSO));
+
+	CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle = m_cbvSrvHeap.GET_GPU_DESCRIPTOR(textureToPresent);
+	cmdList->SetGraphicsRootDescriptorTable(0, srvHandle);
+
+	cmdList->IASetVertexBuffers(0, 0, nullptr);
+	cmdList->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	cmdList->IASetIndexBuffer(nullptr);
+
+	cmdList->DrawInstanced(3, 1, 0, 0);
+}
+
+void D3D12Framework::SetBackBufferPSO(PSOHandler& psoHandler)
+{
+	auto flags =
+		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
+		D3D12_ROOT_SIGNATURE_FLAG_DENY_VERTEX_SHADER_ROOT_ACCESS     |
+		D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS       |
+		D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS;
+	m_backBufferRS = psoHandler.CreateRootSignature(
+		0,
+		1,
+		PSOHandler::SAMPLER_CLAMP,
+		flags,
+		L"Back Buffer RS"
+	);
+
+	DXGI_FORMAT rtvFormat[] = { DXGI_FORMAT_R8G8B8A8_UNORM };
+	CD3DX12_DEPTH_STENCIL_DESC depth(D3D12_DEFAULT);
+	m_backBufferPSO = psoHandler.CreatePSO(
+		{
+			L"Shaders/FullscreenVS.cso",
+			L"Shaders/BackBufferPS.cso"
+		},
+		PSOHandler::BLEND_DEFAULT,
+		PSOHandler::RASTERIZER_DEFAULT,
+		depth,
+		DXGI_FORMAT_UNKNOWN,
+		&rtvFormat[0],
+		_countof(rtvFormat),
+		m_backBufferRS,
+		PSOHandler::IL_NONE,
+		L"Back Buffer PSO"
+	);
 }
 
 void D3D12Framework::LoadAssets()

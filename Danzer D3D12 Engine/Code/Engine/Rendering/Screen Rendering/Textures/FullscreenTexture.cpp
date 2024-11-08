@@ -211,17 +211,24 @@ void FullscreenTexture::SetBufferAtSlot(const uint32_t descriptorIndex, const ui
 	m_bufferSlots[slot] = { descriptorIndex, frameIndex };
 }
 
-void FullscreenTexture::RenderToTexture(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper& wrapper, PSOHandler& psohandler, const uint8_t frameIndex)
+void FullscreenTexture::ClearTexture(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper& rtvWrapper, const uint8_t frameIndex)
+{
+	cmdList->RSSetViewports(1, &m_viewPort);
+	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle = rtvWrapper.GET_CPU_DESCRIPTOR(m_rtvOffsetID + frameIndex);
+	cmdList->ClearRenderTargetView(rtvHandle, &ClearColor[0], 0, nullptr);
+}
+
+void FullscreenTexture::RenderToTexture(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper& rtvWrapper, DescriptorHeapWrapper& cbvSrvWrapper, PSOHandler& psohandler, const uint8_t frameIndex)
 {
 	cmdList->SetGraphicsRootSignature(psohandler.GetRootSignature(m_rs));
 	cmdList->SetPipelineState(psohandler.GetPipelineState(m_pso));
 
 	cmdList->RSSetViewports(1, &m_viewPort);
 
-	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle = wrapper.GET_CPU_DESCRIPTOR((m_rtvOffsetID + frameIndex));
+	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle = rtvWrapper.GET_CPU_DESCRIPTOR((m_rtvOffsetID + frameIndex));
 	cmdList->OMSetRenderTargets(1, &rtvHandle, false, nullptr);
 
-	SetTextureAndBufferSlots(cmdList, wrapper, frameIndex);
+	SetTextureAndBufferSlots(cmdList, cbvSrvWrapper, frameIndex);
 
 	cmdList->IASetVertexBuffers(0, 0, nullptr);
 	cmdList->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -230,7 +237,7 @@ void FullscreenTexture::RenderToTexture(ID3D12GraphicsCommandList* cmdList, Desc
 	cmdList->DrawInstanced(3, 1, 0, 0);
 }
 
-void FullscreenTexture::SetTextureAndBufferSlots(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper& wrapper, const uint8_t frameIndex)
+void FullscreenTexture::SetTextureAndBufferSlots(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper& cbvSrvWrapper, const uint8_t frameIndex)
 {
 	uint16_t currentSlot = 0;
 
@@ -238,7 +245,7 @@ void FullscreenTexture::SetTextureAndBufferSlots(ID3D12GraphicsCommandList* cmdL
 	{
 
 		if (m_bufferSlots[i].first != UINT32_MAX) {	
-			CD3DX12_GPU_DESCRIPTOR_HANDLE handle = wrapper.GET_GPU_DESCRIPTOR(m_bufferSlots[i].second ? m_bufferSlots[i].first + frameIndex : m_bufferSlots[i].first);
+			CD3DX12_GPU_DESCRIPTOR_HANDLE handle = cbvSrvWrapper.GET_GPU_DESCRIPTOR(m_bufferSlots[i].second ? m_bufferSlots[i].first + frameIndex : m_bufferSlots[i].first);
 			cmdList->SetGraphicsRootDescriptorTable(currentSlot, handle);
 		}
 		currentSlot++;
@@ -247,7 +254,7 @@ void FullscreenTexture::SetTextureAndBufferSlots(ID3D12GraphicsCommandList* cmdL
 	for (size_t i = 0; i < m_textureSlots.size(); i++)
 	{
 		if (m_textureSlots[i].first != UINT32_MAX) {
-			CD3DX12_GPU_DESCRIPTOR_HANDLE handle = wrapper.GET_GPU_DESCRIPTOR(m_textureSlots[i].second ? m_textureSlots[i].first + frameIndex : m_textureSlots[i].first);
+			CD3DX12_GPU_DESCRIPTOR_HANDLE handle = cbvSrvWrapper.GET_GPU_DESCRIPTOR(m_textureSlots[i].second ? m_textureSlots[i].first + frameIndex : m_textureSlots[i].first);
 			cmdList->SetGraphicsRootDescriptorTable(currentSlot, handle);
 		}
 		

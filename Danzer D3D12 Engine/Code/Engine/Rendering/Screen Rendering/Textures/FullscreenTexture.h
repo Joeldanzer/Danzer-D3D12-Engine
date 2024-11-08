@@ -11,6 +11,7 @@ class PSOHandler;
 
 struct Texture;
 
+// Used for the rendering pipeline to 
 class FullscreenTexture
 {
 public:
@@ -71,6 +72,8 @@ public:
 	void SetBufferAtSlot(ConstantBufferData* buffer,		const uint8_t slot, bool frameIndex = false);
 	void SetBufferAtSlot(const uint32_t descriptorIndex,	const uint8_t slot, bool frameIndex = false);
 
+	void ClearTexture(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper& rtvWrapper, const uint8_t frameIndex);
+
 	void RenderTexture(bool render) {
 		m_renderTexture = render;
 	}
@@ -104,7 +107,7 @@ public:
 protected:
 	friend class TextureRenderingHandler;
 
-	virtual void RenderToTexture(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper& wrapper, PSOHandler& psoHandler, const uint8_t frameIndex);
+	virtual void RenderToTexture(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper& rtvWrapper, DescriptorHeapWrapper& cbvSrvWrapper, PSOHandler& psoHandler, const uint8_t frameIndex);
 	void SetTextureAndBufferSlots(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper& wrapper, const uint8_t frameIndex);
 
 	TextureType m_textureType;

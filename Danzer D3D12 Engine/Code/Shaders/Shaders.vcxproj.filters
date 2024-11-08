@@ -56,6 +56,7 @@
     <FxCompile Include="Light\VolumetricLightBlurPS.hlsl" />
     <FxCompile Include="Fullscreen\KuwaharaFilterPS.hlsl" />
     <FxCompile Include="Fullscreen\OLD_SSAOPS.hlsl" />
+    <FxCompile Include="Fullscreen\BackBufferPS.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="UI\UIstructs.hlsli">

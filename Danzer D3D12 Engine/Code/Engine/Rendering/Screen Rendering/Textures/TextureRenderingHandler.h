@@ -8,7 +8,7 @@ class DescriptorHeapWrapper;
 class PSOHandler; 
 
 // All the passes in the rendering pipeline, the order of first to last depending on each pass is 0 - 2 (start to end)
-enum RENDER_PASS {
+enum RENDER_PASS : uint8_t {
 	NONE,
 	PRE_SCENE_PASS_0, // 1st pass in PRE_SCENE_PASS. 
 	PRE_SCENE_PASS_1, // 2nd pass in PRE_SCENE_PASS.
@@ -63,7 +63,9 @@ public:
 private:
 	friend class RenderManager;
 
-	void RenderToBackBuffer(ID3D12GraphicsCommandList* cmdList);
+	void ClearAllTextures(ID3D12GraphicsCommandList* cmdList);
+
+	FullscreenTexture* FetchLastRenderedTexture();
 	void SetPSOHandler(PSOHandler* psoHandler);
 	void SetCurrentFrameindex(const uint8_t index) { m_frameIndex = index; }
 	void RenderPass(RENDER_PASS from, RENDER_PASS to, ID3D12GraphicsCommandList* cmdList);
@@ -80,6 +82,7 @@ private:
 	uint32_t m_defaultBufferOffset;
 	uint32_t m_lightBufferOffset;
 
+	FullscreenTexture* m_lastRenderedTexture = nullptr;
 	std::array<std::vector<FullscreenTexture*>, RENDER_PASS_COUNT> m_renderList;
 };
 

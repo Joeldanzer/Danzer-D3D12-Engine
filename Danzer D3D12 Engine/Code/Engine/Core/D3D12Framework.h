@@ -4,6 +4,7 @@
 #include <dxgi1_4.h>
 
 class FrameResource;
+class PSOHandler;
 
 class D3D12Framework
 {
@@ -65,6 +66,9 @@ public:
 private:
     friend class RenderManager;
 
+    void RenderToBackBuffer(const uint32_t textureToPresent, PSOHandler& psoHandler);
+    void SetBackBufferPSO(PSOHandler& psoHandler);
+
     void LoadAssets();
     void InitImgui();
     void ScanAdapter(IDXGIAdapter1*, IDXGIFactory4*);
@@ -95,6 +99,9 @@ private:
 
     ComPtr<ID3D12Fence> m_fence;
     UINT64 m_fenceValue;
+
+    uint32_t m_backBufferPSO = UINT32_MAX;
+    uint32_t m_backBufferRS  = UINT32_MAX;
 
     struct StateTransition {
         D3D12_RESOURCE_STATES m_currentState;

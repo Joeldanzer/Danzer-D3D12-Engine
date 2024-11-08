@@ -16,9 +16,9 @@ cbuffer DefaultBuffer : register(b0)
     float4 CameraPosition;
     float4 Eye;
     
-    float Time;
     float ScreenWidth;
     float ScreenHeight;
+    float Time;
     
     // Needs to be 256-byte alligned
     float trashOne;

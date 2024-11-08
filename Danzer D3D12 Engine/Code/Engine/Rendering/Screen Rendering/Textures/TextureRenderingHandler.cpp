@@ -61,6 +61,26 @@ FullscreenTexture* TextureRenderingHandler::CreateRenderTexture(const uint16_t w
 	return texture;
 }
 
+void TextureRenderingHandler::AddFullscreenTextureToPipeline(FullscreenTexture* fullscreenTexture, RENDER_PASS renderPass)
+{
+}
+
+void TextureRenderingHandler::ClearAllTextures(ID3D12GraphicsCommandList* cmdList)
+{
+	for (uint8_t i = 0; i < RENDER_PASS_COUNT; i++)
+	{
+		for (uint8_t j = 0; j < m_renderList[i].size() ; j++)
+		{
+			m_renderList[i][j]->ClearTexture(cmdList, m_framework.RTVHeap(), m_framework.GetFrameIndex());
+		}
+	}
+}
+
+FullscreenTexture* TextureRenderingHandler::FetchLastRenderedTexture()
+{
+	return m_lastRenderedTexture;
+}
+
 void TextureRenderingHandler::SetPSOHandler(PSOHandler* psoHandler)
 {
 	//m_psoHandler = psoHandler;
@@ -79,11 +99,12 @@ void TextureRenderingHandler::RenderPass(RENDER_PASS from, RENDER_PASS to, ID3D1
 		{
 			FullscreenTexture* texture = m_renderList[i][j];
 
-			texture->RenderToTexture(cmdList, m_framework.CbvSrvHeap(), m_psoHandler, m_frameIndex);
+			texture->RenderToTexture(cmdList, m_framework.RTVHeap(), m_framework.CbvSrvHeap(), m_psoHandler, m_framework.GetFrameIndex());
 			transitionResources.emplace_back(texture->GetResource(m_frameIndex));
+			m_lastRenderedTexture = texture;
 		}
 
-		// Transition render targets to pixel shader for use. 
+		// Transition render targets to Texture for use. 
 		if (!transitionResources.empty()) {
 			m_framework.QeueuResourceTransition(&transitionResources[0], transitionResources.size(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 			m_framework.TransitionAllResources();
@@ -104,8 +125,7 @@ std::vector<ID3D12Resource*> TextureRenderingHandler::FetchResources(RENDER_PASS
 	{
 		for (uint16_t j = 0; j < m_renderList[i].size(); j++)
 		{
-			FullscreenTexture* texture = m_renderList[i][j];
-			resources.emplace_back(texture->GetResource(m_frameIndex));
+			resources.emplace_back(m_renderList[i][j]->GetResource(m_framework.GetFrameIndex()));
 		}
 	}
 
