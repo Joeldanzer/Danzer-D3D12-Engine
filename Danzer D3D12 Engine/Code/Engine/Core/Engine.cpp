@@ -145,9 +145,9 @@ void Engine::Impl::MidUpdate()
 
 	m_sceneManager.UpdateTransformsForRendering();
 
-	m_physicsHandler.SetPhysicsPositionAndRotation(m_sceneManager.Registry());
-	m_physicsEngine.Update(1.0f / 60.0f, 0);
-	m_physicsHandler.UpdatePhysicsEntities(m_sceneManager.Registry());
+	//m_physicsHandler.SetPhysicsPositionAndRotation(m_sceneManager.Registry());
+	//m_physicsEngine.Update(1.0f / 60.0f, 0);
+	//m_physicsHandler.UpdatePhysicsEntities(m_sceneManager.Registry());
 
 	m_soundEngine.UpdateSound(deltaTime);
 

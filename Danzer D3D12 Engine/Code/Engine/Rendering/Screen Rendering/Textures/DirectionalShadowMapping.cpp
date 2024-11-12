@@ -4,10 +4,10 @@
 
 #include "Core/DesriptorHeapWrapper.h"
 
-void DirectionalShadowMapping::RenderTexture(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper* handle, TextureHandler* textureHandler, const UINT frameIndex)
+void DirectionalShadowMapping::RenderToTexture(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper& dsvHeap, DescriptorHeapWrapper& cbvSrvhandle, PSOHandler& psoHandler, const uint8_t frameIndex)
 {
-	CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle = handle->GET_CPU_DESCRIPTOR(0);
-	dsvHandle.Offset((DSVOffsetID() + frameIndex) * handle->DESCRIPTOR_SIZE());
+	CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle = dsvHeap.GET_CPU_DESCRIPTOR(0);
+	dsvHandle.Offset((DSVOffsetID() + frameIndex) * dsvHeap.DESCRIPTOR_SIZE());
 
 	cmdList->RSSetViewports(1, &GetViewPort());
 	cmdList->OMSetRenderTargets(0, nullptr, false, &dsvHandle);

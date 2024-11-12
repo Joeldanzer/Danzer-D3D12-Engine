@@ -10,7 +10,7 @@ TextureRenderingHandler::TextureRenderingHandler(D3D12Framework& framework, PSOH
 {
 	for (uint8_t i = PRE_SCENE_PASS_0; i < RENDER_PASS_COUNT; i++)
 	{
-		m_renderList[i].reserve(256);
+		m_renderList[i].reserve(16);
 	}
 }
 
@@ -63,6 +63,7 @@ FullscreenTexture* TextureRenderingHandler::CreateRenderTexture(const uint16_t w
 
 void TextureRenderingHandler::AddFullscreenTextureToPipeline(FullscreenTexture* fullscreenTexture, RENDER_PASS renderPass)
 {
+	m_renderList[renderPass].emplace_back(fullscreenTexture);
 }
 
 void TextureRenderingHandler::ClearAllTextures(ID3D12GraphicsCommandList* cmdList)
@@ -71,7 +72,20 @@ void TextureRenderingHandler::ClearAllTextures(ID3D12GraphicsCommandList* cmdLis
 	{
 		for (uint8_t j = 0; j < m_renderList[i].size() ; j++)
 		{
-			m_renderList[i][j]->ClearTexture(cmdList, m_framework.RTVHeap(), m_framework.GetFrameIndex());
+			m_renderList[i][j]->ClearTexture(cmdList, m_framework.RTVHeap(), m_frameIndex);
+		}
+	}
+}
+
+void TextureRenderingHandler::TransitionResourceForRendering()
+{
+	m_frameIndex = m_framework.GetFrameIndex();
+
+	for (uint8_t i = 0; i < RENDER_PASS_COUNT; i++)
+	{
+		for (uint8_t j = 0; j < m_renderList[i].size(); j++)
+		{
+			m_framework.QeueuResourceTransition(m_renderList[i][j]->GetResource(m_frameIndex), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, m_renderList[i][j]->GetRenderingResourceState());
 		}
 	}
 }
@@ -88,27 +102,33 @@ void TextureRenderingHandler::SetPSOHandler(PSOHandler* psoHandler)
 
 void TextureRenderingHandler::RenderPass(RENDER_PASS from, RENDER_PASS to, ID3D12GraphicsCommandList* cmdList)
 { 
-	m_frameIndex = m_framework.GetFrameIndex();
-
 	std::vector<ID3D12Resource*> transitionResources;
 	for (uint8_t i = uint8_t(from); i < uint8_t(to) + 1; i++)
 	{
-		transitionResources.clear();
+		if (m_renderList[i].empty())
+			continue;
 
+		transitionResources.clear();
 		for (uint16_t j = 0; j < m_renderList[i].size(); j++)
 		{
 			FullscreenTexture* texture = m_renderList[i][j];
 
-			texture->RenderToTexture(cmdList, m_framework.RTVHeap(), m_framework.CbvSrvHeap(), m_psoHandler, m_framework.GetFrameIndex());
+			switch (texture->GetRenderingResourceState())
+			{
+			case D3D12_RESOURCE_STATE_DEPTH_WRITE:
+				texture->RenderToTexture(cmdList, m_framework.DSVHeap(), m_framework.CbvSrvHeap(), m_psoHandler, m_frameIndex);
+				break;
+			case D3D12_RESOURCE_STATE_RENDER_TARGET:
+				texture->RenderToTexture(cmdList, m_framework.RTVHeap(), m_framework.CbvSrvHeap(), m_psoHandler, m_frameIndex);
+				break;
+			}
 			transitionResources.emplace_back(texture->GetResource(m_frameIndex));
 			m_lastRenderedTexture = texture;
+
+			m_framework.QeueuResourceTransition(texture->GetResource(m_frameIndex), texture->GetRenderingResourceState(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 		}
 
-		// Transition render targets to Texture for use. 
-		if (!transitionResources.empty()) {
-			m_framework.QeueuResourceTransition(&transitionResources[0], transitionResources.size(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-			m_framework.TransitionAllResources();
-		}
+		m_framework.TransitionAllResources();
 	}
 }
 

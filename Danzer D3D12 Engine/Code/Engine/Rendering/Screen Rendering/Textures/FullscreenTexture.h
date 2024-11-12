@@ -16,6 +16,7 @@ class FullscreenTexture
 {
 public:
 	FullscreenTexture() : 
+		m_resourceState(D3D12_RESOURCE_STATE_COMMON),
 		m_dsvOffsetID(0), 
 		m_srvOffsetID(0),
 		m_viewPort({}), 
@@ -81,6 +82,9 @@ public:
 	ID3D12Resource* GetResource(const UINT frameIndex) {
 		return m_resource[frameIndex].Get();
 	}
+	const D3D12_RESOURCE_STATES GetRenderingResourceState() {
+		return m_resourceState;
+	}
 	const UINT SRVOffsetID() {
 		return m_srvOffsetID;
 	}
@@ -127,7 +131,12 @@ protected:
 	std::vector<std::pair<uint32_t, bool>> m_textureSlots;
 	std::vector<std::pair<uint32_t, bool>> m_bufferSlots;
 
+	std::wstring m_resourceName = L"";
+	D3D12_RESOURCE_STATES m_resourceState; // Keep track of what kind of a resource this texture is, used for clearing and transitioning the resource.
 	D3D12_VIEWPORT m_viewPort;
 	ComPtr<ID3D12Resource> m_resource[FrameCount];
+
+private:
+	bool m_textureIsInitialized = false;
 };
 

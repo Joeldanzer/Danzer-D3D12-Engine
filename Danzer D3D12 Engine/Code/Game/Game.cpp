@@ -89,9 +89,9 @@ Game::Impl::Impl(Engine& engine) :
 	engine.GetSoundEngine().CreateSoundListener(reg.emplace<SoundListener>(camEntt));
 
 	enttTest = &engine.GetSceneManager().CreateBasicEntity("Physics Sphere", false);
-	m_sphere = &reg.emplace<PhysicsBody>(enttTest->m_entity, engine.GetPhysicsHandler().CreatePhyscisSphere(*enttTest, 1.0f, EMotionType::Dynamic, EActivation::DontActivate, Layers::MOVING));
+	//m_sphere = &reg.emplace<PhysicsBody>(enttTest->m_entity, engine.GetPhysicsHandler().CreatePhyscisSphere(*enttTest, 1.0f, EMotionType::Dynamic, EActivation::DontActivate, Layers::MOVING));
 	reg.emplace<SoundSource>(enttTest->m_entity);
-	m_sphere->OnContactAdded = std::bind(&Game::Impl::OnSphereContact, this, std::placeholders::_1);
+	//m_sphere->OnContactAdded = std::bind(&Game::Impl::OnSphereContact, this, std::placeholders::_1);
 
 	reg.emplace<Model>(enttTest->m_entity, engine.GetModelHandler().LoadModel(L"Models/sphere.fbx"));
 	Transform& sphereT = reg.get<Transform>(enttTest->m_entity);
@@ -100,7 +100,7 @@ Game::Impl::Impl(Engine& engine) :
 
 	GameEntity& staticbox = engine.GetSceneManager().CreateBasicEntity("Static Box", true);
 	reg.emplace<Model>(staticbox.m_entity, engine.GetModelHandler().LoadModel(L"Models/cube.fbx"));
-	reg.emplace<PhysicsBody>(staticbox.m_entity, engine.GetPhysicsHandler().CreatePhysicsBox(staticbox, {20.0f, 0.2f, 20.0f}, EMotionType::Static, EActivation::Activate, Layers::NON_MOVING));
+	//reg.emplace<PhysicsBody>(staticbox.m_entity, engine.GetPhysicsHandler().CreatePhysicsBox(staticbox, {20.0f, 0.2f, 20.0f}, EMotionType::Static, EActivation::Activate, Layers::NON_MOVING));
 
 	Transform& boxT = reg.get<Transform>(staticbox.m_entity);
 	boxT.m_scale = { 20.0f, 0.2f, 20.0f };

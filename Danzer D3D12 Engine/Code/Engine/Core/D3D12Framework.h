@@ -27,6 +27,7 @@ public:
     void TransitionMultipleRTV(ID3D12Resource** resources, UINT numberOfresources, D3D12_RESOURCE_STATES present, D3D12_RESOURCE_STATES newState);
 
     void QeueuResourceTransition(ID3D12Resource** resources, UINT numberOfresources, D3D12_RESOURCE_STATES present, D3D12_RESOURCE_STATES newState);
+    void QeueuResourceTransition(ID3D12Resource* resources,  D3D12_RESOURCE_STATES present, D3D12_RESOURCE_STATES newState);
     void TransitionAllResources();
 
     void EndInitFrame(); // Called when all resources has been loade and we can clost InitCmdList

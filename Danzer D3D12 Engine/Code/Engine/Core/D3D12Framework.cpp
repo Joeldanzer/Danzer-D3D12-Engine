@@ -188,6 +188,14 @@ void D3D12Framework::QeueuResourceTransition(ID3D12Resource** resources, UINT nu
 	}
 }
 
+void D3D12Framework::QeueuResourceTransition(ID3D12Resource* resource, D3D12_RESOURCE_STATES present, D3D12_RESOURCE_STATES newState)
+{
+	std::pair<ID3D12Resource*, StateTransition> transition;
+	transition.first = resource;
+	transition.second = { present, newState };
+	m_transitionQeueu.emplace_back(transition);
+}
+
 void D3D12Framework::TransitionAllResources()
 {
 	std::vector<CD3DX12_RESOURCE_BARRIER> transitionList;
@@ -238,7 +246,7 @@ void D3D12Framework::RenderToBackBuffer(const uint32_t textureToPresent, PSOHand
 	cmdList->SetGraphicsRootSignature(psoHandler.GetRootSignature(m_backBufferRS));
 	cmdList->SetPipelineState(psoHandler.GetPipelineState(m_backBufferPSO));
 
-	CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle = m_cbvSrvHeap.GET_GPU_DESCRIPTOR(textureToPresent);
+	CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle = m_cbvSrvHeap.GET_GPU_DESCRIPTOR(textureToPresent + m_frameIndex);
 	cmdList->SetGraphicsRootDescriptorTable(0, srvHandle);
 
 	cmdList->IASetVertexBuffers(0, 0, nullptr);

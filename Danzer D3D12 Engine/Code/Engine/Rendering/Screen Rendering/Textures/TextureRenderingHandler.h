@@ -64,6 +64,7 @@ private:
 	friend class RenderManager;
 
 	void ClearAllTextures(ID3D12GraphicsCommandList* cmdList);
+	void TransitionResourceForRendering();
 
 	FullscreenTexture* FetchLastRenderedTexture();
 	void SetPSOHandler(PSOHandler* psoHandler);
