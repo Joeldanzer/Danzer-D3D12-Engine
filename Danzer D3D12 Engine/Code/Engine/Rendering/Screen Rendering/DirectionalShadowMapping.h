@@ -1,16 +1,16 @@
 #pragma once
-#include "FullscreenTexture.h"
+#include "TextureRenderer.h"
 
 #include "Rendering/Models/ModelData.h"
 
-class DirectionalShadowMapping : public FullscreenTexture
+class DirectionalShadowMapping : public TextureRenderer
 {
 public:	
 	DirectionalShadowMapping() :
 		m_models(nullptr), modelCount(0), m_projectionMatrix() 
 	{}
 	
-	void RenderToTexture(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper& dsvHandle, DescriptorHeapWrapper& cbvSrvHandle, PSOHandler& psoHandler, const uint8_t frameIndex) override;
+	void RenderToTexture(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper& dsvHandle, DescriptorHeapWrapper& cbvSrvHandle, const uint8_t frameIndex) override;
 	void SetPipelineAndRootSignature(PSOHandler& psoHandler);
 
 	void CreateProjection(float projectionScale, float increase);

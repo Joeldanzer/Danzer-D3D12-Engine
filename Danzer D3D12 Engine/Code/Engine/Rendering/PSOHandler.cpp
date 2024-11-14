@@ -108,6 +108,7 @@ UINT PSOHandler::CreatePSO(std::array<std::wstring, 2> shaderName, BLEND_DESC bl
 	return index;
 }
 
+
 void PSOHandler::InitializeSamplerDescs()
 {
 	D3D12_STATIC_SAMPLER_DESC samplerDesc = {};

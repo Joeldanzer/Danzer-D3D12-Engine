@@ -9,6 +9,12 @@
 //    float4 trashCameraBuffer[6];
 //};
 
+struct LightOutput
+{
+    float4 m_sceneColor  : SV_TARGET0;
+    float4 m_brightColor : SV_TARGET1;
+};
+
 SamplerState defaultSample     : register(s0);
 
 Texture2D   albedoTexture        : register(t0);

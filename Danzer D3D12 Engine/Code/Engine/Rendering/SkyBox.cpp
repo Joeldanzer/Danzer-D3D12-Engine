@@ -7,9 +7,19 @@
 
 #include "Components/Transform.h"
 
+Skybox::Skybox(ModelHandler& modelHandler) : 
+	m_spin(false),
+	m_rotation(0.f, 0.f, 0.f, 1.f),
+	m_pso(0),
+	m_rs(0),
+	m_textureID(0),
+	m_modelID(modelHandler.CreateCustomModel(ModelData::GetCube()).m_modelID)
+{
+}
+
 Skybox::~Skybox(){}
 
-void Skybox::Initialize(PSOHandler& psoHandler, ModelHandler& modelHandler, TextureHandler& textureHandler, std::wstring skyBoxTexture)
+void Skybox::Initialize(PSOHandler& psoHandler, TextureHandler& textureHandler, std::wstring skyBoxTexture)
 {
 	DXGI_FORMAT format[] = { DXGI_FORMAT_R8G8B8A8_UNORM };
 	CD3DX12_DEPTH_STENCIL_DESC depth(D3D12_DEFAULT);
@@ -17,22 +27,29 @@ void Skybox::Initialize(PSOHandler& psoHandler, ModelHandler& modelHandler, Text
 	auto flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
 		D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
 		D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS;
-	m_rs = psoHandler.CreateRootSignature(1, 1, PSOHandler::SAMPLER_WRAP, flags, L"Skybox Root Signature");
-	m_pso = psoHandler.CreatePSO(
-		{ L"Shaders/skyboxVS.cso", L"Shaders/skyboxPS.cso" },
-		PSOHandler::BLEND_DEFAULT,
-		PSOHandler::RASTERIZER_NONE,
+
+	InitializeRenderer(
+		L"Shaders/skyboxVS.cso",
+		L"Shaders/skyboxPS.cso",
+		WindowHandler::WindowData().m_w,
+		WindowHandler::WindowData().m_h,
+		false,
 		depth,
 		DXGI_FORMAT_UNKNOWN,
-		&format[0],
+		{ DXGI_FORMAT_R8G8B8A8_UNORM },
+		PSOHandler::BLEND_DEFAULT,
+		PSOHandler::RASTERIZER_DEFAULT,
+		PSOHandler::SAMPLER_WRAP,
+		flags,
 		1,
-		m_rs,
+		1,
 		PSOHandler::IL_INSTANCE_FORWARD,
-		L"Skybox PSO"
+		L"Skybox",
+		psoHandler
 	);
-
-	m_modelID = modelHandler.CreateCustomModel(ModelData::GetCube()).m_modelID;
 	m_textureID = textureHandler.GetTexture(skyBoxTexture);
+
+	SetTextureAtSlot(textureHandler.GetTextureData(m_textureID).m_offsetID, 0, false);
 }
 
 void Skybox::Update(const float dt)
@@ -42,34 +59,38 @@ void Skybox::Update(const float dt)
 	}
 }
 
-void Skybox::RenderSkybox(ID3D12GraphicsCommandList* cmdList, PSOHandler& psoHandler, DescriptorHeapWrapper& wrapper, Texture& texture, ModelData& model, const Transform& camTransform, const uint32_t bufferOffset, const uint8_t frameIndex)
+void Skybox::RenderToTexture(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper& heap, DescriptorHeapWrapper& cbvSrvHeap, const uint8_t frameIndex)
 {
-	cmdList->SetGraphicsRootSignature(psoHandler.GetRootSignature(m_rs));
-	cmdList->SetPipelineState(psoHandler.GetPipelineState(m_pso));
+	if (!m_modelData->GetInstanceTransforms().empty())
+		m_modelData->ClearInstanceTransform();
 
-	D3D12_GPU_DESCRIPTOR_HANDLE cbvHandle = wrapper.GET_GPU_DESCRIPTOR(bufferOffset + frameIndex);
-	cmdList->SetGraphicsRootDescriptorTable(0, cbvHandle);
+	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle = heap.GET_CPU_DESCRIPTOR(m_rtvSlots[0].first + frameIndex);
 
-	D3D12_GPU_DESCRIPTOR_HANDLE srvHandle = wrapper.GET_GPU_DESCRIPTOR(texture.m_offsetID);
-	cmdList->SetGraphicsRootDescriptorTable(1, srvHandle);
-
-	if (!model.GetInstanceTransforms().empty())
-		 model.ClearInstanceTransform();
+	cmdList->RSSetViewports(1, &m_viewPort);
+	cmdList->OMSetRenderTargets(1, &rtvHandle, false, nullptr);
 
 	//* Add the rotation from the skybox and always place it a the cameras position
 	DirectX::XMVECTOR quatv = DirectX::XMLoadFloat4(&m_rotation);
 	Mat4f transform = DirectX::XMMatrixRotationQuaternion(quatv);
 	transform *= DirectX::XMMatrixScaling(5.0f, 5.0f, 5.0f);
-	transform *= DirectX::XMMatrixTranslation(camTransform.m_position.x, camTransform.m_position.y, camTransform.m_position.z);
+	transform *= DirectX::XMMatrixTranslation(m_camPosition.x, m_camPosition.y, m_camPosition.z);
 
-	model.AddInstanceTransform(DirectX::XMMatrixTranspose(transform));
-	model.UpdateTransformInstanceBuffer(frameIndex);
+	m_modelData->AddInstanceTransform(DirectX::XMMatrixTranspose(transform));
+	m_modelData->UpdateTransformInstanceBuffer(frameIndex);
 	D3D12_VERTEX_BUFFER_VIEW bufferView[2] = {
-		model.GetMeshes()[0].m_vertexBufferView, model.GetTransformInstanceBuffer().GetBufferView(frameIndex)
+		m_modelData->GetMeshes()[0].m_vertexBufferView, m_modelData->GetTransformInstanceBuffer().GetBufferView(frameIndex)
 	};
 	cmdList->IASetVertexBuffers(0, 2, &bufferView[0]);
-	cmdList->IASetIndexBuffer(&model.GetMeshes()[0].m_indexBufferView);
+	cmdList->IASetIndexBuffer(&m_modelData->GetMeshes()[0].m_indexBufferView);
 	cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-	cmdList->DrawIndexedInstanced(model.GetMeshes()[0].m_numIndices, 1, 0, 0, 0);
+	cmdList->DrawIndexedInstanced(m_modelData->GetMeshes()[0].m_numIndices, 1, 0, 0, 0);
+
+	m_modelData->ClearInstanceTransform();
+}
+
+void Skybox::FetchCameraPositionAndSkyboxModel(const Vect3f position, ModelHandler& modelHandler)
+{
+	m_modelData   = &modelHandler.GetLoadedModelInformation(m_modelID);
+	m_camPosition = position;
 }

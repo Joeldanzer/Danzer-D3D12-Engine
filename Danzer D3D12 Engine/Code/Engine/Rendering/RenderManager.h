@@ -9,7 +9,6 @@ class D3D12Framework;
 class ModelEffectHandler;
 class LightHandler;
 class PSOHandler;
-class VolumetricLight;
 class TextureRenderingHandler;
 class BufferHandler;
 class Skybox;
@@ -34,7 +33,6 @@ public:
 
 	PSOHandler&				 GetPSOHandler()	   const noexcept;
 	BufferHandler&		     GetConstantHandler()  const noexcept;
-	VolumetricLight&		 GetVolumetricLight()  const noexcept;
 	TextureRenderingHandler& GetTextureRendering() const noexcept;
 
 	void SetKuwaharaRadius(UINT radius, UINT scale, Vect3f offset);

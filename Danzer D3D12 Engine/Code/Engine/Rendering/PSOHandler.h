@@ -41,7 +41,6 @@ public:
 		RASTERIZER_COUNT
 	};
 
-
 	PSOHandler(D3D12Framework& framework);
 
 	UINT CreateRootSignature(const UINT numberOfCBV, const UINT numberOfSRV, SAMPLER_DESCS sampler, D3D12_ROOT_SIGNATURE_FLAGS flags, std::wstring name);

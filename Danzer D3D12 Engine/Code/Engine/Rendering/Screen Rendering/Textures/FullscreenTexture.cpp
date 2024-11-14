@@ -84,8 +84,6 @@ void FullscreenTexture::InitAsDepth(ID3D12Device* device, DescriptorHeapWrapper*
 	m_resourceName = name;
 	m_resourceState = D3D12_RESOURCE_STATE_DEPTH_WRITE;
 	m_viewPort = CD3DX12_VIEWPORT(0.0f, 0.0f, FLOAT(width), FLOAT(height));
-
-	m_textureIsInitialized = true;
 }
 
 void FullscreenTexture::InitAsTexture(ID3D12Device* device, DescriptorHeapWrapper* cbvSrvHeap, DescriptorHeapWrapper* rtvHeap, const UINT width, const UINT height, DXGI_FORMAT textureDesc, DXGI_FORMAT srvFormat, D3D12_RESOURCE_FLAGS flag, std::wstring name)
@@ -146,132 +144,22 @@ void FullscreenTexture::InitAsTexture(ID3D12Device* device, DescriptorHeapWrappe
 		m_resource[i]->SetName(std::wstring(name + std::to_wstring(i)).c_str());
 	}
 
-	m_resourceName = name;
+	m_resourceName  = name;
 	m_resourceState = D3D12_RESOURCE_STATE_RENDER_TARGET;
 	m_viewPort = CD3DX12_VIEWPORT(0.0f, 0.0f, FLOAT(width), FLOAT(height));
-
-	m_textureIsInitialized = true;
 }
 
-void FullscreenTexture::SetPipelineAndRootSignature(std::wstring vertexShader, std::wstring pixelShader, bool depthEnabled, DXGI_FORMAT format, const uint8_t blendDesc, const uint8_t rastDesc, const uint8_t samplerDesc, D3D12_ROOT_SIGNATURE_FLAGS flags, DXGI_FORMAT depthFormat, const uint8_t numberOfBuffers, const uint8_t numberOfTextures, const uint8_t inputLayout, std::wstring textureName, PSOHandler& psoHandler)
-{
-	CD3DX12_DEPTH_STENCIL_DESC depth(D3D12_DEFAULT);
-	depth.DepthEnable = depthEnabled;
-	DXGI_FORMAT formats[] = { format };
-	m_rs  = psoHandler.CreateRootSignature(numberOfBuffers, numberOfTextures, static_cast<PSOHandler::SAMPLER_DESCS>(samplerDesc), flags, textureName + L" Root Signature");
-	m_pso = psoHandler.CreatePSO(
-		{ vertexShader, pixelShader },
-		static_cast<PSOHandler::BLEND_DESC>(blendDesc),
-		static_cast<PSOHandler::RASTERIZER_DESC>(rastDesc),
-		depth,
-		DXGI_FORMAT_UNKNOWN,
-		&formats[0],
-		_countof(formats),
-		m_rs,
-		static_cast<PSOHandler::INPUT_LAYOUTS>(inputLayout),
-		textureName + L" PSO"
-	);
-
-	for (uint32_t i = 0; i < numberOfTextures; i++)
-		m_textureSlots.push_back({ UINT32_MAX, true });
-
-	for (uint32_t i = 0; i < numberOfBuffers; i++)
-		m_bufferSlots.push_back({UINT32_MAX, true});
-}
-
-void FullscreenTexture::SetTextureAtSlot(const Texture* texture, const uint8_t slot, bool frameIndex)
-{
-	if (slot >= m_textureSlots.size()) {
-		assert(slot >= m_textureSlots.size(), "Given Texture slot exceeds the number of defined slots!");
-	}
-	m_textureSlots[slot] = { texture->m_offsetID, frameIndex };
-}
-
-void FullscreenTexture::SetTextureAtSlot(const FullscreenTexture* texture, const uint8_t slot, bool frameIndex)
-{
-	if (slot >= m_textureSlots.size()) {
-		assert(slot >= m_textureSlots.size(), "Given Texture slot exceeds the number of defined slots!");
-	}
-	m_textureSlots[slot] = { texture->m_srvOffsetID, frameIndex };
-}
-
-void FullscreenTexture::SetTextureAtSlot(const uint32_t descriptorIndex, const uint8_t slot, bool frameIndex)
-{
-	if (slot >= m_textureSlots.size()) {
-		assert(slot >= m_textureSlots.size(), "Given Texture slot exceeds the number of defined slots!");
-	}
-	m_textureSlots[slot] = { descriptorIndex, frameIndex };
-}
-
-void FullscreenTexture::SetBufferAtSlot(ConstantBufferData* buffer, const uint8_t slot, bool frameIndex)
-{
-	if (slot >= m_bufferSlots.size()) {
-		assert(slot >= m_bufferSlots.size(), "Given Buffer slot exceeds the number of defined slots!");
-	}
-	m_bufferSlots[slot] = { buffer->OffsetID(), frameIndex};
-}
-
-void FullscreenTexture::SetBufferAtSlot(const uint32_t descriptorIndex, const uint8_t slot, bool frameIndex)
-{
-	if (slot >= m_bufferSlots.size()) {
-		assert(slot >= m_bufferSlots.size(), "Given Buffer slot exceeds the number of defined slots!");
-	}
-	m_bufferSlots[slot] = { descriptorIndex, frameIndex };
-}
-
-void FullscreenTexture::ClearTexture(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper& rtvWrapper, const uint8_t frameIndex)
+void FullscreenTexture::ClearTexture(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper& heap, const uint8_t frameIndex)
 {
 	cmdList->RSSetViewports(1, &m_viewPort);
-	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle = rtvWrapper.GET_CPU_DESCRIPTOR(m_rtvOffsetID + frameIndex);
-	cmdList->ClearRenderTargetView(rtvHandle, &ClearColor[0], 0, nullptr);
-}
-
-void FullscreenTexture::RenderToTexture(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper& rtvWrapper, DescriptorHeapWrapper& cbvSrvWrapper, PSOHandler& psohandler, const uint8_t frameIndex)
-{
-	if(m_resourceState != D3D12_RESOURCE_STATE_DEPTH_WRITE)
-	{
-		cmdList->SetGraphicsRootSignature(psohandler.GetRootSignature(m_rs));
-		cmdList->SetPipelineState(psohandler.GetPipelineState(m_pso));
-
-		cmdList->RSSetViewports(1, &m_viewPort);
-
-		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle = rtvWrapper.GET_CPU_DESCRIPTOR((m_rtvOffsetID + frameIndex));
-		cmdList->OMSetRenderTargets(1, &rtvHandle, false, nullptr);
-
-		SetTextureAndBufferSlots(cmdList, cbvSrvWrapper, frameIndex);
-
-		cmdList->IASetVertexBuffers(0, 0, nullptr);
-		cmdList->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		cmdList->IASetIndexBuffer(nullptr);
-
-		cmdList->DrawInstanced(3, 1, 0, 0);
-	}
-	else {
-		std::wstring errorMessage = L"WARNING: Resource '" + m_resourceName + L"' is a depth texture so RenderToTexture needs to be overridden!";
-		OutputDebugString(errorMessage.c_str());
-	}
-}
-
-void FullscreenTexture::SetTextureAndBufferSlots(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper& cbvSrvWrapper, const uint8_t frameIndex)
-{
-	uint16_t currentSlot = 0;
-
-	for (size_t i = 0; i < m_bufferSlots.size(); i++)
-	{
-
-		if (m_bufferSlots[i].first != UINT32_MAX) {	
-			CD3DX12_GPU_DESCRIPTOR_HANDLE handle = cbvSrvWrapper.GET_GPU_DESCRIPTOR(m_bufferSlots[i].second ? m_bufferSlots[i].first + frameIndex : m_bufferSlots[i].first);
-			cmdList->SetGraphicsRootDescriptorTable(currentSlot, handle);
-		}
-		currentSlot++;
-	}
-
-	for (size_t i = 0; i < m_textureSlots.size(); i++)
-	{
-		if (m_textureSlots[i].first != UINT32_MAX) {
-			CD3DX12_GPU_DESCRIPTOR_HANDLE handle = cbvSrvWrapper.GET_GPU_DESCRIPTOR(m_textureSlots[i].second ? m_textureSlots[i].first + frameIndex : m_textureSlots[i].first);
-			cmdList->SetGraphicsRootDescriptorTable(currentSlot, handle);
-		}	
-		currentSlot++;
+	switch (m_resourceState) {
+	case D3D12_RESOURCE_STATE_DEPTH_WRITE:
+		CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle = heap.GET_CPU_DESCRIPTOR(m_dsvOffsetID + frameIndex);
+		cmdList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+		break;
+	case D3D12_RESOURCE_STATE_RENDER_TARGET:
+		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle = heap.GET_CPU_DESCRIPTOR(m_rtvOffsetID + frameIndex);
+		cmdList->ClearRenderTargetView(rtvHandle, &ClearColor[0], 0, nullptr);
+		break;
 	}
 }

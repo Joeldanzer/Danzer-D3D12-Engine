@@ -2,7 +2,8 @@
 #include "LightFunctionsHeader.hlsli"
 #include "DirectionalLightHeader.hlsli"
 
-float4 main(VertexToPixel input) : SV_TARGET
+
+LightOutput main(VertexToPixel input) : SV_TARGET
 {
     float4 color;
     
@@ -77,13 +78,15 @@ float4 main(VertexToPixel input) : SV_TARGET
 
     //radiance = lerp(radiance.rgb, newFogColor.rgb, fogAmount.rrr);
    
+    LightOutput output;
+    
     switch (CameraPosition.w)
     {
         case 0:
             color.rgb = radiance.rgb;    
             break;
         case 1:
-            color.rgb = radiance.rgb;
+            color.rgb = vl.rgb;
             break;
         case 2:
             color.rgb = normal.xyz;
@@ -112,6 +115,14 @@ float4 main(VertexToPixel input) : SV_TARGET
     }
     
     color.a = albedo.a;
-   
-	return color;
+    
+    output.m_sceneColor = color;
+    
+    float brightness = dot(radiance.rgb, float3(0.2126f, 0.7152f, 0.0722f));
+    if(brightness > 1.0f)
+        output.m_brightColor = float4(radiance.rgb, 1.0f);
+    else
+        output.m_brightColor = float4(0.0f, 0.0f, 0.0f, 0.0f);
+    
+	return output;
 }
