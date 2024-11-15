@@ -6,7 +6,7 @@ class BufferHandler;
 class SSAOData
 {
 public:
-	SSAOData() : m_textureOffset(UINT32_MAX), m_samplesBufferOffset(UINT32_MAX){}
+	SSAOData() : m_countBufferOffset(UINT32_MAX), m_textureOffset(UINT32_MAX), m_samplesBufferOffset(UINT32_MAX) {}
 	void GenerateRandomTexture(TextureHandler& textureHandler, BufferHandler& bufferHandler, const uint16_t numberOfSamples, const uint16_t noiseSize);
 
 	const uint32_t GetTextureOffset() {

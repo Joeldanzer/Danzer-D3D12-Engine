@@ -62,7 +62,7 @@ Game::Impl::Impl(Engine& engine) :
 	//Transform2D& transform = reg.emplace<Transform2D>(m_entity);
 	//Object& obj			   = reg.emplace<Object>(m_entity);
 	//Sprite& sprite		   = reg.emplace<Sprite>(m_entity);
-	//
+	
 	//obj.m_state = Object::STATE::ACTIVE;
 	//sprite.m_spriteSheet = engine.GetSpriteHandler().GetCreatedSpriteSheet("testSpriteSheet");
 	//transform.m_scale    = { 0.2f, 0.2f };
@@ -70,41 +70,42 @@ Game::Impl::Impl(Engine& engine) :
 
 	m_currentTime = m_time;
 	
-	//Transform& modelTransform = reg.emplace<Transform>(entity);
-	//modelTransform.m_scale	  = {1.0f, 1.0f, 1.0f};
-	//modelTransform.m_position = { 0.0f, 0.0f, 0.0f };
-	//modelTransform.m_rotation = Quat4f::CreateFromAxisAngle(Vect3f::Up, ToRadians(180.0f));
-	//Object& sponzaObj = reg.emplace<Object>(entity);
-	//sponzaObj.m_name = "Sponza Atrium";
+	entt::entity entity = reg.create();
+
+	Transform& modelTransform = reg.emplace<Transform>(entity);
+	modelTransform.m_scale	  = { 1.0f, 1.0f, 1.0f };
+	modelTransform.m_position = { 0.0f, 0.0f, 0.0f };
+	modelTransform.m_rotation = Quat4f::CreateFromAxisAngle(Vect3f::Up, ToRadians(180.0f));
+	GameEntity& sponzaObj = reg.emplace<GameEntity>(entity, entity);
+	sponzaObj.m_name = "Sponza Atrium";
 
 	//m_engine.GetModelHandler().LoadModelsToScene(reg, L"Models/BlenderSponzaAtriumNew.fbx");
 
-	//auto entity = reg.create();
-    //reg.emplace<Model>(entity, engine.GetModelHandler().LoadModel(L"Models/BlenderSponzaAtriumOld.fbx", "Sponza Atrium"));
+    reg.emplace<Model>(entity, engine.GetModelHandler().LoadModel(L"Models/BlenderSponzaAtriumOld.fbx", "Sponza Atrium"));
 	
 	//engine.GetSoundEngine().CreateSound("Sound/MetalPipe.wav", FMOD_DEFAULT, nullptr, &m_pipeSound);
-	pipeSound = engine.GetSoundEngine().LoadSound("Sound/MetalPipe.wav", false);
-
-	auto camEntt = engine.GetSceneManager().GetMainCamera();
-	engine.GetSoundEngine().CreateSoundListener(reg.emplace<SoundListener>(camEntt));
-
-	enttTest = &engine.GetSceneManager().CreateBasicEntity("Physics Sphere", false);
+	//pipeSound = engine.GetSoundEngine().LoadSound("Sound/MetalPipe.wav", false);
+	//
+	//auto camEntt = engine.GetSceneManager().GetMainCamera();
+	//engine.GetSoundEngine().CreateSoundListener(reg.emplace<SoundListener>(camEntt));
+	//
+	//enttTest = &engine.GetSceneManager().CreateBasicEntity("Physics Sphere", false);
 	//m_sphere = &reg.emplace<PhysicsBody>(enttTest->m_entity, engine.GetPhysicsHandler().CreatePhyscisSphere(*enttTest, 1.0f, EMotionType::Dynamic, EActivation::DontActivate, Layers::MOVING));
-	reg.emplace<SoundSource>(enttTest->m_entity);
+	//reg.emplace<SoundSource>(enttTest->m_entity);
 	//m_sphere->OnContactAdded = std::bind(&Game::Impl::OnSphereContact, this, std::placeholders::_1);
 
-	reg.emplace<Model>(enttTest->m_entity, engine.GetModelHandler().LoadModel(L"Models/sphere.fbx"));
-	Transform& sphereT = reg.get<Transform>(enttTest->m_entity);
-	sphereT.m_position = { 0.0f, 10.0f, 0.0f };
+	//reg.emplace<Model>(enttTest->m_entity, engine.GetModelHandler().LoadModel(L"Models/sphere.fbx"));
+	//Transform& sphereT = reg.get<Transform>(enttTest->m_entity);
+	//sphereT.m_position = { 0.0f, 10.0f, 0.0f };
 
 
-	GameEntity& staticbox = engine.GetSceneManager().CreateBasicEntity("Static Box", true);
-	reg.emplace<Model>(staticbox.m_entity, engine.GetModelHandler().LoadModel(L"Models/cube.fbx"));
+	//GameEntity& staticbox = engine.GetSceneManager().CreateBasicEntity("Static Box", true);
+	//reg.emplace<Model>(staticbox.m_entity, engine.GetModelHandler().LoadModel(L"Models/cube.fbx"));
 	//reg.emplace<PhysicsBody>(staticbox.m_entity, engine.GetPhysicsHandler().CreatePhysicsBox(staticbox, {20.0f, 0.2f, 20.0f}, EMotionType::Static, EActivation::Activate, Layers::NON_MOVING));
 
-	Transform& boxT = reg.get<Transform>(staticbox.m_entity);
-	boxT.m_scale = { 20.0f, 0.2f, 20.0f };
-	boxT.m_rotation = Quat4f::CreateFromAxisAngle(Vect3f::Right, ToRadians(0.0f));
+	//Transform& boxT = reg.get<Transform>(staticbox.m_entity);
+	//boxT.m_scale = { 20.0f, 0.2f, 20.0f };
+	//boxT.m_rotation = Quat4f::CreateFromAxisAngle(Vect3f::Right, ToRadians(0.0f));
 	//auto waterPlane = engine.GetSceneManager().GetCurrentScene().CreateBasicEntity("WaterPlane");
 	//Model waterModel = reg.emplace<Model>(waterPlane, engine.GetModelHandler().LoadModel(L"Models/WaterPlane.fbx", "Water Plane"));
 	//std::vector<UINT> textures = {

@@ -17,7 +17,7 @@ GBufferOutput main(VertexToPixel input)
 	GBufferOutput output;
     float4 baseColor       = float4(MaterialColor.rgb, 1.f);
     output.m_Albedo		   = albedoTexture.Sample(defaultSampler, input.m_uv);	
-    output.m_Normal.rgb    = GetNormal(input).rgb;
+    output.m_Normal.rgb    = normalize(GetNormal(input).rgb);
     output.m_Normal.w	   = GetEmissive(input);
     output.m_Material      = float4(GetMetallic(input), GetRoughness(input), GetHeight(input), GetAmbientOcclusion(input));
     output.m_VertexNormal  = float4(input.m_normal.xyz, 1.f);

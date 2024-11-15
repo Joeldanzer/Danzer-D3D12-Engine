@@ -51,11 +51,10 @@ class TextureRenderingHandler
 public:
 	TextureRenderingHandler(D3D12Framework& framework, PSOHandler& psoHandler);
 	~TextureRenderingHandler();
-	//void AddToRenderPass(FullscreenTexture* texture, RENDER_PASS pass); // Add already existing FullscreenTexture to render pass
+
 	FullscreenTexture* CreateFullscreenTexture(
 		const uint16_t		 width, 
 		const uint16_t		 height,
-		DXGI_FORMAT			 textureDesc,
 		DXGI_FORMAT			 srvFormat,
 		std::wstring		 textureName,
 		RENDER_PASS			 transitionPoint,

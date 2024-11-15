@@ -257,6 +257,8 @@ void RenderManager::Impl::InitializeRenderTextures(TextureHandler& textureHandle
 	m_lightBuffer     = m_bufferHandler.CreateBufferData(sizeof(LightBuffer));
 	m_shadowMapBuffer = m_bufferHandler.CreateBufferData((sizeof(Mat4f)* 2) + sizeof(Vect4f));
 
+	m_textureRendering.SetCommonBuffers(m_cameraBuffer->OffsetID(), m_lightBuffer->OffsetID());
+
 	m_skyboxRenderer = new Skybox(modelHandler);
 	m_skyboxRenderer->Initialize(m_psoHandler, textureHandler);
 	m_skyboxRenderer->SetBufferAtSlot(m_cameraBuffer, 0);
@@ -270,7 +272,6 @@ void RenderManager::Impl::InitializeRenderTextures(TextureHandler& textureHandle
 	FullscreenTexture* shadowMapTexture = m_textureRendering.CreateFullscreenTexture(
 		8192,
 		8192,
-		DXGI_FORMAT_R32_TYPELESS,
 		DXGI_FORMAT_R32_FLOAT,
 		L"Shadow Map Texture",
 		PRE_SCENE_PASS_0,
@@ -292,7 +293,6 @@ void RenderManager::Impl::InitializeRenderTextures(TextureHandler& textureHandle
 	FullscreenTexture* ssaoTexture = m_textureRendering.CreateFullscreenTexture(
 		WindowHandler::WindowData().m_w,
 		WindowHandler::WindowData().m_h,
-		DXGI_FORMAT_R8_UNORM,
 		DXGI_FORMAT_R8_UNORM,
 		L"SSAO Texture",
 		PRE_SCENE_PASS_0
@@ -322,7 +322,6 @@ void RenderManager::Impl::InitializeRenderTextures(TextureHandler& textureHandle
 		WindowHandler::WindowData().m_w,
 		WindowHandler::WindowData().m_h,
 		DXGI_FORMAT_R8G8B8A8_UNORM,
-		DXGI_FORMAT_R8G8B8A8_UNORM,
 		L"Volumetric Light Texture",
 		PRE_SCENE_PASS_1
 	);
@@ -349,9 +348,8 @@ void RenderManager::Impl::InitializeRenderTextures(TextureHandler& textureHandle
 		WindowHandler::WindowData().m_w,
 		WindowHandler::WindowData().m_h,
 		DXGI_FORMAT_R8_UNORM,
-		DXGI_FORMAT_R8_UNORM,
 		L"SSAO Blur Texture",
-		PRE_SCENE_PASS_1
+		PRE_SCENE_PASS_2
 	);
 	TextureRenderer* ssaoBlurRenderer = m_textureRendering.CreateTextureRenderer(
 		textureData,
@@ -372,15 +370,13 @@ void RenderManager::Impl::InitializeRenderTextures(TextureHandler& textureHandle
 		WindowHandler::WindowData().m_w,
 		WindowHandler::WindowData().m_h,
 		DXGI_FORMAT_R8G8B8A8_UNORM,
-		DXGI_FORMAT_R8G8B8A8_UNORM,
 		L"Scene Light Texture",
 		SCENE_PASS_2
 	);
-	m_textureRendering.m_lastRenderedTexture = dirLightTexture;
+	//m_textureRendering.m_lastRenderedTexture = dirLightTexture;
 	FullscreenTexture* hdrBlurTexture = m_textureRendering.CreateFullscreenTexture(
 		WindowHandler::WindowData().m_w,
 		WindowHandler::WindowData().m_h,
-		DXGI_FORMAT_R8G8B8A8_UNORM,
 		DXGI_FORMAT_R8G8B8A8_UNORM,
 		L"HDR Blur Texture",
 		SCENE_PASS_2
@@ -389,19 +385,19 @@ void RenderManager::Impl::InitializeRenderTextures(TextureHandler& textureHandle
 		textureData,
 		2,
 		11,
-		L"Directional Light Render Texture",
+		L"Directional Light Renderer",
 		SCENE_PASS_0
 	);
 
 	dirLightRenderer->SetRenderTargetAtSlot(dirLightTexture, 0);
 	dirLightRenderer->SetRenderTargetAtSlot(hdrBlurTexture,  1);
-	dirLightRenderer->SetTextureAtSlot(m_gBuffer.GetSRVOffset(GBUFFER_ALBEDO), 0, false);
-	dirLightRenderer->SetTextureAtSlot(m_gBuffer.GetSRVOffset(GBUFFER_NORMAL), 1, false);
-	dirLightRenderer->SetTextureAtSlot(m_gBuffer.GetSRVOffset(GBUFFER_MATERIAL), 2, false);
-	dirLightRenderer->SetTextureAtSlot(m_gBuffer.GetSRVOffset(GBUFFER_VERTEX_COLOR), 3, false);
-	dirLightRenderer->SetTextureAtSlot(m_gBuffer.GetSRVOffset(GBUFFER_VERTEX_NORMAL), 4, false);
+	dirLightRenderer->SetTextureAtSlot(m_gBuffer.GetSRVOffset(GBUFFER_ALBEDO),		   0, false);
+	dirLightRenderer->SetTextureAtSlot(m_gBuffer.GetSRVOffset(GBUFFER_NORMAL),		   1, false);
+	dirLightRenderer->SetTextureAtSlot(m_gBuffer.GetSRVOffset(GBUFFER_MATERIAL),	   2, false);
+	dirLightRenderer->SetTextureAtSlot(m_gBuffer.GetSRVOffset(GBUFFER_VERTEX_COLOR),   3, false);
+	dirLightRenderer->SetTextureAtSlot(m_gBuffer.GetSRVOffset(GBUFFER_VERTEX_NORMAL),  4, false);
 	dirLightRenderer->SetTextureAtSlot(m_gBuffer.GetSRVOffset(GBUFFER_WORLD_POSITION), 5, false);
-	dirLightRenderer->SetTextureAtSlot(m_gBuffer.GetSRVOffset(GBUFFER_DEPTH), 6, false);
+	dirLightRenderer->SetTextureAtSlot(m_gBuffer.GetSRVOffset(GBUFFER_DEPTH),		   6, false);
 	dirLightRenderer->SetTextureAtSlot(textureHandler.GetTextureData(m_skyboxRenderer->TextureID()).m_offsetID, 7, false);
 	dirLightRenderer->SetTextureAtSlot(shadowMapTexture,  8);
 	dirLightRenderer->SetTextureAtSlot(ssaoBlurTexture,   9);
@@ -411,6 +407,44 @@ void RenderManager::Impl::InitializeRenderTextures(TextureHandler& textureHandle
 	dirLightRenderer->SetBufferAtSlot(m_lightBuffer->OffsetID(),  1);
 
 	m_skyboxRenderer->SetRenderTargetAtSlot(dirLightTexture, 0);
+
+	FullscreenTexture* bloomBlurTexture = m_textureRendering.CreateFullscreenTexture(
+		WindowHandler::WindowData().m_w,
+		WindowHandler::WindowData().m_h,
+		DXGI_FORMAT_R8G8B8A8_UNORM,
+		L"Bloom Blur Texture",
+		POST_PROCESS_0
+	);
+	textureData.m_pixelShader = L"Shaders/BloomBlurPS.cso";
+	textureData.m_format = { DXGI_FORMAT_R8G8B8A8_UNORM };
+	TextureRenderer* bloomBlurRenderer = m_textureRendering.CreateTextureRenderer(
+		textureData,
+		0,
+		1,
+		L"Bloom Blur Renderer",
+		POST_PROCESS_0
+	);
+	bloomBlurRenderer->SetRenderTargetAtSlot(bloomBlurTexture, 0);
+	bloomBlurRenderer->SetTextureAtSlot(hdrBlurTexture,  0);
+	
+	FullscreenTexture* bloomTexture = m_textureRendering.CreateFullscreenTexture(
+		WindowHandler::WindowData().m_w,
+		WindowHandler::WindowData().m_h,
+		DXGI_FORMAT_R8G8B8A8_UNORM,
+		L"Bloom Texture",
+		POST_PROCESS_1
+	);
+	textureData.m_pixelShader = L"Shaders/BloomPS.cso";
+	TextureRenderer* bloomRenderer = m_textureRendering.CreateTextureRenderer(
+		textureData,
+		0,
+		2,
+		L"Bloom  Renderer",
+		POST_PROCESS_1
+	);
+	bloomRenderer->SetRenderTargetAtSlot(bloomTexture, 0);
+	bloomRenderer->SetTextureAtSlot(dirLightTexture,   0);
+	bloomRenderer->SetTextureAtSlot(bloomBlurTexture,  1);
 }
 
 void RenderManager::Impl::RenderImgui()

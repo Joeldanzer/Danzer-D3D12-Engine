@@ -7,6 +7,8 @@
 TextureRenderingHandler::TextureRenderingHandler(D3D12Framework& framework, PSOHandler& psoHandler) :
 	m_psoHandler(psoHandler),
 	m_framework(framework),
+	m_defaultBufferOffset(UINT32_MAX),
+	m_lightBufferOffset(UINT32_MAX),
 	m_frameIndex(0)
 {
 	for (uint8_t i = PRE_SCENE_PASS_0; i < RENDER_PASS_COUNT; i++)
@@ -27,7 +29,7 @@ TextureRenderingHandler::~TextureRenderingHandler()
 	}
 }
 
-FullscreenTexture* TextureRenderingHandler::CreateFullscreenTexture(const uint16_t width, const uint16_t height, DXGI_FORMAT textureDesc, DXGI_FORMAT srvFormat, std::wstring textureName, RENDER_PASS transitionPoint, bool depthTexture)
+FullscreenTexture* TextureRenderingHandler::CreateFullscreenTexture(const uint16_t width, const uint16_t height, DXGI_FORMAT srvFormat, std::wstring textureName, RENDER_PASS transitionPoint, bool depthTexture)
 {
 	FullscreenTexture* texture = m_textureList[transitionPoint].emplace_back(new FullscreenTexture());
 	//m_textureMap.emplace(textureName, m_textureList.size() - 1);
@@ -39,7 +41,7 @@ FullscreenTexture* TextureRenderingHandler::CreateFullscreenTexture(const uint16
 			&m_framework.RTVHeap(),
 			width,
 			height,
-			textureDesc,
+			srvFormat,
 			srvFormat,
 			D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET,
 			textureName
@@ -52,7 +54,7 @@ FullscreenTexture* TextureRenderingHandler::CreateFullscreenTexture(const uint16
 			&m_framework.DSVHeap(),
 			width,
 			height,
-			textureDesc,
+			DXGI_FORMAT_R32_TYPELESS,
 			srvFormat,
 			D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL,
 			textureName
@@ -194,7 +196,7 @@ void TextureRenderingHandler::RenderPass(RENDER_PASS from, RENDER_PASS to, ID3D1
 		for (uint32_t j = 0; j < m_textureList[i].size(); j++)
 		{
 			m_framework.QeueuResourceTransition(m_textureList[i][j]->GetResource(m_frameIndex), m_textureList[i][j]->GetRenderingResourceState(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-			//m_lastRenderedTexture = m_textureList[i][j];
+			m_lastRenderedTexture = m_textureList[i][j];
 		}
 		m_framework.TransitionAllResources();
 	}

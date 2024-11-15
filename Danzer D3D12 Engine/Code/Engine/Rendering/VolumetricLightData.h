@@ -31,6 +31,5 @@ private:
 	} m_data;
 
 	ConstantBufferData* m_constantBuffer;
-
 };
 
