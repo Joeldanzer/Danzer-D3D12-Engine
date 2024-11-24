@@ -23,7 +23,7 @@ enum RENDER_PASS : uint8_t {
 	RENDER_PASS_COUNT
 };
 
-// Default FullscreenTexture pipeline data, used for easily getting started.
+// Default FullscreenRenderer pipeline data
 struct TexturePipelineData {
 	std::wstring m_vertexShader			= L"Shaders/FullscreenVS.cso";
 	std::wstring m_pixelShader;
@@ -52,6 +52,7 @@ public:
 	TextureRenderingHandler(D3D12Framework& framework, PSOHandler& psoHandler);
 	~TextureRenderingHandler();
 
+	// Creates a new FullscreenTexture and adds it directly to the pipeline
 	FullscreenTexture* CreateFullscreenTexture(
 		const uint16_t		 width, 
 		const uint16_t		 height,
@@ -61,6 +62,7 @@ public:
 		bool				 depthTexture = false
 	);
 
+	// Creates a new TextureRenderer and adds it directly to the pipeline
 	TextureRenderer* CreateTextureRenderer(
 		TexturePipelineData data,
 		const uint8_t	    numberOfBuffers,
@@ -69,6 +71,7 @@ public:
 		RENDER_PASS			renderPass,
 		bool				renderAsDepth = false
 	);
+	// Creates a new TextureRenderer and adds it directly to the pipeline
 	TextureRenderer* CreateTextureRenderer(
 		std::wstring			   vertexShader,
 		std::wstring			   pixelShader,
@@ -90,7 +93,9 @@ public:
 		bool					   renderAsDepth = false
 	);
 
+	// Adds a pre-existing FullscreenTexture to the pipeline and specified point
 	void AddFullscreenTextureToPipeline(FullscreenTexture* fullscreenTexture, RENDER_PASS transitionPoint);
+	// Adds a pre-existing TextureRenderer to the pipeline and specified point
 	void AddTextureRendererToPipeline(TextureRenderer* fullscreenTexture, RENDER_PASS renderPass);
 
 	const uint32_t DefaultBuffer()      { return m_defaultBufferOffset; }
@@ -103,8 +108,6 @@ private:
 	void TransitionResourceForRendering();
 
 	FullscreenTexture* FetchLastRenderedTexture();
-	void SetPSOHandler(PSOHandler* psoHandler);
-	void SetCurrentFrameindex(const uint8_t index) { m_frameIndex = index; }
 	void RenderPass(RENDER_PASS from, RENDER_PASS to, ID3D12GraphicsCommandList* cmdList);
 
 	void SetCommonBuffers(const uint32_t defaultBuffer, const uint32_t lightBuffer);

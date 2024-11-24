@@ -32,18 +32,18 @@ public:
 		const UINT height,
 		DXGI_FORMAT textureDesc,
 		DXGI_FORMAT srvFormat,
-		D3D12_RESOURCE_FLAGS flag,
+		D3D12_RESOURCE_FLAGS resourceFlag,
 		std::wstring name
 	);
 	void InitAsTexture(
 		ID3D12Device* device,
 		DescriptorHeapWrapper* cbvSrvHeap,
 		DescriptorHeapWrapper* rtvHeap,
-		const UINT width,
-		const UINT height,
-		DXGI_FORMAT textureDesc,
-		DXGI_FORMAT srvFormat,
-		D3D12_RESOURCE_FLAGS flag,
+		const UINT width,				   // Width of texture
+		const UINT height,				   // Height of texture
+		DXGI_FORMAT textureDesc,		   // The format of the textures description 
+		DXGI_FORMAT srvFormat,			   // Format of the Shader Resource View, should be the same as textureDesc
+		D3D12_RESOURCE_FLAGS resourceFlag, // Specified flags for the Texture
 		std::wstring name
 	);
 
@@ -55,27 +55,24 @@ public:
 	const D3D12_RESOURCE_STATES GetRenderingResourceState() {
 		return m_resourceState;
 	}
-	const UINT SRVOffsetID() {
+	UINT SRVOffsetID() const {
 		return m_srvOffsetID;
 	}
-	const UINT DSVOffsetID() {
+	UINT DSVOffsetID() const {
 		return m_dsvOffsetID;
 	}
-	const UINT RTVOffsetID() {
+	UINT RTVOffsetID() const {
 		return m_rtvOffsetID;
 	}
 
 protected:
 	friend class TextureRenderingHandler;
 
-	bool m_renderTexture = true;
+	uint32_t			   m_rtvOffsetID = UINT32_MAX;
+	uint32_t			   m_dsvOffsetID = UINT32_MAX;
+	uint32_t			   m_srvOffsetID = UINT32_MAX;
 
-	uint32_t m_dsvOffsetID;
-	uint32_t m_srvOffsetID; 
-	uint32_t m_rtvOffsetID;
-
-	D3D12_VIEWPORT m_viewPort;
-
+	D3D12_VIEWPORT	       m_viewPort;
 	std::wstring		   m_resourceName = L"";
 	D3D12_RESOURCE_STATES  m_resourceState; // Keep track of what kind of a resource this texture is, used for clearing and transitioning the resource.
 	ComPtr<ID3D12Resource> m_resource[FrameCount];

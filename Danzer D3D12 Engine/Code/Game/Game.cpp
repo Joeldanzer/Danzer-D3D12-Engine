@@ -81,7 +81,7 @@ Game::Impl::Impl(Engine& engine) :
 
 	//m_engine.GetModelHandler().LoadModelsToScene(reg, L"Models/BlenderSponzaAtriumNew.fbx");
 
-    reg.emplace<Model>(entity, engine.GetModelHandler().LoadModel(L"Models/BlenderSponzaAtriumOld.fbx", "Sponza Atrium"));
+    reg.emplace<Model>(entity, engine.GetModelHandler().LoadModel(L"Models/BlenderSponzaAtriumNew.fbx", "Sponza Atrium"));
 	
 	//engine.GetSoundEngine().CreateSound("Sound/MetalPipe.wav", FMOD_DEFAULT, nullptr, &m_pipeSound);
 	//pipeSound = engine.GetSoundEngine().LoadSound("Sound/MetalPipe.wav", false);

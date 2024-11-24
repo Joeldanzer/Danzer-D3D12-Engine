@@ -24,7 +24,7 @@ LightOutput main(VertexToPixel input) : SV_TARGET
     //normal.rgb = normalize(normal.rgb * 2.0f - 1.0f);
     
     float emissiveData = normal.w;
-    float metallic     = material.r * 2.0f;
+    float metallic     = material.r * 1.5f;
     float roughness    = material.g;
     float height       = material.b;
     float ao           = material.w;

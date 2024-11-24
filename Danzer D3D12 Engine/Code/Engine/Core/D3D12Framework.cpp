@@ -79,9 +79,9 @@ D3D12Framework::D3D12Framework() :
 		m_rtvHeap.CreateDescriptorHeap(m_device.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_RTV, FrameCount + GBUFFER_COUNT + MAX_NUMBER_OF_RTV, false);
 		
 		// DepthStencil and ShadowMapping
-		m_dsvHeap.CreateDescriptorHeap(m_device.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1 + FrameCount + 1, false);
+		m_dsvHeap.CreateDescriptorHeap(m_device.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1 + FrameCount + MAX_NUMBER_OF_DEPTH_STENCIL, false);
 		
-		// CBV, SRV and UAV heap. Used for everything that active in current scene. 
+		// CBV, SRV and UAV heap. Used for almost everything. 
 		m_cbvSrvHeap.CreateDescriptorHeap(m_device.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, MAX_NUMBER_OF_DESCTRIPTORS, true);
 	}
 
@@ -262,7 +262,7 @@ void D3D12Framework::SetBackBufferPSO(PSOHandler& psoHandler)
 		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
 		D3D12_ROOT_SIGNATURE_FLAG_DENY_VERTEX_SHADER_ROOT_ACCESS     |
 		D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS       |
-		D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS;
+		D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS;  
 	m_backBufferRS = psoHandler.CreateRootSignature(
 		0,
 		1,

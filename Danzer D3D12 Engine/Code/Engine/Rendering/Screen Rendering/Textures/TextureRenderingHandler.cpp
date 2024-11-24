@@ -11,6 +11,7 @@ TextureRenderingHandler::TextureRenderingHandler(D3D12Framework& framework, PSOH
 	m_lightBufferOffset(UINT32_MAX),
 	m_frameIndex(0)
 {
+	// Reserve some slots so adding to the pipeline goes faster. 
 	for (uint8_t i = PRE_SCENE_PASS_0; i < RENDER_PASS_COUNT; i++)
 	{
 		m_renderList[i].reserve(16);
@@ -19,20 +20,21 @@ TextureRenderingHandler::TextureRenderingHandler(D3D12Framework& framework, PSOH
 
 TextureRenderingHandler::~TextureRenderingHandler()
 {
+	m_lastRenderedTexture = nullptr;
+
 	for (uint8_t i = 0; i < RENDER_PASS_COUNT; i++)
-	{
+	{	
 		for (uint16_t j = 0; j < m_renderList[i].size(); j++)
 		{
 			delete m_renderList[i][j];
-			m_renderList[i][j] = nullptr;
 		}
+		m_renderList[i].clear();
 	}
 }
 
 FullscreenTexture* TextureRenderingHandler::CreateFullscreenTexture(const uint16_t width, const uint16_t height, DXGI_FORMAT srvFormat, std::wstring textureName, RENDER_PASS transitionPoint, bool depthTexture)
 {
 	FullscreenTexture* texture = m_textureList[transitionPoint].emplace_back(new FullscreenTexture());
-	//m_textureMap.emplace(textureName, m_textureList.size() - 1);
 
 	if (!depthTexture) {
 		texture->InitAsTexture(
@@ -122,16 +124,23 @@ TextureRenderer* TextureRenderingHandler::CreateTextureRenderer(std::wstring ver
 
 void TextureRenderingHandler::AddFullscreenTextureToPipeline(FullscreenTexture* fullscreenTexture, RENDER_PASS transitionPoint)
 {
-	if (fullscreenTexture && transitionPoint != RENDER_PASS_COUNT) {
-		m_textureList[transitionPoint].emplace_back(fullscreenTexture);
-		//m_textureMap.emplace(fullscreenTexture->m_resourceName, m_textureList.size() - 1);
-	}
+	if (fullscreenTexture && transitionPoint != RENDER_PASS_COUNT) 
+		m_textureList[transitionPoint].emplace_back(fullscreenTexture);	
 }
-
 void TextureRenderingHandler::AddTextureRendererToPipeline(TextureRenderer* fullscreenTexture, RENDER_PASS renderPass)
 {
 	if(fullscreenTexture && renderPass != RENDER_PASS_COUNT)
-		m_renderList[renderPass].push_back(fullscreenTexture);
+		m_renderList[renderPass].emplace_back(fullscreenTexture);
+}
+
+void TextureRenderingHandler::TransitionResourceForRendering()
+{
+	m_frameIndex = m_framework.GetFrameIndex();
+	for (uint8_t i = 0; i < m_textureList.size(); i++)
+	{
+		for (uint32_t j = 0; j < m_textureList[i].size(); j++)
+			m_framework.QeueuResourceTransition(m_textureList[i][j]->GetResource(m_frameIndex), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, m_textureList[i][j]->GetRenderingResourceState());
+	}
 }
 
 void TextureRenderingHandler::ClearAllTextures(ID3D12GraphicsCommandList* cmdList)
@@ -152,24 +161,10 @@ void TextureRenderingHandler::ClearAllTextures(ID3D12GraphicsCommandList* cmdLis
 	}
 }
 
-void TextureRenderingHandler::TransitionResourceForRendering()
-{
-	m_frameIndex = m_framework.GetFrameIndex();
-	for (uint8_t i = 0; i < m_textureList.size(); i++)
-	{
-		for (uint32_t j = 0; j < m_textureList[i].size(); j++)
-			m_framework.QeueuResourceTransition(m_textureList[i][j]->GetResource(m_frameIndex), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, m_textureList[i][j]->GetRenderingResourceState());
-	}
-}
 
 FullscreenTexture* TextureRenderingHandler::FetchLastRenderedTexture()
 {
 	return m_lastRenderedTexture;
-}
-
-void TextureRenderingHandler::SetPSOHandler(PSOHandler* psoHandler)
-{
-	//m_psoHandler = psoHandler;
 }
 
 void TextureRenderingHandler::RenderPass(RENDER_PASS from, RENDER_PASS to, ID3D12GraphicsCommandList* cmdList)

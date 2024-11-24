@@ -15,8 +15,6 @@ class TextureRenderer
 {
 public:
 	TextureRenderer() :
-		m_pso(UINT32_MAX),
-		m_rs(UINT32_MAX),
 		m_viewPort({})
 	{};
 
@@ -28,7 +26,7 @@ public:
 		bool					   useDepth,
 		D3D12_DEPTH_STENCIL_DESC   depthDesc,
 		DXGI_FORMAT				   depthFormat,
-		std::vector<DXGI_FORMAT>   formats,
+		std::vector<DXGI_FORMAT>   formats, 
 		const uint8_t			   blendDesc,
 		const uint8_t			   rastDesc,
 		const uint8_t			   samplerDesc,
@@ -41,24 +39,24 @@ public:
 		bool					   renderAsDepth = false
 	);
 
+	void SetTextureAtSlot(const FullscreenTexture* texture,	 const uint8_t slot, bool useRenderIndex = true);
+	void SetTextureAtSlot(const Texture* texture,		     const uint8_t slot, bool useRenderIndex = true);
+	void SetTextureAtSlot(const uint32_t srvHeapIndex,	     const uint8_t slot, bool useRenderIndex = true);
+														    
+	void SetBufferAtSlot(const ConstantBufferData* buffer,	const uint8_t slot, bool useRenderIndex = true);
+	void SetBufferAtSlot(const uint32_t cbvHeapIndex,	    const uint8_t slot, bool useRenderIndex = true);
+
+	void SetRenderTargetAtSlot(const FullscreenTexture* texture,  const uint8_t slot, bool useRenderIndex = true);
+	void SetRenderTargetAtSlot(const uint32_t rtvHeapIndex,		  const uint8_t slot, bool useRenderIndex = true);
+
+	void SetDepthStencilView(const uint32_t dsvHeapIndex);
+
 	const uint32_t GetPSO() {
 		return m_pso;
 	}
 	const uint32_t GetRootSignature() {
 		return m_rs;
 	}
-
-	void SetTextureAtSlot(FullscreenTexture* texture,  const uint8_t slot, bool useRenderIndex = true);
-	void SetTextureAtSlot(const Texture* texture,	   const uint8_t slot, bool useRenderIndex = true);
-	void SetTextureAtSlot(const uint32_t srvHeapIndex, const uint8_t slot, bool useRenderIndex = true);
-
-	void SetBufferAtSlot(ConstantBufferData* buffer,  const uint8_t slot, bool useRenderIndex = true);
-	void SetBufferAtSlot(const uint32_t cbvHeapIndex, const uint8_t slot, bool useRenderIndex = true);
-
-	void SetRenderTargetAtSlot(FullscreenTexture* texture,  const uint8_t slot, bool useRenderIndex = true);
-	void SetRenderTargetAtSlot(const uint32_t rtvHeapIndex, const uint8_t slot, bool useRenderIndex = true);
-
-	void SetDepthStencilView(const uint32_t dsvHeapIndex);
 
 protected:
 	friend class TextureRenderingHandler;
@@ -67,18 +65,18 @@ protected:
 	void PreparePipelineAndRootSignature(ID3D12GraphicsCommandList* cmdList, PSOHandler& psoHandler);
 	void SetTextureAndBufferSlots(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper& cbvSrvHeap, const uint8_t frameIndex);
 
-	std::vector<std::pair<uint32_t, bool>> m_textureSlots;
+	std::vector<std::pair<uint32_t, bool>> m_textureSlots; // DescriptorHeap offset indicies with FrameIndex check at specified slot 
 	std::vector<std::pair<uint32_t, bool>> m_bufferSlots;
 	std::vector<std::pair<uint32_t, bool>> m_rtvSlots;
-	uint32_t							   m_dsvHeapIndex = UINT32_MAX;
 
-	std::wstring m_rendererName = L"";
+	uint32_t							   m_dsvHeapIndex = UINT32_MAX; // TODO: Implement so that TextureRenderers can draw to Depth
+	uint32_t							   m_pso		  = UINT32_MAX;
+	uint32_t							   m_rs			  = UINT32_MAX;
 
-	D3D12_VIEWPORT m_viewPort;
+	std::wstring						   m_rendererName = L"";
 
-	uint32_t m_pso;
-	uint32_t m_rs;
-
-	bool m_renderAsDepth = false;
+	D3D12_VIEWPORT						   m_viewPort;
+	
+	bool								   m_renderAsDepth = false;
 };
 

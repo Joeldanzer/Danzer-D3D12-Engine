@@ -17,7 +17,7 @@ public:
 	void IntializeBuffer(ID3D12Device* device, DescriptorHeapWrapper* cbvWrapper, const UINT sizeOfData);
 	void UpdateBufferToGPU(const UINT frameIndex);
 
-	const uint32_t OffsetID() {
+	uint32_t OffsetID() const {
 		return m_offsetID;
 	}
 	

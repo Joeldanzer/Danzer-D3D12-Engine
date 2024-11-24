@@ -10,7 +10,14 @@
 void TextureRenderer::InitializeRenderer(std::wstring vertexShader, std::wstring pixelShader, const uint16_t viewportWidth, const uint16_t viewportHeight, bool useDepth, D3D12_DEPTH_STENCIL_DESC depthDesc, DXGI_FORMAT depthFormat, std::vector<DXGI_FORMAT> formats, const uint8_t blendDesc, const uint8_t rastDesc, const uint8_t samplerDesc, D3D12_ROOT_SIGNATURE_FLAGS flags, const uint8_t numberOfBuffers, const uint8_t numberOfTextures, const uint8_t inputLayout, std::wstring name, PSOHandler& psoHandler, bool renderAsDepth)
 {
 	depthDesc.DepthEnable = useDepth;
-	m_rs = psoHandler.CreateRootSignature(numberOfBuffers, numberOfTextures, static_cast<PSOHandler::SAMPLER_DESCS>(samplerDesc), flags, name + L" Root Signature");
+	
+	m_rs = psoHandler.CreateRootSignature(
+		numberOfBuffers, 
+		numberOfTextures, 
+		static_cast<PSOHandler::SAMPLER_DESCS>(samplerDesc), 
+		flags, 
+		name + L" Root Signature"
+	);
 	m_pso = psoHandler.CreatePSO(
 		{ vertexShader, pixelShader },
 		static_cast<PSOHandler::BLEND_DESC>(blendDesc),
@@ -23,7 +30,8 @@ void TextureRenderer::InitializeRenderer(std::wstring vertexShader, std::wstring
 		static_cast<PSOHandler::INPUT_LAYOUTS>(inputLayout),
 		name + L" PSO"
 	);
-
+	
+	// Fill up slots
 	for (uint32_t i = 0; i < numberOfTextures; i++)
 		m_textureSlots.push_back({ UINT32_MAX, true });
 
@@ -35,7 +43,7 @@ void TextureRenderer::InitializeRenderer(std::wstring vertexShader, std::wstring
 
 	m_rendererName  = name;
 	m_renderAsDepth = renderAsDepth;
-	m_viewPort = CD3DX12_VIEWPORT(0.0f, 0.0f, FLOAT(viewportWidth), FLOAT(viewportHeight));
+	m_viewPort      = CD3DX12_VIEWPORT(0.0f, 0.0f, FLOAT(viewportWidth), FLOAT(viewportHeight));
 }
 
 void TextureRenderer::RenderToTexture(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper& heap, DescriptorHeapWrapper& cbvSrvHeap, const uint8_t frameIndex)
@@ -72,13 +80,13 @@ void TextureRenderer::PreparePipelineAndRootSignature(ID3D12GraphicsCommandList*
 
 void TextureRenderer::SetTextureAndBufferSlots(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper& cbvSrvHeap, const uint8_t frameIndex)
 {
-	uint16_t currentSlot = 0;
+	uint8_t currentSlot = 0;
 
 	for (size_t i = 0; i < m_bufferSlots.size(); i++)
 	{
 		if (m_bufferSlots[i].first != UINT32_MAX) {
 			CD3DX12_GPU_DESCRIPTOR_HANDLE handle = cbvSrvHeap.GET_GPU_DESCRIPTOR(m_bufferSlots[i].second ? m_bufferSlots[i].first + frameIndex : m_bufferSlots[i].first);
-			cmdList->SetGraphicsRootDescriptorTable(currentSlot, handle);
+			cmdList->SetGraphicsRootDescriptorTables(currentSlot, handle);
 		}
 		currentSlot++;
 	}
@@ -93,11 +101,11 @@ void TextureRenderer::SetTextureAndBufferSlots(ID3D12GraphicsCommandList* cmdLis
 	}
 }
 
-void TextureRenderer::SetTextureAtSlot(FullscreenTexture* texture, const uint8_t slot, bool useRenderIndex)
+void TextureRenderer::SetTextureAtSlot(const FullscreenTexture* texture, const uint8_t slot, bool useRenderIndex)
 {
 	if (slot >= m_textureSlots.size()) {
 #ifdef DEBUG
-		assert(slot >= m_textureSlots.size(), "Given Texture slot exceeds the number of defined slots!");
+		assert(slot < m_textureSlots.size(), "Given Texture slot exceeds the number of defined slots!");
 #endif
 		return;
 	}
@@ -108,7 +116,7 @@ void TextureRenderer::SetTextureAtSlot(const Texture* texture, const uint8_t slo
 {
 	if (slot >= m_textureSlots.size()) {
 #ifdef DEBUG
-		assert(slot >= m_textureSlots.size(), "Given Texture slot exceeds the number of defined slots!");
+		assert(slot < m_textureSlots.size(), "Given Texture slot exceeds the number of defined slots!");
 #endif
 		return;
 	}
@@ -119,18 +127,18 @@ void TextureRenderer::SetTextureAtSlot(const uint32_t srvHeapIndex, const uint8_
 {
 	if (slot >= m_textureSlots.size()) {
 #ifdef DEBUG
-		assert(slot >= m_textureSlots.size(), "Given Texture slot exceeds the number of defined slots!");
+		assert(slot < m_textureSlots.size(), "Given Texture slot exceeds the number of defined slots!");
 #endif
 		return;
 	}
 	m_textureSlots[slot] = { srvHeapIndex, useRenderIndex };
 }
 
-void TextureRenderer::SetBufferAtSlot(ConstantBufferData* buffer, const uint8_t slot, bool useRenderIndex)
+void TextureRenderer::SetBufferAtSlot(const ConstantBufferData* buffer, const uint8_t slot, bool useRenderIndex)
 {
 	if (slot >= m_bufferSlots.size()) {
 #ifdef DEBUG
-		assert(slot >= m_bufferSlots.size(), "Given Buffer slot exceeds the number of defined slots!");
+		assert(slot < m_bufferSlots.size(), "Given Buffer slot exceeds the number of defined slots!");
 #endif
 		return;
 	}
@@ -141,18 +149,18 @@ void TextureRenderer::SetBufferAtSlot(const uint32_t cbvHeapIndex, const uint8_t
 {
 	if (slot >= m_bufferSlots.size()) {
 #ifdef DEBUG
-		assert(slot >= m_bufferSlots.size(), "Given Buffer slot exceeds the number of defined slots!");
+		assert(slot < m_bufferSlots.size(), "Given Buffer slot exceeds the number of defined slots!");
 #endif
 		return;
 	}
 	m_bufferSlots[slot] = { cbvHeapIndex, useRenderIndex };
 }
 
-void TextureRenderer::SetRenderTargetAtSlot(FullscreenTexture* texture, const uint8_t slot, bool useRenderIndex)
+void TextureRenderer::SetRenderTargetAtSlot(const FullscreenTexture* texture, const uint8_t slot, bool useRenderIndex)
 {
 	if (slot >= m_rtvSlots.size()) {
 #ifdef DEBUG
-		assert(slot >= m_bufferSlots.size(), "Given RenderTarget slot exceeds the number of defined slots!");
+		assert(slot < m_bufferSlots.size(), "Given RenderTarget slot exceeds the number of defined slots!");
 #endif
 		return;
 	}
@@ -163,7 +171,7 @@ void TextureRenderer::SetRenderTargetAtSlot(const uint32_t rtvHeapIndex, const u
 {
 	if (slot >= m_rtvSlots.size()) {
 #ifdef DEBUG
-		assert(slot >= m_bufferSlots.size(), "Given RenderTarget slot exceeds the number of defined slots!");
+		assert(slot < m_bufferSlots.size(), "Given RenderTarget slot exceeds the number of defined slots!");
 #endif
 		return;
 	}
