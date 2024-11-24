@@ -6,13 +6,21 @@
 class D3D12Framework;
 class DescriptorHeapWrapper;
 class TextureHandler;
+class ConstantBufferData;
 class PSOHandler;
 
+struct Texture;
+
+// Used for the rendering pipeline to 
 class FullscreenTexture
 {
 public:
 	FullscreenTexture() : 
-		m_dsvOffsetID(0), m_srvOffsetID(0), m_viewPort({}), m_pso(0), m_rs(0), m_rtvOffsetID(0)
+		m_resourceState(D3D12_RESOURCE_STATE_COMMON),
+		m_dsvOffsetID(0), 
+		m_srvOffsetID(0),
+		m_rtvOffsetID(0), 
+		m_viewPort({})
 	{}
 	~FullscreenTexture();
 
@@ -24,63 +32,49 @@ public:
 		const UINT height,
 		DXGI_FORMAT textureDesc,
 		DXGI_FORMAT srvFormat,
-		D3D12_RESOURCE_FLAGS flag,
+		D3D12_RESOURCE_FLAGS resourceFlag,
 		std::wstring name
 	);
 	void InitAsTexture(
 		ID3D12Device* device,
 		DescriptorHeapWrapper* cbvSrvHeap,
 		DescriptorHeapWrapper* rtvHeap,
-		const UINT width,
-		const UINT height,
-		DXGI_FORMAT textureDesc,
-		DXGI_FORMAT srvFormat,
-		D3D12_RESOURCE_FLAGS flag,
+		const UINT width,				   // Width of texture
+		const UINT height,				   // Height of texture
+		DXGI_FORMAT textureDesc,		   // The format of the textures description 
+		DXGI_FORMAT srvFormat,			   // Format of the Shader Resource View, should be the same as textureDesc
+		D3D12_RESOURCE_FLAGS resourceFlag, // Specified flags for the Texture
 		std::wstring name
 	);
 
-	virtual void InitBuffers(ID3D12Device* device, DescriptorHeapWrapper& cbvWrapper);
+	void ClearTexture(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper& rtvWrapper, const uint8_t frameIndex);
 
-	virtual void SetPipelineAndRootSignature(PSOHandler& psoHandler) = 0;
-
-	virtual void SetAsRenderTarget(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper* rtvWrapper, D3D12_CPU_DESCRIPTOR_HANDLE* dsvHandle, const UINT frameIndex);
-	void SetViewportAndPSO(ID3D12GraphicsCommandList* cmdList, PSOHandler& psoHandler);
-	
-	void SetTextureAtSlot(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper* srvWrapper, const UINT slot, const UINT frameIndex);
-	virtual void RenderTexture(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper* handle, TextureHandler* textureHandler, const UINT frameIndex){}
-
-	ID3D12Resource* GetResource(const UINT frameIndex) {
+	ID3D12Resource* GetResource(const uint8_t frameIndex) {
 		return m_resource[frameIndex].Get();
 	}
-
-	const UINT SRVOffsetID() {
+	const D3D12_RESOURCE_STATES GetRenderingResourceState() {
+		return m_resourceState;
+	}
+	UINT SRVOffsetID() const {
 		return m_srvOffsetID;
 	}
-	const UINT DSVOffsetID() {
+	UINT DSVOffsetID() const {
 		return m_dsvOffsetID;
 	}
-	const UINT RTVOffsetID() {
+	UINT RTVOffsetID() const {
 		return m_rtvOffsetID;
-	}
-	const D3D12_VIEWPORT& GetViewPort() {
-		return m_viewPort;
-	}
-	const UINT GetPSO() {
-		return m_pso;
-	}
-	const UINT GetRootSignature() {
-		return m_rs;
 	}
 
 protected:
-	UINT m_dsvOffsetID;
-	UINT m_srvOffsetID; 
-	UINT m_rtvOffsetID;
+	friend class TextureRenderingHandler;
 
-	UINT m_pso;
-	UINT m_rs;
+	uint32_t			   m_rtvOffsetID = UINT32_MAX;
+	uint32_t			   m_dsvOffsetID = UINT32_MAX;
+	uint32_t			   m_srvOffsetID = UINT32_MAX;
 
-	D3D12_VIEWPORT m_viewPort;
+	D3D12_VIEWPORT	       m_viewPort;
+	std::wstring		   m_resourceName = L"";
+	D3D12_RESOURCE_STATES  m_resourceState; // Keep track of what kind of a resource this texture is, used for clearing and transitioning the resource.
 	ComPtr<ID3D12Resource> m_resource[FrameCount];
 };
 

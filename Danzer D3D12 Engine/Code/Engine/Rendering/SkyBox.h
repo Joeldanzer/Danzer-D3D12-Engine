@@ -1,75 +1,42 @@
 #pragma once
-#include "Core/D3D12Header.h"
-#include "Core/MathDefinitions.h"
 
-#include <array>
-#include <string>
-#include <unordered_map>
+#include "Screen Rendering/TextureRenderer.h"
 
+class ModelHandler;
 class TextureHandler;
 class PSOHandler;
+class DescriptorHeapWrapper;
 
-class Skybox
+class  Transform;
+class  ModelData;
+struct Texture;
+struct ID3D12GraphicsCommandList;
+
+class Skybox : public TextureRenderer
 {
 public:
-	Skybox(TextureHandler& textureHandler) : 
-		m_textureHandler(textureHandler),
-		m_cube(0),
-		m_spin(false),
-		m_currentSkyBox(0),
-		m_rotation(0.f, 0.f, 0.f, 1.f),
-		m_pso(0),
-		m_rs(0)
-	{}
+	Skybox(ModelHandler& modelHandler);
 	~Skybox();
 
-	struct Data {
-		UINT m_texture;
-		std::string m_skyboxName;
-	};
-
-	void Init(PSOHandler& psoHandler, UINT cubeModel, std::wstring skyBoxTexture = L"Sprites/defaultRedSkybox.dds", bool spin = false, std::string skyboxName = "defaultSkybox");
-
+	void Initialize(PSOHandler& psoHandler, TextureHandler& textureHandler, std::wstring skyBoxTexture = L"Sprites/defaultRedSkybox.dds");
 	void Update(const float dt);
 
-	void AddSkybox(std::wstring skyboxTexture, std::string skyboxName);
-	void SetCurrentSkybox(std::string skyboxName) {
-		if (m_skyboxes.find(skyboxName) != m_skyboxes.end())
-			m_currentSkyBox = m_skyboxes[skyboxName];
-		else
-			m_currentSkyBox = m_skyboxes["defaultSkybox"];
-		
-	}
+	void RenderToTexture(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper& heap, DescriptorHeapWrapper& cbvSrvHeap, const uint8_t frameIndex);
+	void FetchCameraPositionAndSkyboxModel(const Vect3f position, ModelHandler& modelHandler);
 
-	const UINT GetPSO() {
-		return m_pso;
-	}
-	const UINT GetRootSignature() {
-		return m_rs;
-	}
-	const UINT GetSkyboxCube() {
-		return m_cube;
-	}
-	const UINT GetCurrentSkyboxTexture() {
-		return m_currentSkyBox;
-	}
+	const uint32_t TextureID() { return m_textureID; }
+	const uint32_t ModelID()   { return m_modelID; }
 
-	std::array<UINT, 2> GetCurrentActiveSkybox() const { return {m_cube, m_currentSkyBox}; }
 	Quat4f& GetRotation() {
 		return m_rotation;
 	}
 
 private:
-	TextureHandler& m_textureHandler;
-
-	std::unordered_map<std::string, UINT> m_skyboxes;
-	
 	Quat4f m_rotation;
 	bool m_spin;
 
-	UINT m_pso, m_rs;
-
-	UINT m_cube;
-	UINT m_currentSkyBox;
+	Vect3f     m_camPosition;
+	ModelData* m_modelData = nullptr;
+	uint32_t   m_pso, m_rs, m_textureID, m_modelID;
 };
 

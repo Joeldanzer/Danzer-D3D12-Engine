@@ -41,7 +41,7 @@ void SpriteHandler::CreateSpriteSheet(std::wstring sprite, const UINT widthFrame
 
     spriteSheet.m_texture = spriteID;
 
-    TextureHandler::Texture& texture = m_textureHandler.GetTextureData(spriteID);
+    Texture& texture = m_textureHandler.GetTextureData(spriteID);
 
     // Get Width and Height of sprite sheet
     std::ifstream file(sprite);

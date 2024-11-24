@@ -22,6 +22,7 @@ std::unique_ptr<LoaderModel> ModelLoaderCustom::LoadModelFromAssimp(std::string 
     auto flags = 0
         | aiProcessPreset_TargetRealtime_MaxQuality
         | aiProcess_ConvertToLeftHanded
+        | aiProcess_Triangulate
         | aiProcess_TransformUVCoords
         | aiProcess_CalcTangentSpace
         | aiProcess_GlobalScale

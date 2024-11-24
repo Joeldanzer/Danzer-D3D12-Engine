@@ -4,12 +4,11 @@
 
 #include "Core/DesriptorHeapWrapper.h"
 
-void DirectionalShadowMapping::RenderTexture(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper* handle, TextureHandler* textureHandler, const UINT frameIndex)
+void DirectionalShadowMapping::RenderToTexture(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper& dsvHeap, DescriptorHeapWrapper& cbvSrvheap, const uint8_t frameIndex)
 {
-	CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle = handle->GET_CPU_DESCRIPTOR(0);
-	dsvHandle.Offset((DSVOffsetID() + frameIndex) * handle->DESCRIPTOR_SIZE());
+	CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle = dsvHeap.GET_CPU_DESCRIPTOR(m_dsvHeapIndex + frameIndex);
 
-	cmdList->RSSetViewports(1, &GetViewPort());
+	cmdList->RSSetViewports(1, &m_viewPort);
 	cmdList->OMSetRenderTargets(0, nullptr, false, &dsvHandle);
 
 	for (UINT i = 0; i < modelCount; i++)
@@ -48,24 +47,31 @@ void DirectionalShadowMapping::SetPipelineAndRootSignature(PSOHandler& psoHandle
 				 D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS     |
 				 D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS   |
 				 D3D12_ROOT_SIGNATURE_FLAG_DENY_PIXEL_SHADER_ROOT_ACCESS;
-	m_rs  = psoHandler.CreateRootSignature(1, 0, PSOHandler::SAMPLER_DESC_BORDER, flags, L"Dirrectional Shadow Mapping Root Signature");
-	m_pso = psoHandler.CreatePSO(
-		{ L"Shaders/ShadowDepthVS.cso", L"" },
-		CD3DX12_BLEND_DESC(D3D12_DEFAULT),
-		psoHandler.RastDescs(PSOHandler::RASTERIZER_NONE),
+
+	InitializeRenderer(
+		L"Shaders/ShadowDepthVS.cso",
+		L"",
+		8192,
+		8192,
+		true,
 		depth,
 		DXGI_FORMAT_D32_FLOAT,
-		nullptr,
+		std::vector<DXGI_FORMAT>(),
+		PSOHandler::BLEND_DEFAULT,
+		PSOHandler::RASTERIZER_NONE,
+		PSOHandler::SAMPLER_BORDER,
+		flags,
+		1,
 		0,
-		m_rs,
-		PSOHandler::INPUT_LAYOUT_INSTANCE_DEFFERED,
-		L"Directional Shadow Mapping PSO"
+		PSOHandler::IL_INSTANCE_DEFFERED,
+		L"Directional Shadow Mapping",
+		psoHandler,
+		true
 	);
 }
 
 void DirectionalShadowMapping::CreateProjection(float projectionScale, float increase)
 {
 	m_projectionMatrix = DirectX::XMMatrixOrthographicLH(projectionScale, projectionScale, -(projectionScale * increase), projectionScale * increase);
-	
 	//m_projectionMatrix = DirectX::XMMatrixOrthographicLH(projectionScale, projectionScale, -10.0f, 10.0f);
 }

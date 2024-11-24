@@ -4,6 +4,7 @@
 #include <dxgi1_4.h>
 
 class FrameResource;
+class PSOHandler;
 
 class D3D12Framework
 {
@@ -26,6 +27,7 @@ public:
     void TransitionMultipleRTV(ID3D12Resource** resources, UINT numberOfresources, D3D12_RESOURCE_STATES present, D3D12_RESOURCE_STATES newState);
 
     void QeueuResourceTransition(ID3D12Resource** resources, UINT numberOfresources, D3D12_RESOURCE_STATES present, D3D12_RESOURCE_STATES newState);
+    void QeueuResourceTransition(ID3D12Resource* resources,  D3D12_RESOURCE_STATES present, D3D12_RESOURCE_STATES newState);
     void TransitionAllResources();
 
     void EndInitFrame(); // Called when all resources has been loade and we can clost InitCmdList
@@ -65,6 +67,9 @@ public:
 private:
     friend class RenderManager;
 
+    void RenderToBackBuffer(const uint32_t textureToPresent, PSOHandler& psoHandler);
+    void SetBackBufferPSO(PSOHandler& psoHandler);
+
     void LoadAssets();
     void InitImgui();
     void ScanAdapter(IDXGIAdapter1*, IDXGIFactory4*);
@@ -95,6 +100,9 @@ private:
 
     ComPtr<ID3D12Fence> m_fence;
     UINT64 m_fenceValue;
+
+    uint32_t m_backBufferPSO = UINT32_MAX;
+    uint32_t m_backBufferRS  = UINT32_MAX;
 
     struct StateTransition {
         D3D12_RESOURCE_STATES m_currentState;

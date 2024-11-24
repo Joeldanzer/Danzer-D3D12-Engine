@@ -13,19 +13,15 @@ float4 main(VertexToPixel input) : SV_TARGET
 
     float3   tangent   = normalize(noise - normal * dot(noise, normal));
     float3   biTangent = cross(normal, tangent);
-    float3x3 TBN = float3x3(tangent, biTangent, normal);
+    float3x3 TBN       = float3x3(tangent, biTangent, normal);
     
     float radius    = 1.0f;
     float bias      = 0.005f;
     float occlusion = 0.0f;
     
-    for (int i = 0; i < 64; i++)
+    for (int i = 0; i < SampleCount; i++)
     {
-        float3 sample;
-        if(i >= 32)
-            sample = SamplesTwo[i - 32];
-        else
-            sample = SamplesOne[i];
+        float3 sample = Samples[i];
 
         float3 samplePos = mul(sample, TBN);
         samplePos = fragPos.xyz + (samplePos) * radius;
@@ -43,7 +39,7 @@ float4 main(VertexToPixel input) : SV_TARGET
         occlusion += (depth >= samplePos.z + bias ? 1.0f : 0.0f) * rangeCheck;
     }
     
-    occlusion = 1.0f - (occlusion / 64);
+    occlusion = 1.0f - (occlusion / SampleCount);
      
     return float4(occlusion, occlusion, occlusion, 1.0f);
 }

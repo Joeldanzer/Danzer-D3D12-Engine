@@ -4,6 +4,10 @@
 #include "Core/DesriptorHeapWrapper.h"
 #include "Rendering/PSOHandler.h"
 
+#include "Rendering/TextureHandler.h"
+#include "Rendering/Buffers/ConstantBufferData.h"
+#include "Rendering/PSOHandler.h"
+
 FullscreenTexture::~FullscreenTexture()
 {
 	for (size_t i = 0; i < FrameCount; i++)
@@ -77,6 +81,8 @@ void FullscreenTexture::InitAsDepth(ID3D12Device* device, DescriptorHeapWrapper*
 		m_resource[i]->SetName(std::wstring(name + std::to_wstring(i)).c_str());
 	}
 
+	m_resourceName = name;
+	m_resourceState = D3D12_RESOURCE_STATE_DEPTH_WRITE;
 	m_viewPort = CD3DX12_VIEWPORT(0.0f, 0.0f, FLOAT(width), FLOAT(height));
 }
 
@@ -138,30 +144,22 @@ void FullscreenTexture::InitAsTexture(ID3D12Device* device, DescriptorHeapWrappe
 		m_resource[i]->SetName(std::wstring(name + std::to_wstring(i)).c_str());
 	}
 
+	m_resourceName  = name;
+	m_resourceState = D3D12_RESOURCE_STATE_RENDER_TARGET;
 	m_viewPort = CD3DX12_VIEWPORT(0.0f, 0.0f, FLOAT(width), FLOAT(height));
 }
 
-void FullscreenTexture::InitBuffers(ID3D12Device* device, DescriptorHeapWrapper& cbvWrapper)
-{ 
-	device; cbvWrapper;
-}
-
-void FullscreenTexture::SetAsRenderTarget(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper* rtvWrapper, D3D12_CPU_DESCRIPTOR_HANDLE* dsvHandle, const UINT frameIndex)
+void FullscreenTexture::ClearTexture(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper& heap, const uint8_t frameIndex)
 {
-	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle = rtvWrapper->GET_CPU_DESCRIPTOR((m_rtvOffsetID + frameIndex));
-	cmdList->OMSetRenderTargets(1, &rtvHandle, false, dsvHandle);
-}
-
-void FullscreenTexture::SetTextureAtSlot(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper* srvWrapper, const UINT slot, const UINT frameIndex)
-{
-	CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle = srvWrapper->GET_GPU_DESCRIPTOR(m_srvOffsetID + frameIndex);
-	cmdList->SetGraphicsRootDescriptorTable(slot, srvHandle);
-}
-
-void FullscreenTexture::SetViewportAndPSO(ID3D12GraphicsCommandList* cmdList, PSOHandler& psoHandler)
-{
-	cmdList->SetGraphicsRootSignature(psoHandler.GetRootSignature(m_rs));
-	cmdList->SetPipelineState(psoHandler.GetPipelineState(m_pso));
-
 	cmdList->RSSetViewports(1, &m_viewPort);
+	switch (m_resourceState) {
+	case D3D12_RESOURCE_STATE_DEPTH_WRITE:
+		CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle = heap.GET_CPU_DESCRIPTOR(m_dsvOffsetID + frameIndex);
+		cmdList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+		break;
+	case D3D12_RESOURCE_STATE_RENDER_TARGET:
+		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle = heap.GET_CPU_DESCRIPTOR(m_rtvOffsetID + frameIndex);
+		cmdList->ClearRenderTargetView(rtvHandle, &ClearColor[0], 0, nullptr);
+		break;
+	}
 }

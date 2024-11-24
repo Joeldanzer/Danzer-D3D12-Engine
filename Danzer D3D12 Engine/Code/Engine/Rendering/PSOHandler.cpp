@@ -56,7 +56,7 @@ UINT PSOHandler::CreateRootSignature(const UINT numberOfCBV, const UINT numberOf
 	return index;
 }
 
-UINT PSOHandler::CreatePSO(std::array<std::wstring, 2> shaderName, D3D12_BLEND_DESC blend, D3D12_RASTERIZER_DESC rast, D3D12_DEPTH_STENCIL_DESC depth, DXGI_FORMAT depthFormat, DXGI_FORMAT* rtvFormats, const UINT rtvCount, const UINT rootSignature, INPUT_LAYOUTS layout, std::wstring name)
+UINT PSOHandler::CreatePSO(std::array<std::wstring, 2> shaderName, BLEND_DESC blend, RASTERIZER_DESC rast, D3D12_DEPTH_STENCIL_DESC depth, DXGI_FORMAT depthFormat, DXGI_FORMAT* rtvFormats, const UINT rtvCount, const UINT rootSignature, INPUT_LAYOUTS layout, std::wstring name)
 {
 	DXGI_SAMPLE_DESC sample = { 1, 0 };
 
@@ -87,14 +87,14 @@ UINT PSOHandler::CreatePSO(std::array<std::wstring, 2> shaderName, D3D12_BLEND_D
 	psoDesc.NumRenderTargets	  = rtvFormats ? rtvCount : 0;
 	psoDesc.SampleDesc			  = sample;
 	psoDesc.SampleMask			  = 0xffffffff;
-	psoDesc.BlendState			  = blend;
-	psoDesc.RasterizerState		  = rast;
+	psoDesc.BlendState			  = m_blendDescs[blend];
+	psoDesc.RasterizerState		  = m_rastDescs[rast];
 	psoDesc.DepthStencilState	  = depth;
 	psoDesc.pRootSignature		  = m_rootSignatures[rootSignature].Get();
 	psoDesc.VS					  = vsByte;
 	psoDesc.PS					  = ps ? psByte : CD3DX12_SHADER_BYTECODE(0, 0);
 	psoDesc.Flags				  = D3D12_PIPELINE_STATE_FLAG_NONE;
-	if (layout != INPUT_LAYOUT_NONE) {
+	if (layout != IL_NONE) {
 		psoDesc.InputLayout.pInputElementDescs = m_inputLayouts[layout].data();
 		psoDesc.InputLayout.NumElements        = (UINT)m_inputLayouts[layout].size();
 	}
@@ -107,6 +107,7 @@ UINT PSOHandler::CreatePSO(std::array<std::wstring, 2> shaderName, D3D12_BLEND_D
 
 	return index;
 }
+
 
 void PSOHandler::InitializeSamplerDescs()
 {
@@ -125,7 +126,7 @@ void PSOHandler::InitializeSamplerDescs()
 	samplerDesc.ShaderRegister = 0;
 	samplerDesc.RegisterSpace = 0;
 
-	m_samplerDescs[SAMPLER_DESC_CLAMP] = samplerDesc;
+	m_samplerDescs[SAMPLER_CLAMP] = samplerDesc;
 
 	samplerDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
 	samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
@@ -141,7 +142,7 @@ void PSOHandler::InitializeSamplerDescs()
 	samplerDesc.ShaderRegister = 0;
 	samplerDesc.RegisterSpace = 0;
 
-	m_samplerDescs[SAMPLER_DESC_WRAP] = samplerDesc;
+	m_samplerDescs[SAMPLER_WRAP] = samplerDesc;
 
 	samplerDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
 	samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
@@ -158,12 +159,12 @@ void PSOHandler::InitializeSamplerDescs()
 	samplerDesc.RegisterSpace = 0;
 	//samplerDesc
 	
-	m_samplerDescs[SAMPLER_DESC_BORDER] = samplerDesc;
+	m_samplerDescs[SAMPLER_BORDER] = samplerDesc;
 }
 
 void PSOHandler::InitializeInputLayouts()
 {
-	m_inputLayouts[INPUT_LAYOUT_INSTANCE_SPRITE_2D] = {
+	m_inputLayouts[IL_INSTANCE_SPRITE_2D] = {
 		// Per Vertex
 		{ "POSITION",   0, DXGI_FORMAT_R32G32B32A32_FLOAT,   0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
 		{ "UV",		    0, DXGI_FORMAT_R32G32_FLOAT,		 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
@@ -176,7 +177,7 @@ void PSOHandler::InitializeInputLayouts()
 		{ "UI_SIZE",        0, DXGI_FORMAT_R32G32_FLOAT, 1, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
 	};
 
-	m_inputLayouts[INPUT_LAYOUT_INSTANCE_FONT_2D] = {
+	m_inputLayouts[IL_INSTANCE_FONT_2D] = {
 		// Per Instance
 		{ "POSITION",      0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
 		{ "FONT_SIZE",     0, DXGI_FORMAT_R32G32_FLOAT,       0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
@@ -187,7 +188,7 @@ void PSOHandler::InitializeInputLayouts()
 		{ "COLOR",         0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
 	};
 
-	m_inputLayouts[INPUT_LAYOUT_INSTANCE_DEFFERED] = {
+	m_inputLayouts[IL_INSTANCE_DEFFERED] = {
 		// Per Vertex
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT,  D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
 		{ "NORMAL",   0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT,  D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
@@ -203,7 +204,7 @@ void PSOHandler::InitializeInputLayouts()
 		{ "TRANSFORM",3, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
 	};
 
-	m_inputLayouts[INPUT_LAYOUT_INSTANCE_FORWARD] = {
+	m_inputLayouts[IL_INSTANCE_FORWARD] = {
 		// Per Vertex
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT,  D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
 		{ "NORMAL",   0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT,  D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
@@ -220,12 +221,12 @@ void PSOHandler::InitializeInputLayouts()
 	};
 
 	//Used for debugging Collision
-	m_inputLayouts[INPUT_LAYOUT_INSTANCE_AABB] = {
-		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
-		{ "SIZE",	  0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 }
-	};
+	//m_inputLayouts[INPUT_LAYOUT_INSTANCE_AABB] = {
+	//	{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
+	//	{ "SIZE",	  0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 }
+	//};
 
-	m_inputLayouts[INPUT_LAYOUT_INSTANCE_RAY] = {
+	m_inputLayouts[IL_INSTANCE_RAY] = {
 		{ "POSITION",  0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
 		{ "DESTINATION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
 		//{ "DISTANCE",  0, DXGI_FORMAT_R32_FLOAT,       0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 }
@@ -266,5 +267,8 @@ void PSOHandler::InitializeRastDescs()
 
 	rast.CullMode = D3D12_CULL_MODE_NONE;
 	m_rastDescs[RASTERIZER_NONE] = rast;
+
+	rast = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+	m_rastDescs[RASTERIZER_DEFAULT] = rast;
 }
 

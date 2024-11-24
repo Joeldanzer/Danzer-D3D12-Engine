@@ -18,17 +18,17 @@ void Renderer2D::Init(D3D12Framework& framework, PSOHandler& psoHandler)
 	auto flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
 				 D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
 				 D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS;
-	m_rs  = psoHandler.CreateRootSignature(1, 1, PSOHandler::SAMPLER_DESC_CLAMP, flags, L"Renderer 2D Root Signature");
+	m_rs  = psoHandler.CreateRootSignature(1, 1, PSOHandler::SAMPLER_CLAMP, flags, L"Renderer 2D Root Signature");
 	m_pso = psoHandler.CreatePSO(
 		{L"Shaders/uiVertexShader.cso", L"Shaders/uiPixelShader.cso"},
-		psoHandler.BlendDescs(PSOHandler::BLEND_TRANSPARENT),
-		psoHandler.RastDescs(PSOHandler::RASTERIZER_BACK),
+		PSOHandler::BLEND_DEFAULT,
+		PSOHandler::RASTERIZER_NONE,
 		depth,
 		DXGI_FORMAT_UNKNOWN,
 		&format[0],
 		1,
 		m_rs,
-		PSOHandler::INPUT_LAYOUT_INSTANCE_SPRITE_2D,
+		PSOHandler::IL_INSTANCE_SPRITE_2D,
 		L"Renderer 2D PSO"
 	);
 
@@ -52,7 +52,7 @@ void Renderer2D::UpdateDefaultUIBuffers(UINT frameIndex)
 	//m_commandList->SetGraphicsRootDescriptorTable(0, m_windowBuffer.GetDescriptorHeap(frameIndex)->GetGPUDescriptorHandleForHeapStart());
 }
 
-void Renderer2D::RenderUI(ID3D12GraphicsCommandList* cmdList, std::vector<SpriteData>& sprites, UINT frameIndex, std::vector<TextureHandler::Texture> textures)
+void Renderer2D::RenderUI(ID3D12GraphicsCommandList* cmdList, std::vector<SpriteData>& sprites, UINT frameIndex, std::vector<Texture> textures)
 {
 	D3D12_GPU_DESCRIPTOR_HANDLE cbvSrvHeapStart = m_framework->CbvSrvHeap().GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
 	const UINT cbvSrvDescSize					= m_framework->CbvSrvHeap().DESCRIPTOR_SIZE();
@@ -83,7 +83,7 @@ void Renderer2D::RenderUI(ID3D12GraphicsCommandList* cmdList, std::vector<Sprite
 	}
 }
 
-void Renderer2D::RenderFontUI(ID3D12GraphicsCommandList* cmdList, std::vector<Font>& fonts, UINT frameIndex, std::vector<TextureHandler::Texture> textures)
+void Renderer2D::RenderFontUI(ID3D12GraphicsCommandList* cmdList, std::vector<Font>& fonts, UINT frameIndex, std::vector<Texture> textures)
 {
 	cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_POINTLIST);
 	

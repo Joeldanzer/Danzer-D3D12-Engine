@@ -3,7 +3,7 @@
 cbuffer BlurData : register(b0)
 {
     uint4    WindowSize; 
-    float4   trashTwo[15];
+    float4   blurTrashTwo[15];
 }
 
 SamplerState samplerState : register(s0);

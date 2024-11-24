@@ -10,7 +10,7 @@
 #include "Models/ModelHandler.h"
 #include "RenderUtility.h"
 #include "Rendering/Screen Rendering/Textures/FullscreenTexture.h"
-#include "Rendering/Screen Rendering/Textures/DirectionalShadowMapping.h"
+#include "Rendering/Screen Rendering/DirectionalShadowMapping.h"
 #include "Rendering/Screen Rendering/GBuffer.h"
 #include "Rendering/Screen Rendering/LightHandler.h"
 #include "Core/FrameResource.h"
@@ -100,7 +100,7 @@ CD3DX12_GPU_DESCRIPTOR_HANDLE Renderer::UpdateLightBuffer(Mat4f& projection, Tra
 	return cbvHandle;
 }
 
-void Renderer::RenderSkybox(ID3D12GraphicsCommandList* cmdList, Transform& cameraTransform, TextureHandler::Texture& textures, ModelData& model, Skybox& skybox, UINT frameIndex, UINT startLocation)
+void Renderer::RenderSkybox(ID3D12GraphicsCommandList* cmdList, Transform& cameraTransform, Texture& textures, ModelData& model, Skybox& skybox, UINT frameIndex, UINT startLocation)
 {
 	D3D12_GPU_DESCRIPTOR_HANDLE cbvSrvHeapStart = m_framework->CbvSrvHeap().GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
 	const UINT cbvSrvDescSize					= m_framework->CbvSrvHeap().DESCRIPTOR_SIZE();
@@ -131,32 +131,32 @@ void Renderer::RenderSkybox(ID3D12GraphicsCommandList* cmdList, Transform& camer
 	cmdList->DrawIndexedInstanced(mesh.m_numIndices, 1, 0, 0, 0);
 }
 
-void Renderer::RenderDirectionalLight(ID3D12GraphicsCommandList* cmdList, TextureHandler::Texture& skyboxTexture, DirectionalShadowMapping& shadowMap, FullscreenTexture* ssao, FullscreenTexture* vl, UINT frameIndex, UINT startLocation)
+void Renderer::RenderDirectionalLight(ID3D12GraphicsCommandList* cmdList, Texture& skyboxTexture, DirectionalShadowMapping& shadowMap, FullscreenTexture* ssao, FullscreenTexture* vl, UINT frameIndex, UINT startLocation)
 {
-	D3D12_GPU_DESCRIPTOR_HANDLE cbvSrvHeapStart = m_framework->CbvSrvHeap().GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
-	const UINT cbvSrvDescSize = m_framework->CbvSrvHeap().DESCRIPTOR_SIZE();
-
-	CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle(cbvSrvHeapStart, skyboxTexture.m_offsetID, cbvSrvDescSize);
-	cmdList->SetGraphicsRootDescriptorTable(startLocation, srvHandle);
-	startLocation++;
-
-	CD3DX12_GPU_DESCRIPTOR_HANDLE shadowHandle(cbvSrvHeapStart, shadowMap.SRVOffsetID() + frameIndex, cbvSrvDescSize);
-	cmdList->SetGraphicsRootDescriptorTable(startLocation, shadowHandle);
-	startLocation++;
-
-	CD3DX12_GPU_DESCRIPTOR_HANDLE ssaoHandle(cbvSrvHeapStart, ssao->SRVOffsetID() + frameIndex, cbvSrvDescSize);
-	cmdList->SetGraphicsRootDescriptorTable(startLocation, ssaoHandle);
-	startLocation++;
-
-	CD3DX12_GPU_DESCRIPTOR_HANDLE vlHandle(cbvSrvHeapStart, vl->SRVOffsetID() + frameIndex, cbvSrvDescSize);
-	cmdList->SetGraphicsRootDescriptorTable(startLocation, vlHandle);
-	startLocation++;
-
-	cmdList->IASetVertexBuffers(0, 0, nullptr);
-	cmdList->IASetIndexBuffer(nullptr);
-	cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	
-	cmdList->DrawInstanced(3, 1, 0, 0);
+	//D3D12_GPU_DESCRIPTOR_HANDLE cbvSrvHeapStart = m_framework->CbvSrvHeap().GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
+	//const UINT cbvSrvDescSize = m_framework->CbvSrvHeap().DESCRIPTOR_SIZE();
+	//
+	//CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle(cbvSrvHeapStart, skyboxTexture.m_offsetID, cbvSrvDescSize);
+	//cmdList->SetGraphicsRootDescriptorTable(startLocation, srvHandle);
+	//startLocation++;
+	//
+	//CD3DX12_GPU_DESCRIPTOR_HANDLE shadowHandle(cbvSrvHeapStart, shadowMap.SRVOffsetID() + frameIndex, cbvSrvDescSize);
+	//cmdList->SetGraphicsRootDescriptorTable(startLocation, shadowHandle);
+	//startLocation++;
+	//
+	//CD3DX12_GPU_DESCRIPTOR_HANDLE ssaoHandle(cbvSrvHeapStart, ssao->SRVOffsetID() + frameIndex, cbvSrvDescSize);
+	//cmdList->SetGraphicsRootDescriptorTable(startLocation, ssaoHandle);
+	//startLocation++;
+	//
+	//CD3DX12_GPU_DESCRIPTOR_HANDLE vlHandle(cbvSrvHeapStart, vl->SRVOffsetID() + frameIndex, cbvSrvDescSize);
+	//cmdList->SetGraphicsRootDescriptorTable(startLocation, vlHandle);
+	//startLocation++;
+	//
+	//cmdList->IASetVertexBuffers(0, 0, nullptr);
+	//cmdList->IASetIndexBuffer(nullptr);
+	//cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	//
+	//cmdList->DrawInstanced(3, 1, 0, 0);
 }
 
 void Renderer::RenderPointLights(ID3D12GraphicsCommandList* cmdList, LightHandler& lightHandler, const entt::registry& registry, const UINT frameIndex, UINT startLocation)
@@ -192,11 +192,10 @@ void Renderer::RenderPointLights(ID3D12GraphicsCommandList* cmdList, LightHandle
 	}
 }
 
-void Renderer::RenderForwardModelEffects(ID3D12GraphicsCommandList* cmdList, PSOHandler& psoHandler, const UINT depthOffset, std::vector<ModelEffectData>& modelEffects, ModelHandler& modelHandler, std::vector<TextureHandler::Texture>& textures, const UINT frameIndex, Camera& cam, Transform& camTransform, UINT startLocation)
+void Renderer::RenderForwardModelEffects(ID3D12GraphicsCommandList* cmdList, PSOHandler& psoHandler, const UINT depthOffset, std::vector<ModelEffectData>& modelEffects, ModelHandler& modelHandler, std::vector<Texture>& textures, const UINT frameIndex, Camera& cam, Transform& camTransform, UINT startLocation)
 {
 	D3D12_GPU_DESCRIPTOR_HANDLE cbvSrvHeapStart = m_framework->CbvSrvHeap().GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
 	const UINT cbvSrvDescSize = m_framework->CbvSrvHeap().DESCRIPTOR_SIZE();
-
 
 	for (UINT i = 0; i < modelEffects.size(); i++)
 	{
@@ -253,7 +252,7 @@ void Renderer::RenderForwardModelEffects(ID3D12GraphicsCommandList* cmdList, PSO
 	}
 }
 
-void Renderer::RenderToGbuffer(ID3D12GraphicsCommandList* cmdList, std::vector<ModelData>& models, UINT frameIndex, std::vector<TextureHandler::Texture>& textures, bool renderTransparency, UINT startLocation)
+void Renderer::RenderToGbuffer(ID3D12GraphicsCommandList* cmdList, std::vector<ModelData>& models, UINT frameIndex, std::vector<Texture>& textures, bool renderTransparency, UINT startLocation)
 {
 	D3D12_GPU_DESCRIPTOR_HANDLE cbvSrvHeapStart = m_framework->CbvSrvHeap().GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
 	const UINT cbvSrvDescSize					= m_framework->CbvSrvHeap().DESCRIPTOR_SIZE();
@@ -313,7 +312,7 @@ void Renderer::RenderToGbuffer(ID3D12GraphicsCommandList* cmdList, std::vector<M
 		}
 	}
 }
-//void Renderer::TransparentRender(Scene* scene, std::vector<ModelData>& models, UINT frameIndex, std::vector<TextureHandler::Texture> textures)
+//void Renderer::TransparentRender(Scene* scene, std::vector<ModelData>& models, UINT frameIndex, std::vector<Texture> textures)
 //{
 //	D3D12_GPU_DESCRIPTOR_HANDLE cbvSrvHeapStart = m_framework->CbvSrvHeap().GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
 //	const UINT cbvSrvDescSize = m_framework->CbvSrvHeap().DESCRIPTOR_SIZE();

@@ -12,14 +12,14 @@ struct SoundListener;
 struct FMOD_CREATESOUNDEXINFO;
 class SoundHandler;
 
-typedef UINT32 SOUND_ID;
-typedef UINT32 STREAM_ID;
+typedef uint32_t SOUND_ID;
+typedef uint32_t STREAM_ID;
 
 class SoundEngine
 {
 public:
-	static constexpr UINT16 s_maxSoundChannels  = 512;
-	static constexpr UINT8  s_maxNum3DListeners = 4;
+	static constexpr uint16_t s_maxSoundChannels  = 1024;
+	static constexpr uint8_t  s_maxNum3DListeners = 4;
 
 	
 	//enum SoundChannel {

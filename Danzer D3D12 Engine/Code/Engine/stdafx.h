@@ -5,6 +5,7 @@
 #include "Core/D3D12Framework.h" 
 #include "Core/MathDefinitions.h"
 #include "Core/D3D12Header.h"
+#include "Core/DesriptorHeapWrapper.h"
 
 // 3rd Party includes
 #include "assimp/config.h"

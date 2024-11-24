@@ -10,7 +10,6 @@
 #include "Rendering/Models/ModelHandler.h"
 #include "Components/Light/DirectionalLight.h"
 #include "Rendering/TextureHandler.h"
-#include "Rendering/Screen Rendering/Textures/VolumetricLight.h"
 
 #include "Components/2D/Text.h"
 #include "Components/GameEntity.h"
@@ -132,19 +131,19 @@ void ImguiHandler::Update(const float dt)
 			ImGui::DragFloat3("Light Position", &lightPosition[0], 0.1f);
 			transform.m_position = { lightPosition[0], lightPosition[1], lightPosition[2] };
 
-			ImGui::Text("Volumetric Lighting");
-			VolumetricLight& vl = renderManager.GetVolumetricLight();
+			//ImGui::Text("Volumetric Lighting");
+			//VolumetricLight& vl = renderManager.GetVolumetricLight();
 			
-			int steps = vl.GetVolumetricData().m_numberOfSteps;
-			ImGui::DragInt("Number Of Steps", &steps, 5.0f, 10, 1000);
-			
-			float gScattering = vl.GetVolumetricData().m_gScattering;
-			ImGui::DragFloat("G Scattering", &gScattering, 0.01f, -1.0f, 1.0f);
-
-			float scatteringStr = vl.GetVolumetricData().m_scatteringStrength;
-			ImGui::DragFloat("Scattering Strength", &scatteringStr, 0.01f, 1.5f, 10.0f);
-
-			vl.SetVolumetricData(steps, gScattering, scatteringStr);
+			//int steps = vl.GetVolumetricData().m_numberOfSteps;
+			//ImGui::DragInt("Number Of Steps", &steps, 5.0f, 10, 1000);
+			//
+			//float gScattering = vl.GetVolumetricData().m_gScattering;
+			//ImGui::DragFloat("G Scattering", &gScattering, 0.01f, -1.0f, 1.0f);
+			//
+			//float scatteringStr = vl.GetVolumetricData().m_scatteringStrength;
+			//ImGui::DragFloat("Scattering Strength", &scatteringStr, 0.01f, 1.5f, 10.0f);
+			//
+			//vl.SetVolumetricData(steps, gScattering, scatteringStr);
 
 			ImGui::EndMenu();
 		}

@@ -152,6 +152,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Rendering\Screen Rendering\TextureRenderer.h" />
+    <ClInclude Include="Rendering\Buffers\BufferHandler.h" />
     <ClInclude Include="Components\Sound\SoundListener.h" />
     <ClInclude Include="Components\Sound\SoundSource.h" />
     <ClInclude Include="Physics\BodyInterfaceImpl.h" />
@@ -168,7 +170,6 @@
     <ClInclude Include="Physics\PhysicsHeader.h" />
     <ClInclude Include="Physics\PhysicsLayers.h" />
     <ClInclude Include="Physics\PhysicsEngine.h" />
-    <ClInclude Include="Rendering\Screen Rendering\Textures\DirectionalLightTexture.h" />
     <ClInclude Include="Rendering\Screen Rendering\Fullscreen Shaders\KuwaharaFilter.h" />
     <ClInclude Include="Rendering\Buffers\ConstantBufferData.h" />
     <ClInclude Include="Core\DesriptorHeapWrapper.h" />
@@ -180,7 +181,7 @@
     <ClInclude Include="Rendering\Models\ModelEffectData.h" />
     <ClInclude Include="Rendering\Models\ModelEffectHandler.h" />
     <ClInclude Include="Rendering\Screen Rendering\Textures\FullscreenTexture.h" />
-    <ClInclude Include="Rendering\Screen Rendering\Textures\DirectionalShadowMapping.h" />
+    <ClInclude Include="Rendering\Screen Rendering\DirectionalShadowMapping.h" />
     <ClInclude Include="Core\FrameResource.h" />
     <ClInclude Include="Rendering\Screen Rendering\Fullscreen Shaders\FullscreenShader.h" />
     <ClInclude Include="Rendering\Models\Material.h" />
@@ -222,11 +223,10 @@
     <ClInclude Include="SceneManager.h" />
     <ClInclude Include="Rendering\Screen Rendering\ScreenTexture.h" />
     <ClInclude Include="ShaderEffectRenderer.h" />
-    <ClInclude Include="Rendering\Screen Rendering\Textures\SSAOTexture.h" />
     <ClInclude Include="Rendering\Buffers\SSAOBuffer.h" />
-    <ClInclude Include="Rendering\Screen Rendering\Textures\SSAOBlur.h" />
     <ClInclude Include="Sound\SoundEngine.h" />
     <ClInclude Include="Sound\SoundHeader.h" />
+    <ClInclude Include="Rendering\SSAOData.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="Rendering\Buffers\TransformBuffer.h" />
     <ClInclude Include="Rendering\Buffers\VertexBuffer.h" />
@@ -235,16 +235,17 @@
     <ClInclude Include="Rendering\2D\SpriteInstanceBuffer.h" />
     <ClInclude Include="Rendering\Buffers\WindowSizeBuffer.h" />
     <ClInclude Include="Rendering\TextureHandler.h" />
-    <ClInclude Include="Rendering\Screen Rendering\Textures\VolumetricLight.h" />
-    <ClInclude Include="Rendering\Screen Rendering\Textures\VolumetricLightBlur.h" />
+    <ClInclude Include="Rendering\Screen Rendering\Textures\TextureRenderingHandler.h" />
+    <ClInclude Include="Rendering\VolumetricLightData.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Rendering\Screen Rendering\TextureRenderer.cpp" />
+    <ClCompile Include="Rendering\Buffers\BufferHandler.cpp" />
     <ClCompile Include="Physics\BodyInterfaceImpl.cpp" />
     <ClCompile Include="Physics\Body Contacts\ContactListener.cpp" />
     <ClCompile Include="Physics\PhysicsBody.cpp" />
     <ClCompile Include="Physics\PhysicsHandler.cpp" />
     <ClCompile Include="Physics\PhysicsEngine.cpp" />
-    <ClCompile Include="Rendering\Screen Rendering\Textures\DirectionalLightTexture.cpp" />
     <ClCompile Include="Rendering\Screen Rendering\Fullscreen Shaders\KuwaharaFilter.cpp" />
     <ClCompile Include="Rendering\Buffers\ConstantBufferData.cpp" />
     <ClCompile Include="Core\input.cpp" />
@@ -256,7 +257,7 @@
     <ClCompile Include="Rendering\Buffers\EffectShaderBuffer.cpp" />
     <ClCompile Include="Rendering\Models\ModelEffectHandler.cpp" />
     <ClCompile Include="Rendering\Screen Rendering\Textures\FullscreenTexture.cpp" />
-    <ClCompile Include="Rendering\Screen Rendering\Textures\DirectionalShadowMapping.cpp" />
+    <ClCompile Include="Rendering\Screen Rendering\DirectionalShadowMapping.cpp" />
     <ClCompile Include="Core\FrameResource.cpp" />
     <ClCompile Include="Rendering\Buffers\CBVBuffer.cpp" />
     <ClCompile Include="Rendering\Screen Rendering\Fullscreen Shaders\FullscreenShader.cpp" />
@@ -283,10 +284,9 @@
     <ClCompile Include="SceneManager.cpp" />
     <ClCompile Include="Rendering\Screen Rendering\ScreenTexture.cpp" />
     <ClCompile Include="ShaderEffectRenderer.cpp" />
-    <ClCompile Include="Rendering\Screen Rendering\Textures\SSAOTexture.cpp" />
     <ClCompile Include="Rendering\Buffers\SSAOBuffer.cpp" />
-    <ClCompile Include="Rendering\Screen Rendering\Textures\SSAOBlur.cpp" />
     <ClCompile Include="Sound\SoundEngine.cpp" />
+    <ClCompile Include="Rendering\SSAOData.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
@@ -298,8 +298,8 @@
     <ClCompile Include="Rendering\2D\SpriteInstanceBuffer.cpp" />
     <ClCompile Include="Rendering\Buffers\WindowSizeBuffer.cpp" />
     <ClCompile Include="Rendering\TextureHandler.cpp" />
-    <ClCompile Include="Rendering\Screen Rendering\Textures\VolumetricLight.cpp" />
-    <ClCompile Include="Rendering\Screen Rendering\Textures\VolumetricLightBlur.cpp" />
+    <ClCompile Include="Rendering\Screen Rendering\Textures\TextureRenderingHandler.cpp" />
+    <ClCompile Include="Rendering\VolumetricLightData.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

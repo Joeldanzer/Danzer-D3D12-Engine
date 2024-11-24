@@ -20,7 +20,7 @@ float ComputeScattering(float lightDotView)
 
 float4 main(VertexToPixel input) : SV_TARGET
 {    
-    uint2 windowSize   = uint2(1920, 1080);
+    uint2 windowSize   = uint2(ScreenWidth, ScreenHeight);
     uint2 fragPosition = windowSize * input.m_uv;
     
     float3 worldPosition  = WorldPositionTexture.Sample(samplerState, input.m_uv); 

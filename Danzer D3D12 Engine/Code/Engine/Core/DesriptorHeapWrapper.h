@@ -4,6 +4,7 @@
 
 #define MAX_NUMBER_OF_DESCTRIPTORS 1000000
 #define MAX_NUMBER_OF_RTV 200
+#define MAX_NUMBER_OF_DEPTH_STENCIL 20
 
 class DescriptorHeapWrapper
 {

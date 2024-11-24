@@ -2,7 +2,8 @@
 #include "LightFunctionsHeader.hlsli"
 #include "DirectionalLightHeader.hlsli"
 
-float4 main(VertexToPixel input) : SV_TARGET
+
+LightOutput main(VertexToPixel input) : SV_TARGET
 {
     float4 color;
     
@@ -20,14 +21,15 @@ float4 main(VertexToPixel input) : SV_TARGET
     float  ssao          = ssaoTexture.Sample(defaultSample, input.m_uv).r;
     float3 vl            = volumetricLight.Sample(defaultSample, input.m_uv).rgb;
     
+    //normal.rgb = normalize(normal.rgb * 2.0f - 1.0f);
+    
     float emissiveData = normal.w;
-    float metallic     = material.r;
+    float metallic     = material.r * 1.5f;
     float roughness    = material.g;
     float height       = material.b;
     float ao           = material.w;
     
     albedo.rgb = GammaToLinear(albedo.rgb);
-    //vl.rgb     = GammaToLinear(vl);
     
     float3 toEye = normalize(CameraPosition.xyz - worldPosition);
     float3 r = reflect(toEye, normalize(normal.xyz));
@@ -35,25 +37,23 @@ float4 main(VertexToPixel input) : SV_TARGET
     float3 specualrcolor = lerp((float3) 0.04, albedo.rgb, metallic);
     float3 diffusecolor  = lerp((float3) 0.00, albedo.rgb, 1 - metallic);
        
-    
-    float2 screenPosition = float2(1920, 1080) * input.m_uv;
+    float2 screenPosition   = WindowSize * input.m_uv;
     //float3 ambient        = EvaluateAmbience(skyboxTexture, defaultSample, vertexNormal, normal.rgb, toEye, roughness, metallic, albedo.rgb, ao, diffusecolor, specualrcolor, AmbientColor);
     float3  shadowData      = ShadowCalculation(screenPosition, float4(worldPosition, 1.0f), normal.xyz, LightDirection.xyz, LightTransform, LightProjection);
     float3 directionalLight = EvaluateDirectionalLight(diffusecolor, specualrcolor, normal.xyz, roughness, LightColor.rgb * LightColor.w, LightDirection.xyz, toEye, metallic) * shadowData.rrr;    
     
-   
     float3 kS = FresnelSchlickRoughness(max(dot(normal.xyz, toEye.xyz), 0.0), specualrcolor, roughness);
     float3 kD = 1.0 - kS;
     float3 irradiance = skyboxTexture.Sample(defaultSample, kD.xyz).rgb * AmbientColor.rgb;
     irradiance *= AmbientColor.a;
     float3 diffuse = irradiance * albedo.rgb;
     float3 ambient = diffusecolor * diffuse;
-        
+    
     float3 radiance = (ambient + directionalLight) * ssao;
     radiance = radiance / (radiance + 1.0f.rrr);
-    radiance = pow(radiance, float(1.0f / 2.0f).rrr);
+    radiance = LinearToGamma(radiance);
     
-    radiance = radiance + vl;
+    radiance += vl;
     
     //radiance = LinearToGamma(radiance);
     // Fog that i want to get in!
@@ -77,13 +77,15 @@ float4 main(VertexToPixel input) : SV_TARGET
 
     //radiance = lerp(radiance.rgb, newFogColor.rgb, fogAmount.rrr);
    
+    LightOutput output;
+    
     switch (CameraPosition.w)
     {
         case 0:
             color.rgb = radiance.rgb;    
             break;
         case 1:
-            color.rgb = shadowData.rrr;
+            color.rgb = vl.rgb;
             break;
         case 2:
             color.rgb = normal.xyz;
@@ -113,5 +115,13 @@ float4 main(VertexToPixel input) : SV_TARGET
     
     color.a = albedo.a;
    
-	return color;
+    output.m_sceneColor = color;
+    
+    float brightness = dot(radiance.rgb, float3(0.2126f, 0.7152f, 0.0722f));
+    if(brightness > 1.0f)
+        output.m_brightColor = float4(radiance.rgb, 1.0f);
+    else
+        output.m_brightColor = float4(0.0f, 0.0f, 0.0f, 0.0f);
+    
+	return output;
 }

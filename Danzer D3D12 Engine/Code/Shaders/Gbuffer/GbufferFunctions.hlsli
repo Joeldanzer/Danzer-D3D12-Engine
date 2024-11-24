@@ -30,17 +30,31 @@ float GetHeight(VertexToPixel input)
 
 float4 GetNormal(VertexToPixel input)
 {
-    float4 normal = normalTexture.Sample(defaultSampler, input.m_uv.xy);
-    float3 normalAO = float3(normal.xy, 0.0f);
-    normalAO.xy = (normalAO * 2.f) - 1.f;
-    normalAO.z = sqrt(1 - saturate(normalAO.x * normalAO.x + normalAO.y * normalAO.y));
+    float3 normal = normalize(input.m_normal.xyz);
+    float3 tangent = normalize(input.m_tangent.xyz);
+    tangent = normalize(tangent - dot(tangent, normal) * normal);
     
-    float3x3 tangentspacematrix = float3x3(normalize(input.m_tangent.xyz), normalize(input.m_biNormal.xyz), normalize(input.m_normal.xyz));
-    normalAO = mul(normalAO.xyz, tangentspacematrix);
-    normalAO = normalize(normalAO);
+    float3 bitangent = cross(tangent, normal);
+    float3 bumpMap   = normalTexture.Sample(defaultSampler, input.m_uv.xy);
+    bumpMap = bumpMap * 2.0f - 1.0f;
     
-    float4 output;
-    output.xyz = normalAO.xyz;
-    output.a = 1.0f;
-    return output;
+    float3x3 TBM = float3x3(tangent, bitangent, normal);
+    float3 newNormal = mul(bumpMap, TBM);
+    newNormal = normalize(newNormal);
+    
+    return float4(newNormal, 1.0f);
+    
+    //float4 normal = normalTexture.Sample(defaultSampler, input.m_uv.xy);
+    //float3 normalAO = float3(normal.xy, 0.0f);
+    //normalAO.xy = (normalAO * 2.f) - 1.f;
+    //normalAO.z = sqrt(1 - saturate(normalAO.x * normalAO.x + normalAO.y * normalAO.y));
+    //
+    //float3x3 tangentspacematrix = float3x3(normalize(input.m_tangent.xyz), normalize(input.m_biNormal.xyz), normalize(input.m_normal.xyz));
+    //normalAO = mul(normalAO.xyz, tangentspacematrix);
+    //normalAO = normalize(normalAO);
+    //
+    //float4 output;
+    //output.xyz = normalAO.xyz;
+    //output.a = 1.0f;
+    //return output;
 }

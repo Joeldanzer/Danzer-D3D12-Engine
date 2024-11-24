@@ -13,6 +13,8 @@ class D3D12Framework;
 class ModelEffectHandler;
 class LightHandler;
 class SoundEngine;
+class TextureRenderingHandler;
+class BufferHandler;
 
 /*
 * Want to turn Engine into a static class so it can be accessed anywhere without needing to send it through
@@ -33,19 +35,21 @@ public:
 
 	void EndInitFrame();
 
-	const float			GetFPS()			    const noexcept;
-	const float		    GetDeltaTime()		    const noexcept;
-
-	SceneManager&	    GetSceneManager()	    const noexcept;
-	ModelHandler&		GetModelHandler()	    const noexcept;
-	SpriteHandler&		GetSpriteHandler()	    const noexcept;
-	RenderManager&	    GetRenderManager()	    const noexcept;
-	D3D12Framework&		GetFramework()		    const noexcept;
-	TextureHandler&		GetTextureHandler()	    const noexcept;
-	ModelEffectHandler& GetModelEffectHandler() const noexcept;
-	LightHandler&		GetLightHandler()       const noexcept;
-	PhysicsHandler&		GetPhysicsHandler()		const noexcept;
-	SoundEngine&		GetSoundEngine()		const noexcept;
+	const float				 GetFPS()					  const noexcept;
+	const float				 GetDeltaTime()				  const noexcept;
+							 							  
+	SceneManager&			 GetSceneManager()			  const noexcept;
+	ModelHandler&			 GetModelHandler()			  const noexcept;
+	SpriteHandler&			 GetSpriteHandler()			  const noexcept;
+	RenderManager&			 GetRenderManager()			  const noexcept;
+	D3D12Framework&			 GetFramework()				  const noexcept;
+	TextureHandler&			 GetTextureHandler()	      const noexcept;
+	ModelEffectHandler&		 GetModelEffectHandler()	  const noexcept;
+	LightHandler&			 GetLightHandler()			  const noexcept;
+	PhysicsHandler&			 GetPhysicsHandler()		  const noexcept;
+	SoundEngine&			 GetSoundEngine()		      const noexcept;
+	BufferHandler&		     GetBufferHandler()		      const noexcept;
+	TextureRenderingHandler& GetTextureRenderingHandler() const noexcept;
 	
 
 private:

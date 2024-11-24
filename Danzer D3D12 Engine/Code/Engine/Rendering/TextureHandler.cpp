@@ -308,7 +308,7 @@ CD3DX12_RESOURCE_BARRIER TextureHandler::LoadTextures(void* data, const UINT siz
 
 	D3D12_SUBRESOURCE_DATA textureData = {};
 	textureData.pData	   = data;
-	textureData.RowPitch   = (sizeof(float) * 4) * sizeOfData;
+	textureData.RowPitch   = (sizeof(float) * 4)  * sizeOfData;
 	textureData.SlicePitch = textureData.RowPitch * sizeOfData;
 
 	UpdateSubresources(

@@ -26,17 +26,17 @@ void KuwaharaFilter::CreatePipelineAndRootsignature(PSOHandler& psoHandler)
 	depth.DepthEnable = false;
 	auto flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
 			     D3D12_ROOT_SIGNATURE_FLAG_DENY_VERTEX_SHADER_ROOT_ACCESS ;
-	m_rs  = psoHandler.CreateRootSignature(1, 1, PSOHandler::SAMPLER_DESC_CLAMP, flags, L"Kuwahara Filter Root Signature");
+	m_rs  = psoHandler.CreateRootSignature(1, 1, PSOHandler::SAMPLER_CLAMP, flags, L"Kuwahara Filter Root Signature");
 	m_pso = psoHandler.CreatePSO(
 		{ L"Shaders/FullscreenVS.cso", L"Shaders/KuwaharaFilterPS.cso" },
-		CD3DX12_BLEND_DESC(D3D12_DEFAULT),
-		CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT),
+		PSOHandler::BLEND_DEFAULT,
+		PSOHandler::RASTERIZER_NONE,
 		depth,
 		DXGI_FORMAT_UNKNOWN,
 		&format[0],
 		1,
 		m_rs,
-		PSOHandler::INPUT_LAYOUT_NONE,
+		PSOHandler::IL_NONE,
 		L"Kuwahara Filter PSO"
 	);
 }
@@ -53,7 +53,8 @@ void KuwaharaFilter::UpdateBufferData(ID3D12GraphicsCommandList* cmdList, Descri
 	m_data.m_width  = WindowHandler::WindowData().m_w / m_scale;
 	m_data.m_height = WindowHandler::WindowData().m_h / m_scale;
 
-	m_cbvData.UpdateBuffer(reinterpret_cast<UINT16*>(&m_data), frameIndex);
+	m_cbvData.UpdateBufferData(reinterpret_cast<UINT16*>(&m_data));
+	m_cbvData.UpdateBufferToGPU(frameIndex);
 	cmdList->SetGraphicsRootDescriptorTable(0, cbvWrapper->GET_GPU_DESCRIPTOR(m_cbvData.OffsetID() + frameIndex));
 }
 
