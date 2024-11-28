@@ -86,7 +86,7 @@ void TextureRenderer::SetTextureAndBufferSlots(ID3D12GraphicsCommandList* cmdLis
 	{
 		if (m_bufferSlots[i].first != UINT32_MAX) {
 			CD3DX12_GPU_DESCRIPTOR_HANDLE handle = cbvSrvHeap.GET_GPU_DESCRIPTOR(m_bufferSlots[i].second ? m_bufferSlots[i].first + frameIndex : m_bufferSlots[i].first);
-			cmdList->SetGraphicsRootDescriptorTables(currentSlot, handle);
+			cmdList->SetGraphicsRootDescriptorTable(currentSlot, handle);
 		}
 		currentSlot++;
 	}

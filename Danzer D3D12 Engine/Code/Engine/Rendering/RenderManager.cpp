@@ -206,7 +206,7 @@ void RenderManager::Impl::InitializeRenderTextures(TextureHandler& textureHandle
 	ssaoRenderer->SetTextureAtSlot(m_ssaoData.GetTextureOffset(), 2, false);
 	ssaoRenderer->SetBufferAtSlot(m_cameraBuffer->OffsetID(),   0);
 	ssaoRenderer->SetBufferAtSlot(m_ssaoData.GetBufferOffset(), 1);
-	ssaoRenderer->SetBufferAtSlot(m_ssaoData.GetCountOffset(),  3);
+	ssaoRenderer->SetBufferAtSlot(m_ssaoData.GetCountOffset(),  2);
 
 	rendererData.m_pixelShader = L"Shaders/VolumetricLightingPS.cso";
 	rendererData.m_format      = { DXGI_FORMAT_R8G8B8A8_UNORM };
