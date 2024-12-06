@@ -30,7 +30,10 @@ public:
     void QeueuResourceTransition(ID3D12Resource* resources,  D3D12_RESOURCE_STATES present, D3D12_RESOURCE_STATES newState);
     void TransitionAllResources();
 
-    void EndInitFrame(); // Called when all resources has been loade and we can clost InitCmdList
+    void EndInitFrame(); // Called when all resources has been load and we can close InitCmdList
+    bool IsInitFrame() {
+        return m_initFrame;
+    }
 
     DescriptorHeapWrapper& RTVHeap() {
         return m_rtvHeap;
@@ -67,6 +70,8 @@ public:
 private:
     friend class RenderManager;
 
+    bool m_initFrame = true;
+
     void RenderToBackBuffer(const uint32_t textureToPresent, PSOHandler& psoHandler);
     void SetBackBufferPSO(PSOHandler& psoHandler);
 
@@ -95,7 +100,7 @@ private:
 
     FrameResource* m_frameResources[FrameCount];
 
-    UINT m_frameIndex;
+    UINT   m_frameIndex;
     HANDLE m_fenceEvent;
 
     ComPtr<ID3D12Fence> m_fence;

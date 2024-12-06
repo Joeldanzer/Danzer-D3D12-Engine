@@ -118,7 +118,7 @@ public:
 private:
 	friend class ModelHandler;
 
-	std::vector<Mesh>  m_meshes;
+	std::vector<Mesh>   m_meshes;
 	std::vector<Vect3f> m_verticies;
 	
 	std::vector<Mat4f> m_instanceTransforms;

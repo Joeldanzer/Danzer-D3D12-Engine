@@ -68,6 +68,8 @@ private:
 	char* m_tag;
 	char* m_name;
 
+	bool m_renderOnlyMesh = false;
+
 	std::vector<ImguiTexture> m_imguiTextures;
 	// Object Imgui Settings
 	

@@ -1,4 +1,6 @@
 #include "stdafx.h"
+#include "Core/HelperFunctions.h"
+
 #include "ModelLoaderCustom.h"
 
 #include "assimp/Scene.h"
@@ -7,8 +9,19 @@
 #include <assert.h>
 #include <fstream>
 
+static const uint16_t sVertexBufferSize = (16 * 5) + (4 * 2); // Size of an VertexBuffer
+
 ModelLoaderCustom::ModelLoaderCustom(){}
 ModelLoaderCustom::~ModelLoaderCustom(){}
+
+bool ModelLoaderCustom::CheckModelMemory(const aiScene* scene)
+{
+    uint64_t amount = 0;
+    for (uint i = 0; i < scene->mNumMeshes; i++)
+        amount += scene->mMeshes[i]->mNumVertices * sVertexBufferSize;
+    
+    return RequestAllocation(amount);
+}
 
 std::unique_ptr<LoaderModel> ModelLoaderCustom::LoadModelFromAssimp(std::string fileName, bool uvFlipped)
 {
@@ -27,12 +40,16 @@ std::unique_ptr<LoaderModel> ModelLoaderCustom::LoadModelFromAssimp(std::string 
         | aiProcess_CalcTangentSpace
         | aiProcess_GlobalScale
         | aiProcess_FindInstances
-        ;
+    ;
 
     const aiScene* scene = m_importer.ReadFile(fileName, flags);
     assert(scene, "Assimp Failed to load '" + fileName.c_str() + "'");
     
+    if (!CheckModelMemory(scene))
+        return nullptr;
+    
     std::unique_ptr<LoaderModel> model = std::make_unique<LoaderModel>();
+
     model->m_scene = scene;
 
     model->m_name = scene->mName.C_Str();
@@ -53,7 +70,7 @@ std::vector<std::unique_ptr<LoaderModel>> ModelLoaderCustom::LoadMultipleModelsF
     std::ifstream fileExist(fileName);
     if (!fileExist.good())
         assert(fileExist, fileName.c_str() + " doesn't exist!");
-    //AI_CONFIG_COLUM_A
+
     m_importer.SetPropertyBool(AI_CONFIG_FBX_CONVERT_TO_M, false);
     m_importer.SetPropertyBool(AI_CONFIG_IMPORT_FBX_PRESERVE_PIVOTS, true);
     auto flags = 0
@@ -63,12 +80,16 @@ std::vector<std::unique_ptr<LoaderModel>> ModelLoaderCustom::LoadMultipleModelsF
         | aiProcess_CalcTangentSpace
         | aiProcess_GlobalScale
         | aiProcess_FindInstances
-        ;
+   ;
 
     const aiScene* scene = m_importer.ReadFile(fileName, flags);
     assert(scene, "Assimp Failed to load '" + fileName.c_str() + "'");
 
     std::vector<std::unique_ptr<LoaderModel>> models;
+
+    if (!CheckModelMemory(scene))
+        return models;
+
     FetchAllModelsInScene(scene, models, transforms, uvFlipped);
 
     return models;
@@ -241,11 +262,11 @@ void ModelLoaderCustom::LoadVerticiesWithTransform(std::vector<Vect3f>& v3Verts,
 
     // Save all the different mesh information into a int, easy to detect if a model should have
     // animations, vertex paint or any other kind of stuff.,,
-    shaderType |= position  ? LoaderType_Position : 0;
-    shaderType |= normals   ? LoaderType_Normal : 0;
+    shaderType |= position  ? LoaderType_Position  : 0;
+    shaderType |= normals   ? LoaderType_Normal    : 0;
     shaderType |= binormTan ? LoaderType_BinormTan : 0;
-    shaderType |= color     ? LoaderType_Color : 0;
-    shaderType |= uv        ? LoaderType_UV : 0;
+    shaderType |= color     ? LoaderType_Color     : 0;
+    shaderType |= uv        ? LoaderType_UV        : 0;
     //  shaderType |= bones    ? LoaderType_Bones     : 0;
 
       // Size of our vertex buffer 

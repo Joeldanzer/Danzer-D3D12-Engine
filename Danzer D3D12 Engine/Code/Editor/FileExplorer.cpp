@@ -22,7 +22,6 @@ std::wstring FileExplorer::OpenFileExplorer(FILE_EXPLORER state, FileType file)
 
 	else if (file.m_fileType == L".json")
 		ofn.lpstrFilter = _T(".json");
-
 	else
 		ofn.lpstrFilter = _T("");
 

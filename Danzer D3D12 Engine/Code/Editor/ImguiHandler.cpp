@@ -7,6 +7,7 @@
 #include "SceneManager.h"
 #include "Rendering/Models/ModelData.h"
 #include "Core/D3D12Framework.h"
+#include "Core/FrameResource.h"
 #include "Rendering/Models/ModelHandler.h"
 #include "Components/Light/DirectionalLight.h"
 #include "Rendering/TextureHandler.h"
@@ -148,18 +149,7 @@ void ImguiHandler::Update(const float dt)
 			ImGui::EndMenu();
 		}
 
-		if (ImGui::BeginMenu("Post Process")) {
-			ImGui::DragInt("Kuwahara Radius", &m_kuwaharaRadius, 1.0f, 1, 15);
 
-			ImGui::DragInt("Kuwahara Scale", &m_kuwaharaScale, 1.0f, 1, 4);
-
-			float offset[3] = { m_kuwaharaOffset.x, m_kuwaharaOffset.y, m_kuwaharaOffset.z };
-			ImGui::DragFloat3("Kuwahara Offset", &offset[0], 0.01f, -1.0f, 1.0f);
-			m_kuwaharaOffset = { offset[0], offset[1], offset[2] };
-
-			renderManager.SetKuwaharaRadius(m_kuwaharaRadius, m_kuwaharaScale, m_kuwaharaOffset);
-			ImGui::EndMenu();
-		}
 		//if (ImGui::BeginMenu("File")) {
 		//	if (ImGui::MenuItem("Load Scene", "CTRL+O")) {
 		//		std::wstring scene = m_fileExplorer.OpenFileExplorer(FILE_EXPLORER_GET, m_fileExtensions["Scenes"]);
@@ -232,6 +222,8 @@ void ImguiHandler::Update(const float dt)
 		//}
 	}
 	ImGui::EndMainMenuBar();	
+	
+	StaticWindows();
 }
 
 
@@ -250,62 +242,46 @@ void ImguiHandler::StaticWindows()
 		ImGui::SetNextWindowBgAlpha(1.f);
 		bool isOpen = true;
 
-		//if (ImGui::Begin("Scene View", &isOpen, staticWindowFlags)) {
-		//	if (ImGui::Button("Create Empty Object")) {
-		//		m_currentEntity = scene.CreateBasicEntity("Empty Object");
-		//	}
-		//	ImGui::SameLine();
-		//	if(ImGui::Button("Create Cube")) {
-		//		m_currentEntity = scene.CreateBasicEntity("Cube");
-		//		reg.emplace<Model>(m_currentEntity, m_engine.GetModelHandler().LoadModel(L"Models/Cube.fbx"));
-		//	}
-		//	ImGui::SameLine();
-		//	if (ImGui::Button("Create Sphere")) {
-		//		m_currentEntity = scene.CreateBasicEntity("Sphere");
-		//		reg.emplace<Model>(m_currentEntity, m_engine.GetModelHandler().LoadModel(L"Models/Sphere.fbx"));
-		//	}
-		//
-		//	ImGui::Separator();
-		//
-		//
-		//
-		//	if (ImGui::ListBoxHeader("##", {(float)m_leftWindow.m_width, (float)m_leftWindow.m_width})) {
-		//		auto scene = reg.view<Transform, GameEntity>();
-		//		entt::entity previousEntity;
-		//		for (auto entity : scene) {
-		//			if (reg.try_get<Camera>(entity)) {
-		//				continue;
-		//			}
-		//
-		//			GameEntity& obj = reg.get<GameEntity>(entity);
-		//			bool isSelected = (entity == m_currentEntity);
-		//			if (ImGui::Selectable(obj.m_name.c_str(), isSelected)) {
-		//				m_currentEntity = entity;
-		//				m_currentMesh = 0;
-		//				Transform& transform = reg.get<Transform>(entity);
-		//
-		//				if (m_removeEntity) {
-		//					if (previousEntity != entity) {
-		//						m_currentEntity = previousEntity;
-		//					}
-		//
-		//					reg.destroy(entity);
-		//					m_removeEntity = false;
-		//				}
-		//				//memcpy(m_currentRotation, &transform.m_rotation.x, sizeof(float) * 3);
-		//
-		//				if (!m_itemsHasBeenSelected)
-		//					m_itemsHasBeenSelected = true;
-		//			}
-		//
-		//			previousEntity = entity;
-		//		}
-		//		
-		//		ImGui::ListBoxFooter();
-		//	}
-		//
-		//	ImGui::End();
-		//}
+		if (ImGui::Begin("Scene View", &isOpen, staticWindowFlags)) {
+			if (ImGui::Button("Create Empty GameEntity")) {
+				m_currentEntity = m_engine.GetSceneManager().CreateBasicEntity("Empty Entity", false).m_entity;
+			}
+
+			ImGui::Separator();
+
+			if (ImGui::BeginListBox("##", { (float)m_leftWindow.m_width, (float)m_leftWindow.m_width })) {
+				auto scene = reg.view<Transform, GameEntity>();
+				entt::entity previousEntity;
+				for (auto entity : scene) {
+	
+					GameEntity& obj = reg.get<GameEntity>(entity);
+					bool isSelected = (entity == m_currentEntity);
+					if (ImGui::Selectable(obj.m_name.c_str(), isSelected)) {
+						m_currentEntity = entity;
+						m_currentMesh = 0;
+						Transform& transform = reg.get<Transform>(entity);
+
+						if (m_removeEntity) {
+							if (previousEntity != entity) {
+								m_currentEntity = previousEntity;
+							}
+
+							reg.destroy(entity);
+							m_removeEntity = false;
+						}
+
+						if (!m_itemsHasBeenSelected)
+							m_itemsHasBeenSelected = true;
+					}
+
+					previousEntity = entity;
+				}
+
+				ImGui::EndListBox();
+			}
+
+			ImGui::End();
+		}
 	}
 	//* Left Side window End
 
@@ -315,6 +291,7 @@ void ImguiHandler::StaticWindows()
 		ImGui::SetNextWindowPos({ m_rightWindow.m_positon.x, m_rightWindow.m_positon.y }, 0, { 0.5f, 0.5f });
 		ImGui::SetNextWindowBgAlpha(1.f);
 		bool isOpen = true;
+
 		if (ImGui::Begin("Component Window", &isOpen, staticWindowFlags)) {
 
 			if (m_itemsHasBeenSelected) {
@@ -359,12 +336,11 @@ void ImguiHandler::StaticWindows()
 					ImGui::EndPopup();
 				}
 			}
-			
-				//Transform& transform = reg.get<Transform>(m_currentEntity);
+		
 			ImGui::End();
 		}
 	}
-	//* Right side window en
+	//* Right side window end
 }
 void ImguiHandler::SaveScene(entt::registry& reg)
 {
@@ -407,100 +383,119 @@ bool ImguiHandler::ModelDataSettings(entt::registry& reg)
 				if (m_currentMesh > data.GetMeshes().size() - 1)
 					m_currentMesh = 0;
 				
+				int lastMesh = m_currentMesh;
 				ImGui::SliderInt("Mesh", &m_currentMesh, 0, (UINT)data.GetMeshes().size() - 1);
 				ModelData::Mesh& currentMesh = data.GetMeshes()[m_currentMesh];
 
+				bool renderOnlyMesh = m_renderOnlyMesh;
+				ImGui::Checkbox("Render Only Mesh", &renderOnlyMesh);
+				if (renderOnlyMesh != m_renderOnlyMesh || m_currentMesh != lastMesh) {
+					for (int i = 0; i < data.GetMeshes().size(); i++)
+					{
+						if (i == m_currentMesh) {
+							data.GetMeshes()[i].m_renderMesh = true;
+							continue;
+						}
+
+						data.GetMeshes()[i].m_renderMesh = !renderOnlyMesh;
+					}
+
+					lastMesh		 = m_currentMesh;
+					m_renderOnlyMesh = renderOnlyMesh;
+				}
+
 				Material& material = currentMesh.m_material;
-				static float roughness = material.m_roughness;
-				static float metallic = material.m_shininess;
-				static float emissive = material.m_emissvie;
-				static float color[3] = { material.m_color[0], material.m_color[1], material.m_color[2] };
+				float roughness = material.m_roughness;
+				float metallic = material.m_shininess;
+				float emissive = material.m_emissvie;
+				float color[3] = { material.m_color[0], material.m_color[1], material.m_color[2] };
 
-				ImGui::ColorEdit3("Albedo Color", color);
-				{
-					std::wstring albedo;
-					if (ImGui::Button("Albedo")) {
-						albedo = SelectTexture(material.m_albedo);
-					}
-					else
-						albedo = m_engine.GetTextureHandler().GetTextureData(material.m_albedo).m_texturePath;
-
-					ImGui::SameLine();
-					CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle = AddImguiImage(albedo);
-					ImGui::Image((ImTextureID)srvHandle.ptr, { 50.f, 50.f });
-				}
-
-				{
-					std::wstring metallicMap;
-					if (ImGui::Button("Metallic Map")) {
-						metallicMap = SelectTexture(material.m_metallicMap);
-					}
-					else
-						metallicMap = m_engine.GetTextureHandler().GetTextureData(material.m_metallicMap).m_texturePath;
-
-					ImGui::SameLine();
-					CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle = AddImguiImage(metallicMap);
-					ImGui::Image((ImTextureID)srvHandle.ptr, { 50.f, 50.f });
-				}
-				ImGui::SameLine();
-				ImGui::DragFloat("Metallic",  &metallic, 0.01f, 0.0f,  2.f);
-				
-				{
-					std::wstring roughnessMap;
-					if (ImGui::Button("Roughness Map")) {
-						roughnessMap = SelectTexture(material.m_roughnessMap);
-					}
-					else
-						roughnessMap = m_engine.GetTextureHandler().GetTextureData(material.m_roughnessMap).m_texturePath;
-
-					ImGui::SameLine();
-					CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle = AddImguiImage(roughnessMap);
-					ImGui::Image((ImTextureID)srvHandle.ptr, { 50.f, 50.f });
-				}
-				ImGui::SameLine();
+				//ImGui::ColorEdit3("Albedo Color", color);
+				//{
+				//	std::wstring albedo;
+				//	if (ImGui::Button("Albedo")) {
+				//		albedo = SelectTexture(material.m_albedo);
+				//	}
+				//	else
+				//		albedo = m_engine.GetTextureHandler().GetTextureData(material.m_albedo).m_texturePath;
+				//
+				//	ImGui::SameLine();
+				//	CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle = AddImguiImage(albedo);
+				//	ImGui::Image((ImTextureID)srvHandle.ptr, { 50.f, 50.f });
+				//}
+				//
+				//{
+				//	std::wstring metallicMap;
+				//	if (ImGui::Button("Metallic Map")) {
+				//		metallicMap = SelectTexture(material.m_metallicMap);
+				//	}
+				//	else
+				//		metallicMap = m_engine.GetTextureHandler().GetTextureData(material.m_metallicMap).m_texturePath;
+				//
+				//	ImGui::SameLine();
+				//	CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle = AddImguiImage(metallicMap);
+				//	ImGui::Image((ImTextureID)srvHandle.ptr, { 50.f, 50.f });
+				//}
+				//ImGui::SameLine();
+				//ImGui::DragFloat("Metallic",  &metallic, 0.01f, 0.0f,  2.f);
+				//
+				//{
+				//	std::wstring roughnessMap;
+				//	if (ImGui::Button("Roughness Map")) {
+				//		roughnessMap = SelectTexture(material.m_roughnessMap);
+				//	}
+				//	else
+				//		roughnessMap = m_engine.GetTextureHandler().GetTextureData(material.m_roughnessMap).m_texturePath;
+				//
+				//	ImGui::SameLine();
+				//	CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle = AddImguiImage(roughnessMap);
+				//	ImGui::Image((ImTextureID)srvHandle.ptr, { 50.f, 50.f });
+				//}
+				//ImGui::SameLine();
 				ImGui::DragFloat("Roughness", &roughness, 0.01f, 0.1f,  2.f);
-				ImGui::DragFloat("Emissive",  &emissive,  0.01f, 0.0f,  5.f);
-
-				{
-					std::wstring normmal;
-					if (ImGui::Button("Normal Map")) {
-						normmal = SelectTexture(material.m_normal);
-					}
-					else
-						normmal = m_engine.GetTextureHandler().GetTextureData(material.m_normal).m_texturePath;
-
-					ImGui::SameLine();
-					CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle = AddImguiImage(normmal);
-					ImGui::Image((ImTextureID)srvHandle.ptr, { 50.f, 50.f });
-				}
-				{
-					std::wstring height;
-					if (ImGui::Button("Height Map")) {
-						height = SelectTexture(material.m_heightMap);
-					}
-					else
-						height = m_engine.GetTextureHandler().GetTextureData(material.m_heightMap).m_texturePath;
-
-					ImGui::SameLine();
-					CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle = AddImguiImage(height);
-					ImGui::Image((ImTextureID)srvHandle.ptr, { 50.f, 50.f });
-				}
-				{
-					std::wstring ao;
-					if (ImGui::Button("AO Map")) {
-						ao = SelectTexture(material.m_aoMap);
-					}
-					else
-						ao = m_engine.GetTextureHandler().GetTextureData(material.m_aoMap).m_texturePath;
-
-					ImGui::SameLine();
-					CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle = AddImguiImage(ao);
-					ImGui::Image((ImTextureID)srvHandle.ptr, { 50.f, 50.f });
-				}
+				ImGui::DragFloat("Metallic",  &metallic,  0.01f, 0.0f,  2.f);
+				ImGui::DragFloat("Emissive",  &emissive,  0.01f, 0.0f,  1.f);
+				
+				//{
+				//	std::wstring normmal;
+				//	if (ImGui::Button("Normal Map")) {
+				//		normmal = SelectTexture(material.m_normal);
+				//	}
+				//	else
+				//		normmal = m_engine.GetTextureHandler().GetTextureData(material.m_normal).m_texturePath;
+				//
+				//	ImGui::SameLine();
+				//	CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle = AddImguiImage(normmal);
+				//	ImGui::Image((ImTextureID)srvHandle.ptr, { 50.f, 50.f });
+				//}
+				//{
+				//	std::wstring height;
+				//	if (ImGui::Button("Height Map")) {
+				//		height = SelectTexture(material.m_heightMap);
+				//	}
+				//	else
+				//		height = m_engine.GetTextureHandler().GetTextureData(material.m_heightMap).m_texturePath;
+				//
+				//	ImGui::SameLine();
+				//	CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle = AddImguiImage(height);
+				//	ImGui::Image((ImTextureID)srvHandle.ptr, { 50.f, 50.f });
+				//}
+				//{
+				//	std::wstring ao;
+				//	if (ImGui::Button("AO Map")) {
+				//		ao = SelectTexture(material.m_aoMap);
+				//	}
+				//	else
+				//		ao = m_engine.GetTextureHandler().GetTextureData(material.m_aoMap).m_texturePath;
+				//
+				//	ImGui::SameLine();
+				//	CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle = AddImguiImage(ao);
+				//	ImGui::Image((ImTextureID)srvHandle.ptr, { 50.f, 50.f });
+				//}
 
 				material.m_roughness = roughness;
 				material.m_shininess = metallic;
-				material.m_emissvie = emissive;
+				material.m_emissvie  = emissive;
 				memcpy(material.m_color, color, sizeof(float) * 3);
 			}
 		}
@@ -515,7 +510,7 @@ bool ImguiHandler::ObjectSettings(entt::registry& reg)
 	GameEntity& obj = reg.get<GameEntity>(m_currentEntity);
 	ImGui::Text(obj.m_name.c_str());
 	ImGui::Separator();
-	if (ImGui::CollapsingHeader("Object")) {
+	if (ImGui::CollapsingHeader("Game Entity")) {
 
 		int len = (int)strlen(obj.m_tag.c_str());
 		memcpy(m_tag, obj.m_tag.c_str(), len + 1);

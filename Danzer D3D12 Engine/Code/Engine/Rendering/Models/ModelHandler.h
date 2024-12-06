@@ -38,22 +38,40 @@ public:
 	}
 
 	ModelLoaderCustom& GetModelLoader() { return m_modelLoader; }
-
 	void SetMaterialForModel(UINT model, Material material, UINT mesh = 0);
 
 	std::vector<ModelData>& GetAllModels() {
 		return m_models;
 	}
 
+	void LoadRequestedModels();
+
 private:	
+	struct LoadRequestData {
+		std::unique_ptr<LoaderModel> m_model;
+		bool m_transparent;
+		std::string  m_modelName;
+		std::wstring m_fileName;
+	};
+	
 	Material GetNewMaterialFromLoadedModel(const std::string& material);
 	UINT GetNewlyCreatedModelID(ModelData model);
+
+	uint32_t CreateModelFromLoadedData(LoaderModel* loadedModel, std::string name, std::wstring fileName, bool transparent);
 
 	std::vector<ModelData::Mesh> LoadMeshFromLoaderModel(LoaderModel* loadedModel, std::string name);
 	std::vector<ModelData::Mesh> LoadMeshFromLoaderModel(LoaderModel* loadedModel, std::vector<UINT>& textures);
 	std::string SetModelName(std::wstring modelPath);
+	
+	std::unique_ptr<LoaderModel> FetchLoaderModel(std::wstring fileName, std::string name, bool uvFlipped);
 
-	std::vector<ModelData> m_models;
+	void WriteToBinaryModelFile(const LoaderModel* loadedModel, const std::vector<ModelData::Mesh>& meshes, std::string modelName);
+	void ReadFromBinaryModelFile(std::string modelName, LoaderModel* loaderModel);
+	bool BinaryModelFileExists(std::string modelName);
+
+	uint32_t					 m_modelRequestCounter = 1;
+	std::vector<LoadRequestData> m_loadRequests;
+	std::vector<ModelData>       m_models;
 
 	// Used to easily create necessary buffers for Models.
 	ModelLoaderCustom m_modelLoader;	

@@ -152,6 +152,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Core\HelperFunctions.h" />
     <ClInclude Include="Rendering\Screen Rendering\TextureRenderer.h" />
     <ClInclude Include="Rendering\Buffers\BufferHandler.h" />
     <ClInclude Include="Components\Sound\SoundListener.h" />
@@ -205,7 +206,6 @@
     <ClInclude Include="Rendering\Camera.h" />
     <ClInclude Include="Rendering\Buffers\CameraBuffer.h" />
     <ClInclude Include="Core\D3D12Header.h" />
-    <ClInclude Include="Core\DirectX12Framework.h" />
     <ClInclude Include="Core\Engine.h" />
     <ClInclude Include="Rendering\Models\ModelData.h" />
     <ClInclude Include="Core\MathDefinitions.h" />
@@ -271,7 +271,6 @@
     <ClCompile Include="Rendering\Models\ModelLoaderCustom.cpp" />
     <ClCompile Include="Rendering\Camera.cpp" />
     <ClCompile Include="Rendering\Buffers\CameraBuffer.cpp" />
-    <ClCompile Include="Core\DirectX12Framework.cpp" />
     <ClCompile Include="Core\Engine.cpp" />
     <ClCompile Include="Rendering\Models\ModelData.cpp" />
     <ClCompile Include="Rendering\Models\ModelHandler.cpp" />

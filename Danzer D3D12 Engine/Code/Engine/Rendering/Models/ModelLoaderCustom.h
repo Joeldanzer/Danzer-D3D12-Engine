@@ -29,12 +29,15 @@ struct LoaderMesh {
 
 	Mat4f m_meshTransform;
 	UINT  m_textureIndex;
-	std::vector<unsigned int> m_indices;
-	char* m_verticies;
-	unsigned int m_vertexCount;
-	unsigned int m_vertexSize;
-	unsigned int m_shaderType;
 	std::string m_name;
+	std::vector<uint32_t> m_indices;
+	char* m_verticies;
+
+	uint32_t m_vertexCount;
+	uint32_t m_vertexSize;
+	uint32_t m_shaderType;
+	
+	std::vector<std::wstring> m_textures;
 };
 
 struct LoaderModel {
@@ -89,6 +92,8 @@ public:
 
 	ModelLoaderCustom();
 	~ModelLoaderCustom();
+
+	bool CheckModelMemory(const aiScene* scene);
 
 	std::unique_ptr<LoaderModel> LoadModelFromAssimp(std::string fileName, bool uvFlipped);
 	std::vector<std::unique_ptr<LoaderModel>> LoadMultipleModelsFromAssimp(std::string fileName, std::vector<std::pair<std::string, Mat4f>>& transforms, bool uvFlipped);

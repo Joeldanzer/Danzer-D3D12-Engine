@@ -172,7 +172,6 @@ void RenderManager::Impl::InitializeRenderTextures(TextureHandler& textureHandle
 	);
 	m_shadowMap->SetDepthStencilView(shadowMapTexture->DSVOffsetID());
 
-	
 	TexturePipelineData rendererData;
 	rendererData.m_blendDesc    = PSOHandler::BLEND_DEFAULT;
 	rendererData.m_rastDesc     = PSOHandler::RASTERIZER_DEFAULT;
@@ -436,6 +435,8 @@ BufferHandler& RenderManager::Impl::GetConstantBufferHandler()
 
 void RenderManager::Impl::RenderScene(LightHandler& lightHandler, TextureHandler& textureHandler, SpriteHandler& spriteHandler, ModelHandler& modelHandler, ModelEffectHandler& effectHandler, SceneManager& scene)
 {
+	modelHandler.LoadRequestedModels();
+
 	ID3D12GraphicsCommandList* cmdList = m_framework.CurrentFrameResource()->CmdList();
 
 	const UINT frameIndex = m_framework.m_frameIndex;

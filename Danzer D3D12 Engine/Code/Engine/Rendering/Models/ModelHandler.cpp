@@ -94,37 +94,20 @@ Model ModelHandler::LoadModel(std::wstring fileName, std::string name, bool tran
 	if (exists != 0) {
 		return exists;
 	}
-	
-	// Always restet CommandLists as executing them requires them to be close
-	//m_framework.InitiateCommandList(nullptr, L"ModelHandler Line " + __LINE__);
 
-	std::string modelStr = { fileName.begin(), fileName.end() };
-	std::unique_ptr<LoaderModel> loadedModel = m_modelLoader.LoadModelFromAssimp(modelStr, uvFlipped);
+	UINT id = UINT32_MAX;
 
-	std::vector<ModelData::Mesh> meshes = LoadMeshFromLoaderModel(loadedModel.get(), modelStr);
-	std::vector<Vect3f>	      verticies = loadedModel->m_verticies;
+	// If we are in Intialization frame then don't queue to m_loadRequests.
+	if (m_framework.IsInitFrame()) {
+		std::unique_ptr<LoaderModel> loadedModel = FetchLoaderModel(fileName, name, uvFlipped);
+		return CreateModelFromLoadedData(loadedModel.get(), name, fileName, transparent);
+	}
+	else {
+		m_loadRequests.push_back({ FetchLoaderModel(fileName, name, uvFlipped), transparent, name, fileName});
+		id = m_models.size() + m_modelRequestCounter; // Reserve this models id.
+		m_modelRequestCounter++;
+	}
 
-	// Now we set the buffer infromation into our BUFFER_VIEWS as well as 
-	// creating DescriptorHeaps and SRV for our textures
-	for (UINT i = 0; i < meshes.size(); i++)
-	{
-		meshes[i].m_indexBufferView.BufferLocation = meshes[i].m_indexBuffer->GetGPUVirtualAddress();
-		meshes[i].m_indexBufferView.SizeInBytes    = sizeof(unsigned int) * meshes[i].m_numIndices;
-		meshes[i].m_indexBufferView.Format         = DXGI_FORMAT_R32_UINT;
-
-		meshes[i].m_vertexBufferView.BufferLocation = meshes[i].m_vertexBuffer->GetGPUVirtualAddress();
-		meshes[i].m_vertexBufferView.StrideInBytes  = meshes[i].m_vertexSize;
-		meshes[i].m_vertexBufferView.SizeInBytes    = meshes[i].m_vertexSize * meshes[i].m_numVerticies;
-
-	} 
-
-	std::string modelName = "";
-	if (name.empty())
-		modelName = SetModelName(fileName);
-	else
-		modelName = name;
-
-	UINT id = GetNewlyCreatedModelID(ModelData(meshes, m_framework.GetDevice(), &m_framework.CbvSrvHeap(), verticies, fileName, modelName, transparent));
 	return Model(id);
 }
 
@@ -201,6 +184,16 @@ void ModelHandler::SetMaterialForModel(UINT model, Material material, UINT meshI
 	mesh.m_material = material;
 }
 
+// Loads all the requested models to the gpu during the frame rendering. Not the most ideal but it will do for now.
+void ModelHandler::LoadRequestedModels()
+{
+	for (uint32_t i = 0; i < m_loadRequests.size(); i++)
+		CreateModelFromLoadedData(m_loadRequests[i].m_model.get(), m_loadRequests[i].m_modelName, m_loadRequests[i].m_fileName, m_loadRequests[i].m_transparent);
+
+	m_loadRequests.clear();
+	m_modelRequestCounter = 1;
+}
+
 Material ModelHandler::GetNewMaterialFromLoadedModel(const std::string& materialName)
 {
 	Material material;
@@ -256,10 +249,33 @@ UINT ModelHandler::GetNewlyCreatedModelID(ModelData model)
 	return id;
 }
 
+uint32_t ModelHandler::CreateModelFromLoadedData(LoaderModel* loadedModel, std::string name, std::wstring fileName, bool transparent)
+{
+	std::vector<ModelData::Mesh> meshes = LoadMeshFromLoaderModel(loadedModel, name);
+	std::vector<Vect3f>	      verticies = loadedModel->m_verticies;
+
+	// Now we set the buffer infromation into our BUFFER_VIEWS as well as 
+	// creating DescriptorHeaps and SRV for our textures
+	for (UINT i = 0; i < meshes.size(); i++)
+	{
+		meshes[i].m_indexBufferView.BufferLocation = meshes[i].m_indexBuffer->GetGPUVirtualAddress();
+		meshes[i].m_indexBufferView.SizeInBytes = sizeof(unsigned int) * meshes[i].m_numIndices;
+		meshes[i].m_indexBufferView.Format = DXGI_FORMAT_R32_UINT;
+
+		meshes[i].m_vertexBufferView.BufferLocation = meshes[i].m_vertexBuffer->GetGPUVirtualAddress();
+		meshes[i].m_vertexBufferView.StrideInBytes = meshes[i].m_vertexSize;
+		meshes[i].m_vertexBufferView.SizeInBytes = meshes[i].m_vertexSize * meshes[i].m_numVerticies;
+
+	}
+
+	WriteToBinaryModelFile(loadedModel, meshes, name);
+	return GetNewlyCreatedModelID(ModelData(meshes, m_framework.GetDevice(), &m_framework.CbvSrvHeap(), verticies, fileName, name, transparent));
+}
+
 std::vector<ModelData::Mesh> ModelHandler::LoadMeshFromLoaderModel(LoaderModel* loadedModel, std::string name)
 {
 	ID3D12Device* device = m_framework.GetDevice();
-	ID3D12GraphicsCommandList* cmdList = m_framework.InitCmdList();
+	ID3D12GraphicsCommandList* cmdList = m_framework.IsInitFrame() ? m_framework.InitCmdList() : m_framework.CurrentFrameResource()->CmdList();
 
 	std::vector<ModelData::Mesh> meshes;
 	meshes.reserve(loadedModel->m_meshes.size());
@@ -306,10 +322,22 @@ std::vector<ModelData::Mesh> ModelHandler::LoadMeshFromLoaderModel(LoaderModel* 
 		mesh.m_numVerticies = loadedMesh->m_vertexCount;
 		mesh.m_vertexSize   = loadedMesh->m_vertexSize;
 
-		if (!loadedModel->m_textures.empty())
-			mesh.m_material = GetNewMaterialFromLoadedModel(loadedModel->m_textures[i]);
-		else
-			mesh.m_material = {};
+		// Yeah this solution stinks!!!
+		if (!loadedMesh->m_textures.empty()) {
+			mesh.m_material.m_albedo       = m_textureHandler.GetTexture(loadedMesh->m_textures[0]);
+			mesh.m_material.m_normal       = m_textureHandler.GetTexture(loadedMesh->m_textures[1]);
+			mesh.m_material.m_metallicMap  = m_textureHandler.GetTexture(loadedMesh->m_textures[2]);
+			mesh.m_material.m_roughnessMap = m_textureHandler.GetTexture(loadedMesh->m_textures[3]);
+			mesh.m_material.m_heightMap    = m_textureHandler.GetTexture(loadedMesh->m_textures[4]);
+			mesh.m_material.m_aoMap		   = m_textureHandler.GetTexture(loadedMesh->m_textures[5]);
+		}
+		else {
+			if (!loadedModel->m_textures.empty())
+				mesh.m_material = GetNewMaterialFromLoadedModel(loadedModel->m_textures[i]);
+			else
+				mesh.m_material = {};
+		}
+
 		
 		// Add our newly created model mesh
 		meshes.emplace_back(mesh);
@@ -342,7 +370,6 @@ std::vector<ModelData::Mesh> ModelHandler::LoadMeshFromLoaderModel(LoaderModel* 
 			static_cast<UINT>(loadedMesh->m_indices.size()) * sizeof(UINT),
 			device
 		);
-
 
 		// Set upload Vertex Buffer SubResourceData to our vertex destBuffer
 		resourceBarriers.emplace_back(SetSubresourceData(
@@ -396,4 +423,131 @@ std::string ModelHandler::SetModelName(std::wstring modelPath)
 	}
 
 	return result;
+}
+
+std::unique_ptr<LoaderModel> ModelHandler::FetchLoaderModel(std::wstring fileName, std::string name, bool uvFlipped)
+{
+	std::string modelName = "";
+	if (name.empty())
+		modelName = SetModelName(fileName);
+	else
+		modelName = name;
+
+;
+	if (BinaryModelFileExists(modelName)) {
+		std::unique_ptr<LoaderModel> loadedModel = std::make_unique<LoaderModel>();
+		ReadFromBinaryModelFile(modelName, loadedModel.get());
+		return loadedModel;
+	}
+
+	std::string modelStr = { fileName.begin(), fileName.end() };
+	return m_modelLoader.LoadModelFromAssimp(modelStr, uvFlipped);
+}
+
+void ModelHandler::WriteToBinaryModelFile(const LoaderModel* loadedModel, const std::vector<ModelData::Mesh>& meshes, std::string modelName)
+{
+	std::string fileName = "Models/Binary/" + modelName + ".bmf";
+
+	if (!std::filesystem::exists(fileName.c_str())) {
+		std::fstream modelFile(fileName, std::ios_base::out | std::ios_base::binary);
+		std::array<std::wstring, 6> textureList = {L"", L"", L"", L"", L"", L""};
+		
+		// Write mesh count data.
+		uint32_t meshCount = loadedModel->m_meshes.size();
+		modelFile.write((char*)&meshCount, sizeof(uint32_t));
+
+		for (uint32_t i = 0; i < loadedModel->m_meshes.size(); i++)
+		{
+			const LoaderMesh* mesh = loadedModel->m_meshes[i];
+
+			// Write VertexData
+			modelFile.write((char*)&mesh->m_vertexSize,  sizeof(uint32_t));
+			modelFile.write((char*)&mesh->m_vertexCount, sizeof(uint32_t));
+			modelFile.write(&mesh->m_verticies[0], mesh->m_vertexSize * mesh->m_vertexCount);
+
+			// Write IndexData
+			const uint32_t indexCount = mesh->m_indices.size();
+			modelFile.write((char*)&indexCount,        sizeof(uint32_t));
+			for (uint32_t j = 0; j < mesh->m_indices.size(); j++)
+				modelFile.write((char*)&mesh->m_indices[j], sizeof(uint32_t));
+
+			// Write texture path data.
+			textureList[0] = m_textureHandler.GetTextureData(meshes[i].m_material.m_albedo).m_texturePath;
+			textureList[1] = m_textureHandler.GetTextureData(meshes[i].m_material.m_normal).m_texturePath;
+			textureList[2] = m_textureHandler.GetTextureData(meshes[i].m_material.m_metallicMap).m_texturePath;
+			textureList[3] = m_textureHandler.GetTextureData(meshes[i].m_material.m_roughnessMap).m_texturePath;
+			textureList[4] = m_textureHandler.GetTextureData(meshes[i].m_material.m_heightMap).m_texturePath;
+			textureList[5] = m_textureHandler.GetTextureData(meshes[i].m_material.m_aoMap).m_texturePath;
+
+			uint32_t wcharLength = 0;
+			for (uint32_t j = 0; j < textureList.size(); j++) {
+				std::string texturePath = { textureList[j].begin(), textureList[j].end()};
+				wcharLength = texturePath.length();
+				modelFile.write((char*)(&wcharLength), sizeof(uint32_t)); // Save the count so I can fetch it when reading from file. 
+				modelFile.write(&texturePath[0], wcharLength); // Save as string instead since WCHAR are 2 bytes.
+			}		
+		}
+		modelFile.close();
+	}
+}
+
+void ModelHandler::ReadFromBinaryModelFile(std::string modelName, LoaderModel* loaderModel)
+{
+	std::string fileName = "Models/Binary/" + modelName + ".bmf";
+	std::fstream modelFile(fileName, std::ios_base::in | std::ios_base::binary);
+	
+	uint32_t meshCount = 0;
+	modelFile.read((char*)&meshCount, sizeof(uint32_t));
+	for (uint32_t i = 0; i < meshCount; i++)
+	{
+		loaderModel->m_meshes.push_back(new LoaderMesh());
+		LoaderMesh* mesh = loaderModel->m_meshes[i];
+		
+		// Read verticies from file
+		uint32_t vertexSize  = 0;
+		uint32_t vertexCount = 0;
+
+		modelFile.read((char*)&vertexSize,  sizeof(uint32_t));
+		modelFile.read((char*)&vertexCount, sizeof(uint32_t));
+		
+		mesh->m_vertexSize  = vertexSize;
+		mesh->m_vertexCount = vertexCount;
+
+		mesh->m_verticies = new char[vertexCount * vertexSize];
+		modelFile.read(&mesh->m_verticies[0], vertexSize * vertexCount);
+
+		// Read indicies from file
+		uint32_t indexCount = 0;
+		modelFile.read((char*)&indexCount, sizeof(uint32_t));
+		
+		mesh->m_indices.reserve(indexCount);
+		//uint32_t* indicies = new uint32_t[indexCount];
+		for (uint32_t j = 0; j < indexCount; j++) {
+			uint32_t index = UINT32_MAX;
+			modelFile.read((char*)&index, sizeof(uint32_t));
+			mesh->m_indices.emplace_back(index);
+		}
+
+		// Read textures from file
+		for (uint32_t i = 0; i < 6; i++)
+		{
+			uint32_t wcharLength = 0;
+			modelFile.read((char*)&wcharLength, sizeof(uint32_t));
+
+			char* pathChar = new char[wcharLength];
+			modelFile.read(&pathChar[0], wcharLength);
+	
+			std::string texturePath(&pathChar[0], wcharLength);
+			mesh->m_textures.push_back({ texturePath.begin(), texturePath.end()});
+
+			delete[] pathChar;
+		}
+	}
+	modelFile.close();	
+}
+
+bool ModelHandler::BinaryModelFileExists(std::string modelName)
+{
+	std::string fileName = "Models/Binary/" + modelName + ".bmf";
+	return std::filesystem::exists(fileName.c_str());
 }

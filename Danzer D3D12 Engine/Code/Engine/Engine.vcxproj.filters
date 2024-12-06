@@ -12,9 +12,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Core\DirectX12Framework.cpp">
-      <Filter>Main</Filter>
-    </ClCompile>
     <ClCompile Include="Core\WindowHandler.cpp">
       <Filter>Main</Filter>
     </ClCompile>
@@ -88,9 +85,6 @@
     <ClCompile Include="Rendering\Screen Rendering\TextureRenderer.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Core\DirectX12Framework.h">
-      <Filter>Main</Filter>
-    </ClInclude>
     <ClInclude Include="Core\WindowHandler.h">
       <Filter>Main</Filter>
     </ClInclude>
@@ -199,5 +193,6 @@
     <ClInclude Include="Rendering\SSAOData.h" />
     <ClInclude Include="Rendering\VolumetricLightData.h" />
     <ClInclude Include="Rendering\Screen Rendering\TextureRenderer.h" />
+    <ClInclude Include="Core\HelperFunctions.h" />
   </ItemGroup>
 </Project>

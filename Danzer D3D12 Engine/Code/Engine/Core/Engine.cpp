@@ -186,7 +186,6 @@ void Engine::BeginUpdate()
 {
 	m_Impl->BeginUpdate();
 }
-
 void Engine::MidUpdate()
 {
 	m_Impl->MidUpdate();

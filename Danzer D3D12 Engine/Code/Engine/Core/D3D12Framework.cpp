@@ -231,6 +231,8 @@ void D3D12Framework::EndInitFrame()
 
 #pragma warning( suppress: 6387) 
 	WaitForSingleObject(m_fenceEvent, INFINITE);
+
+	m_initFrame = false;
 }
 
 //* Render the last texture rendered to back buffer.
