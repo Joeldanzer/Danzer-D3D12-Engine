@@ -467,7 +467,7 @@ void ModelHandler::WriteToBinaryModelFile(const LoaderModel* loadedModel, const 
 
 			// Write IndexData
 			const uint32_t indexCount = mesh->m_indices.size();
-			modelFile.write((char*)&indexCount,        sizeof(uint32_t));
+			modelFile.write((char*)&indexCount, sizeof(uint32_t));
 			for (uint32_t j = 0; j < mesh->m_indices.size(); j++)
 				modelFile.write((char*)&mesh->m_indices[j], sizeof(uint32_t));
 
@@ -494,6 +494,8 @@ void ModelHandler::WriteToBinaryModelFile(const LoaderModel* loadedModel, const 
 void ModelHandler::ReadFromBinaryModelFile(std::string modelName, LoaderModel* loaderModel)
 {
 	std::string fileName = "Models/Binary/" + modelName + ".bmf";
+
+	const std::chrono::time_point start = std::chrono::system_clock::now();
 	std::fstream modelFile(fileName, std::ios_base::in | std::ios_base::binary);
 	
 	uint32_t meshCount = 0;
@@ -521,7 +523,6 @@ void ModelHandler::ReadFromBinaryModelFile(std::string modelName, LoaderModel* l
 		modelFile.read((char*)&indexCount, sizeof(uint32_t));
 		
 		mesh->m_indices.reserve(indexCount);
-		//uint32_t* indicies = new uint32_t[indexCount];
 		for (uint32_t j = 0; j < indexCount; j++) {
 			uint32_t index = UINT32_MAX;
 			modelFile.read((char*)&index, sizeof(uint32_t));
@@ -544,6 +545,11 @@ void ModelHandler::ReadFromBinaryModelFile(std::string modelName, LoaderModel* l
 		}
 	}
 	modelFile.close();	
+
+	const std::chrono::time_point end = std::chrono::system_clock::now();
+#if _DEBUG
+	std::cout << modelName << " took " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << " ms." << std::endl;
+#endif
 }
 
 bool ModelHandler::BinaryModelFileExists(std::string modelName)

@@ -14,16 +14,18 @@ public:
 
 	void CreateDescriptorHeap(ID3D12Device* device,
 							  D3D12_DESCRIPTOR_HEAP_TYPE type,
-							  UINT numberOfDescriptors,
+							  uint32_t numberOfDescriptors,
 							  bool shaderVisible);
 
-	CD3DX12_CPU_DESCRIPTOR_HANDLE GET_CPU_DESCRIPTOR(const UINT size); 
-	CD3DX12_GPU_DESCRIPTOR_HANDLE GET_GPU_DESCRIPTOR(const UINT size); 
+	CD3DX12_CPU_DESCRIPTOR_HANDLE GET_CPU_DESCRIPTOR(const uint32_t size);
+	CD3DX12_GPU_DESCRIPTOR_HANDLE GET_GPU_DESCRIPTOR(const uint32_t size);
     
+	uint32_t CreateDescriptorHandle(CD3DX12_CPU_DESCRIPTOR_HANDLE& cpuHandle);
+
 	ID3D12DescriptorHeap*        GetDescriptorHeap()	  { return m_desctiptorHeap.Get(); }
-	const UINT					 DESCRIPTOR_SIZE()        { return m_handleIncrementSize; }
+	const uint32_t			     DESCRIPTOR_SIZE()        { return m_handleIncrementSize; }
 	
-	UINT						 m_handleCurrentOffset; //CurrentOffset * IncrementSize
+	uint32_t				     m_handleCurrentOffset; //CurrentOffset * IncrementSize
 
 private:
 	D3D12_DESCRIPTOR_HEAP_DESC m_desc;

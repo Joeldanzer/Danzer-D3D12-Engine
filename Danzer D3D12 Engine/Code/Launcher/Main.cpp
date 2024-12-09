@@ -1,11 +1,13 @@
 #include <windows.h>
 #include <strsafe.h>
 #include <iostream>
+#include <thread>
 
 #include "..\Editor\Editor.h"
 #include "..\Engine\Core\Engine.h"
 #include "..\Engine\Core\Input.hpp"
 #include "..\Game\Game.h"
+
 
 void DebugWindow() {
 #pragma warning( push )
@@ -13,7 +15,7 @@ void DebugWindow() {
 #pragma warning ( push )
 #pragma warning( disable : 6031 )
 	AllocConsole();
-	freopen("CONIN$", "r", stdin);
+	freopen("CONIN$", "r",  stdin);
 	freopen("CONOUT$", "w", stdout);
 	freopen("CONOUT$", "w", stderr);
 
@@ -23,6 +25,7 @@ void DebugWindow() {
 #pragma warning( pop )
 #pragma warning( pop )
 }
+
 
 int main(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ PWSTR lpCmdLine, _In_ int nShowCmd) 
 {
@@ -40,13 +43,12 @@ int main(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ PWSTR 
 	const HWND hDesktop = GetDesktopWindow();
 	GetWindowRect(hDesktop, &desktop);
 
-	// Will thread this
 	Engine engine = Engine(desktop.right, desktop.bottom);	
 	Editor editor(engine);
 	Game game(engine);
 
 	engine.EndInitFrame();
-
+	
 	while (true) {
 
 		Input::GetInstance().Update();
@@ -66,14 +68,13 @@ int main(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ PWSTR 
 			break;
 		}
 
-		// * Turned off at the moment when working with Editor.
-		engine.BeginUpdate();
+		engine.BeginFrame();
+
 		game.Update(engine.GetDeltaTime());
 		editor.Update(engine.GetDeltaTime());
-		engine.MidUpdate();
-		
-		engine.LateUpdate();		
+
+		engine.UpdateFrame();
 	}
-	
+
 	return 0;
 }

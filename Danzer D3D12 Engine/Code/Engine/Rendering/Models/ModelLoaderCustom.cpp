@@ -6,6 +6,7 @@
 #include "assimp/Scene.h"
 #include "assimp/postprocess.h"
 
+#include <chrono>
 #include <assert.h>
 #include <fstream>
 
@@ -25,9 +26,13 @@ bool ModelLoaderCustom::CheckModelMemory(const aiScene* scene)
 
 std::unique_ptr<LoaderModel> ModelLoaderCustom::LoadModelFromAssimp(std::string fileName, bool uvFlipped)
 {
+    
+
     std::ifstream fileExist(fileName);
     if (!fileExist.good())
         assert(fileExist, fileName.c_str() + " doesn't exist!");
+
+    std::chrono::time_point start = std::chrono::system_clock::now();
 
     //AI_CONFIG_COLUM_A
     m_importer.SetPropertyBool(AI_CONFIG_FBX_CONVERT_TO_M, false);
@@ -61,6 +66,12 @@ std::unique_ptr<LoaderModel> ModelLoaderCustom::LoadModelFromAssimp(std::string 
 
     GetAllModelProperties(model.get(), rootNode, scene, ConvertToEngineMat4(rootNode->mTransformation), uvFlipped);
     LoadMaterials(scene, model.get());
+    
+    std::chrono::time_point end = std::chrono::system_clock::now();
+
+#if _DEBUG
+    std::cout << fileName << " took " << std::chrono::duration_cast<std::chrono::seconds>(end - start).count() << " seconds." << std::endl;
+#endif
 
     return model;
 }

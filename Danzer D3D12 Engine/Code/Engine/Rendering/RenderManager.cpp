@@ -63,8 +63,6 @@ public:
 private:
 	void RenderScene(LightHandler& lightHandler, TextureHandler& textureHandler, SpriteHandler& spriteHandler, ModelHandler& modelHandler, ModelEffectHandler& effectHandler, SceneManager& scene);
 
-	void Render3DInstances(SceneManager& scene, ModelHandler& modelHandler, TextureHandler& textureHandler, ModelEffectHandler& effectHandler);
-
 	void Update3DInstances(SceneManager& scene, ModelHandler& modelHandler, ModelEffectHandler& effectHandler);
 	void Update2DInstances(SceneManager& scene, SpriteHandler& spriteHandler);
 
@@ -406,8 +404,6 @@ void RenderManager::Impl::BeginFrame()
 
 	m_textureRendering.ClearAllTextures(cmdList);
 }
-
-// DirectX12Framework pipeline needs to be fully reworked it seems >:(
 
 void RenderManager::Impl::RenderFrame(LightHandler& lightHandler, TextureHandler& textureHandler, ModelHandler& modelHandler, ModelEffectHandler& effectHandler,
 	 SpriteHandler& spriteHandler, SceneManager& scene)
@@ -757,4 +753,3 @@ TextureRenderingHandler& RenderManager::GetTextureRendering() const noexcept
 void RenderManager::SetKuwaharaRadius(UINT radius, UINT scale, Vect3f offset) {
 	m_Impl->SetKuwaharaRadius(radius, scale, offset);
 }
-

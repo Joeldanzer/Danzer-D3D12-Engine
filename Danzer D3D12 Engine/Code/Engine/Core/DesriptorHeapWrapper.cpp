@@ -16,7 +16,7 @@ DescriptorHeapWrapper::~DescriptorHeapWrapper()
 	m_desctiptorHeap.~ComPtr();
 }
 
-void DescriptorHeapWrapper::CreateDescriptorHeap(ID3D12Device* device, D3D12_DESCRIPTOR_HEAP_TYPE type, UINT numberOfDescriptors, bool shaderVisible)
+void DescriptorHeapWrapper::CreateDescriptorHeap(ID3D12Device* device, D3D12_DESCRIPTOR_HEAP_TYPE type, uint32_t numberOfDescriptors, bool shaderVisible)
 {
 	m_desc = { };
 	m_desc.Type = type;
@@ -31,7 +31,8 @@ void DescriptorHeapWrapper::CreateDescriptorHeap(ID3D12Device* device, D3D12_DES
 	m_handleIncrementSize = device->GetDescriptorHandleIncrementSize(type);
 }
 
-CD3DX12_CPU_DESCRIPTOR_HANDLE DescriptorHeapWrapper::GET_CPU_DESCRIPTOR(const UINT offset)
+
+CD3DX12_CPU_DESCRIPTOR_HANDLE DescriptorHeapWrapper::GET_CPU_DESCRIPTOR(const uint32_t offset)
 {
 	CD3DX12_CPU_DESCRIPTOR_HANDLE cpuHandle;
 	cpuHandle.InitOffsetted(m_desctiptorHeap->GetCPUDescriptorHandleForHeapStart(), offset * m_handleIncrementSize);
@@ -39,9 +40,20 @@ CD3DX12_CPU_DESCRIPTOR_HANDLE DescriptorHeapWrapper::GET_CPU_DESCRIPTOR(const UI
 	return cpuHandle;
 }
 
-CD3DX12_GPU_DESCRIPTOR_HANDLE DescriptorHeapWrapper::GET_GPU_DESCRIPTOR(const UINT offset)
+CD3DX12_GPU_DESCRIPTOR_HANDLE DescriptorHeapWrapper::GET_GPU_DESCRIPTOR(const uint32_t offset)
 {
 	CD3DX12_GPU_DESCRIPTOR_HANDLE gpuHandle;
 	gpuHandle.InitOffsetted(m_desctiptorHeap->GetGPUDescriptorHandleForHeapStart(), m_handleIncrementSize * offset);
 	return gpuHandle;
+}
+
+uint32_t DescriptorHeapWrapper::CreateDescriptorHandle(CD3DX12_CPU_DESCRIPTOR_HANDLE& cpuHandle)
+{
+	cpuHandle = GetDescriptorHeap()->GetCPUDescriptorHandleForHeapStart();
+	cpuHandle.Offset(m_handleCurrentOffset * DESCRIPTOR_SIZE());
+
+	const uint32_t offset = m_handleCurrentOffset;
+	m_handleCurrentOffset++;
+	
+	return offset;
 }

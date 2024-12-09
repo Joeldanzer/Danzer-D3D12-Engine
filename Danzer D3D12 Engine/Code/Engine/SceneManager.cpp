@@ -101,10 +101,11 @@ void SceneManager::UpdateTransformsForRendering(bool updateStaticObjects)
 				continue;
 
 		Transform& transform = view.get<Transform>(entity);
-		const Vector3& pos = transform.m_position;
+		const Vector3& pos   = transform.m_position;
 		const Vector3& scale = transform.m_scale;
 
-		transform.m_last = transform.m_world;
+		transform.m_last		 = transform.m_world;
+		transform.m_lastPosition = transform.m_world.Translation();
 
 		Mat4f mat;
 		DirectX::XMVECTOR quatv = DirectX::XMLoadFloat4(&transform.m_rotation);
@@ -113,6 +114,8 @@ void SceneManager::UpdateTransformsForRendering(bool updateStaticObjects)
 		mat *= DirectX::XMMatrixTranslation(pos.x, pos.y, pos.z);
 		transform.m_local = mat;
 		transform.m_world = !transform.Parent() ? transform.m_world = transform.m_local : transform.m_local * transform.Parent()->m_world;
+
+		transform.m_lastPosition = pos;
 	}
 
 	const Transform& camTransform = m_registry.get<Transform>(m_mainCamera);

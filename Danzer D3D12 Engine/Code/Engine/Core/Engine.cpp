@@ -31,9 +31,8 @@ public:
 	Impl(unsigned int width, unsigned int height);
 	~Impl();
 
-	void BeginUpdate();
-	void MidUpdate();
-	void LateUpdate();
+	void UpdateFrame();
+	void BeginFrame();
 
 	void EndInitFrame();
 
@@ -130,21 +129,15 @@ Engine::Engine(unsigned int width, unsigned int height)
 Engine::~Engine(){
 	//delete m_Impl;
 }
-
-void Engine::Impl::BeginUpdate()
-{
+void Engine::Impl::BeginFrame() {
 	m_frameTimer.Update();
-	const float deltaTime = m_frameTimer.GetRealDeltaTime();
-
 	m_renderManager.BeginFrame();
 }
-
-void Engine::Impl::MidUpdate()
-{
+void Engine::Impl::UpdateFrame() {
 	const float deltaTime = m_frameTimer.GetRealDeltaTime();
-
 	m_sceneManager.UpdateTransformsForRendering();
 
+	// Might move to main.cpp
 	//m_physicsHandler.SetPhysicsPositionAndRotation(m_sceneManager.Registry());
 	//m_physicsEngine.Update(1.0f / 60.0f, 0);
 	//m_physicsHandler.UpdatePhysicsEntities(m_sceneManager.Registry());
@@ -152,19 +145,13 @@ void Engine::Impl::MidUpdate()
 	m_soundEngine.UpdateSound(deltaTime);
 
 	m_renderManager.RenderFrame(m_lightHandler, m_textureHandler, m_modelHandler, m_modelEffectHandler, m_spriteHandler, m_sceneManager);
-}
-
-void Engine::Impl::LateUpdate()
-{
-	m_sceneManager.UpdateLastPositions();
 
 	m_framework.ExecuteCommandList();
 	m_framework.GetSwapChain()->Present(1, 0);
 	m_framework.WaitForGPU();
 }
 
-void Engine::Impl::EndInitFrame()
-{
+void Engine::Impl::EndInitFrame() {
 	m_sceneManager.UpdateTransformsForRendering(true);
 
 	m_physicsHandler.UpdateStaticColliders(m_sceneManager.Registry());
@@ -181,18 +168,12 @@ void Engine::Impl::EndInitFrame()
 //	
 //	return true;
 //}
-
-void Engine::BeginUpdate()
-{
-	m_Impl->BeginUpdate();
+void Engine::BeginFrame() {
+	m_Impl->BeginFrame();
 }
-void Engine::MidUpdate()
+void Engine::UpdateFrame()
 {
-	m_Impl->MidUpdate();
-}
-void Engine::LateUpdate()
-{
-	m_Impl->LateUpdate();
+	m_Impl->UpdateFrame();
 }
 void Engine::EndInitFrame()
 {

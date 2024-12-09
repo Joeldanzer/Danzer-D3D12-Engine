@@ -29,9 +29,8 @@ public:
 
 	//bool StartEngine(bool editor = true);
 
-	void BeginUpdate();
-	void MidUpdate();
-	void LateUpdate();
+	void BeginFrame();
+	void UpdateFrame();
 
 	void EndInitFrame();
 

@@ -84,7 +84,6 @@ bool EditorLoadAndSave::LoadScene(std::string scene, entt::registry& reg)
 	//
 	return success;
 }
-
 void EditorLoadAndSave::SaveScene(std::string scene, entt::registry& reg)
 {
 	m_currentScene = scene;
@@ -200,7 +199,6 @@ void EditorLoadAndSave::SaveScene(std::string scene, entt::registry& reg)
 		of.close();
 	}
 }
-
 void EditorLoadAndSave::SaveModelSettings(Model* model, rapidjson::PrettyWriter<rapidjson::StringBuffer>& writer)
 {
 	ModelData& data = m_engine.GetModelHandler().GetLoadedModelInformation(model->m_modelID);
@@ -276,7 +274,6 @@ void EditorLoadAndSave::SaveModelSettings(Model* model, rapidjson::PrettyWriter<
 	}
 	writer.EndObject();
 }
-
 void EditorLoadAndSave::GetModelSettings(entt::entity entity, entt::registry& reg, rapidjson::Value& value)
 {
 	if (value.HasMember("Model")) {
@@ -319,10 +316,8 @@ void EditorLoadAndSave::GetModelSettings(entt::entity entity, entt::registry& re
 		}
 	}
 }
-
 void EditorLoadAndSave::SaveDirectionalLight(DirectionalLight* dirLight, rapidjson::PrettyWriter<rapidjson::StringBuffer>& writer)
 {
-
 	writer.Key("Directional Light");
 	writer.StartObject();
 	{
@@ -352,7 +347,6 @@ void EditorLoadAndSave::SaveDirectionalLight(DirectionalLight* dirLight, rapidjs
 	}
 	writer.EndObject();
 }
-
 void EditorLoadAndSave::GetDirectionalLightSettings(entt::entity entity, entt::registry& reg, rapidjson::Value& value)
 {
 	if (value.HasMember("Directional Light")) {
@@ -379,7 +373,6 @@ void EditorLoadAndSave::GetDirectionalLightSettings(entt::entity entity, entt::r
 		};
 	}
 }
-
 bool EditorLoadAndSave::ReadJsonDocument(const std::string& scene, rapidjson::Document& doc)
 {
 	char* str = nullptr;
