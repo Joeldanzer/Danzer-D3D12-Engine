@@ -357,18 +357,11 @@ void ImguiHandler::StaticWindows()
 }
 void ImguiHandler::SaveScene(entt::registry& reg)
 {
-	if (!m_sceneLoader.CurrentScene().empty()) {
-		m_sceneLoader.SaveScene(m_sceneLoader.CurrentScene(), reg);
-	}
-	else {
-		std::wstring scene = m_fileExplorer.OpenFileExplorer(FILE_EXPLORER_SAVE, m_fileExtensions["Scenes"]);
-		m_sceneLoader.SaveScene({ scene.begin(), scene.end() }, reg);
-	}
+
 }
 void ImguiHandler::SaveSceneAs(entt::registry& reg)
 {
-	std::wstring scene = m_fileExplorer.OpenFileExplorer(FILE_EXPLORER_SAVE, m_fileExtensions["Scenes"]);
-	m_sceneLoader.SaveScene({ scene.begin(), scene.end() }, reg);
+
 }
 bool ImguiHandler::ModelDataSettings(entt::registry& reg)
 {
