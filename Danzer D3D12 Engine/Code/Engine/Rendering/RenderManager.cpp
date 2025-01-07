@@ -511,7 +511,9 @@ void RenderManager::Impl::RenderScene(LightHandler& lightHandler, TextureHandler
 			D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 	} //* Scene to Gbuffer end
 
-	m_textureRendering.RenderPass(PRE_SCENE_PASS_0, POST_PROCESS_2, cmdList);
+	m_textureRendering.RenderPass(PRE_SCENE_PASS_0, PRE_SCENE_PASS_2, cmdList);
+	m_textureRendering.RenderPass(SCENE_PASS_0, SCENE_PASS_2, cmdList);
+	m_textureRendering.RenderPass(POST_PROCESS_0, POST_PROCESS_2, cmdList);
 	m_framework.RenderToBackBuffer(m_textureRendering.FetchLastRenderedTexture()->SRVOffsetID(), m_psoHandler);
 
 	//* Render 2D Scene

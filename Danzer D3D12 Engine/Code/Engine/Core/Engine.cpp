@@ -83,14 +83,14 @@ Engine::Impl::Impl(unsigned int width, unsigned int height) :
 	m_bufferHandler(m_framework),
 	m_lightHandler(m_framework),
 	m_sceneManager(m_camera),
-	//m_physicsEngine(
-	//	10240, // Max number of bodies
-	//	0,     // Max body mutexes
-	//	65536, // Max body pairs
-	//	20480, // Max Contact Constraints
-	//	3      // Max Number of jobs(AKA threads)
-	//),
-	//m_physicsHandler(m_physicsEngine),
+	m_physicsEngine(
+		10240, // Max number of bodies
+		0,     // Max body mutexes
+		65536, // Max body pairs
+		20480, // Max Contact Constraints
+		3      // Max Number of jobs(AKA threads)
+	),
+	m_physicsHandler(m_physicsEngine),
 	m_soundEngine(),
 	m_deltaTime(0.f)
 {
@@ -138,9 +138,9 @@ void Engine::Impl::UpdateFrame() {
 	m_sceneManager.UpdateTransformsForRendering();
 
 	// Might move to main.cpp
-	//m_physicsHandler.SetPhysicsPositionAndRotation(m_sceneManager.Registry());
-	//m_physicsEngine.Update(1.0f / 60.0f, 0);
-	//m_physicsHandler.UpdatePhysicsEntities(m_sceneManager.Registry());
+	m_physicsHandler.SetPhysicsPositionAndRotation(m_sceneManager.Registry());
+	m_physicsEngine.Update(1.0f / 60.0f, 0);
+	m_physicsHandler.UpdatePhysicsEntities(m_sceneManager.Registry());
 
 	m_soundEngine.UpdateSound(deltaTime);
 
@@ -159,15 +159,6 @@ void Engine::Impl::EndInitFrame() {
 	m_framework.EndInitFrame();
 }
 
-//bool Engine::StartEngine(bool editor)
-//{
-//	if (editor)
-//		s_engineState = EngineState::ENGINE_STATE_EDITOR;
-//	else
-//		s_engineState = EngineState::ENGINE_STATE_GAME;
-//	
-//	return true;
-//}
 void Engine::BeginFrame() {
 	m_Impl->BeginFrame();
 }

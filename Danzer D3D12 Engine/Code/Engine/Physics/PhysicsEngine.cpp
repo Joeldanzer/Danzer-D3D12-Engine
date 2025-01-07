@@ -40,7 +40,7 @@ PhysicsEngine::PhysicsEngine(const UINT maxBodies, const UINT maxBodyMutexes, co
 	m_tempAllocator		  = new TempAllocatorImpl(32 * 1024 * 1024);
 
 #ifdef PHYSICS_THREADED
-	//m_jobSystem			  = new JobSystemThreadPool(s_MaxPhysicsJobs, s_MaxPhysicsBarriers, m_maxConcurrentJobs);
+	m_jobSystem			  = new JobSystemThreadPool(s_MaxPhysicsJobs, s_MaxPhysicsBarriers, m_maxConcurrentJobs);
 	m_jobSystemValidating = new JobSystemSingleThreaded(s_MaxPhysicsJobs);
 #else
 	m_jobSystem = new JobSystemSingleThreaded(s_MaxPhysicsJobs);
@@ -72,7 +72,7 @@ PhysicsEngine::~PhysicsEngine()
 
 void PhysicsEngine::Update(const float physicsDT, const int collisionSteps)
 {
-	//m_physicsSystem->Update(physicsDT, m_numberOfSteps, m_tempAllocator, m_jobSystem);
+	m_physicsSystem->Update(physicsDT, m_numberOfSteps, m_tempAllocator, m_jobSystem);
 }
 
 void PhysicsEngine::OptimizeBroadPhase()
