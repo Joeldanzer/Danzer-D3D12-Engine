@@ -1,6 +1,5 @@
 #pragma once
 #include "Core/D3D12Header.h"
-//#include "DirectX/include/directx/d3d12.h"
 #include "DirectX/include/directx/d3dx12.h"
 
 #include "Models/Material.h"

@@ -71,7 +71,7 @@ int main(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ PWSTR 
 		engine.BeginFrame();
 
 		game.Update(engine.GetDeltaTime());
-		//editor.Update(engine.GetDeltaTime());
+		editor.Update(engine.GetDeltaTime());
 
 		engine.UpdateFrame();
 	}

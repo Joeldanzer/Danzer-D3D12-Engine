@@ -169,7 +169,7 @@ FullscreenTexture* TextureRenderingHandler::FetchLastRenderedTexture()
 void TextureRenderingHandler::RenderPass(RENDER_PASS from, RENDER_PASS to, ID3D12GraphicsCommandList* cmdList)
 { 
 	std::vector<ID3D12Resource*> transitionResources;
-	for (uint8_t i = uint8_t(from); i < uint8_t(to) + 1; i++)
+	for (uint8_t i = from; i < to + 1; i++)
 	{
 		for (uint16_t j = 0; j < m_renderList[i].size(); j++)
 		{
@@ -187,7 +187,7 @@ void TextureRenderingHandler::RenderPass(RENDER_PASS from, RENDER_PASS to, ID3D1
 		if (m_textureList[i].empty())
 			continue;
 
-		for (uint32_t j = 0; j < m_textureList[i].size(); j++)
+		for (uint16_t j = 0; j < m_textureList[i].size(); j++)
 		{
 			m_framework.QeueuResourceTransition(m_textureList[i][j]->GetResource(m_frameIndex), m_textureList[i][j]->GetRenderingResourceState(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 			m_lastRenderedTexture = m_textureList[i][j];

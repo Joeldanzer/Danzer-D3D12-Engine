@@ -22,19 +22,18 @@ public:
 	static CustomModel GetPlane();
 
 	struct Mesh {
-		UINT m_numVerticies;
-		UINT m_vertexSize;
+		uint32_t m_numVerticies;
+		uint32_t m_vertexSize;
+		uint32_t m_numIndices;
 		
-		UINT m_numIndices;
+		D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView = {};
+		D3D12_INDEX_BUFFER_VIEW	 m_indexBufferView  = {};
 		
-		D3D12_VERTEX_BUFFER_VIEW	 m_vertexBufferView = {};
-		D3D12_INDEX_BUFFER_VIEW		 m_indexBufferView  = {};
+		ComPtr<ID3D12Resource>	 m_indexBuffer;
+		ComPtr<ID3D12Resource>	 m_vertexBuffer;
 		
-		ComPtr<ID3D12Resource>		 m_indexBuffer;
-		ComPtr<ID3D12Resource>		 m_vertexBuffer;
-		
-		Material       m_material;
-		MaterialBuffer m_materialBuffer;
+		Material				 m_material;
+		MaterialBuffer			 m_materialBuffer;
 
 		bool m_renderMesh = true;
 	};

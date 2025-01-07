@@ -79,8 +79,6 @@ Game::Impl::Impl(Engine& engine) :
 	GameEntity& sponzaObj = reg.emplace<GameEntity>(entity, entity);
 	sponzaObj.m_name = "Sponza Atrium";
 
-	//m_engine.GetModelHandler().LoadModelsToScene(reg, L"Models/BlenderSponzaAtriumNew.fbx");
-
     reg.emplace<Model>(entity, engine.GetModelHandler().LoadModel(L"Models/BlenderSponzaAtriumNew.fbx", "Sponza Atrium"));
 	
 	//engine.GetSoundEngine().CreateSound("Sound/MetalPipe.wav", FMOD_DEFAULT, nullptr, &m_pipeSound);

@@ -158,7 +158,7 @@ void RenderManager::Impl::InitializeRenderTextures(TextureHandler& textureHandle
 	m_shadowMap = new DirectionalShadowMapping();
 	m_shadowMap->SetPipelineAndRootSignature(m_psoHandler);
 	m_shadowMap->SetBufferAtSlot(m_shadowMapBuffer->OffsetID(), 0, true);
-	m_shadowMap->CreateProjection(64.0f, 4.0f);
+	m_shadowMap->CreateProjection(128.0f, 8.0f);
 	m_textureRendering.AddTextureRendererToPipeline(m_shadowMap, PRE_SCENE_PASS_0);
 	FullscreenTexture* shadowMapTexture = m_textureRendering.CreateFullscreenTexture(
 		8192,

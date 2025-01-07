@@ -100,8 +100,6 @@ void SceneManager::UpdateTransformsForRendering(bool updateStaticObjects)
 		//	if (gameEntt.m_static || gameEntt.m_state != GameEntity::STATE::ACTIVE)
 		//		continue;
 
-		if (m_registry.try_get<DirectionalLight>(entity))
-			int s = 1;
 
 		Transform& transform = view.get<Transform>(entity);
 		const Vector3& pos   = transform.m_position;
@@ -123,13 +121,13 @@ void SceneManager::UpdateTransformsForRendering(bool updateStaticObjects)
 
 	const Transform& camTransform = m_registry.get<Transform>(m_mainCamera);
 
-	auto lightView = m_registry.view<Transform, DirectionalLight>();
-	for (auto entity : lightView )
-	{
-		Transform& transform = m_registry.get<Transform>(entity);
-		transform.m_position.x = camTransform.m_position.x;
-		transform.m_position.y = camTransform.m_position.z;
-	}
+	//auto lightView = m_registry.view<Transform, DirectionalLight>();
+	//for (auto entity : lightView )
+	//{
+	//	Transform& transform = m_registry.get<Transform>(entity);
+	//	transform.m_position.x = camTransform.m_position.x;
+	//	transform.m_position.y = camTransform.m_position.z;
+	//}
 }
 
 void SceneManager::UpdateLastPositions()

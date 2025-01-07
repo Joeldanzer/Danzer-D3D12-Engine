@@ -10,7 +10,6 @@ class PSOHandler;
 
 // All the passes in the rendering pipeline, the order of first to last depending on each pass is 0 - 2 (start to end)
 enum RENDER_PASS : uint8_t {
-	NONE,
 	PRE_SCENE_PASS_0, // 1st pass in PRE_SCENE_PASS. 
 	PRE_SCENE_PASS_1, // 2nd pass in PRE_SCENE_PASS.
 	PRE_SCENE_PASS_2, // 3rd pass in PRE_SCENE_PASS.
