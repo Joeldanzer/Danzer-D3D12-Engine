@@ -161,7 +161,6 @@ void TextureRenderingHandler::ClearAllTextures(ID3D12GraphicsCommandList* cmdLis
 	}
 }
 
-
 FullscreenTexture* TextureRenderingHandler::FetchLastRenderedTexture()
 {
 	return m_lastRenderedTexture;

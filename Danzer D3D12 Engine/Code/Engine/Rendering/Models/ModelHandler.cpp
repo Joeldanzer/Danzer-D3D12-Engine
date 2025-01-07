@@ -363,7 +363,7 @@ std::vector<ModelData::Mesh> ModelHandler::LoadMeshFromLoaderModel(LoaderModel* 
 		ModelData::Mesh mesh;
 		LoaderMesh* loadedMesh = loadedModel->m_meshes[i];
 
-		// Load our Buffers and Upload Buffers 
+		// Load our Buffers 
 		VertexIndexBufferInfo bufferInfo = GetIndexAndVertexBuffer(
 			ToWstring(loadedModel->m_name),
 			loadedMesh->m_vertexSize * loadedMesh->m_vertexCount,
@@ -402,6 +402,7 @@ std::vector<ModelData::Mesh> ModelHandler::LoadMeshFromLoaderModel(LoaderModel* 
 		meshes.emplace_back(mesh);
 	}
 
+	// Queue to the GPU
 	cmdList->ResourceBarrier(static_cast<UINT>(resourceBarriers.size()), &resourceBarriers[0]);
 	
 	return meshes;

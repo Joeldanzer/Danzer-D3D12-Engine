@@ -90,7 +90,7 @@ void ImguiHandler::Update(const float dt)
 	if (ImGui::BeginMainMenuBar()) {
 		if (ImGui::BeginMenu("Scene Lighting")) {	
 			ImGui::Text("Directional Lighting");
-			auto dirLightList = reg.view<DirectionalLight, Transform>();
+			auto dirLightList = reg.view<DirectionalLight, Transform, GameEntity>();
 			entt::entity ent;
 			for (auto entity : dirLightList)
 				ent = entity;

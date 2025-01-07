@@ -96,9 +96,12 @@ void SceneManager::UpdateTransformsForRendering(bool updateStaticObjects)
 	for (auto entity : view)
 	{
 		const GameEntity& gameEntt = view.get<GameEntity>(entity);
-		if(!updateStaticObjects)
-			if (gameEntt.m_static || gameEntt.m_state != GameEntity::STATE::ACTIVE)
-				continue;
+		//if(!updateStaticObjects)
+		//	if (gameEntt.m_static || gameEntt.m_state != GameEntity::STATE::ACTIVE)
+		//		continue;
+
+		if (m_registry.try_get<DirectionalLight>(entity))
+			int s = 1;
 
 		Transform& transform = view.get<Transform>(entity);
 		const Vector3& pos   = transform.m_position;

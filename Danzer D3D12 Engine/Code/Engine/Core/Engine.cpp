@@ -83,14 +83,14 @@ Engine::Impl::Impl(unsigned int width, unsigned int height) :
 	m_bufferHandler(m_framework),
 	m_lightHandler(m_framework),
 	m_sceneManager(m_camera),
-	m_physicsEngine(
-		10240, // Max number of bodies
-		0,     // Max body mutexes
-		65536, // Max body pairs
-		20480, // Max Contact Constraints
-		3      // Max Number of jobs(AKA threads)
-	),
-	m_physicsHandler(m_physicsEngine),
+	//m_physicsEngine(
+	//	10240, // Max number of bodies
+	//	0,     // Max body mutexes
+	//	65536, // Max body pairs
+	//	20480, // Max Contact Constraints
+	//	3      // Max Number of jobs(AKA threads)
+	//),
+	//m_physicsHandler(m_physicsEngine),
 	m_soundEngine(),
 	m_deltaTime(0.f)
 {

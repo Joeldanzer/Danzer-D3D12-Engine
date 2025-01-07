@@ -650,7 +650,7 @@ void RenderManager::Impl::UpdatePrimaryConstantBuffers(SceneManager& scene)
 	Camera& cam = reg.get<Camera>(scene.GetMainCamera());
 	Transform& camTransform = reg.get<Transform>(scene.GetMainCamera());
 
-	auto list = scene.Registry().view<DirectionalLight, Transform>();
+	auto list = scene.Registry().view<DirectionalLight, Transform, GameEntity>();
 	DirectionalLight directionalLight;
 	Vect4f dirLightPos = { 0.0f, 0.0f, 0.0f, 1.0f };
 	Vect4f directionaLightdir = { 0.f, 0.f, 0.f, 1.f };
@@ -661,7 +661,7 @@ void RenderManager::Impl::UpdatePrimaryConstantBuffers(SceneManager& scene)
 
 	camData.m_transformTwo = DirectX::XMMatrixTranspose(camTransform.m_world.Invert());
 	camData.m_transformOne = DirectX::XMMatrixTranspose(cam.GetProjection());
-	camData.m_vectorOne = camTransform.m_position;
+	camData.m_vectorOne =  camTransform.m_position;
 	camData.m_vectorTwo = -camData.m_transformTwo.Forward();
 	camData.m_vectorOne.w = cam.RenderTarget();
 	camData.m_time = clock() / 1000.0f;
@@ -672,13 +672,13 @@ void RenderManager::Impl::UpdatePrimaryConstantBuffers(SceneManager& scene)
 
 	for (auto entity : list) {
 		directionalLight = reg.get<DirectionalLight>(entity);
-		directionalLight.m_lightTransform = reg.get<Transform>(entity).m_world;
+		directionalLight.m_lightTransform = reg.get<Transform>(entity).m_local;
 		dirLightPos = reg.get<Transform>(entity).m_position;
 
 		lightData.m_lightTransform = DirectX::XMMatrixTranspose(directionalLight.m_lightTransform.Invert());
-		lightData.m_lightColor = directionalLight.m_lightColor;
-		lightData.m_ambientColor = directionalLight.m_ambientColor;
-		lightData.m_direction = lightData.m_lightTransform.Forward();
+		lightData.m_lightColor     = directionalLight.m_lightColor;
+		lightData.m_ambientColor   = directionalLight.m_ambientColor;
+		lightData.m_direction      = lightData.m_lightTransform.Forward();
 	}
 	lightData.m_lightProjection = DirectX::XMMatrixTranspose(m_shadowMap->GetProjectionMatrix());
 
