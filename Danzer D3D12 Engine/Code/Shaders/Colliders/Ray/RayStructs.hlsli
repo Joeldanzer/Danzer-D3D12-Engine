@@ -1,11 +1,13 @@
 struct InputToVertex
 {
-    float3 m_position    : POSITION;
-    float3 m_destination : DESTINATION;
+    float4 m_color : COLOR;
+    float4 m_start : POSITION;
+    float4 m_end   : DESTINATION;
 };
 
 struct VertexToGeometry
 {
-    float4 m_position    : POSITION;
-    float4 m_destination : DESTINATION;
+    float4 m_color : COLOR;
+    float4 m_start : POSITION;
+    float4 m_end   : DESTINATION;
 };

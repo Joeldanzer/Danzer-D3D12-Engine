@@ -1,11 +1,15 @@
 #include "AABBStructs.hlsli"
 
-VertexToGeometry main( InputToVertex input ) 
+VertexToPixel main( InputToVertex input ) 
 {
-    VertexToGeometry returnValue;
+    VertexToPixel returnValue;
 	
-    returnValue.m_position = float4(input.m_position, 1.f);
-    returnValue.m_size = input.m_size;
+    float4 toWorld = mul(input.m_position, input.m_transform);
+    float4 toCam   = mul(toWorld, camera);
+    float4 toProj  = mul(toCam, projection);
+    
+    returnValue.m_position = toProj;
+    returnValue.m_color    = input.m_color;
     
 	return returnValue;
 }

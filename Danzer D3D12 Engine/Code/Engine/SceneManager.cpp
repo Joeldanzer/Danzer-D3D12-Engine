@@ -10,7 +10,7 @@
 
 SceneManager::SceneManager(Camera& cam)
 {
-	cam = Camera(65.f, (float)WindowHandler::WindowData().m_w / (float)WindowHandler::WindowData().m_h);
+	cam = Camera(65.f, (float)WindowHandler::WindowData().m_w / (float)WindowHandler::WindowData().m_h, 0.1f, 1000.0f);
 
 	m_registry = entt::registry();
 
@@ -92,34 +92,35 @@ void SceneManager::SearchForExistingScenes()
 
 void SceneManager::UpdateTransformsForRendering(bool updateStaticObjects)
 {
-	auto view = m_registry.view<Transform, GameEntity>();
-	for (auto entity : view)
-	{
-		const GameEntity& gameEntt = view.get<GameEntity>(entity);
-		//if(!updateStaticObjects)
+	//auto view = m_registry.view<Transform, GameEntity>();
+	//for (auto entity : view)
+	//{
+	//	const GameEntity& gameEntt = view.get<GameEntity>(entity);
+	//	//if(!updateStaticObjects)
 		//	if (gameEntt.m_static || gameEntt.m_state != GameEntity::STATE::ACTIVE)
 		//		continue;
-
-
-		Transform& transform = view.get<Transform>(entity);
-		const Vector3& pos   = transform.m_position;
-		const Vector3& scale = transform.m_scale;
-
-		transform.m_last		 = transform.m_world;
-		transform.m_lastPosition = transform.m_world.Translation();
-
-		Mat4f mat;
-		DirectX::XMVECTOR quatv = DirectX::XMLoadFloat4(&transform.m_rotation);
-		mat  = DirectX::XMMatrixScaling(transform.m_scale.x, transform.m_scale.y, transform.m_scale.z);
-		mat *= DirectX::XMMatrixRotationQuaternion(quatv);
-		mat *= DirectX::XMMatrixTranslation(pos.x, pos.y, pos.z);
-		transform.m_local = mat;
-		transform.m_world = !transform.Parent() ? transform.m_world = transform.m_local : transform.m_local * transform.Parent()->m_world;
-
-		transform.m_lastPosition = pos;
-	}
-
-	const Transform& camTransform = m_registry.get<Transform>(m_mainCamera);
+	//
+	//
+	//	Transform& transform = view.get<Transform>(entity);
+	//	const Vector3& pos   = transform.m_position;
+	//	const Vector3& scale = transform.m_scale;
+	//
+	//	transform.m_last		 = transform.m_world;
+	//	transform.m_lastPosition = transform.m_world.Translation();
+	//
+	//	Mat4f mat;
+	//	DirectX::XMVECTOR quatv = DirectX::XMLoadFloat4(&transform.m_rotation);
+	//	mat *= DirectX::XMMatrixRotationQuaternion(quatv);
+	//	mat *= DirectX::XMMatrixScaling(transform.m_scale.x, transform.m_scale.y, transform.m_scale.z);
+	//	mat *= DirectX::XMMatrixTranslation(pos.x, pos.y, pos.z);
+	//
+	//	transform.m_local = mat;
+	//	transform.m_world = !transform.Parent() ? transform.m_world = transform.m_local : transform.m_local * transform.Parent()->m_world;
+	//
+	//	transform.m_lastPosition = pos;
+	//}
+	//
+	//const Transform& camTransform = m_registry.get<Transform>(m_mainCamera);
 
 	//auto lightView = m_registry.view<Transform, DirectionalLight>();
 	//for (auto entity : lightView )

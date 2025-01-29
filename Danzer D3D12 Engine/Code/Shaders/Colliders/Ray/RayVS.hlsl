@@ -4,7 +4,9 @@ VertexToGeometry main( InputToVertex input)
 {
     VertexToGeometry returnValue;
 	
-    returnValue.m_position = float4(input.m_position, 1.f);
-    returnValue.m_destination = float4(input.m_destination, 1.f);
+    returnValue.m_start = input.m_start;
+    returnValue.m_end   = input.m_end;
+    returnValue.m_color = input.m_color;
+    
 	return returnValue;
 }

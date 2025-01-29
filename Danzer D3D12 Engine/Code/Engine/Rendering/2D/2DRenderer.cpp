@@ -19,8 +19,9 @@ void Renderer2D::Init(D3D12Framework& framework, PSOHandler& psoHandler)
 				 D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
 				 D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS;
 	m_rs  = psoHandler.CreateRootSignature(1, 1, PSOHandler::SAMPLER_CLAMP, flags, L"Renderer 2D Root Signature");
-	m_pso = psoHandler.CreatePSO(
-		{L"Shaders/uiVertexShader.cso", L"Shaders/uiPixelShader.cso"},
+	m_pso = psoHandler.CreateDefaultPSO(
+		L"Shaders/uiVertexShader.cso", 
+		L"Shaders/uiPixelShader.cso",
 		PSOHandler::BLEND_DEFAULT,
 		PSOHandler::RASTERIZER_NONE,
 		depth,
@@ -78,7 +79,7 @@ void Renderer2D::RenderUI(ID3D12GraphicsCommandList* cmdList, std::vector<Sprite
 		CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle(cbvSrvHeapStart, textures[sheet.m_texture].m_offsetID, cbvSrvDescSize);
 		cmdList->SetGraphicsRootDescriptorTable(1, srvHandle);
 	
-		cmdList->IASetVertexBuffers(1, 1, &sprite.GetInstanceBuffer().GetBufferView(frameIndex));
+		//cmdList->IASetVertexBuffers(1, 1, &sprite.GetInstanceBuffer().GetBufferView(frameIndex));
 		cmdList->DrawIndexedInstanced(6, (UINT)sprite.GetInstances().size(), 0, 0, 0);
 	}
 }

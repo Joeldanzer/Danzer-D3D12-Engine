@@ -1,7 +1,9 @@
 #pragma once
 #include "../VertexAndTextures.h"
-#include "Rendering/Buffers/TransformBuffer.h"
+#include "Rendering/Buffers/VertexBuffer.h"
 #include "Rendering/Buffers/MaterialBuffer.h"
+
+#include "Rendering/FrustrumCulling.h"
 
 #include "Material.h"
 
@@ -22,9 +24,9 @@ public:
 	static CustomModel GetPlane();
 
 	struct Mesh {
-		uint32_t m_numVerticies;
-		uint32_t m_vertexSize;
-		uint32_t m_numIndices;
+		uint32_t				 m_vertexSize;
+		uint32_t				 m_numIndices;
+		uint32_t				 m_numVerticies;
 		
 		D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView = {};
 		D3D12_INDEX_BUFFER_VIEW	 m_indexBufferView  = {};
@@ -34,6 +36,11 @@ public:
 		
 		Material				 m_material;
 		MaterialBuffer			 m_materialBuffer;
+	
+		FrustrumCulling::AABB	 m_aabb;
+
+		VertexBuffer			 m_meshBuffer;
+		std::vector<Mat4f>		 m_instanceTransforms;
 
 		bool m_renderMesh = true;
 	};
@@ -51,16 +58,17 @@ public:
 		m_transparent(transparent),
 		m_modelPath(fileName)
 	{
-		for (auto& mesh : m_meshes)
+		for (auto& mesh : m_meshes) {
 			mesh.m_materialBuffer.Init(device, cbvWrapper, sizeof(MaterialBuffer::Data));
+			mesh.m_meshBuffer.Initialize(device, sizeof(Mat4f));
+		}
 
-		m_transformBuffer.Init(device);
-		//m_materialBuffer.Init(device);
+		m_transformBuffer.Initialize(device, sizeof(Mat4f));
 	};
 
-	void AddInstanceTransform(Mat4f transform);
 	void ClearInstanceTransform();
 	const std::vector<Mat4f>& GetInstanceTransforms() { return m_instanceTransforms; }
+	const std::vector<uint32_t>& MeshToRender() { return m_meshToRender; }
 
 	void SetID(UINT id) { m_ID = id; }
 	const UINT GetID() { return m_ID; }
@@ -70,18 +78,22 @@ public:
 	void SetName(std::string name) { m_name = name; }
 	const std::string& Name() const { return m_name; }
 
-	//MaterialBuffer& GetMaterialBuffer() {
-	//	return m_materialBuffer;
-	//}
-	TransformBuffer& GetTransformInstanceBuffer() {
+	VertexBuffer& GetTransformInstanceBuffer() {
 		return m_transformBuffer;
 	}
-	void UpdateTransformInstanceBuffer(UINT frameIndex) { 
-		m_transformBuffer.UpdateBuffer(reinterpret_cast<UINT8*>(&m_instanceTransforms[0]), (UINT)m_instanceTransforms.size(), frameIndex); 
+	void AddModelInstanceTransform(Mat4f transform) { m_instanceTransforms.emplace_back(transform); }
+	void AddMeshToRender(const uint32_t meshIndex, const Mat4f& transform) {
+		m_meshes[meshIndex].m_instanceTransforms.emplace_back(transform.Transpose());
+		m_meshToRender.emplace_back(meshIndex);
 	}
-	void UpdateTransformInstanceBuffer(std::vector<Mat4f>& transform, const UINT frameIndex) {
-		m_transformBuffer.UpdateBuffer(reinterpret_cast<UINT8*>(&transform[0]), (UINT)transform.size(), frameIndex);
+	void UpdateAllMeshInstanceBuffer(uint32_t frameIndex);
+	void UpdateTransformInstanceBuffer(uint32_t frameIndex) {
+		m_transformBuffer.UpdateBuffer(reinterpret_cast<uint16_t*>(&m_instanceTransforms[0]), (uint32_t)m_instanceTransforms.size(), frameIndex);
 	}
+
+	//void UpdateTransformInstanceBuffer(std::vector<Mat4f>& transform, const UINT frameIndex) {
+	//	m_transformBuffer.UpdateBuffer(reinterpret_cast<uint8_t*>(&transform[0]), (uint32_t)transform.size(), frameIndex);
+	//}
 	void UpdatedMaterialBuffer(UINT frameIndex) {
 		//MaterialBuffer::Data data;
 		//data.m_hasMaterialTexture = m_hasMaterialTextures;
@@ -119,17 +131,20 @@ private:
 
 	std::vector<Mesh>   m_meshes;
 	std::vector<Vect3f> m_verticies;
-	
-	std::vector<Mat4f> m_instanceTransforms;
-	std::vector<Mat4f> m_instanceTransparentTransforms;
+
+	//std::vector<>
+	std::vector<uint32_t> m_meshToRender;
+
+	std::vector<Mat4f>    m_instanceTransforms;
+	std::vector<Mat4f>	  nstanceTransparentTransforms;
 
 	// Vertext paint inforamtion
 	std::vector<UINT> m_albedoTextures;
 	std::vector<UINT> m_normalTextures;
 	std::vector<UINT> m_materialTextures;
 
-	TransformBuffer m_transformBuffer;
-	TransformBuffer m_transparentTransformBuffer;
+	VertexBuffer m_transformBuffer;
+	VertexBuffer m_transparentTransformBuffer;
 
 	UINT m_ID;	
 

@@ -172,8 +172,9 @@ void GBuffer::InitPipelineAndRootSignature(PSOHandler& psoHandler)
 	depth.DepthFunc		 = D3D12_COMPARISON_FUNC_LESS_EQUAL;
 	depth.StencilEnable  = false;
 
-	m_pso = psoHandler.CreatePSO(
-		{ L"Shaders/GbufferVS.cso", L"Shaders/GbufferPS.cso" }, 
+	m_pso = psoHandler.CreateDefaultPSO(
+		L"Shaders/GbufferVS.cso", 
+		L"Shaders/GbufferPS.cso", 
 		PSOHandler::BLEND_DEFAULT,
 		PSOHandler::RASTERIZER_FRONT,
 		depth,
@@ -185,8 +186,9 @@ void GBuffer::InitPipelineAndRootSignature(PSOHandler& psoHandler)
 		L"GBuffer PSO"
 	);
 
-	m_pso = psoHandler.CreatePSO(
-		{ L"Shaders/GbufferVS.cso", L"Shaders/GbufferPS.cso" },
+	m_pso = psoHandler.CreateDefaultPSO(
+		L"Shaders/GbufferVS.cso", 
+		L"Shaders/GbufferPS.cso",
 		PSOHandler::BLEND_TRANSPARENT,
 		PSOHandler::RASTERIZER_NONE,
 		depth,

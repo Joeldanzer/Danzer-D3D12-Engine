@@ -5,6 +5,7 @@
 typedef DirectX::SimpleMath::Vector2 Vect2f;
 typedef DirectX::SimpleMath::Vector3 Vect3f;
 typedef DirectX::SimpleMath::Vector4 Vect4f;
+typedef DirectX::SimpleMath::Plane   Planef;
 
 typedef DirectX::SimpleMath::Quaternion Quat4f;
 
@@ -51,4 +52,29 @@ inline Vect4f Mul(const Mat4f& mat, const Vect4f& pos) {
 	    //pos.x* mat._31 + pos.y * mat._32 + pos.z * mat._33 + pos.w * mat._34,
 	    //pos.x* mat._41 + pos.y * mat._42 + pos.z * mat._43 + pos.w * mat._44,
 	};
+}
+inline const float Dot(const Vect3f& v1, const Vect3f& v2) {
+	return v1.x * v2.x + v1.y * v2.y + v1.z * v2.y;
+}
+inline const Vect3f Cross(const Vect3f& v1, const Vect3f& v2) {
+	return {
+		v1.y * v2.z - v1.z * v2.y,
+		v1.z * v2.x - v1.x * v2.z,
+		v1.x * v2.y - v1.y - v2.x
+	};
+}
+inline const Vect3f PlaneIntersecting(const Planef& p1, const Planef& p2, const Planef& p3) {
+	Vect3f n1 = p1.Normal(), n2 = p2.Normal(), n3 = p3.Normal();
+
+	if (n1.Dot(n2) >= 1) return Vect3f::Zero;
+	if (n2.Dot(n3) >= 1) return Vect3f::Zero;
+	if (n3.Dot(n1) >= 1) return Vect3f::Zero;
+
+	float d1 = p1.D(), d2 = p2.D(), d3 = p3.D();
+
+	Vect3f numerator = d1 * (n2.Cross(n3)) + d2 * (n3.Cross(n1)) + d3 * (n1.Cross(n2));
+	float  denominator = (n2.Cross(n1)).Dot(n3);
+	Vect3f intersection = numerator / denominator;
+
+	return intersection;
 }

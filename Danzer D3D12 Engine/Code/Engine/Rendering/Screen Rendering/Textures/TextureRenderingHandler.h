@@ -17,8 +17,11 @@ enum RENDER_PASS : uint8_t {
 	SCENE_PASS_1,
 	SCENE_PASS_2,
 	POST_PROCESS_0,   // After Light Pass(DirectionalLight, Spotlight, pointlights etc.)
-	POST_PROCESS_1, 
+	POST_PROCESS_1,
 	POST_PROCESS_2,
+	UI_LAYER_0,
+	UI_LAYER_1,
+	UI_LAYER_2,
 	RENDER_PASS_COUNT
 };
 

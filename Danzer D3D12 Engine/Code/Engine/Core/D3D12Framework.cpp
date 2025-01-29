@@ -275,11 +275,9 @@ void D3D12Framework::SetBackBufferPSO(PSOHandler& psoHandler)
 
 	DXGI_FORMAT rtvFormat[] = { DXGI_FORMAT_R8G8B8A8_UNORM };
 	CD3DX12_DEPTH_STENCIL_DESC depth(D3D12_DEFAULT);
-	m_backBufferPSO = psoHandler.CreatePSO(
-		{
-			L"Shaders/FullscreenVS.cso",
-			L"Shaders/BackBufferPS.cso"
-		},
+	m_backBufferPSO = psoHandler.CreateDefaultPSO(
+		L"Shaders/FullscreenVS.cso",
+		L"Shaders/BackBufferPS.cso",	
 		PSOHandler::BLEND_DEFAULT,
 		PSOHandler::RASTERIZER_DEFAULT,
 		depth,

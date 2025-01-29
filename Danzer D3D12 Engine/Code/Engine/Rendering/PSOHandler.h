@@ -37,15 +37,18 @@ public:
 		RASTERIZER_DEFAULT,
 		RASTERIZER_BACK,
 		RASTERIZER_FRONT,
+		RASTERIZER_LINE,
 		RASTERIZER_NONE,
 		RASTERIZER_COUNT
 	};
 
 	PSOHandler(D3D12Framework& framework);
 
-	UINT CreateRootSignature(const UINT numberOfCBV, const UINT numberOfSRV, SAMPLER_DESCS sampler, D3D12_ROOT_SIGNATURE_FLAGS flags, std::wstring name);
-	UINT CreatePSO(
-		std::array<std::wstring, 2> shaderName, 
+	const uint32_t CreateRootSignature(const UINT numberOfCBV, const UINT numberOfSRV, SAMPLER_DESCS sampler, D3D12_ROOT_SIGNATURE_FLAGS flags, std::wstring name);
+	// Creates PSO with default InputLayouts, vertex and pixel shader.
+	const uint32_t CreateDefaultPSO(
+		std::wstring                vertexShader,
+		std::wstring                pixelShader,
 		BLEND_DESC				    blend, 
 		RASTERIZER_DESC				rast, 
 		D3D12_DEPTH_STENCIL_DESC	depth,
@@ -55,6 +58,36 @@ public:
 		const UINT					rootSignature,
 		INPUT_LAYOUTS				layout,
 		std::wstring				name
+	);
+	// Creates PSO with custom InputLayout, standard vertex & pixel shader.
+	const uint32_t CreateDefaultPSO(
+		std::wstring						  vertexShader,
+		std::wstring						  pixelShader,
+		BLEND_DESC							  blend,
+		RASTERIZER_DESC						  rast,
+		D3D12_DEPTH_STENCIL_DESC			  depth,
+		DXGI_FORMAT							  depthFormat,
+		DXGI_FORMAT*						  rtvFormats,
+		const UINT						      rtvCount,
+		const UINT						      rootSignature,
+		std::vector<D3D12_INPUT_ELEMENT_DESC> layout,
+		std::wstring						  name
+	);
+	// Creates a PSO object with custom InputLayout, Vertex, Geometry and Pixel shader.
+	const uint32_t CreateGeometryPSO(
+		std::wstring						  vertexShader,
+		std::wstring						  geometryShader,
+		std::wstring						  pixelShader,
+		BLEND_DESC							  blend,
+		RASTERIZER_DESC						  rast,
+		D3D12_DEPTH_STENCIL_DESC			  depth,
+		DXGI_FORMAT							  depthFormat,
+		DXGI_FORMAT*						  rtvFormats,
+		const UINT						      rtvCount,
+		const UINT						      rootSignature,
+		D3D12_PRIMITIVE_TOPOLOGY_TYPE		  primitiveTopology,
+		std::vector<D3D12_INPUT_ELEMENT_DESC> layout,
+		std::wstring						  name
 	);
 
 	ID3D12PipelineState* GetPipelineState(const UINT psoIndex) {
@@ -80,6 +113,8 @@ private:
 	void InitializeInputLayouts();
 	void InitializeBlendDescs();
 	void InitializeRastDescs();
+
+	void ReadFileToBlob(const std::wstring& shader, D3D12_SHADER_BYTECODE* byteCode);
 
 	std::vector<ComPtr<ID3D12PipelineState>> m_pipelineStates;
 	std::vector<ComPtr<ID3D12RootSignature>> m_rootSignatures;

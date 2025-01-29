@@ -27,8 +27,9 @@ void KuwaharaFilter::CreatePipelineAndRootsignature(PSOHandler& psoHandler)
 	auto flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
 			     D3D12_ROOT_SIGNATURE_FLAG_DENY_VERTEX_SHADER_ROOT_ACCESS ;
 	m_rs  = psoHandler.CreateRootSignature(1, 1, PSOHandler::SAMPLER_CLAMP, flags, L"Kuwahara Filter Root Signature");
-	m_pso = psoHandler.CreatePSO(
-		{ L"Shaders/FullscreenVS.cso", L"Shaders/KuwaharaFilterPS.cso" },
+	m_pso = psoHandler.CreateDefaultPSO(
+		L"Shaders/FullscreenVS.cso", 
+		L"Shaders/KuwaharaFilterPS.cso",
 		PSOHandler::BLEND_DEFAULT,
 		PSOHandler::RASTERIZER_NONE,
 		depth,

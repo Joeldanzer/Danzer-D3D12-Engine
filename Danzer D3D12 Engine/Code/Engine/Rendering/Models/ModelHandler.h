@@ -27,7 +27,7 @@ public:
 	Model CreateCustomModel(CustomModel model, bool transparent = false);
 	Model LoadModel(std::wstring fileName, std::string name = "", bool transparent = false, bool uvFlipped = false);
 	void  LoadModelsToScene(entt::registry& reg, std::wstring fileName, std::string name = "", bool uvFlipped = false);
-	UINT GetExistingModel(std::wstring modelName);
+	UINT GetExistingModel(std::wstring modelPath);
 
 	ModelData& GetLoadedModelInformation(UINT id) {
 		if (id - 1 < m_models.size() && id != 0)
@@ -53,7 +53,7 @@ private:
 		std::string  m_modelName;
 		std::wstring m_fileName;
 	};
-	
+
 	Material GetNewMaterialFromLoadedModel(const std::string& material);
 	UINT GetNewlyCreatedModelID(ModelData model);
 

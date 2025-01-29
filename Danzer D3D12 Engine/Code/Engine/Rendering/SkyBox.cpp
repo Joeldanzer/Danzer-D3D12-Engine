@@ -59,7 +59,7 @@ void Skybox::Update(const float dt)
 	}
 }
 
-void Skybox::RenderToTexture(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper& heap, DescriptorHeapWrapper& cbvSrvHeap, const uint8_t frameIndex)
+bool Skybox::RenderToTexture(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper& heap, DescriptorHeapWrapper& cbvSrvHeap, const uint8_t frameIndex)
 {
 	if (!m_modelData->GetInstanceTransforms().empty())
 		m_modelData->ClearInstanceTransform();
@@ -75,7 +75,7 @@ void Skybox::RenderToTexture(ID3D12GraphicsCommandList* cmdList, DescriptorHeapW
 	transform *= DirectX::XMMatrixScaling(5.0f, 5.0f, 5.0f);
 	transform *= DirectX::XMMatrixTranslation(m_camPosition.x, m_camPosition.y, m_camPosition.z);
 
-	m_modelData->AddInstanceTransform(DirectX::XMMatrixTranspose(transform));
+	m_modelData->AddModelInstanceTransform(DirectX::XMMatrixTranspose(transform));
 	m_modelData->UpdateTransformInstanceBuffer(frameIndex);
 	D3D12_VERTEX_BUFFER_VIEW bufferView[2] = {
 		m_modelData->GetMeshes()[0].m_vertexBufferView, m_modelData->GetTransformInstanceBuffer().GetBufferView(frameIndex)
@@ -87,6 +87,8 @@ void Skybox::RenderToTexture(ID3D12GraphicsCommandList* cmdList, DescriptorHeapW
 	cmdList->DrawIndexedInstanced(m_modelData->GetMeshes()[0].m_numIndices, 1, 0, 0, 0);
 
 	m_modelData->ClearInstanceTransform();
+
+	return true;
 }
 
 void Skybox::FetchCameraPositionAndSkyboxModel(const Vect3f position, ModelHandler& modelHandler)

@@ -4,36 +4,39 @@
 
 #include "Core/DesriptorHeapWrapper.h"
 
-void DirectionalShadowMapping::RenderToTexture(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper& dsvHeap, DescriptorHeapWrapper& cbvSrvheap, const uint8_t frameIndex)
+bool DirectionalShadowMapping::RenderToTexture(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper& dsvHeap, DescriptorHeapWrapper& cbvSrvheap, const uint8_t frameIndex)
 {
 	CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle = dsvHeap.GET_CPU_DESCRIPTOR(m_dsvHeapIndex + frameIndex);
 
 	cmdList->RSSetViewports(1, &m_viewPort);
 	cmdList->OMSetRenderTargets(0, nullptr, false, &dsvHandle);
 
-	for (UINT i = 0; i < modelCount; i++)
+	for (uint32_t i = 0; i < modelCount; i++)
 	{
 		if (!m_models[i].IsTransparent()) {
 			ModelData& model = m_models[i];
-			UINT numberOfTransforms = ((UINT)model.GetInstanceTransforms().size() < MAX_INSTANCES_PER_MODEL) ? (UINT)model.GetInstanceTransforms().size() : MAX_INSTANCES_PER_MODEL;
-
-			if (numberOfTransforms > 0) {
+			
+			std::vector<uint32_t>   meshToRender = model.MeshToRender();
+	
+			if (meshToRender.size() > 0) {
 				for (UINT j = 0; j < model.GetMeshes().size(); j++)
 				{
 					ModelData::Mesh& mesh = model.GetMeshes()[j];
-					if (mesh.m_renderMesh) {
+					if (mesh.m_renderMesh && !mesh.m_instanceTransforms.empty()) {
 						D3D12_VERTEX_BUFFER_VIEW vBufferViews[2] = {
-							mesh.m_vertexBufferView, model.GetTransformInstanceBuffer().GetBufferView(frameIndex)
+							mesh.m_vertexBufferView, mesh.m_meshBuffer.GetBufferView(frameIndex)
 						};
 						cmdList->IASetVertexBuffers(0, 2, &vBufferViews[0]);
 						cmdList->IASetIndexBuffer(&mesh.m_indexBufferView);
 						cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-						cmdList->DrawIndexedInstanced(mesh.m_numIndices, numberOfTransforms, 0, 0, 0);
+						cmdList->DrawIndexedInstanced(mesh.m_numIndices, (uint32_t)mesh.m_instanceTransforms.size(), 0, 0, 0);
 					}
 				}
 			}
 		}
 	}
+
+	return true;
 }
 
 void DirectionalShadowMapping::SetPipelineAndRootSignature(PSOHandler& psoHandler)

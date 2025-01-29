@@ -1,8 +1,11 @@
 #pragma once
 #include "Core/MathDefinitions.h"
 
-#include "FontBuffer.h"
+#include <string>
+//#include "FontBuffer.h"
 #include <unordered_map>
+
+struct ID3D12Device;
 
 class Font {
 public:
@@ -53,7 +56,7 @@ public:
 		m_name(name),
 		m_data(data)
 	{
-		m_instancebuffer.Init(device);
+		//m_instancebuffer.Init(device);
 	}
 
 	void SetID(UINT id) { m_ID = id; }
@@ -69,8 +72,9 @@ public:
 	std::vector<Instance>& GetInstances() { return m_instances; }
 
 	void UpdateInstanceBuffer(UINT frameIndex) { 
-		m_instancebuffer.UpdateBuffer(reinterpret_cast<UINT8*>(&m_instances[0]), (UINT)m_instances.size(), frameIndex); }
-	FontBuffer& GetInstanceBuffer() { return m_instancebuffer; }
+		//m_instancebuffer.UpdateBuffer(reinterpret_cast<UINT8*>(&m_instances[0]), (UINT)m_instances.size(), frameIndex); }
+	//FontBuffer& GetInstanceBuffer() { return m_instancebuffer; 
+	}
 
 private:
 	std::string m_name;
@@ -78,5 +82,5 @@ private:
 	Data m_data;
 
 	std::vector<Instance> m_instances;
-	FontBuffer m_instancebuffer;
+	//FontBuffer m_instancebuffer;
 };

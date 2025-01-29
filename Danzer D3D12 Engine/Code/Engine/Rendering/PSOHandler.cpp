@@ -16,7 +16,7 @@ PSOHandler::PSOHandler(D3D12Framework& framework) :
 	InitializeBlendDescs();
 }
 
-UINT PSOHandler::CreateRootSignature(const UINT numberOfCBV, const UINT numberOfSRV, SAMPLER_DESCS sampler, D3D12_ROOT_SIGNATURE_FLAGS flags, std::wstring name)
+const uint32_t PSOHandler::CreateRootSignature(const UINT numberOfCBV, const UINT numberOfSRV, SAMPLER_DESCS sampler, D3D12_ROOT_SIGNATURE_FLAGS flags, std::wstring name)
 {
 	std::vector<CD3DX12_ROOT_PARAMETER> rootParameter = {};
 	rootParameter.reserve(size_t(numberOfCBV) + size_t(numberOfSRV));
@@ -56,24 +56,13 @@ UINT PSOHandler::CreateRootSignature(const UINT numberOfCBV, const UINT numberOf
 	return index;
 }
 
-UINT PSOHandler::CreatePSO(std::array<std::wstring, 2> shaderName, BLEND_DESC blend, RASTERIZER_DESC rast, D3D12_DEPTH_STENCIL_DESC depth, DXGI_FORMAT depthFormat, DXGI_FORMAT* rtvFormats, const UINT rtvCount, const UINT rootSignature, INPUT_LAYOUTS layout, std::wstring name)
+const uint32_t PSOHandler::CreateDefaultPSO(std::wstring vertexShader, std::wstring pixelShader, BLEND_DESC blend, RASTERIZER_DESC rast, D3D12_DEPTH_STENCIL_DESC depth, DXGI_FORMAT depthFormat, DXGI_FORMAT* rtvFormats, const UINT rtvCount, const UINT rootSignature, INPUT_LAYOUTS layout, std::wstring name)
 {
 	DXGI_SAMPLE_DESC sample = { 1, 0 };
 
-	ID3DBlob* vs = nullptr;
-	ID3DBlob* ps = nullptr;
-
-	D3D12_SHADER_BYTECODE vsByte = {};
-	CHECK_HR(D3DReadFileToBlob(shaderName[0].c_str(), &vs));
-	vsByte.BytecodeLength  = vs->GetBufferSize();
-	vsByte.pShaderBytecode = vs->GetBufferPointer();
-	
-	D3D12_SHADER_BYTECODE psByte = {};
-	if (shaderName[1].length() > 0) {
-		CHECK_HR(D3DReadFileToBlob(shaderName[1].c_str(), &ps));
-		psByte.BytecodeLength  = ps->GetBufferSize();
-		psByte.pShaderBytecode = ps->GetBufferPointer();
-	}
+	D3D12_SHADER_BYTECODE vsByte, psByte;
+	ReadFileToBlob(vertexShader, &vsByte);
+	ReadFileToBlob(pixelShader,  &psByte);
 
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
 	if (rtvFormats != nullptr)
@@ -92,7 +81,7 @@ UINT PSOHandler::CreatePSO(std::array<std::wstring, 2> shaderName, BLEND_DESC bl
 	psoDesc.DepthStencilState	  = depth;
 	psoDesc.pRootSignature		  = m_rootSignatures[rootSignature].Get();
 	psoDesc.VS					  = vsByte;
-	psoDesc.PS					  = ps ? psByte : CD3DX12_SHADER_BYTECODE(0, 0);
+	psoDesc.PS				      = pixelShader.size() > 0 ? psByte : CD3DX12_SHADER_BYTECODE(0, 0);
 	psoDesc.Flags				  = D3D12_PIPELINE_STATE_FLAG_NONE;
 	if (layout != IL_NONE) {
 		psoDesc.InputLayout.pInputElementDescs = m_inputLayouts[layout].data();
@@ -108,6 +97,87 @@ UINT PSOHandler::CreatePSO(std::array<std::wstring, 2> shaderName, BLEND_DESC bl
 	return index;
 }
 
+const uint32_t PSOHandler::CreateDefaultPSO(std::wstring vertexShader, std::wstring pixelShader, BLEND_DESC blend, RASTERIZER_DESC rast, D3D12_DEPTH_STENCIL_DESC depth, DXGI_FORMAT depthFormat, DXGI_FORMAT* rtvFormats, const UINT rtvCount, const UINT rootSignature, std::vector<D3D12_INPUT_ELEMENT_DESC> layout, std::wstring name)
+{
+	DXGI_SAMPLE_DESC sample = { 1, 0 };
+
+	D3D12_SHADER_BYTECODE vsByte, psByte;
+	ReadFileToBlob(vertexShader, &vsByte);
+	ReadFileToBlob(pixelShader,  &psByte);
+
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
+	
+	if (rtvFormats != nullptr)
+		for (UINT i = 0; i < rtvCount; i++)
+			psoDesc.RTVFormats[i] = rtvFormats[i];
+	else
+		psoDesc.RTVFormats[0] = DXGI_FORMAT_UNKNOWN;
+
+	psoDesc.DSVFormat = depthFormat;
+	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	psoDesc.NumRenderTargets = rtvFormats ? rtvCount : 0;
+	psoDesc.SampleDesc = sample;
+	psoDesc.SampleMask = 0xffffffff;
+	psoDesc.BlendState = m_blendDescs[blend];
+	psoDesc.RasterizerState = m_rastDescs[rast];
+	psoDesc.DepthStencilState = depth;
+	psoDesc.pRootSignature = m_rootSignatures[rootSignature].Get();
+	psoDesc.VS = vsByte;
+	psoDesc.PS = pixelShader.size() > 0 ? psByte : CD3DX12_SHADER_BYTECODE(0, 0);
+	psoDesc.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
+	psoDesc.InputLayout.pInputElementDescs = layout.data();
+	psoDesc.InputLayout.NumElements		   = (uint32_t)layout.size();	
+
+	m_pipelineStates.emplace_back(ComPtr<ID3D12PipelineState>());
+	UINT index = (UINT)m_pipelineStates.size() - 1;
+	CHECK_HR(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_pipelineStates[index])));
+
+	m_pipelineStates[index]->SetName(name.c_str());
+
+	return index;
+}
+
+const uint32_t PSOHandler::CreateGeometryPSO(std::wstring vertexShader, std::wstring geometryShader, std::wstring pixelShader, BLEND_DESC blend, RASTERIZER_DESC rast, D3D12_DEPTH_STENCIL_DESC depth, DXGI_FORMAT depthFormat, DXGI_FORMAT* rtvFormats, const UINT rtvCount, const UINT rootSignature, D3D12_PRIMITIVE_TOPOLOGY_TYPE primitiveTopology, std::vector<D3D12_INPUT_ELEMENT_DESC> layout, std::wstring name)
+{
+	DXGI_SAMPLE_DESC sample = { 1, 0 };
+
+	D3D12_SHADER_BYTECODE vsByte, gsByte, psByte;
+	ReadFileToBlob(vertexShader,   &vsByte);
+	ReadFileToBlob(geometryShader, &gsByte);
+	ReadFileToBlob(pixelShader,	   &psByte);
+
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
+
+	if (rtvFormats != nullptr)
+		for (UINT i = 0; i < rtvCount; i++)
+			psoDesc.RTVFormats[i] = rtvFormats[i];
+	else
+		psoDesc.RTVFormats[0] = DXGI_FORMAT_UNKNOWN;
+
+	psoDesc.DSVFormat					   = depthFormat;
+	psoDesc.PrimitiveTopologyType		   = primitiveTopology;
+	psoDesc.NumRenderTargets			   = rtvFormats ? rtvCount : 0;
+	psoDesc.SampleDesc					   = sample;
+	psoDesc.SampleMask					   = 0xffffffff;
+	psoDesc.BlendState					   = m_blendDescs[blend];
+	psoDesc.RasterizerState				   = m_rastDescs[rast];
+	psoDesc.DepthStencilState			   = depth;
+	psoDesc.pRootSignature				   = m_rootSignatures[rootSignature].Get();
+	psoDesc.VS							   = vsByte;
+	psoDesc.GS							   = gsByte;
+	psoDesc.PS							   = psByte;
+	psoDesc.Flags						   = D3D12_PIPELINE_STATE_FLAG_NONE;
+	psoDesc.InputLayout.pInputElementDescs = layout.data();
+	psoDesc.InputLayout.NumElements		   = (uint32_t)layout.size();
+
+	m_pipelineStates.emplace_back(ComPtr<ID3D12PipelineState>());
+	UINT index = (UINT)m_pipelineStates.size() - 1;
+	CHECK_HR(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_pipelineStates[index])));
+
+	m_pipelineStates[index]->SetName(name.c_str());
+
+	return index;
+}
 
 void PSOHandler::InitializeSamplerDescs()
 {
@@ -219,18 +289,6 @@ void PSOHandler::InitializeInputLayouts()
 		{ "TRANSFORM",2, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
 		{ "TRANSFORM",3, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
 	};
-
-	//Used for debugging Collision
-	//m_inputLayouts[INPUT_LAYOUT_INSTANCE_AABB] = {
-	//	{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
-	//	{ "SIZE",	  0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 }
-	//};
-
-	m_inputLayouts[IL_INSTANCE_RAY] = {
-		{ "POSITION",  0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
-		{ "DESTINATION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 },
-		//{ "DISTANCE",  0, DXGI_FORMAT_R32_FLOAT,       0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 }
-	};
 }
 
 void PSOHandler::InitializeBlendDescs()
@@ -263,12 +321,27 @@ void PSOHandler::InitializeRastDescs()
 	m_rastDescs[RASTERIZER_FRONT] = rast;
 
 	rast.CullMode = D3D12_CULL_MODE_BACK;
-	m_rastDescs[RASTERIZER_BACK] = rast;
+	m_rastDescs[RASTERIZER_BACK]  = rast;
 
 	rast.CullMode = D3D12_CULL_MODE_NONE;
-	m_rastDescs[RASTERIZER_NONE] = rast;
+	m_rastDescs[RASTERIZER_NONE]  = rast;
 
 	rast = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
 	m_rastDescs[RASTERIZER_DEFAULT] = rast;
+	
+	rast.FillMode = D3D12_FILL_MODE_WIREFRAME;
+	rast.CullMode = D3D12_CULL_MODE_NONE;
+	m_rastDescs[RASTERIZER_LINE] = rast;
+}
+
+void PSOHandler::ReadFileToBlob(const std::wstring& shader, D3D12_SHADER_BYTECODE* byteCode)
+{
+	if (shader.empty())
+		return;
+
+	ID3DBlob* blob = nullptr;
+	CHECK_HR(D3DReadFileToBlob(shader.c_str(), &blob));
+	byteCode->BytecodeLength  = blob->GetBufferSize();
+	byteCode->pShaderBytecode = blob->GetBufferPointer();
 }
 

@@ -179,7 +179,6 @@ UINT TextureHandler::CreateCustomTexture(void* data, const UINT sizeOfData, std:
 
 UINT TextureHandler::GetTexture(std::wstring texturePath)
 {
-	//texturePath = GetCorrectPathAndName(texturePath);
 	for (UINT i = 0; i < m_textures.size(); i++)
 	{
 		if (texturePath == m_textures[i].m_texturePath)
@@ -310,7 +309,6 @@ CD3DX12_RESOURCE_BARRIER TextureHandler::LoadTextures(void* data, const UINT siz
 	textureData.pData	   = data;
 	textureData.RowPitch   = (sizeof(float) * 4)  * sizeOfData;
 	textureData.SlicePitch = textureData.RowPitch * sizeOfData;
-
 	UpdateSubresources(
 		m_framework.InitCmdList(),
 		*textureBuffer,

@@ -34,7 +34,6 @@
     <FxCompile Include="default\skyboxPS.hlsl" />
     <FxCompile Include="default\skyboxVS.hlsl" />
     <FxCompile Include="Colliders\AABB\AABBVS.hlsl" />
-    <FxCompile Include="Colliders\AABB\AABBGS.hlsl" />
     <FxCompile Include="Colliders\ColliderPS.hlsl" />
     <FxCompile Include="Colliders\Ray\RayVS.hlsl" />
     <FxCompile Include="Colliders\Ray\RayGS.hlsl" />
@@ -59,6 +58,10 @@
     <FxCompile Include="Fullscreen\BackBufferPS.hlsl" />
     <FxCompile Include="Fullscreen\BloomBlurPS.hlsl" />
     <FxCompile Include="Fullscreen\BloomPS.hlsl" />
+    <FxCompile Include="Colliders\AABB\AABBPS.hlsl" />
+    <FxCompile Include="Colliders\DebugLineVS.hlsl" />
+    <FxCompile Include="Colliders\DebugLineGS.hlsl" />
+    <FxCompile Include="Colliders\DebugLinePS.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="UI\UIstructs.hlsli">
@@ -84,5 +87,6 @@
     <None Include="Fullscreen\SSAOHeader.hlsli" />
     <None Include="Light\VolumetricLightHeader.hlsli" />
     <None Include="Fullscreen\OLD_SSAOHeader.hlsli" />
+    <None Include="Colliders\DebugLineHeader.hlsli" />
   </ItemGroup>
 </Project>

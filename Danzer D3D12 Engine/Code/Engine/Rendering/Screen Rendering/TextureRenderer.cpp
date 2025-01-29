@@ -18,8 +18,9 @@ void TextureRenderer::InitializeRenderer(std::wstring vertexShader, std::wstring
 		flags, 
 		name + L" Root Signature"
 	);
-	m_pso = psoHandler.CreatePSO(
-		{ vertexShader, pixelShader },
+	m_pso = psoHandler.CreateDefaultPSO(
+		vertexShader, 
+		pixelShader,
 		static_cast<PSOHandler::BLEND_DESC>(blendDesc),
 		static_cast<PSOHandler::RASTERIZER_DESC>(rastDesc),
 		depthDesc,
@@ -46,10 +47,14 @@ void TextureRenderer::InitializeRenderer(std::wstring vertexShader, std::wstring
 	m_viewPort      = CD3DX12_VIEWPORT(0.0f, 0.0f, FLOAT(viewportWidth), FLOAT(viewportHeight));
 }
 
-void TextureRenderer::RenderToTexture(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper& heap, DescriptorHeapWrapper& cbvSrvHeap, const uint8_t frameIndex)
+bool TextureRenderer::RenderToTexture(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper& heap, DescriptorHeapWrapper& cbvSrvHeap, const uint8_t frameIndex)
 {
 	if (!m_renderAsDepth) {
 		cmdList->RSSetViewports(1, &m_viewPort);
+
+		if (m_rtvSlots.empty()) {
+			return false;
+		}
 
 		std::vector<CD3DX12_CPU_DESCRIPTOR_HANDLE> rtvHandles;
 		rtvHandles.reserve(m_rtvSlots.size());
@@ -65,10 +70,14 @@ void TextureRenderer::RenderToTexture(ID3D12GraphicsCommandList* cmdList, Descri
 		cmdList->IASetIndexBuffer(nullptr);
 
 		cmdList->DrawInstanced(3, 1, 0, 0);
+
+		return true;
 	}
 	else {
 		std::wstring errorMessage = L"WARNING: Resource '" + m_rendererName + L"' is a depth texture so RenderToTexture needs to be overridden!";
 		OutputDebugString(errorMessage.c_str());
+
+		return false;
 	}
 }
 

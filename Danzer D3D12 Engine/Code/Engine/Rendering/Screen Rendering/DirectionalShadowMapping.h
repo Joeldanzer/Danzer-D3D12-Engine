@@ -10,7 +10,7 @@ public:
 		m_models(nullptr), modelCount(0), m_projectionMatrix() 
 	{}
 	
-	void RenderToTexture(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper& dsvHandle, DescriptorHeapWrapper& cbvSrvHandle, const uint8_t frameIndex) override;
+	bool RenderToTexture(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper& dsvHandle, DescriptorHeapWrapper& cbvSrvHandle, const uint8_t frameIndex) override;
 	void SetPipelineAndRootSignature(PSOHandler& psoHandler);
 
 	void CreateProjection(float projectionScale, float increase);
@@ -19,12 +19,12 @@ public:
 	}
 
 	void SetModelsData(std::vector<ModelData>& models) {
-		m_models = &models[0];
-		modelCount = UINT(models.size());
+		m_models   = &models[0];
+		modelCount = uint32_t(models.size());
 	}
 
 private:
-	UINT modelCount;
+	uint32_t   modelCount;
 	ModelData* m_models;
 
  	Mat4f m_projectionMatrix;

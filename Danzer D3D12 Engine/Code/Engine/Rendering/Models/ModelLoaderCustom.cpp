@@ -26,20 +26,18 @@ bool ModelLoaderCustom::CheckModelMemory(const aiScene* scene)
 
 std::unique_ptr<LoaderModel> ModelLoaderCustom::LoadModelFromAssimp(std::string fileName, bool uvFlipped)
 {
-    
-
     std::ifstream fileExist(fileName);
     if (!fileExist.good())
         assert(fileExist, fileName.c_str() + " doesn't exist!");
 
     std::chrono::time_point start = std::chrono::system_clock::now();
 
-    //AI_CONFIG_COLUM_A
     m_importer.SetPropertyBool(AI_CONFIG_FBX_CONVERT_TO_M, false);
     m_importer.SetPropertyBool(AI_CONFIG_IMPORT_FBX_PRESERVE_PIVOTS, true);
     auto flags = 0
         | aiProcessPreset_TargetRealtime_MaxQuality
         | aiProcess_ConvertToLeftHanded
+        | aiProcess_GenBoundingBoxes
         | aiProcess_Triangulate
         | aiProcess_TransformUVCoords
         | aiProcess_CalcTangentSpace
@@ -197,7 +195,7 @@ void ModelLoaderCustom::LoadVerticies(std::vector<Vect3f>& v3Verts, aiMesh* mesh
     bool binormTan = mesh->HasTangentsAndBitangents();
     bool bones     = mesh->HasBones();
     bool color     = mesh->HasVertexColors(0);
-    
+
     unsigned int shaderType = 0;
 
     // Save all the different mesh information into a int, easy to detect if a model should have
@@ -211,12 +209,18 @@ void ModelLoaderCustom::LoadVerticies(std::vector<Vect3f>& v3Verts, aiMesh* mesh
 
     // Size of our vertex buffer 
     unsigned int vertexBufferSize = 0;
-    vertexBufferSize += position ? sizeof(float)  * 4 : 0;
-    vertexBufferSize += normals  ? sizeof(float)  * 4 : 0;
-    vertexBufferSize += binormTan ? sizeof(float) * 8 : 0;
-    vertexBufferSize += color    ? sizeof(float)  * 4 : 0;
-    vertexBufferSize += uv       ? sizeof(float)  * 2 : 0;
+    vertexBufferSize += position  ? sizeof(float)  * 4 : 0;
+    vertexBufferSize += normals   ? sizeof(float)  * 4 : 0;
+    vertexBufferSize += binormTan ? sizeof(float)  * 8 : 0;
+    vertexBufferSize += color     ? sizeof(float)  * 4 : 0;
+    vertexBufferSize += uv        ? sizeof(float)  * 2 : 0;
   //  vertexBufferSize += bones    ? sizeof(float) * 8 : 0;
+
+    Vect4f min = { mesh->mAABB.mMin.x, mesh->mAABB.mMin.y, mesh->mAABB.mMin.z, 1.0f };
+    Vect4f max = { mesh->mAABB.mMax.x, mesh->mAABB.mMax.y, mesh->mAABB.mMax.z, 1.0f };
+
+    loaderMesh->m_aabbMin = { mesh->mAABB.mMin.x, mesh->mAABB.mMin.y, mesh->mAABB.mMin.z };
+    loaderMesh->m_aabbMax = { mesh->mAABB.mMax.x, mesh->mAABB.mMax.y, mesh->mAABB.mMax.z };
 
     loaderMesh->m_shaderType = shaderType; 
     loaderMesh->m_vertexSize = vertexBufferSize;
@@ -290,6 +294,14 @@ void ModelLoaderCustom::LoadVerticiesWithTransform(std::vector<Vect3f>& v3Verts,
     //vertexBufferSize += sizeof(float) * 4;
     //  vertexBufferSize += bones    ? sizeof(float) * 8 : 0;
 
+    Vect4f min = { mesh->mAABB.mMin.x, mesh->mAABB.mMin.y, mesh->mAABB.mMin.z, 1.0f };
+    Vect4f max = { mesh->mAABB.mMax.x, mesh->mAABB.mMax.y, mesh->mAABB.mMax.z, 1.0f };
+    min = Mul(transform, min);
+    max = Mul(transform, max);
+
+    loaderMesh->m_aabbMin = min;
+    loaderMesh->m_aabbMax = max;
+
     loaderMesh->m_shaderType = shaderType;
     loaderMesh->m_vertexSize = vertexBufferSize;
     loaderMesh->m_vertexCount = mesh->mNumVertices;
@@ -315,11 +327,10 @@ void ModelLoaderCustom::LoadVerticiesWithTransform(std::vector<Vect3f>& v3Verts,
         }
 
         if (color) {    
-
-               verticies.PushVec4({ 1, 1, 1, 1 });
+            verticies.PushVec4({ 1.0f, 1.0f, 1.0f, 1.0f });
         }
         else
-            verticies.PushVec4({ 1.f, 1.f, 1.f, 0.f });
+            verticies.PushVec4({ 1.0f, 1.0f, 1.0f, 1.0f });
 
         if (uv) 
             verticies.PushVec2({ mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y });        

@@ -66,8 +66,9 @@ ModelEffect ModelEffectHandler::CreateModelEffect(std::array<std::wstring, 2> sh
 	effectData.m_rs  = m_psoHandler->CreateRootSignature(2, (UINT)textures.size() + 1, PSOHandler::SAMPLER_WRAP, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT, L"Model Effect RS: " + std::to_wstring(m_modelEffects.size() - 1));
 	
 	std::array<DXGI_FORMAT, GBUFFER_COUNT> formats = GBuffer::GBufferFormats();
-	effectData.m_pso = m_psoHandler->CreatePSO(
-		shaders,
+	effectData.m_pso = m_psoHandler->CreateDefaultPSO(
+		shaders[0],
+		shaders[1],
 		transparent ? PSOHandler::BLEND_TRANSPARENT : PSOHandler::BLEND_DEFAULT,
 		transparent ? PSOHandler::RASTERIZER_NONE   : PSOHandler::RASTERIZER_FRONT,
 		CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT),

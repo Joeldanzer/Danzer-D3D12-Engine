@@ -57,7 +57,6 @@ CustomModel ModelData::GetCube()
 
 CustomModel ModelData::GetPlane()
 {
-
 	CustomModel model;
 	model.m_customModelName = "Plane";
 	model.m_verticies = {
@@ -77,11 +76,23 @@ CustomModel ModelData::GetPlane()
 	return model;
 }
 
-void ModelData::AddInstanceTransform(Mat4f transform) {
-	m_instanceTransforms.emplace_back(transform);
+// Clears all instance transform on meshes/models.
+void ModelData::ClearInstanceTransform() 
+{
+	for (uint32_t i = 0; i < m_meshes.size(); i++)
+		m_meshes[i].m_instanceTransforms.clear();
+	
+	m_instanceTransforms.clear();
+	m_meshToRender.clear();
 }
 
-void ModelData::ClearInstanceTransform()
+void ModelData::UpdateAllMeshInstanceBuffer(uint32_t frameIndex)
 {
-	m_instanceTransforms.clear();
+	// Doing it this method means we can render transparent meshes seperatly
+	for (uint32_t i = 0; i < m_meshes.size(); i++)
+	{
+		Mesh& mesh = m_meshes[i];
+		if(!mesh.m_instanceTransforms.empty())
+			mesh.m_meshBuffer.UpdateBuffer(reinterpret_cast<uint16_t*>(&mesh.m_instanceTransforms[0]), (uint32_t)mesh.m_instanceTransforms.size(), frameIndex);
+	}
 }

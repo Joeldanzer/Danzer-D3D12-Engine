@@ -37,6 +37,9 @@ struct LoaderMesh {
 	uint32_t m_vertexSize;
 	uint32_t m_shaderType;
 	
+	Vect3f m_aabbMin;
+	Vect3f m_aabbMax;
+
 	std::vector<std::wstring> m_textures;
 };
 

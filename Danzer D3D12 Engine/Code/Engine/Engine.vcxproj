@@ -152,7 +152,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Rendering\Data\DebugRenderingData.h" />
+    <ClInclude Include="Rendering\Screen Rendering\DebugTextureRenderer.h" />
     <ClInclude Include="Core\HelperFunctions.h" />
+    <ClInclude Include="Rendering\FrustrumCulling.h" />
     <ClInclude Include="Rendering\Screen Rendering\TextureRenderer.h" />
     <ClInclude Include="Rendering\Buffers\BufferHandler.h" />
     <ClInclude Include="Components\Sound\SoundListener.h" />
@@ -197,7 +200,6 @@
     <ClInclude Include="Rendering\Screen Rendering\GBuffer.h" />
     <ClInclude Include="Level Loader\LevelLoaderCustom.h" />
     <ClInclude Include="Level Loader\LevelLoader.h" />
-    <ClInclude Include="Rendering\2D\Fonts\FontBuffer.h" />
     <ClInclude Include="Core\FrameTimer.h" />
     <ClInclude Include="Rendering\2D\Fonts\Font.h" />
     <ClInclude Include="Components\2D\Text.h" />
@@ -222,23 +224,23 @@
     <ClInclude Include="Scene.h" />
     <ClInclude Include="SceneManager.h" />
     <ClInclude Include="Rendering\Screen Rendering\ScreenTexture.h" />
-    <ClInclude Include="ShaderEffectRenderer.h" />
     <ClInclude Include="Rendering\Buffers\SSAOBuffer.h" />
     <ClInclude Include="Sound\SoundEngine.h" />
     <ClInclude Include="Sound\SoundHeader.h" />
-    <ClInclude Include="Rendering\SSAOData.h" />
+    <ClInclude Include="Rendering\Data\SSAOData.h" />
     <ClInclude Include="stdafx.h" />
-    <ClInclude Include="Rendering\Buffers\TransformBuffer.h" />
     <ClInclude Include="Rendering\Buffers\VertexBuffer.h" />
     <ClInclude Include="Core\WindowHandler.h" />
     <ClInclude Include="Rendering\2D\2DRenderer.h" />
-    <ClInclude Include="Rendering\2D\SpriteInstanceBuffer.h" />
     <ClInclude Include="Rendering\Buffers\WindowSizeBuffer.h" />
     <ClInclude Include="Rendering\TextureHandler.h" />
     <ClInclude Include="Rendering\Screen Rendering\Textures\TextureRenderingHandler.h" />
-    <ClInclude Include="Rendering\VolumetricLightData.h" />
+    <ClInclude Include="Rendering\Data\VolumetricLightData.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Rendering\Data\DebugRenderingData.cpp" />
+    <ClCompile Include="Rendering\Screen Rendering\DebugTextureRenderer.cpp" />
+    <ClCompile Include="Rendering\FrustrumCulling.cpp" />
     <ClCompile Include="Rendering\Screen Rendering\TextureRenderer.cpp" />
     <ClCompile Include="Rendering\Buffers\BufferHandler.cpp" />
     <ClCompile Include="Physics\BodyInterfaceImpl.cpp" />
@@ -266,7 +268,6 @@
     <ClCompile Include="Rendering\Screen Rendering\GBuffer.cpp" />
     <ClCompile Include="Level Loader\LevelLoaderCustom.cpp" />
     <ClCompile Include="Level Loader\LevelLoader.cpp" />
-    <ClCompile Include="Rendering\2D\Fonts\FontBuffer.cpp" />
     <ClCompile Include="Core\FrameTimer.cpp" />
     <ClCompile Include="Rendering\Models\ModelLoaderCustom.cpp" />
     <ClCompile Include="Rendering\Camera.cpp" />
@@ -282,23 +283,20 @@
     <ClCompile Include="Scene.cpp" />
     <ClCompile Include="SceneManager.cpp" />
     <ClCompile Include="Rendering\Screen Rendering\ScreenTexture.cpp" />
-    <ClCompile Include="ShaderEffectRenderer.cpp" />
     <ClCompile Include="Rendering\Buffers\SSAOBuffer.cpp" />
     <ClCompile Include="Sound\SoundEngine.cpp" />
-    <ClCompile Include="Rendering\SSAOData.cpp" />
+    <ClCompile Include="Rendering\Data\SSAOData.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="Rendering\Buffers\TransformBuffer.cpp" />
     <ClCompile Include="Rendering\Buffers\VertexBuffer.cpp" />
     <ClCompile Include="Core\WindowHandler.cpp" />
     <ClCompile Include="Rendering\2D\2DRenderer.cpp" />
-    <ClCompile Include="Rendering\2D\SpriteInstanceBuffer.cpp" />
     <ClCompile Include="Rendering\Buffers\WindowSizeBuffer.cpp" />
     <ClCompile Include="Rendering\TextureHandler.cpp" />
     <ClCompile Include="Rendering\Screen Rendering\Textures\TextureRenderingHandler.cpp" />
-    <ClCompile Include="Rendering\VolumetricLightData.cpp" />
+    <ClCompile Include="Rendering\Data\VolumetricLightData.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

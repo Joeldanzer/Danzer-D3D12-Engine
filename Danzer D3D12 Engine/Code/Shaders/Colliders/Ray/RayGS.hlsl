@@ -3,18 +3,18 @@
 
 [maxvertexcount(2)]
 void main(
-	point VertexToGeometry input[1] , 
+	point VertexToGeometry input[1], 
 	inout LineStream<GeometryToPixel> output
 )
 {	
     float4 pos[2];
     
-    float4 worldPos = mul(CameraTransform,  input[0].m_position);
+    float4 worldPos = mul(CameraTransform,  input[0].m_start);
     float4 projPos  = mul(CameraProjection, worldPos);
     
     pos[0] = projPos;
     
-    worldPos = mul(CameraTransform , input[0].m_destination);
+    worldPos = mul(CameraTransform,  input[0].m_end);
     projPos  = mul(CameraProjection, worldPos);
     
     pos[1] = projPos;
@@ -23,7 +23,7 @@ void main(
     {
         GeometryToPixel element;
         element.m_position = pos[i];
-        element.m_color = float4(1.f, 0.f, 0.f, 1.f);
+        element.m_color    = input[0].m_color;
         output.Append(element);
     }
     

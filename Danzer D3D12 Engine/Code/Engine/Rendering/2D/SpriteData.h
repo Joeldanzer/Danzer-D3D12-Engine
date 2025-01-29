@@ -1,7 +1,7 @@
 #pragma once
 
 // Sprite instance buffer, havent changed the name of the file yet
-#include "SpriteInstanceBuffer.h"
+//#include "SpriteInstanceBuffer.h"
 #include "../../Core/MathDefinitions.h"
 
 #include <array>
@@ -41,7 +41,7 @@ public:
 		m_spriteSheet(sheet),
 		m_renderSprite(true)
 	{
-		m_instanceBuffer.Init(device);
+		//m_instanceBuffer.Init(device);
 	};
 
 
@@ -51,11 +51,12 @@ public:
 	Sheet& GetSheet() {return m_spriteSheet;}
 	const std::string& Name() { return m_name; }
 
-	SpriteInstanceBuffer& GetInstanceBuffer() { return m_instanceBuffer; }
+	// Need to redo!
+	//SpriteInstanceBuffer& GetInstanceBuffer() { return m_instanceBuffer; }
 	void UpdateInstanceBuffer(UINT frameIndex) { 
-		if(!m_instances.empty())
-			m_instanceBuffer.UpdateBuffer(
-				reinterpret_cast<UINT8*>(&m_instances[0]), (UINT)m_instances.size(), frameIndex); 
+		if(!m_instances.empty()){}
+			//m_instanceBuffer.UpdateBuffer(
+			//	reinterpret_cast<UINT8*>(&m_instances[0]), (UINT)m_instances.size(), frameIndex); 
 	}
 	void AddInstance(SpriteData::Instance instance) { m_instances.emplace_back(instance); }
 	void ClearInstances() { m_instances.clear(); }
@@ -66,7 +67,7 @@ private:
 
 	std::vector<SpriteData::Instance> m_instances;
 
-	SpriteInstanceBuffer m_instanceBuffer;
+	///SpriteInstanceBuffer m_instanceBuffer;
 
 	std::string m_name;
 	UINT m_ID;

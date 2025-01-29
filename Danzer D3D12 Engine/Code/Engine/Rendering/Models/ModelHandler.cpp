@@ -10,6 +10,8 @@
 #include "../RenderUtility.h"
 #include "../../Core/D3D12Framework.h"
 
+#include "Rendering/FrustrumCulling.h"
+
 #include "Core/FrameResource.h"
 #include "Scene.h"
 #include "Components/Transform.h"
@@ -58,32 +60,31 @@ Model ModelHandler::CreateCustomModel(CustomModel customModel, bool transparent)
 	mesh.m_vertexSize   = sizeof(Vertex);
 	mesh.m_numVerticies = static_cast<UINT>(customModel.m_verticies.size());
 	
-	mesh.m_indexBuffer = bufferInfo.m_iBuffer;
-	mesh.m_numIndices  = static_cast<UINT>(customModel.m_indices.size());
+	mesh.m_indexBuffer  = bufferInfo.m_iBuffer;
+	mesh.m_numIndices   = static_cast<UINT>(customModel.m_indices.size());
 	
 	//Faster to execute them at the same time
 	cmdList->ResourceBarrier(static_cast<UINT>(resourceBarriers.size()), &resourceBarriers[0]);
 	
-	std::vector<Vect3f> verticies;
-
 	{
-		mesh.m_indexBufferView.BufferLocation = mesh.m_indexBuffer->GetGPUVirtualAddress();
-		mesh.m_indexBufferView.Format = DXGI_FORMAT_R32_UINT;
-		mesh.m_indexBufferView.SizeInBytes = sizeof(unsigned int) * mesh.m_numIndices;
+		mesh.m_indexBufferView.BufferLocation  = mesh.m_indexBuffer->GetGPUVirtualAddress();
+		mesh.m_indexBufferView.Format		   = DXGI_FORMAT_R32_UINT;
+		mesh.m_indexBufferView.SizeInBytes     = sizeof(unsigned int) * mesh.m_numIndices;
 		
 		mesh.m_vertexBufferView.BufferLocation = mesh.m_vertexBuffer->GetGPUVirtualAddress();
-		mesh.m_vertexBufferView.StrideInBytes = sizeof(Vertex);
-		mesh.m_vertexBufferView.SizeInBytes = sizeof(Vertex) * mesh.m_numVerticies;
+		mesh.m_vertexBufferView.StrideInBytes  = sizeof(Vertex);
+		mesh.m_vertexBufferView.SizeInBytes    = sizeof(Vertex) * mesh.m_numVerticies;
 	}
 
-	for (UINT i = 0; i < customModel.m_verticies.size(); i++)
+	std::vector<Vect3f> verticies;
+	for (uint16_t i = 0; i < customModel.m_verticies.size(); i++)
 	{
 		Vect3f pos = { customModel.m_verticies[i].m_position.x, customModel.m_verticies[i].m_position.y, customModel.m_verticies[i].m_position.z };
 		verticies.emplace_back(pos);
 	}
 
 	std::vector<ModelData::Mesh> meshes = { mesh };
-	UINT id = GetNewlyCreatedModelID(ModelData(meshes, m_framework.GetDevice(), &m_framework.CbvSrvHeap(), verticies, L"", customModel.m_customModelName, transparent));
+	uint32_t id = GetNewlyCreatedModelID(ModelData(meshes, m_framework.GetDevice(), &m_framework.CbvSrvHeap(), verticies, L"", customModel.m_customModelName, transparent));
 	
 	return Model(id);
 }
@@ -124,6 +125,7 @@ void ModelHandler::LoadModelsToScene(entt::registry& reg, std::wstring fileName,
 		std::vector<Vect3f>	      verticies = models[i]->m_verticies;
 
 		bool isTransparent = models[i]->m_isTransparent;
+
 		// Now we set the buffer infromation into our BUFFER_VIEWS as well as 
 		// creating DescriptorHeaps and SRV for our textures
 		for (UINT i = 0; i < meshes.size(); i++)
@@ -337,7 +339,8 @@ std::vector<ModelData::Mesh> ModelHandler::LoadMeshFromLoaderModel(LoaderModel* 
 			else
 				mesh.m_material = {};
 		}
-
+		
+		mesh.m_aabb = FrustrumCulling::AABB(loadedMesh->m_aabbMin, loadedMesh->m_aabbMax);
 		
 		// Add our newly created model mesh
 		meshes.emplace_back(mesh);
@@ -472,6 +475,14 @@ void ModelHandler::WriteToBinaryModelFile(const LoaderModel* loadedModel, const 
 			for (uint32_t j = 0; j < mesh->m_indices.size(); j++)
 				modelFile.write((char*)&mesh->m_indices[j], sizeof(uint32_t));
 
+			const float minAABB[3] = { mesh->m_aabbMin.x, mesh->m_aabbMin.y, mesh->m_aabbMin.z };
+			const float maxAABB[3] = { mesh->m_aabbMax.x, mesh->m_aabbMax.y, mesh->m_aabbMax.z };
+			for (uint16_t i = 0; i < 3; i++)
+			{
+				modelFile.write((char*)&minAABB[i], sizeof(float));
+				modelFile.write((char*)&maxAABB[i], sizeof(float));
+			}
+
 			// Write texture path data.
 			textureList[0] = m_textureHandler.GetTextureData(meshes[i].m_material.m_albedo).m_texturePath;
 			textureList[1] = m_textureHandler.GetTextureData(meshes[i].m_material.m_normal).m_texturePath;
@@ -530,8 +541,19 @@ void ModelHandler::ReadFromBinaryModelFile(std::string modelName, LoaderModel* l
 			mesh->m_indices.emplace_back(index);
 		}
 
+		float min[3] = { 0.0f, 0.0f, 0.0f };
+		float max[3] = { 0.0f, 0.0f, 0.0f };
+		for (uint16_t j = 0; j < 3; j++)
+		{
+			modelFile.read((char*)&min[j], sizeof(float));
+			modelFile.read((char*)&max[j], sizeof(float));
+		}
+
+		mesh->m_aabbMin = { min[0], min[1], min[2] };
+		mesh->m_aabbMax = { max[0], max[1], max[2] };
+
 		// Read textures from file
-		for (uint32_t i = 0; i < 6; i++)
+		for (uint32_t j = 0; j < 6; j++)
 		{
 			uint32_t wcharLength = 0;
 			modelFile.read((char*)&wcharLength, sizeof(uint32_t));

@@ -1,7 +1,7 @@
 #pragma once
 #include "entt/entt.hpp"
 #include "Models/ModelData.h"  
-#include "Buffers/TransformBuffer.h"
+#include "Buffers/VertexBuffer.h"
 #include "Models/ModelEffectData.h"
 
 #include "Rendering/TextureHandler.h"
@@ -35,7 +35,7 @@ public:
 		m_framework(nullptr),	 
 		m_rootSignature(nullptr), 
 	 	m_cameraBuffer(CameraBuffer()),
-		m_transformBuffer(TransformBuffer()),
+		m_transformBuffer(VertexBuffer()),
 		m_lightBuffer(LightBuffer()),
 		m_pointLightBuffer(PointLightBuffer())
 	{}
@@ -63,7 +63,7 @@ private:
 
 	CameraBuffer	   m_cameraBuffer;
 	CameraBuffer	   m_shadowBuffer;
-	TransformBuffer    m_transformBuffer;
+	VertexBuffer    m_transformBuffer;
 	LightBuffer		   m_lightBuffer;
 	MaterialBuffer     m_materialBuffer;
 	EffectShaderBuffer m_effectBuffer;

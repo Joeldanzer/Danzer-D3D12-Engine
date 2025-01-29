@@ -119,7 +119,7 @@ void Renderer::RenderSkybox(ID3D12GraphicsCommandList* cmdList, Transform& camer
 	transform      *= DirectX::XMMatrixScaling(5.0f, 5.0f, 5.0f);
 	transform      *= DirectX::XMMatrixTranslation(cameraTransform.m_position.x, cameraTransform.m_position.y, cameraTransform.m_position.z);
 
-	model.AddInstanceTransform(DirectX::XMMatrixTranspose(transform));
+	model.AddModelInstanceTransform(DirectX::XMMatrixTranspose(transform));
 	model.UpdateTransformInstanceBuffer(frameIndex);
 	D3D12_VERTEX_BUFFER_VIEW vBufferViews[2] = {
 		mesh.m_vertexBufferView, model.GetTransformInstanceBuffer().GetBufferView(frameIndex)
@@ -129,34 +129,6 @@ void Renderer::RenderSkybox(ID3D12GraphicsCommandList* cmdList, Transform& camer
 	cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	
 	cmdList->DrawIndexedInstanced(mesh.m_numIndices, 1, 0, 0, 0);
-}
-
-void Renderer::RenderDirectionalLight(ID3D12GraphicsCommandList* cmdList, Texture& skyboxTexture, DirectionalShadowMapping& shadowMap, FullscreenTexture* ssao, FullscreenTexture* vl, UINT frameIndex, UINT startLocation)
-{
-	//D3D12_GPU_DESCRIPTOR_HANDLE cbvSrvHeapStart = m_framework->CbvSrvHeap().GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
-	//const UINT cbvSrvDescSize = m_framework->CbvSrvHeap().DESCRIPTOR_SIZE();
-	//
-	//CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle(cbvSrvHeapStart, skyboxTexture.m_offsetID, cbvSrvDescSize);
-	//cmdList->SetGraphicsRootDescriptorTable(startLocation, srvHandle);
-	//startLocation++;
-	//
-	//CD3DX12_GPU_DESCRIPTOR_HANDLE shadowHandle(cbvSrvHeapStart, shadowMap.SRVOffsetID() + frameIndex, cbvSrvDescSize);
-	//cmdList->SetGraphicsRootDescriptorTable(startLocation, shadowHandle);
-	//startLocation++;
-	//
-	//CD3DX12_GPU_DESCRIPTOR_HANDLE ssaoHandle(cbvSrvHeapStart, ssao->SRVOffsetID() + frameIndex, cbvSrvDescSize);
-	//cmdList->SetGraphicsRootDescriptorTable(startLocation, ssaoHandle);
-	//startLocation++;
-	//
-	//CD3DX12_GPU_DESCRIPTOR_HANDLE vlHandle(cbvSrvHeapStart, vl->SRVOffsetID() + frameIndex, cbvSrvDescSize);
-	//cmdList->SetGraphicsRootDescriptorTable(startLocation, vlHandle);
-	//startLocation++;
-	//
-	//cmdList->IASetVertexBuffers(0, 0, nullptr);
-	//cmdList->IASetIndexBuffer(nullptr);
-	//cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	//
-	//cmdList->DrawInstanced(3, 1, 0, 0);
 }
 
 void Renderer::RenderPointLights(ID3D12GraphicsCommandList* cmdList, LightHandler& lightHandler, const entt::registry& registry, const UINT frameIndex, UINT startLocation)
@@ -179,7 +151,7 @@ void Renderer::RenderPointLights(ID3D12GraphicsCommandList* cmdList, LightHandle
 		lightData.m_range	 = light.m_range;
 		lightData.m_position = transform.m_position + light.m_offsetPosition;
 		PointLightBuffer& buffer = lightHandler.GetLightBuffer(light);
-		buffer.UpdateBuffer(reinterpret_cast<UINT16*>(& lightData), frameIndex);
+		buffer.UpdateBuffer(reinterpret_cast<UINT16*>(&lightData), frameIndex);
 
 		CD3DX12_GPU_DESCRIPTOR_HANDLE cbvHandle(cbvSrvHeapStart, buffer.OffsetID(), cbvSrvDescSize);
 		cmdList->SetGraphicsRootDescriptorTable(1, cbvHandle);
@@ -211,7 +183,7 @@ void Renderer::RenderForwardModelEffects(ID3D12GraphicsCommandList* cmdList, PSO
 		CD3DX12_GPU_DESCRIPTOR_HANDLE depthHandle(cbvSrvHeapStart, depthOffset, cbvSrvDescSize);
 
 		ModelData& model = modelHandler.GetLoadedModelInformation(effectData.ModelID());
-		model.UpdateTransformInstanceBuffer(effectData.GetTransforms(), frameIndex);
+		//model.UpdateTransformInstanceBuffer(effectData.GetTransforms(), frameIndex);
 
 		for (UINT i = 0; i < model.GetMeshes().size(); i++)
 		{
@@ -255,29 +227,31 @@ void Renderer::RenderForwardModelEffects(ID3D12GraphicsCommandList* cmdList, PSO
 void Renderer::RenderToGbuffer(ID3D12GraphicsCommandList* cmdList, std::vector<ModelData>& models, UINT frameIndex, std::vector<Texture>& textures, bool renderTransparency, UINT startLocation)
 {
 	D3D12_GPU_DESCRIPTOR_HANDLE cbvSrvHeapStart = m_framework->CbvSrvHeap().GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
-	const UINT cbvSrvDescSize					= m_framework->CbvSrvHeap().DESCRIPTOR_SIZE();
+	const uint32_t cbvSrvDescSize			    = m_framework->CbvSrvHeap().DESCRIPTOR_SIZE();
 
-	for (UINT i = 0; i < models.size(); i++)
+	for (uint32_t i = 0; i < models.size(); i++)
 	{
+		// Transparent models will not be rendered here.
 		if (models[i].IsTransparent() == renderTransparency) {
 
 			ModelData& model = models[i];
-			UINT numberOfTransforms = ((UINT)model.GetInstanceTransforms().size() < MAX_INSTANCES_PER_MODEL) ? (UINT)model.GetInstanceTransforms().size() : MAX_INSTANCES_PER_MODEL;
 
-			if (numberOfTransforms > 0) {
-				model.UpdateTransformInstanceBuffer(frameIndex);
-
-				int id = 0;
+			if (!model.MeshToRender().empty()) {
+				model.UpdateAllMeshInstanceBuffer(frameIndex);
 
 				for (UINT j = 0; j < model.GetMeshes().size(); j++)
 				{
+					// Fetch mesh index from the meshes list that we will render.
 					ModelData::Mesh& mesh = model.GetMeshes()[j];
-					if (mesh.m_renderMesh) {
+
+					// Check if we want to render this mesh or if there are any instance transforms for this frame. 
+					if (mesh.m_renderMesh && !mesh.m_instanceTransforms.empty()) {
+						// Set Material buffer 
 
 						MaterialBuffer::Data materialData;
-						materialData.m_emissive = mesh.m_material.m_emissvie;
+						materialData.m_emissive  = mesh.m_material.m_emissvie;
 						materialData.m_roughness = mesh.m_material.m_roughness;
-						materialData.m_metallic = mesh.m_material.m_shininess;
+						materialData.m_metallic  = mesh.m_material.m_shininess;
 						for (UINT i = 0; i < 4; i++)
 							materialData.m_color[i] = mesh.m_material.m_color[i];
 						
@@ -298,14 +272,16 @@ void Renderer::RenderToGbuffer(ID3D12GraphicsCommandList* cmdList, std::vector<M
 						for (UINT i = 0; i < _countof(srvHandles); i++)
 							cmdList->SetGraphicsRootDescriptorTable(2 + i, srvHandles[i]);
 
+						// Set the vertex & transform buffers 
 						D3D12_VERTEX_BUFFER_VIEW vBufferViews[2] = {
-							mesh.m_vertexBufferView, model.GetTransformInstanceBuffer().GetBufferView(frameIndex)
+							mesh.m_vertexBufferView, mesh.m_meshBuffer.GetBufferView(frameIndex)
 						};
 						cmdList->IASetVertexBuffers(0, 2, &vBufferViews[0]);
 						cmdList->IASetIndexBuffer(&mesh.m_indexBufferView);
 						cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-						cmdList->DrawIndexedInstanced(mesh.m_numIndices, numberOfTransforms, 0, 0, 0);
+						// Draw
+						cmdList->DrawIndexedInstanced(mesh.m_numIndices, mesh.m_instanceTransforms.size(), 0, 0, 0);
 					}
 				}
 			}
@@ -369,7 +345,7 @@ void Renderer::RenderToGbuffer(ID3D12GraphicsCommandList* cmdList, std::vector<M
 //
 //	m_commandList->DrawInstanced(1, (UINT)rays.size(), 0, 0);
 //}
-//
+
 //void Renderer::AABBRendering(std::vector<AABBBuffer::AABBInstance>& aabb, UINT frameIndex)
 //{
 //	m_aabbBuffer.UpdateBuffer(reinterpret_cast<UINT8*>(&aabb[0]), aabb.size(), frameIndex);
@@ -378,5 +354,5 @@ void Renderer::RenderToGbuffer(ID3D12GraphicsCommandList* cmdList, std::vector<M
 //	m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_POINTLIST);
 //
 //	m_commandList->DrawInstanced(1, (UINT)aabb.size(), 0, 0);
-//}
+//§}
 

@@ -233,6 +233,7 @@ namespace DirectX
             explicit Vector3(_In_reads_(3) const float *pArray) noexcept : XMFLOAT3(pArray) {}
             Vector3(FXMVECTOR V) noexcept { XMStoreFloat3(this, V); }
             Vector3(const XMFLOAT3& V) noexcept { this->x = V.x; this->y = V.y; this->z = V.z; }
+            Vector3(const XMFLOAT4& V) noexcept { this->x = V.x; this->y = V.y; this->z = V.z; }
             explicit Vector3(const XMVECTORF32& F) noexcept { this->x = F.f[0]; this->y = F.f[1]; this->z = F.f[2]; }
 
             Vector3(const Vector3&) = default;

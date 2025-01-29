@@ -21,7 +21,7 @@ public:
 	void Initialize(PSOHandler& psoHandler, TextureHandler& textureHandler, std::wstring skyBoxTexture = L"Sprites/defaultRedSkybox.dds");
 	void Update(const float dt);
 
-	void RenderToTexture(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper& heap, DescriptorHeapWrapper& cbvSrvHeap, const uint8_t frameIndex);
+	bool RenderToTexture(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper& heap, DescriptorHeapWrapper& cbvSrvHeap, const uint8_t frameIndex);
 	void FetchCameraPositionAndSkyboxModel(const Vect3f position, ModelHandler& modelHandler);
 
 	const uint32_t TextureID() { return m_textureID; }

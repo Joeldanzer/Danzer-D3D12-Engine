@@ -49,6 +49,8 @@ private:
 	float m_currentTime;
 	float m_time = 0.2f;
 	entt::entity m_entity;
+
+	entt::entity m_frustrumTest;
 };
 
 Game::Impl::Impl(Engine& engine) :
@@ -78,9 +80,26 @@ Game::Impl::Impl(Engine& engine) :
 	modelTransform.m_rotation = Quat4f::CreateFromAxisAngle(Vect3f::Up, ToRadians(180.0f));
 	GameEntity& sponzaObj = reg.emplace<GameEntity>(entity, entity);
 	sponzaObj.m_name = "Sponza Atrium";
-
-    reg.emplace<Model>(entity, engine.GetModelHandler().LoadModel(L"Models/BlenderSponzaAtriumNew.fbx", "Sponza Atrium"));
 	
+    reg.emplace<Model>(entity, engine.GetModelHandler().LoadModel(L"Models/BlenderSponzaAtriumNew.fbx", "Sponza Atrium"));
+
+	//for (int32_t x = -5; x < 5 + 1; x++)
+	//{
+	//	for (int32_t z = -5; z < 5 + 1; z++)
+	//	{	
+	//		GameEntity& entity = engine.GetSceneManager().CreateBasicEntity("FrustrumTest", false);
+	//		reg.emplace<Model>(entity.m_entity, engine.GetModelHandler().LoadModel(L"Models/Particle_Chest.fbx", "ParticleChest"));
+	//
+	//		Transform& transform = reg.get<Transform>(entity.m_entity);
+	//		transform.m_position = { (float)x * 5, 0.0f, (float)z* 5};
+	//		transform.m_scale = { 1.0f, 1.0f, 1.0f };
+	//		
+	//	}
+	//}
+
+	m_frustrumTest = engine.GetSceneManager().CreateBasicEntity("FrustrumTest", false).m_entity;
+	Camera& cam = reg.get<Camera>(engine.GetSceneManager().GetMainCamera());
+	cam.SetFrustrumTest(&reg.get<Transform>(m_frustrumTest));
 	//engine.GetSoundEngine().CreateSound("Sound/MetalPipe.wav", FMOD_DEFAULT, nullptr, &m_pipeSound);
 	//pipeSound = engine.GetSoundEngine().LoadSound("Sound/MetalPipe.wav", false);
 	//
@@ -133,16 +152,6 @@ Game::Impl::Impl(Engine& engine) :
 	//waterTransform.m_position = { 0.0f, 2.0f, 0.0f };
 	//waterTransform.m_scale	  = { 1.0f, 1.0f, 1.5f };
 
-	//for (UINT i = 1; i < 12; i++)
-	//{
-	//	entt::entity point = m_engine.GetSceneManager().GetCurrentScene().CreateBasicEntity("PointLight");
-	//	PointLight& light = reg.emplace<PointLight>(point, m_engine.GetLightHandler().CreatePointLight());
-	//	light.m_color = { 1.0f - (i/10.0f), 0.0f, (i /10.f), 1.0f };
-	//	light.m_range = 1.0f;
-	//	
-	//	Transform& lightTransform = reg.get<Transform>(point);
-	//	lightTransform.m_position = { 0.0f, 5.0f, -5.0f + i };
-	//}
 }	
 
 Game::Impl::~Impl(){}
@@ -152,6 +161,28 @@ void Game::Impl::Update(const float dt)
 	entt::registry& reg = m_engine.GetSceneManager().Registry();
 	Transform& transform = reg.get<Transform>(m_engine.GetSceneManager().GetMainCamera());
 	
+	//Transform& frustrumTransform = reg.get<Transform>(m_frustrumTest);
+	//if (Input::GetInstance().IsKeyDown('Q')) {
+	//	frustrumTransform.m_rotation *= DirectX::XMQuaternionRotationAxis(Vect3f::Up, dt * -2.0f);
+	//}
+	//if (Input::GetInstance().IsKeyDown('E')) {
+	//	frustrumTransform.m_rotation *= DirectX::XMQuaternionRotationAxis(Vect3f::Up, dt * 2.0f);
+	//}
+
+	//if (Input::GetInstance().IsKeyDown('C')) {
+	//	frustrumTransform.m_position.z += 8.0f * dt;
+	//}
+	//if (Input::GetInstance().IsKeyDown('X')) {
+	//	frustrumTransform.m_position.z -= 8.0f * dt;
+	//}
+	//if (Input::GetInstance().IsKeyDown('B')) {
+	//	frustrumTransform.m_position.x += 8.0f * dt;
+	//}
+	//if (Input::GetInstance().IsKeyDown('N')) {
+	//	frustrumTransform.m_position.x -= 8.0f * dt;
+	// 
+	//}
+
 	float speed = 5.0f;
 
 	if (Input::GetInstance().IsKeyDown(VK_LEFT))
@@ -189,11 +220,9 @@ void Game::Impl::Update(const float dt)
 			cam.RenderTarget() = cam.RenderTarget() < 9 ? cam.RenderTarget() + 1 : 0;
 		}
 	}
-
-	if (Input::GetInstance().IsKeyPressed('P'))
-		reg.get<PhysicsBody>(enttTest->m_entity).ActivateBody();
 }
 
+// Testing for custom functions for Collision Detection.
 void Game::Impl::OnSphereContact(GameEntity& collidedEntity)
 {
 	//std::cout << "Sphere will do something!" << std::endl;
@@ -201,7 +230,6 @@ void Game::Impl::OnSphereContact(GameEntity& collidedEntity)
 	body.AddLinearVelocity({ 0.0f, 15.0f, 0.0f });
 
 	m_engine.GetSoundEngine().PlaySoundAtEntt(enttTest->m_entity, pipeSound);
-	//m_engine.GetSoundEngine().PlayFSound(m_pipeSound);
 }
 
 Game::Game(Engine& engine) :
