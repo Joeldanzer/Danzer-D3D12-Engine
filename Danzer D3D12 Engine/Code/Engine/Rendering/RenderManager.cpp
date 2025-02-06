@@ -18,15 +18,16 @@
 #include "Screen Rendering/GBuffer.h"
 #include "Screen Rendering/Textures/FullscreenTexture.h"
 #include "Screen Rendering/TextureRenderer.h"
-#include "Screen Rendering/LightHandler.h"
 #include "Screen Rendering/DirectionalShadowMapping.h"
 #include "Screen Rendering/Fullscreen Shaders/KuwaharaFilter.h"
 #include "Screen Rendering/Textures/TextureRenderingHandler.h"
 #include "Screen Rendering/DebugTextureRenderer.h"
+#include "Screen Rendering/LightRenderer.h"
 
-#include "Rendering/Data/VolumetricLightData.h"
-#include "Rendering/Data/SSAOData.h"
-#include "Rendering/Data/DebugRenderingData.h"
+#include "Data/LightHandler.h"
+#include "Data/VolumetricLightData.h"
+#include "Data/SSAOData.h"
+#include "Data/DebugRenderingData.h"
 #include "Buffers/BufferHandler.h"
 
 #include "Camera.h"
@@ -50,7 +51,7 @@ public:
 
 	void BeginFrame();
 	void RenderFrame(
-		LightHandler& lightHandler, TextureHandler& textureHandler, ModelHandler& modelHandler, 
+		TextureHandler& textureHandler, ModelHandler& modelHandler, 
 		ModelEffectHandler& effectHandler, SpriteHandler& SpriteHandler, SceneManager& scene/*Camera, Ligthing, GameObjects, etc...*/
 	);
 
@@ -63,7 +64,9 @@ public:
 	}
 
 private:
-	void RenderScene(LightHandler& lightHandler, TextureHandler& textureHandler, SpriteHandler& spriteHandler, ModelHandler& modelHandler, ModelEffectHandler& effectHandler, SceneManager& scene);
+	void UpdateLightInstances(entt::registry& reg);
+
+	void RenderScene(TextureHandler& textureHandler, SpriteHandler& spriteHandler, ModelHandler& modelHandler, ModelEffectHandler& effectHandler, SceneManager& scene);
 
 	void FrustrumCulling(const Camera& camera, Transform& transform, ModelData& model);
 
@@ -71,7 +74,7 @@ private:
 	void Update2DInstances(SceneManager& scene, SpriteHandler& spriteHandler);
 
 	void AddSpriteSheetInstance(Sprite& data, Transform2D& transform, SpriteHandler& spriteHandler);
-	void AddFontInstance(Text& data, Transform2D& trransform, SpriteHandler& spriteHandler);
+	void AddFontInstance(TextOLD& data, Transform2D& trransform, SpriteHandler& spriteHandler);
 
 	void UpdatePrimaryConstantBuffers(SceneManager& scene);
 	void ClearAllInstances(ModelHandler& modelHandler, SpriteHandler& spriteHandler);
@@ -88,11 +91,12 @@ private:
 	D3D12Framework&           m_framework;
 	TextureRenderingHandler   m_textureRendering;
 	BufferHandler			  m_bufferHandler;
-							  
+	LightHandler			  m_lightHandler;
+
 	SSAOData				  m_ssaoData;
 	VolumetricLightData       m_vlData;
 	DebugRenderingData		  m_debugRenderingData;
-							  
+				  
 	TextureRenderer*          m_dirLightTexture			= nullptr;
 							  
 	ConstantBufferData*       m_cameraBuffer			= nullptr;
@@ -104,6 +108,7 @@ private:
 	KuwaharaFilter			  m_kuwaharaFilter;
 	DirectionalShadowMapping* m_shadowMap				= nullptr;
 	DebugTextureRenderer*     m_debugRenderer			= nullptr;
+	LightRenderer*			  m_lightRenderer		    = nullptr;
 
 	struct DefaultBuffer {
 		Mat4f  m_transformOne;
@@ -134,6 +139,7 @@ RenderManager::Impl::Impl(D3D12Framework& framework, TextureHandler& textureHand
 	m_textureRendering(framework, m_psoHandler),
 	m_gBuffer(framework, m_psoHandler),
 	m_debugRenderingData(framework.GetDevice()),
+	m_lightHandler(framework),
 	m_shadowMap()
 {
 	// Set the back buffer PSO and RS for use at the end of a frame.
@@ -309,6 +315,26 @@ void RenderManager::Impl::InitializeRenderTextures(TextureHandler& textureHandle
 	dirLightRenderer->SetBufferAtSlot(m_cameraBuffer->OffsetID(), 0);
 	dirLightRenderer->SetBufferAtSlot(m_lightBuffer->OffsetID(),  1);
 
+	LightRenderer* lightRenderer = new LightRenderer(m_lightHandler);
+	lightRenderer->InitializeRenderer(m_psoHandler, 2, 11);
+	lightRenderer->SetRenderTargetAtSlot(dirLightTexture, 0);
+	lightRenderer->SetRenderTargetAtSlot(hdrBlurTexture, 1);
+	lightRenderer->SetTextureAtSlot(m_gBuffer.GetSRVOffset(GBUFFER_ALBEDO), 0, false);
+	lightRenderer->SetTextureAtSlot(m_gBuffer.GetSRVOffset(GBUFFER_NORMAL), 1, false);
+	lightRenderer->SetTextureAtSlot(m_gBuffer.GetSRVOffset(GBUFFER_MATERIAL), 2, false);
+	lightRenderer->SetTextureAtSlot(m_gBuffer.GetSRVOffset(GBUFFER_VERTEX_COLOR), 3, false);
+	lightRenderer->SetTextureAtSlot(m_gBuffer.GetSRVOffset(GBUFFER_VERTEX_NORMAL), 4, false);
+	lightRenderer->SetTextureAtSlot(m_gBuffer.GetSRVOffset(GBUFFER_WORLD_POSITION), 5, false);
+	lightRenderer->SetTextureAtSlot(m_gBuffer.GetSRVOffset(GBUFFER_DEPTH), 6, false);
+	lightRenderer->SetTextureAtSlot(textureHandler.GetTextureData(m_skyboxRenderer->TextureID()).m_offsetID, 7, false);
+	lightRenderer->SetTextureAtSlot(shadowMapTexture, 8);
+	lightRenderer->SetTextureAtSlot(ssaoBlurTexture, 9);
+	lightRenderer->SetTextureAtSlot(volumetricTexture, 10);
+
+	lightRenderer->SetBufferAtSlot(m_cameraBuffer->OffsetID(), 0);
+
+	m_textureRendering.AddTextureRendererToPipeline(lightRenderer, SCENE_PASS_0);
+
 	m_skyboxRenderer->SetRenderTargetAtSlot(dirLightTexture, 0);
 
 	FullscreenTexture* bloomBlurTexture = m_textureRendering.CreateFullscreenTexture(
@@ -366,11 +392,15 @@ void RenderManager::Impl::InitializeRenderTextures(TextureHandler& textureHandle
 
 void RenderManager::Impl::RenderImgui()
 {
-	ID3D12DescriptorHeap* descHeaps[] = { m_framework.m_imguiDesc };
-	m_framework.m_frameResources[m_framework.m_frameIndex]->CmdList()->SetDescriptorHeaps(
-		_countof(descHeaps),
-		&descHeaps[0]
-	);
+#if EDITOR_DEBUG_VIEW // Don't draw directly to back buffer after finishing the scene. 
+	ID3D12GraphicsCommandList* cmdList = m_framework.CurrentFrameResource()->CmdList();
+
+	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle = m_framework.RTVHeap().GET_CPU_DESCRIPTOR(m_framework.m_frameIndex);
+	cmdList->OMSetRenderTargets(1, &rtvHandle, false, nullptr);
+	cmdList->RSSetViewports(1, &m_framework.m_viewport);
+#else
+	m_framework.RenderToBackBuffer(m_textureRendering.FetchLastRenderedTexture()->SRVOffsetID(), m_psoHandler);
+#endif
 
 	ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), m_framework.m_frameResources[m_framework.m_frameIndex]->CmdList());
 }
@@ -426,11 +456,11 @@ void RenderManager::Impl::BeginFrame()
 	m_textureRendering.ClearAllTextures(cmdList);
 }
 
-void RenderManager::Impl::RenderFrame(LightHandler& lightHandler, TextureHandler& textureHandler, ModelHandler& modelHandler, ModelEffectHandler& effectHandler,
+void RenderManager::Impl::RenderFrame(TextureHandler& textureHandler, ModelHandler& modelHandler, ModelEffectHandler& effectHandler,
 	 SpriteHandler& spriteHandler, SceneManager& scene)
 {	
 	ImGui::Render();
-	RenderScene(lightHandler, textureHandler, spriteHandler, modelHandler, effectHandler, scene);
+	RenderScene(textureHandler, spriteHandler, modelHandler, effectHandler, scene);
 
 	ClearAllInstances(modelHandler, spriteHandler);
 }
@@ -450,7 +480,7 @@ BufferHandler& RenderManager::Impl::GetConstantBufferHandler()
 	return m_bufferHandler;
 }
 
-void RenderManager::Impl::RenderScene(LightHandler& lightHandler, TextureHandler& textureHandler, SpriteHandler& spriteHandler, ModelHandler& modelHandler, ModelEffectHandler& effectHandler, SceneManager& scene)
+void RenderManager::Impl::RenderScene(TextureHandler& textureHandler, SpriteHandler& spriteHandler, ModelHandler& modelHandler, ModelEffectHandler& effectHandler, SceneManager& scene)
 {
 	modelHandler.LoadRequestedModels();
 
@@ -537,7 +567,6 @@ void RenderManager::Impl::RenderScene(LightHandler& lightHandler, TextureHandler
 	m_textureRendering.RenderPass(SCENE_PASS_0, SCENE_PASS_2, cmdList);
 	m_textureRendering.RenderPass(POST_PROCESS_0, POST_PROCESS_2, cmdList);
 
-	m_framework.RenderToBackBuffer(m_textureRendering.FetchLastRenderedTexture()->SRVOffsetID(), m_psoHandler);
 
 	//* Render 2D Scene
 	{ 
@@ -555,6 +584,7 @@ void RenderManager::Impl::RenderScene(LightHandler& lightHandler, TextureHandler
 	//* Render 2D Scene End
 
 	RenderImgui(); // Render Imgui over everything else
+	
 
 	m_framework.TransitionRenderTarget(D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
 }
@@ -582,11 +612,24 @@ void RenderManager::Impl::Update3DInstances(const Camera& cam, SceneManager& sce
 
 		if (obj.m_state == GameEntity::STATE::ACTIVE) {
 			Transform& transform = view.get<Transform>(entity);
-			const Vector3& pos = transform.m_position;
+			const Vector3& pos   = transform.m_position;
 			const Vector3& scale = transform.m_scale;
 
-			transform.m_last = transform.m_world;
-			transform.m_lastPosition = transform.m_world.Translation();
+			// Handling of last pos and rot data.
+			{
+				if (transform.m_lastPosCheck != transform.m_position) {
+					transform.m_lastPosition = transform.m_lastPosCheck;
+					transform.m_lastPosCheck = transform.m_lastPosition;
+				}
+				
+				Vect3f euler = transform.m_rotation.ToEuler();
+				if (transform.m_lastRotCheck != euler) {
+					transform.m_lastRotation = transform.m_lastRotCheck;
+					transform.m_lastPosCheck = euler;
+				}
+			}
+
+			transform.m_last		 = transform.m_world;
 
 			Mat4f mat;
 			DirectX::XMVECTOR quatv = DirectX::XMLoadFloat4(&transform.m_rotation);
@@ -594,11 +637,8 @@ void RenderManager::Impl::Update3DInstances(const Camera& cam, SceneManager& sce
 			mat *= DirectX::XMMatrixScaling(transform.m_scale.x, transform.m_scale.y, transform.m_scale.z);
 			mat *= DirectX::XMMatrixTranslation(pos.x, pos.y, pos.z);
 
-
 			transform.m_local = mat;
 			transform.m_world = !transform.Parent() ? transform.m_world = transform.m_local : transform.m_local * transform.Parent()->m_world;
-
-			transform.m_lastPosition = pos;
 
 			Model* model = reg.try_get<Model>(entity);
 			if (model) {
@@ -732,11 +772,11 @@ void RenderManager::Impl::Update2DInstances(SceneManager& scene, SpriteHandler& 
 		}
 	}
 
-	auto textView = reg.view<Transform2D, GameEntity, Text>();
+	auto textView = reg.view<Transform2D, GameEntity, TextOLD>();
 	for (auto entity : textView) {
 		GameEntity& obj = reg.get<GameEntity>(entity);
 		if (obj.m_state == GameEntity::STATE::ACTIVE) {
-			Text& text = reg.get<Text>(entity);
+			TextOLD& text = reg.get<TextOLD>(entity);
 			if (text.m_fontID != 0) {
 				AddFontInstance(text, reg.get<Transform2D>(entity), spriteHandler);
 			}
@@ -763,7 +803,7 @@ void RenderManager::Impl::AddSpriteSheetInstance(Sprite& data, Transform2D& tran
 	spriteHandler.GetAllSprites()[data.m_spriteSheet].AddInstance(inst);
 }
 
-void RenderManager::Impl::AddFontInstance(Text& data, Transform2D& transform, SpriteHandler& spriteHandler)
+void RenderManager::Impl::AddFontInstance(TextOLD& data, Transform2D& transform, SpriteHandler& spriteHandler)
 {
 	Vect2f newPosition = {0.f, 0.f};	
 	std::string& text = data.m_text;
@@ -869,9 +909,9 @@ void RenderManager::BeginFrame()
 	m_Impl->BeginFrame();
 }
 
-void RenderManager::RenderFrame(LightHandler& lightHandler, TextureHandler& textureHandler, ModelHandler& modelHandler, ModelEffectHandler& effectHandler, SpriteHandler& SpriteHandler, SceneManager& scene)
+void RenderManager::RenderFrame(TextureHandler& textureHandler, ModelHandler& modelHandler, ModelEffectHandler& effectHandler, SpriteHandler& SpriteHandler, SceneManager& scene)
 {
-	m_Impl->RenderFrame(lightHandler, textureHandler, modelHandler, effectHandler, SpriteHandler, scene);
+	m_Impl->RenderFrame(textureHandler, modelHandler, effectHandler, SpriteHandler, scene);
 }
 
 PSOHandler& RenderManager::GetPSOHandler() const noexcept

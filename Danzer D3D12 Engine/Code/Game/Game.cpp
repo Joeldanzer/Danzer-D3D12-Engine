@@ -10,7 +10,7 @@
 #include "Rendering/Models/ModelHandler.h"
 #include "Rendering/TextureHandler.h"
 #include "Rendering/2D/SpriteHandler.h"
-#include "Rendering/Screen Rendering/LightHandler.h"
+#include "Rendering/Data/LightHandler.h"
 #include "Components/Render & Effects/WaterPlaneBufferData.h"
 #include "Sound/SoundHeader.h"
 
@@ -25,6 +25,7 @@
 #include "Components/Sound/SoundListener.h"
 #include "Components/Sound/SoundSource.h"
 
+
 class Game::Impl {
 public:
 	Impl(Engine& engine);
@@ -32,7 +33,6 @@ public:
 
 	void Update(const float dt);
 
-	
 private:
 	//void OnSphere(GameEntity& collidedEntity);
 	void OnSphereContact(GameEntity& collidedEntity);
@@ -64,7 +64,6 @@ Game::Impl::Impl(Engine& engine) :
 	//Transform2D& transform = reg.emplace<Transform2D>(m_entity);
 	//Object& obj			   = reg.emplace<Object>(m_entity);
 	//Sprite& sprite		   = reg.emplace<Sprite>(m_entity);
-	
 	//obj.m_state = Object::STATE::ACTIVE;
 	//sprite.m_spriteSheet = engine.GetSpriteHandler().GetCreatedSpriteSheet("testSpriteSheet");
 	//transform.m_scale    = { 0.2f, 0.2f };
@@ -214,9 +213,9 @@ void Game::Impl::Update(const float dt)
 
 	if (Input::GetInstance().IsKeyPressed('Z')) {
 		auto cameraList = reg.view<Camera>();
-		for (UINT i = 0; i < cameraList.size(); i++)
+		for (auto ent : cameraList)
 		{
-			Camera& cam = reg.get<Camera>(cameraList[i]);
+			Camera& cam = reg.get<Camera>(ent);
 			cam.RenderTarget() = cam.RenderTarget() < 9 ? cam.RenderTarget() + 1 : 0;
 		}
 	}

@@ -10,7 +10,6 @@
 #include "Rendering/RenderManager.h"
 #include "Rendering/Models/ModelHandler.h"
 #include "Rendering/Models/ModelEffectHandler.h"
-#include "Rendering/Screen Rendering/LightHandler.h"
 #include "Rendering/Buffers/BufferHandler.h"
 #include "Rendering/Screen Rendering/Textures/TextureRenderingHandler.h"
 #include "Rendering/2D/SpriteHandler.h"
@@ -45,7 +44,6 @@ public:
 	D3D12Framework&			 GetFramework()				  noexcept;
 	TextureHandler&			 GetTextureHandler()		  noexcept;
 	ModelEffectHandler&		 GetModelEffectHandler()	  noexcept;
-	LightHandler&			 GetLightHandler()			  noexcept;
 	PhysicsHandler&			 GetPhysicsHandler()		  noexcept;
 	SoundEngine&			 GetSoundEngine()			  noexcept;
 	BufferHandler&			 GetBufferHandler()			  noexcept;
@@ -65,7 +63,6 @@ private:
 	PhysicsEngine			m_physicsEngine;
 	PhysicsHandler			m_physicsHandler;
 	ModelEffectHandler		m_modelEffectHandler;
-	LightHandler			m_lightHandler;
 	FrameTimer				m_frameTimer;
 	Camera					m_camera;
 
@@ -81,7 +78,6 @@ Engine::Impl::Impl(unsigned int width, unsigned int height) :
 	m_modelEffectHandler(m_framework, m_renderManager.GetPSOHandler()),
 	m_spriteHandler(m_framework, m_textureHandler),
 	m_bufferHandler(m_framework),
-	m_lightHandler(m_framework),
 	m_sceneManager(m_camera),
 	m_physicsEngine(
 		10240, // Max number of bodies
@@ -144,7 +140,7 @@ void Engine::Impl::UpdateFrame() {
 
 	m_soundEngine.UpdateSound(deltaTime);
 
-	m_renderManager.RenderFrame(m_lightHandler, m_textureHandler, m_modelHandler, m_modelEffectHandler, m_spriteHandler, m_sceneManager);
+	m_renderManager.RenderFrame(m_textureHandler, m_modelHandler, m_modelEffectHandler, m_spriteHandler, m_sceneManager);
 
 	m_framework.ExecuteCommandList();
 	m_framework.GetSwapChain()->Present(1, 0);
@@ -208,10 +204,6 @@ ModelEffectHandler& Engine::GetModelEffectHandler() const noexcept
 {
 	return m_Impl->GetModelEffectHandler();
 }
-LightHandler& Engine::GetLightHandler() const noexcept
-{
-	return m_Impl->GetLightHandler();
-}
 PhysicsHandler& Engine::GetPhysicsHandler() const noexcept
 {
 	return m_Impl->GetPhysicsHandler();
@@ -265,11 +257,6 @@ TextureHandler& Engine::Impl::GetTextureHandler() noexcept
 ModelEffectHandler& Engine::Impl::GetModelEffectHandler() noexcept
 {
 	return m_modelEffectHandler;
-}
-
-LightHandler& Engine::Impl::GetLightHandler() noexcept
-{
-	return m_lightHandler;
 }
 
 PhysicsHandler& Engine::Impl::GetPhysicsHandler() noexcept

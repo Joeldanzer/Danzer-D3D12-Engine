@@ -2,6 +2,7 @@
 #include "DirectXTK12/Inc/SimpleMath.h"
 #include <cmath>
 
+typedef DirectX::SimpleMath::Color   Colorf;
 typedef DirectX::SimpleMath::Vector2 Vect2f;
 typedef DirectX::SimpleMath::Vector3 Vect3f;
 typedef DirectX::SimpleMath::Vector4 Vect4f;

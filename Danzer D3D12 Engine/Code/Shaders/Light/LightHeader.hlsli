@@ -1,21 +1,10 @@
-//cbuffer MainCamera : register(b0)
-//{
-//    float4x4 CameraTransform;
-//    float4x4 CameraProjection;
-//    float4   CameraPosition;
-//    float4   Eye;
-//    
-//    // Needs to be 256-byte alligned
-//    float4 trashCameraBuffer[6];
-//};
-
 struct LightOutput
 {
     float4 m_sceneColor  : SV_TARGET0;
     float4 m_brightColor : SV_TARGET1;
 };
 
-SamplerState defaultSample     : register(s0);
+SamplerState defaultSample       : register(s0);
 
 Texture2D   albedoTexture        : register(t0);
 Texture2D   normalTexture        : register(t1);

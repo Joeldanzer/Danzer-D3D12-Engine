@@ -34,7 +34,6 @@ bool FrustrumCulling::MeshIsInFrustrum(const Camera& cam, Transform& transform, 
     for (uint32_t i = 0; i < Camera::FACE_COUNT; i++) {
         if (!globalAABB.IsOnForwardPlane(cam.GetFrustrumFace(static_cast<Camera::Faces>(i))))
            return false;
-        
     }
 
     return true;

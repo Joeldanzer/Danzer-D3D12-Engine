@@ -2,9 +2,9 @@
 #include "Core/MathDefinitions.h"
 #include <string>
 
-struct Text {
-	Text(){}
-	Text(std::string text, Vect4f color, unsigned int font) :
+struct TextOLD {
+	TextOLD(){}
+	TextOLD(std::string text, Vect4f color, unsigned int font) :
 		m_text(text),
 		m_color(color),
 		m_fontID(font)

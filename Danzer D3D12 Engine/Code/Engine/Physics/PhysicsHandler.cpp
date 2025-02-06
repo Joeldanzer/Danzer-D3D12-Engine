@@ -40,7 +40,7 @@ void PhysicsHandler::SetPhysicsPositionAndRotation(entt::registry& reg)
 		GameEntity& gameEntt = reg.get<GameEntity>(entity);
 		
 		if (m_bodyInterface.GetInterface()->GetMotionType(body.m_id) == EMotionType::Static ||
-			gameEntt.m_state == GameEntity::STATE::NOT_ACTIVE)
+			gameEntt.m_state == GameEntity::STATE::DEACTIVE)
 			continue;
 		
 		Transform& transform = reg.get<Transform>(entity);
@@ -61,7 +61,7 @@ void PhysicsHandler::UpdateStaticColliders(entt::registry& reg)
 		GameEntity& gameEntt = reg.get<GameEntity>(entity);
 
 		if (m_bodyInterface.GetInterface()->GetMotionType(body.m_id) != EMotionType::Static ||
-			gameEntt.m_state == GameEntity::STATE::NOT_ACTIVE)
+			gameEntt.m_state == GameEntity::STATE::DEACTIVE)
 			continue;
 
 		Transform& transform = reg.get<Transform>(entity);
@@ -80,7 +80,7 @@ void PhysicsHandler::UpdatePhysicsEntities(entt::registry& reg)
 		PhysicsBody& body = reg.get<PhysicsBody>(entity);
 		GameEntity& gameEntt = reg.get<GameEntity>(entity);
 		if (m_bodyInterface.GetInterface()->GetMotionType(body.m_id) == EMotionType::Static ||
-			gameEntt.m_state == GameEntity::STATE::NOT_ACTIVE)
+			gameEntt.m_state == GameEntity::STATE::DEACTIVE)
 			continue;
 		
 		Transform& transform = reg.get<Transform>(entity);

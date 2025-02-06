@@ -1,9 +1,26 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\packages\Microsoft.Windows.CppWinRT.2.0.220531.1\build\native\Microsoft.Windows.CppWinRT.props" Condition="Exists('..\packages\Microsoft.Windows.CppWinRT.2.0.220531.1\build\native\Microsoft.Windows.CppWinRT.props')" />
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
       <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Editor_Debug|Win32">
+      <Configuration>Editor_Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Editor_Debug|x64">
+      <Configuration>Editor_Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Editor_Release|Win32">
+      <Configuration>Editor_Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Editor_Release|x64">
+      <Configuration>Editor_Release</Configuration>
+      <Platform>x64</Platform>
     </ProjectConfiguration>
     <ProjectConfiguration Include="Release|Win32">
       <Configuration>Release</Configuration>
@@ -51,6 +68,18 @@
     <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Editor_Debug|Win32'">
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Editor_Debug|x64'">
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Editor_Release|Win32'">
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Editor_Release|x64'">
+    <PlatformToolset>v143</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -120,7 +149,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>DEBUG;_DEBUG;_CONSOLE;JPH_FLOATING_POINT_EXCEPTIONS_ENABLED;JPH_DEBUG_RENDERER;JPH_PROFILE_ENABLED;JPH_OBJECT_STREAM;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>DEBUG;_DEBUG;_CONSOLE;JPH_FLOATING_POINT_EXCEPTIONS_ENABLED;JPH_DEBUG_RENDERER;JPH_PROFILE_ENABLED;JPH_OBJECT_STREAM;EDITOR_DEBUG_VIEW;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)Editor\;$(SolutionDir)3rdParty\;$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
@@ -152,6 +181,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Components\ComponentRegister.h" />
+    <ClInclude Include="Components\Light\Spotlight.h" />
+    <ClInclude Include="Rendering\Screen Rendering\LightRenderer.h" />
     <ClInclude Include="Rendering\Data\DebugRenderingData.h" />
     <ClInclude Include="Rendering\Screen Rendering\DebugTextureRenderer.h" />
     <ClInclude Include="Core\HelperFunctions.h" />
@@ -179,7 +211,7 @@
     <ClInclude Include="Core\DesriptorHeapWrapper.h" />
     <ClInclude Include="Core\D3D12Framework.h" />
     <ClInclude Include="Rendering\PSOHandler.h" />
-    <ClInclude Include="Rendering\Screen Rendering\LightHandler.h" />
+    <ClInclude Include="Rendering\Data\LightHandler.h" />
     <ClInclude Include="Rendering\Buffers\PointLightBuffer.h" />
     <ClInclude Include="Rendering\Buffers\EffectShaderBuffer.h" />
     <ClInclude Include="Rendering\Models\ModelEffectData.h" />
@@ -238,6 +270,8 @@
     <ClInclude Include="Rendering\Data\VolumetricLightData.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Components\ComponentRegister.cpp" />
+    <ClCompile Include="Rendering\Screen Rendering\LightRenderer.cpp" />
     <ClCompile Include="Rendering\Data\DebugRenderingData.cpp" />
     <ClCompile Include="Rendering\Screen Rendering\DebugTextureRenderer.cpp" />
     <ClCompile Include="Rendering\FrustrumCulling.cpp" />
@@ -254,7 +288,7 @@
     <ClCompile Include="Core\DesriptorHeapWrapper.cpp" />
     <ClCompile Include="Core\D3D12Framework.cpp" />
     <ClCompile Include="Rendering\PSOHandler.cpp" />
-    <ClCompile Include="Rendering\Screen Rendering\LightHandler.cpp" />
+    <ClCompile Include="Rendering\Data\LightHandler.cpp" />
     <ClCompile Include="Rendering\Buffers\PointLightBuffer.cpp" />
     <ClCompile Include="Rendering\Buffers\EffectShaderBuffer.cpp" />
     <ClCompile Include="Rendering\Models\ModelEffectHandler.cpp" />
@@ -298,7 +332,18 @@
     <ClCompile Include="Rendering\Screen Rendering\Textures\TextureRenderingHandler.cpp" />
     <ClCompile Include="Rendering\Data\VolumetricLightData.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
+    <Import Project="..\packages\Microsoft.Windows.CppWinRT.2.0.220531.1\build\native\Microsoft.Windows.CppWinRT.targets" Condition="Exists('..\packages\Microsoft.Windows.CppWinRT.2.0.220531.1\build\native\Microsoft.Windows.CppWinRT.targets')" />
   </ImportGroup>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\Microsoft.Windows.CppWinRT.2.0.220531.1\build\native\Microsoft.Windows.CppWinRT.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Windows.CppWinRT.2.0.220531.1\build\native\Microsoft.Windows.CppWinRT.props'))" />
+    <Error Condition="!Exists('..\packages\Microsoft.Windows.CppWinRT.2.0.220531.1\build\native\Microsoft.Windows.CppWinRT.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Windows.CppWinRT.2.0.220531.1\build\native\Microsoft.Windows.CppWinRT.targets'))" />
+  </Target>
 </Project>

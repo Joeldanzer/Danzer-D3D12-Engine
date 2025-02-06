@@ -61,7 +61,7 @@
     <ClCompile Include="Rendering\Models\ModelEffectHandler.cpp" />
     <ClCompile Include="Rendering\Buffers\EffectShaderBuffer.cpp" />
     <ClCompile Include="Rendering\Buffers\PointLightBuffer.cpp" />
-    <ClCompile Include="Rendering\Screen Rendering\LightHandler.cpp" />
+    <ClCompile Include="Rendering\Data\LightHandler.cpp" />
     <ClCompile Include="Rendering\Buffers\SSAOBuffer.cpp" />
     <ClCompile Include="Rendering\PSOHandler.cpp" />
     <ClCompile Include="Rendering\Buffers\ConstantBufferData.cpp" />
@@ -80,6 +80,8 @@
     <ClCompile Include="Rendering\FrustrumCulling.cpp" />
     <ClCompile Include="Rendering\Screen Rendering\DebugTextureRenderer.cpp" />
     <ClCompile Include="Rendering\Data\DebugRenderingData.cpp" />
+    <ClCompile Include="Rendering\Screen Rendering\LightRenderer.cpp" />
+    <ClCompile Include="Components\ComponentRegister.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Core\WindowHandler.h">
@@ -160,7 +162,7 @@
     <ClInclude Include="Components\Render &amp; Effects\WaterPlaneBufferData.h" />
     <ClInclude Include="Components\Light\PointLight.h" />
     <ClInclude Include="Rendering\Buffers\PointLightBuffer.h" />
-    <ClInclude Include="Rendering\Screen Rendering\LightHandler.h" />
+    <ClInclude Include="Rendering\Data\LightHandler.h" />
     <ClInclude Include="Rendering\Buffers\SSAOBuffer.h" />
     <ClInclude Include="Rendering\PSOHandler.h" />
     <ClInclude Include="Rendering\Buffers\ConstantBufferData.h" />
@@ -188,5 +190,11 @@
     <ClInclude Include="Rendering\FrustrumCulling.h" />
     <ClInclude Include="Rendering\Screen Rendering\DebugTextureRenderer.h" />
     <ClInclude Include="Rendering\Data\DebugRenderingData.h" />
+    <ClInclude Include="Components\Light\Spotlight.h" />
+    <ClInclude Include="Rendering\Screen Rendering\LightRenderer.h" />
+    <ClInclude Include="Components\ComponentRegister.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
 </Project>

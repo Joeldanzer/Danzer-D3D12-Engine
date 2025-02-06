@@ -306,6 +306,10 @@ void D3D12Framework::LoadAssets()
 		m_rtvHeap.m_handleCurrentOffset++;
 	}
 
+#if EDITOR_DEBUG_VIEW // Create Imgui RenderTargets
+
+#endif
+
 	// Create Depth Stencil
 	{
 		CD3DX12_RESOURCE_DESC dsvDesc(
@@ -350,20 +354,28 @@ void D3D12Framework::LoadAssets()
 
 void D3D12Framework::InitImgui()
 {
+	
 	ImGui::CreateContext();
 	ImGui::StyleColorsDark();
 	ImGui_ImplWin32_Init(WindowHandler::GetHWND());
 
-	D3D12_DESCRIPTOR_HEAP_DESC desc = {};
-	desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-	desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-	desc.NumDescriptors = MAX_NUMBER_OF_DESCTRIPTORS;
-	CHECK_HR(m_device->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&m_imguiDesc)));
+	ImGuiIO& io = ImGui::GetIO();
+	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
-	m_imguiDesc->SetName(L"ImGui Descriptor Heap");
 
-	ImGui_ImplDX12_Init(m_device.Get(), FrameCount, DXGI_FORMAT_R8G8B8A8_UNORM, m_imguiDesc,
-		m_imguiDesc->GetCPUDescriptorHandleForHeapStart(), m_imguiDesc->GetGPUDescriptorHandleForHeapStart());
+	ImGui_ImplDX12_InitInfo initInfo;
+	initInfo.Device            = m_device.Get();
+	initInfo.CommandQueue      = m_commandQueue.Get();
+	initInfo.NumFramesInFlight = FrameCount;
+	initInfo.RTVFormat		   = DXGI_FORMAT_R8G8B8A8_UNORM;
+	
+	initInfo.SrvDescriptorHeap = CbvSrvHeap().GetDescriptorHeap();
+	initInfo.LegacySingleSrvCpuDescriptor = CbvSrvHeap().GET_CPU_DESCRIPTOR(0);
+	initInfo.LegacySingleSrvGpuDescriptor = CbvSrvHeap().GET_GPU_DESCRIPTOR(0);
+	ImGui_ImplDX12_Init(&initInfo);
+
+	//ImGui_ImplDX12_Init(m_device.Get(), FrameCount, DXGI_FORMAT_R8G8B8A8_UNORM, m_cbvSrvHeap.GetDescriptorHeap(),
+	//	m_cbvSrvHeap.GetDescriptorHeap()->GetCPUDescriptorHandleForHeapStart(), m_cbvSrvHeap.GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart());
 }
 
 void D3D12Framework::ScanAdapter(IDXGIAdapter1* adapter, IDXGIFactory4* factory)
@@ -394,3 +406,17 @@ void D3D12Framework::ScanAdapter(IDXGIAdapter1* adapter, IDXGIFactory4* factory)
 }
 
 #pragma warning ( pop ) // Only disable this warning in D3D12Framework
+
+void D3D12Framework::ImguiDescHeap::Alloc(D3D12_CPU_DESCRIPTOR_HANDLE* outCpuHandle, D3D12_GPU_DESCRIPTOR_HANDLE* outGpuHandle)
+{
+	assert(m_handleIncrement < m_maxNumberOfDescs);
+
+	outCpuHandle->ptr = m_descHeap->GetCPUDescriptorHandleForHeapStart().ptr + (m_handleIncrement * m_handleIncrement);
+	outGpuHandle->ptr = m_descHeap->GetGPUDescriptorHandleForHeapStart().ptr + (m_handleIncrement * m_handleIncrement);
+	m_handleIncrement++;
+}
+
+void D3D12Framework::ImguiDescHeap::Free(D3D12_CPU_DESCRIPTOR_HANDLE* outCpuHandle, D3D12_GPU_DESCRIPTOR_HANDLE* outGpuHandle)
+{
+
+}

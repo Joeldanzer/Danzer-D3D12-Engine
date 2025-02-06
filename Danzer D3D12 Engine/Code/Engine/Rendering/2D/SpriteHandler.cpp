@@ -26,9 +26,9 @@ Sprite SpriteHandler::CreateSpriteFromSheet(std::string sheetName, UINT frame)
     return sprite;
 }
 
-Text SpriteHandler::CreateTextFromFont(std::string fontName)
+TextOLD SpriteHandler::CreateTextFromFont(std::string fontName)
 {
-    Text text;
+    TextOLD text;
     text.m_fontID = GetLoadedFont(fontName);
     return text;
 }

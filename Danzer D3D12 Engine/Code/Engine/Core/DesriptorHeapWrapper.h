@@ -28,7 +28,9 @@ public:
 	uint32_t				     m_handleCurrentOffset; //CurrentOffset * IncrementSize
 
 private:
-	D3D12_DESCRIPTOR_HEAP_DESC m_desc;
+	friend class D3D12Framework;
+
+	D3D12_DESCRIPTOR_HEAP_DESC   m_desc;
 	ComPtr<ID3D12DescriptorHeap> m_desctiptorHeap;
 
 	D3D12_CPU_DESCRIPTOR_HANDLE m_cpuHeapStart;

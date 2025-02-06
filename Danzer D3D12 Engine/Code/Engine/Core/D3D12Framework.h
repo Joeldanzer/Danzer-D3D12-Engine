@@ -9,6 +9,19 @@ class PSOHandler;
 class D3D12Framework
 {
 public:
+    struct ImguiDescHeap {
+        ComPtr<ID3D12DescriptorHeap> m_descHeap;
+
+        void Alloc(D3D12_CPU_DESCRIPTOR_HANDLE* outCpuHandle, D3D12_GPU_DESCRIPTOR_HANDLE* outGpuHandle);
+        void Free(D3D12_CPU_DESCRIPTOR_HANDLE* outCpuHandle, D3D12_GPU_DESCRIPTOR_HANDLE* outGpuHandle);
+
+        uint32_t m_handleIncrement  = 0;
+        uint32_t m_maxNumberOfDescs = MAX_NUMBER_OF_DESCTRIPTORS;
+        uint32_t m_currentOffset    = 0;
+    };
+
+    static ImguiDescHeap m_imguiDescHeap;
+
 	D3D12Framework();
     ~D3D12Framework();
 	

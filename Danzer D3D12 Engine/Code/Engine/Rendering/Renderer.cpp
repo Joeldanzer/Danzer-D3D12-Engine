@@ -12,7 +12,6 @@
 #include "Rendering/Screen Rendering/Textures/FullscreenTexture.h"
 #include "Rendering/Screen Rendering/DirectionalShadowMapping.h"
 #include "Rendering/Screen Rendering/GBuffer.h"
-#include "Rendering/Screen Rendering/LightHandler.h"
 #include "Core/FrameResource.h"
 
 #include <chrono>
@@ -20,10 +19,6 @@
 
 Renderer::~Renderer()
 {
-	//m_cameraBuffer.~CameraBuffer();
-	//m_transformBuffer.~TransformBuffer();
-
-	//m_commandList = nullptr;
 	m_framework		= nullptr;
 	m_rootSignature = nullptr;
 }
@@ -99,71 +94,6 @@ CD3DX12_GPU_DESCRIPTOR_HANDLE Renderer::UpdateLightBuffer(Mat4f& projection, Tra
 	CD3DX12_GPU_DESCRIPTOR_HANDLE cbvHandle(cbvSrvHeapStart, m_lightBuffer.OffsetID() + frameIndex, cbvSrvDescSize);
 	return cbvHandle;
 }
-
-void Renderer::RenderSkybox(ID3D12GraphicsCommandList* cmdList, Transform& cameraTransform, Texture& textures, ModelData& model, Skybox& skybox, UINT frameIndex, UINT startLocation)
-{
-	D3D12_GPU_DESCRIPTOR_HANDLE cbvSrvHeapStart = m_framework->CbvSrvHeap().GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
-	const UINT cbvSrvDescSize					= m_framework->CbvSrvHeap().DESCRIPTOR_SIZE();
-	
-	CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle(cbvSrvHeapStart, textures.m_offsetID, cbvSrvDescSize);
-	cmdList->SetGraphicsRootDescriptorTable(1, srvHandle);
-	
-	ModelData::Mesh& mesh = model.GetMeshes()[0];
-	
-	if (!model.GetInstanceTransforms().empty())
-		 model.ClearInstanceTransform();
-	
-	//* Add the rotation from the skybox and always place it a the cameras position
-	DirectX::XMVECTOR quatv = DirectX::XMLoadFloat4(&skybox.GetRotation());
-	Mat4f transform = DirectX::XMMatrixRotationQuaternion(quatv);
-	transform      *= DirectX::XMMatrixScaling(5.0f, 5.0f, 5.0f);
-	transform      *= DirectX::XMMatrixTranslation(cameraTransform.m_position.x, cameraTransform.m_position.y, cameraTransform.m_position.z);
-
-	model.AddModelInstanceTransform(DirectX::XMMatrixTranspose(transform));
-	model.UpdateTransformInstanceBuffer(frameIndex);
-	D3D12_VERTEX_BUFFER_VIEW vBufferViews[2] = {
-		mesh.m_vertexBufferView, model.GetTransformInstanceBuffer().GetBufferView(frameIndex)
-	};
-	cmdList->IASetVertexBuffers(0, 2, &vBufferViews[0]);
-	cmdList->IASetIndexBuffer(&mesh.m_indexBufferView);
-	cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	
-	cmdList->DrawIndexedInstanced(mesh.m_numIndices, 1, 0, 0, 0);
-}
-
-void Renderer::RenderPointLights(ID3D12GraphicsCommandList* cmdList, LightHandler& lightHandler, const entt::registry& registry, const UINT frameIndex, UINT startLocation)
-{
-	D3D12_GPU_DESCRIPTOR_HANDLE cbvSrvHeapStart = m_framework->CbvSrvHeap().GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
-	const UINT cbvSrvDescSize = m_framework->CbvSrvHeap().DESCRIPTOR_SIZE();
-
-	auto view = registry.view<PointLight, Transform, GameEntity>();
-	for (auto i : view)
-	{
-		const GameEntity& obj = registry.get<GameEntity>(i);
-		if (obj.m_state != GameEntity::STATE::ACTIVE)
-			continue;
-	
-		const PointLight& light = registry.get<PointLight>(i);
-		const Transform&  transform = registry.get<Transform>(i);
-		
-		PointLightBuffer::Data lightData;
-		lightData.m_color	 = light.m_color;
-		lightData.m_range	 = light.m_range;
-		lightData.m_position = transform.m_position + light.m_offsetPosition;
-		PointLightBuffer& buffer = lightHandler.GetLightBuffer(light);
-		buffer.UpdateBuffer(reinterpret_cast<UINT16*>(&lightData), frameIndex);
-
-		CD3DX12_GPU_DESCRIPTOR_HANDLE cbvHandle(cbvSrvHeapStart, buffer.OffsetID(), cbvSrvDescSize);
-		cmdList->SetGraphicsRootDescriptorTable(1, cbvHandle);
-	
-		cmdList->IASetVertexBuffers(0, 0, nullptr);
-		cmdList->IASetIndexBuffer(nullptr);
-		cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	
-		cmdList->DrawInstanced(3, 1, 0, 0);
-	}
-}
-
 void Renderer::RenderForwardModelEffects(ID3D12GraphicsCommandList* cmdList, PSOHandler& psoHandler, const UINT depthOffset, std::vector<ModelEffectData>& modelEffects, ModelHandler& modelHandler, std::vector<Texture>& textures, const UINT frameIndex, Camera& cam, Transform& camTransform, UINT startLocation)
 {
 	D3D12_GPU_DESCRIPTOR_HANDLE cbvSrvHeapStart = m_framework->CbvSrvHeap().GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
@@ -223,7 +153,6 @@ void Renderer::RenderForwardModelEffects(ID3D12GraphicsCommandList* cmdList, PSO
 		effectData.GetTransforms().clear();
 	}
 }
-
 void Renderer::RenderToGbuffer(ID3D12GraphicsCommandList* cmdList, std::vector<ModelData>& models, UINT frameIndex, std::vector<Texture>& textures, bool renderTransparency, UINT startLocation)
 {
 	D3D12_GPU_DESCRIPTOR_HANDLE cbvSrvHeapStart = m_framework->CbvSrvHeap().GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
@@ -345,14 +274,4 @@ void Renderer::RenderToGbuffer(ID3D12GraphicsCommandList* cmdList, std::vector<M
 //
 //	m_commandList->DrawInstanced(1, (UINT)rays.size(), 0, 0);
 //}
-
-//void Renderer::AABBRendering(std::vector<AABBBuffer::AABBInstance>& aabb, UINT frameIndex)
-//{
-//	m_aabbBuffer.UpdateBuffer(reinterpret_cast<UINT8*>(&aabb[0]), aabb.size(), frameIndex);
-//
-//	m_commandList->IASetVertexBuffers(0, 1, &m_aabbBuffer.GetBufferView(frameIndex));
-//	m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_POINTLIST);
-//
-//	m_commandList->DrawInstanced(1, (UINT)aabb.size(), 0, 0);
-//§}
 

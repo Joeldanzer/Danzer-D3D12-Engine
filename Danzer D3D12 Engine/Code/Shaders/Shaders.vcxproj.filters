@@ -62,6 +62,7 @@
     <FxCompile Include="Colliders\DebugLineVS.hlsl" />
     <FxCompile Include="Colliders\DebugLineGS.hlsl" />
     <FxCompile Include="Colliders\DebugLinePS.hlsl" />
+    <FxCompile Include="Light\PointLightVS.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="UI\UIstructs.hlsli">

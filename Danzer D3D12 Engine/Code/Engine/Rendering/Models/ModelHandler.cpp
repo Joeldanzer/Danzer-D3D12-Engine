@@ -105,7 +105,7 @@ Model ModelHandler::LoadModel(std::wstring fileName, std::string name, bool tran
 	}
 	else {
 		m_loadRequests.push_back({ FetchLoaderModel(fileName, name, uvFlipped), transparent, name, fileName});
-		id = m_models.size() + m_modelRequestCounter; // Reserve this models id.
+		id = (uint32_t)m_models.size() + m_modelRequestCounter; // Reserve this models id.
 		m_modelRequestCounter++;
 	}
 
@@ -457,7 +457,7 @@ void ModelHandler::WriteToBinaryModelFile(const LoaderModel* loadedModel, const 
 		std::array<std::wstring, 6> textureList = {L"", L"", L"", L"", L"", L""};
 		
 		// Write mesh count data.
-		uint32_t meshCount = loadedModel->m_meshes.size();
+		uint32_t meshCount = (uint32_t)loadedModel->m_meshes.size();
 		modelFile.write((char*)&meshCount, sizeof(uint32_t));
 
 		for (uint32_t i = 0; i < loadedModel->m_meshes.size(); i++)
@@ -470,7 +470,7 @@ void ModelHandler::WriteToBinaryModelFile(const LoaderModel* loadedModel, const 
 			modelFile.write(&mesh->m_verticies[0], mesh->m_vertexSize * mesh->m_vertexCount);
 
 			// Write IndexData
-			const uint32_t indexCount = mesh->m_indices.size();
+			const uint32_t indexCount = (uint32_t)mesh->m_indices.size();
 			modelFile.write((char*)&indexCount, sizeof(uint32_t));
 			for (uint32_t j = 0; j < mesh->m_indices.size(); j++)
 				modelFile.write((char*)&mesh->m_indices[j], sizeof(uint32_t));
@@ -494,7 +494,7 @@ void ModelHandler::WriteToBinaryModelFile(const LoaderModel* loadedModel, const 
 			uint32_t wcharLength = 0;
 			for (uint32_t j = 0; j < textureList.size(); j++) {
 				std::string texturePath = { textureList[j].begin(), textureList[j].end()};
-				wcharLength = texturePath.length();
+				wcharLength = (uint32_t)texturePath.length();
 				modelFile.write((char*)(&wcharLength), sizeof(uint32_t)); // Save the count so I can fetch it when reading from file. 
 				modelFile.write(&texturePath[0], wcharLength); // Save as string instead since WCHAR are 2 bytes.
 			}		

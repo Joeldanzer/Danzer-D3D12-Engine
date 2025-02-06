@@ -9,6 +9,7 @@
 // Light
 #include "Components/Light/DirectionalLight.h"
 #include "Components/Light/PointLight.h"
+#include "Components/Light/Spotlight.h"
 
 // 2D 
 #include "2D/Sprite.h"

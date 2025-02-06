@@ -84,7 +84,9 @@ bool TextureRenderer::RenderToTexture(ID3D12GraphicsCommandList* cmdList, Descri
 void TextureRenderer::PreparePipelineAndRootSignature(ID3D12GraphicsCommandList* cmdList, PSOHandler& psoHandler)
 {
 	cmdList->SetGraphicsRootSignature(psoHandler.GetRootSignature(m_rs));
-	cmdList->SetPipelineState(psoHandler.GetPipelineState(m_pso));
+	
+	if(m_pso != UINT32_MAX)
+		cmdList->SetPipelineState(psoHandler.GetPipelineState(m_pso));
 }
 
 void TextureRenderer::SetTextureAndBufferSlots(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper& cbvSrvHeap, const uint8_t frameIndex)

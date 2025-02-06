@@ -10,6 +10,7 @@ namespace FMOD {
 struct SoundSource;
 struct SoundListener;
 struct FMOD_CREATESOUNDEXINFO;
+
 class SoundHandler;
 
 typedef uint32_t SOUND_ID;
@@ -41,7 +42,7 @@ public:
 
 	void CreateSoundListener(SoundListener& listener);
 
-	void PlaySoundAtEntt( entt::entity entity, SOUND_ID sound,  const float volume = 1.0f, const float pitch = 1.0f);
+	void PlaySoundAtEntt( entt::entity entity, SOUND_ID  sound, const float volume = 1.0f, const float pitch = 1.0f);
 	void PlayStreamAtEntt(entt::entity entity, STREAM_ID sound, const float volume = 1.0f, const float pitch = 1.0f);
 
 	void UpdateSound(const float dt);
@@ -59,7 +60,7 @@ private:
 	std::vector<FMOD::Sound*> m_sounds;
 	std::vector<FMOD::Sound*> m_streams;
 
-	entt::registry* m_registry = nullptr;
+	entt::registry* m_registry  = nullptr;
 
 	FMOD::System* m_soundSystem = nullptr;
 };

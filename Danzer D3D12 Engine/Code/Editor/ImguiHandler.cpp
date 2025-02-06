@@ -1,5 +1,8 @@
 #include "ImguiHandler.h"
 
+#include "imgui/imgui.h"
+#include "imgui/imgui_internal.h"
+
 #include "Core/Engine.h"
 #include "Core/WindowHandler.h"
 #include "Rendering/RenderManager.h"
@@ -17,10 +20,12 @@
 #include "Components/2D/Sprite.h"
 #include "Components/Transform.h"
 
+#include "Rendering/Screen Rendering/Textures/TextureRenderingHandler.h"
+#include "Rendering/Screen Rendering/Textures/FullscreenTexture.h"
+
 #include "Core/input.hpp"
 
 #include <tchar.h>
-#include "imgui/imgui.h"
 
 ImguiHandler::ImguiHandler(Engine& engine) :
 	m_engine(engine),
@@ -52,15 +57,15 @@ ImguiHandler::~ImguiHandler()
 
 void ImguiHandler::Init()
 {
-	m_rightWindow.m_height = WindowHandler::WindowData().m_h;
-	m_rightWindow.m_width = 400;
+	m_rightWindow.m_height    = WindowHandler::WindowData().m_h;
+	m_rightWindow.m_width     = 400;
 	m_rightWindow.m_positon.x = static_cast<float>(WindowHandler::WindowData().m_w - (m_rightWindow.m_width/2));
 	m_rightWindow.m_positon.y = static_cast<float>((m_rightWindow.m_height / 2) + 19);
 
-	m_leftWindow.m_height = WindowHandler::WindowData().m_h / 2;
-	m_leftWindow.m_width = 400;
-	m_leftWindow.m_positon.x = static_cast<float>(m_leftWindow.m_width / 2);
-	m_leftWindow.m_positon.y = static_cast<float>((m_leftWindow.m_height / 2) + 19);
+	m_leftWindow.m_height     = WindowHandler::WindowData().m_h / 2;
+	m_leftWindow.m_width      = 400;
+	m_leftWindow.m_positon.x  = static_cast<float>(m_leftWindow.m_width / 2);
+	m_leftWindow.m_positon.y  = static_cast<float>((m_leftWindow.m_height / 2) + 19);
 
 	m_tag  = new char;
 	m_name = new char;
@@ -71,7 +76,7 @@ void ImguiHandler::Init()
 	auto dirLightList = reg.view<DirectionalLight, Transform>();
 
 	entt::entity ent;
-	for (auto entity : dirLightList)
+	for (entt::entity entity : dirLightList)
 		ent = entity;
 	
 	Transform& transform = reg.get<Transform>(ent);
@@ -82,10 +87,10 @@ void ImguiHandler::Init()
 
 void ImguiHandler::Update(const float dt)
 {
-	D3D12Framework&  framework   = m_engine.GetFramework();
-	RenderManager& renderManager = m_engine.GetRenderManager();
-	SceneManager& scene = m_engine.GetSceneManager();
-	entt::registry& reg = scene.Registry();
+	D3D12Framework& framework     = m_engine.GetFramework();
+	RenderManager&  renderManager = m_engine.GetRenderManager();
+	SceneManager&   scene		  = m_engine.GetSceneManager();
+	entt::registry& reg			  = scene.Registry();
 
 	if (ImGui::BeginMainMenuBar()) {
 		if (ImGui::BeginMenu("Scene Lighting")) {	
@@ -110,7 +115,7 @@ void ImguiHandler::Update(const float dt)
 			float ambientStrength = light.m_ambientColor.w;
 			ImGui::DragFloat("Ambient Strength", &ambientStrength, 0.01f, 10.0f);
 
-			light.m_lightColor   = { lightColor[0], lightColor[1], lightColor[2], lightStrength };
+			light.m_lightColor   = { lightColor[0],   lightColor[1],   lightColor[2],   lightStrength   };
 			light.m_ambientColor = { ambientColor[0], ambientColor[1], ambientColor[2], ambientStrength };
 
 			float rotation[3] = { m_dirLightRot.x, m_dirLightRot.y, m_dirLightRot.z };
@@ -125,7 +130,7 @@ void ImguiHandler::Update(const float dt)
 				Quat4f ddeltaQuat    = DirectX::XMQuaternionRotationRollPitchYaw(ToRadians(deltaRot.x), ToRadians(deltaRot.y), ToRadians(deltaRot.z));
 				transform.m_rotation = DirectX::XMQuaternionMultiply(transform.m_rotation, ddeltaQuat);
 				
-				m_dirLightLastRot = m_dirLightRot;
+				m_dirLightLastRot    = m_dirLightRot;
 			}
 			
 			float lightPosition[3] = { transform.m_position.x, transform.m_position.y, transform.m_position.z };
@@ -223,37 +228,104 @@ void ImguiHandler::Update(const float dt)
 	}
 	ImGui::EndMainMenuBar();	
 	
+	SetUpDockingWindows();
+	DrawSceneToWindow();
+
 	StaticWindows();
+}
+
+void ImguiHandler::SetUpDockingWindows()
+{
+	static ImGuiDockNodeFlags dockSpaceFlags = ImGuiDockNodeFlags_PassthruCentralNode;
+
+	ImGuiWindowFlags windowFlags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
+
+	ImGuiViewport* viewport = ImGui::GetMainViewport();
+	ImGui::SetNextWindowPos(viewport->Pos);
+	ImGui::SetNextWindowSize(viewport->Size);
+	ImGui::SetNextWindowViewport(viewport->ID);
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+	windowFlags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
+	windowFlags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
+
+	if (dockSpaceFlags & ImGuiDockNodeFlags_PassthruCentralNode) {
+		windowFlags |= ImGuiWindowFlags_NoBackground;
+
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, {0.0f, 0.0f});
+		ImGui::Begin("Dockspace", nullptr, windowFlags);
+		ImGui::PopStyleVar();
+		ImGui::PopStyleVar(2);
+
+		ImGuiIO& io = ImGui::GetIO();
+		if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable) {
+			ImGuiID dockSpaceID = ImGui::GetID("MyDockSpace");
+			ImGui::DockSpace(dockSpaceID, {0.0f, 0.0f}, dockSpaceFlags);
+
+			static bool firstTime = true;
+			if (firstTime) {
+				firstTime = false;
+				ImGui::DockBuilderRemoveNode(dockSpaceID);
+				ImGui::DockBuilderAddNode(dockSpaceID, dockSpaceFlags | ImGuiDockNodeFlags_DockSpace);
+				ImGui::DockBuilderSetNodeSize(dockSpaceID, viewport->Size);
+				
+				auto dockLeftID = ImGui::DockBuilderSplitNode(dockSpaceID,  ImGuiDir_Left, 0.2f, nullptr, &dockSpaceID);
+				auto dockRightID = ImGui::DockBuilderSplitNode(dockSpaceID, ImGuiDir_Right, 0.2f, nullptr, &dockSpaceID);
+				
+				ImGui::DockBuilderDockWindow("Scene View", dockLeftID);
+				ImGui::DockBuilderDockWindow("Viewport", dockRightID);
+			}
+		}
+	}
+
+	ImGui::End();
+}
+
+void ImguiHandler::DrawSceneToWindow()
+{
+	uint32_t frameIndex = m_engine.GetFramework().GetFrameIndex();
+	const FullscreenTexture* sceneView = m_engine.GetRenderManager().GetTextureRendering().GetLastRenderedTexture();
+
+	// We skip the first frame since this texture hasn't been rendered yet.
+	if (sceneView != nullptr) {
+		ImVec2 windowSize = { WindowHandler::WindowData().m_w / 2.0f, WindowHandler::WindowData().m_h / 2.0f };
+		ImGui::SetNextWindowSize(windowSize);
+		ImGui::Begin("Viewport", &m_sceneViewOpen);
+
+		CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle = m_engine.GetFramework().CbvSrvHeap().GET_GPU_DESCRIPTOR(sceneView->SRVOffsetID() + frameIndex);
+		ImGui::Image(ImTextureID(srvHandle.ptr), windowSize);
+	
+		ImGui::End();
+	}
 }
 
 
 void ImguiHandler::StaticWindows()
 {
-	ImGuiWindowFlags staticWindowFlags =
-		ImGuiWindowFlags_NoMove |
-		ImGuiWindowFlags_NoResize |
-		ImGuiWindowFlags_NoCollapse;
+	//ImGuiWindowFlags staticWindowFlags =
+	//	ImGuiWindowFlags_M |
+	//	ImGuiWindowFlags_NoResize |
+	//	ImGuiWindowFlags_NoCollapse;
+
+	ImVec2 windowSize = { (float)WindowHandler::WindowData().m_w, (float)WindowHandler::WindowData().m_h };
 
 	entt::registry& reg = m_engine.GetSceneManager().Registry();
 	//* Left Side window Begin
 	{
-		ImGui::SetNextWindowSize({ (float)m_leftWindow.m_width, (float)m_leftWindow.m_height });
-		ImGui::SetNextWindowPos({ m_leftWindow.m_positon.x, m_leftWindow.m_positon.y }, 0, { 0.5f, 0.5f });
-		ImGui::SetNextWindowBgAlpha(1.f);
+		ImGui::SetNextWindowSize({ windowSize.x / 4.0f, windowSize.y / 2.0f });
+		ImGui::SetNextWindowPos({ 0.0f, 0.0f}, 0, { 0.0f, 0.0f });
 		bool isOpen = true;
 
-		if (ImGui::Begin("Scene View", &isOpen, staticWindowFlags)) {
+		if (ImGui::Begin("Scene View", &isOpen)) {
 			if (ImGui::Button("Create Empty GameEntity")) {
 				m_currentEntity = m_engine.GetSceneManager().CreateBasicEntity("Empty Entity", false).m_entity;
 			}
 
 			ImGui::Separator();
-
-			if (ImGui::BeginListBox("##", { (float)m_leftWindow.m_width, (float)m_leftWindow.m_width })) {
+			if (ImGui::BeginListBox("##",  windowSize )) {
 				auto scene = reg.view<Transform, GameEntity>();
 				entt::entity previousEntity;
 				for (auto entity : scene) {
-	
 					GameEntity& obj = reg.get<GameEntity>(entity);
 					bool isSelected = (entity == m_currentEntity);
 					if (ImGui::Selectable(obj.m_name.c_str(), isSelected)) {
@@ -277,11 +349,11 @@ void ImguiHandler::StaticWindows()
 					previousEntity = entity;
 				}
 
-				ImGui::EndListBox();
 			}
+			ImGui::EndListBox();
 
-			ImGui::End();
 		}
+		ImGui::End();
 	}
 	//* Left Side window End
 
@@ -292,7 +364,7 @@ void ImguiHandler::StaticWindows()
 		ImGui::SetNextWindowBgAlpha(1.f);
 		bool isOpen = true;
 
-		if (ImGui::Begin("Component Window", &isOpen, staticWindowFlags)) {
+		if (ImGui::Begin("Component Window", &isOpen)) {
 
 			if (m_itemsHasBeenSelected) {
 				if(ObjectSettings(reg))
@@ -308,37 +380,38 @@ void ImguiHandler::StaticWindows()
 					ImGui::OpenPopup("ComponentList");
 				}
 				if (ImGui::BeginPopup("ComponentList")) {	
-					std::string selectedComponent = "";
+					ImguiComponentMenus::DisplayComponentSelection(reg, m_currentEntity);
+					//std::string selectedComponent = "";
+					//
+					//for (UINT i = 0; i < m_componentList.size(); i++)
+					//{
+					//	bool selected = (selectedComponent == m_componentList[i]);
+					//	if (ImGui::Selectable(m_componentList[i].c_str(), selected)) {
+					//		selectedComponent = m_componentList[i];
+					//		
+					//		if (selectedComponent == "Model") {
+					//			if (!reg.try_get<Model>(m_currentEntity)) {
+					//				reg.emplace<Model>(m_currentEntity, 0);
+					//			}
+					//			break;
+					//		}
+					//
+					//		if (selectedComponent == "DirectionalLight") {
+					//			if (!reg.try_get<DirectionalLight>(m_currentEntity)) {
+					//				reg.emplace<DirectionalLight>(m_currentEntity);
+					//			}
+					//			break;
+					//		}
+					//
+					//	}
+					//}
 				
-					for (UINT i = 0; i < m_componentList.size(); i++)
-					{
-						bool selected = (selectedComponent == m_componentList[i]);
-						if (ImGui::Selectable(m_componentList[i].c_str(), selected)) {
-							selectedComponent = m_componentList[i];
-							
-							if (selectedComponent == "Model") {
-								if (!reg.try_get<Model>(m_currentEntity)) {
-									reg.emplace<Model>(m_currentEntity, 0);
-								}
-								break;
-							}
-				
-							if (selectedComponent == "DirectionalLight") {
-								if (!reg.try_get<DirectionalLight>(m_currentEntity)) {
-									reg.emplace<DirectionalLight>(m_currentEntity);
-								}
-								break;
-							}
-				
-						}
-					}
-				
-					ImGui::EndPopup();
 				}
+				ImGui::EndPopup();
 			}
 		
-			ImGui::End();
 		}
+		ImGui::End();
 	}
 	//* Right side window end
 }
@@ -539,7 +612,7 @@ bool ImguiHandler::ObjectSettings(entt::registry& reg)
 					}
 
 					if (currentState == m_stateNames[1]) {
-						obj.m_state = GameEntity::STATE::NOT_ACTIVE;
+						obj.m_state = GameEntity::STATE::DEACTIVE;
 					}
 
 					if (currentState == m_stateNames[2]) {

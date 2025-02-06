@@ -27,8 +27,6 @@ public:
 	explicit Engine(unsigned int width, unsigned int height);
 	~Engine();
 
-	//bool StartEngine(bool editor = true);
-
 	void BeginFrame();
 	void UpdateFrame();
 
@@ -44,7 +42,6 @@ public:
 	D3D12Framework&			 GetFramework()				  const noexcept;
 	TextureHandler&			 GetTextureHandler()	      const noexcept;
 	ModelEffectHandler&		 GetModelEffectHandler()	  const noexcept;
-	LightHandler&			 GetLightHandler()			  const noexcept;
 	PhysicsHandler&			 GetPhysicsHandler()		  const noexcept;
 	SoundEngine&			 GetSoundEngine()		      const noexcept;
 	BufferHandler&		     GetBufferHandler()		      const noexcept;

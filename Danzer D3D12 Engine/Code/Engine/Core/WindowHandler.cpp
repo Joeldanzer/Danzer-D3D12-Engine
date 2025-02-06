@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "WindowHandler.h"
 
-#include "../3rdParty/imgui-master/backends/imgui_impl_win32.h"
+#include "imgui/backends/imgui_impl_win32.h"
 
 WindowHandler::Data WindowHandler::s_data = WindowHandler::Data();
 HWND WindowHandler::s_hwnd = HWND();
@@ -14,7 +14,6 @@ LRESULT WindowHandler::WinProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 
 	if (ImGui_ImplWin32_WndProcHandler(hwnd, uMsg, wParam, lParam))
 		return true;
-
 
 	if (uMsg == WM_DESTROY || uMsg == WM_CLOSE)
 	{

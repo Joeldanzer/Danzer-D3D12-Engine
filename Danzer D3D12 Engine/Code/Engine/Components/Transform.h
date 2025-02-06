@@ -27,6 +27,9 @@ public:
 	const Vect3f& LastPosition() {
 		return m_lastPosition;
 	}
+	const Vect3f& LastRotation() {
+		return m_lastRotation;
+	}
 
 	void SetTransform(const Mat4f mat) {
 		DirectX::XMVECTOR s, q, p;
@@ -51,8 +54,13 @@ public:
 private:
 	friend class SceneManager;
 	friend class RenderManager;
+	friend class ImguiComponentMenus;
 
 	Vect3f m_lastPosition;
+	Vect3f m_lastPosCheck;
+
+	Vect3f m_lastRotCheck;
+	Vect3f m_lastRotation; // Values stored in euler...
 
 	Mat4f m_last;
 	Mat4f m_world;

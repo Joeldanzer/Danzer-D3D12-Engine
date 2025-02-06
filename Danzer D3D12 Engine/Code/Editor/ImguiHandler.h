@@ -1,7 +1,7 @@
 #pragma once
 
 #include "DirectX/include/directx/d3dx12.h"
-#include "entt/entt.hpp"
+#include "ImguiComponentMenus.h"
 
 #include "Core/MathDefinitions.h"
 
@@ -37,6 +37,11 @@ public:
 	void Update(const float dt);
 
 private:
+	void SetUpDockingWindows();
+	void DrawSceneToWindow();
+	bool m_sceneViewOpen = true;
+
+	void DisplayComponents(entt::registry& reg);
 
 	Vect3f m_dirLightRot     =  {0.0f, 0.0f, 0.0f};
 	Vect3f m_dirLightLastRot =  {0.0f, 0.0f, 0.0f};

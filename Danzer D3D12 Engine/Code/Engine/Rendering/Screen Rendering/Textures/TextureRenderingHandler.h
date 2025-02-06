@@ -27,8 +27,8 @@ enum RENDER_PASS : uint8_t {
 
 // Default FullscreenRenderer pipeline data
 struct TexturePipelineData {
-	std::wstring m_vertexShader			= L"Shaders/FullscreenVS.cso";
-	std::wstring m_pixelShader;
+	std::wstring m_vertexShader = L"Shaders/FullscreenVS.cso";
+	std::wstring m_pixelShader  = L"";
 
 	uint16_t m_width  = WindowHandler::WindowData().m_w;
 	uint16_t m_height = WindowHandler::WindowData().m_h;
@@ -47,7 +47,7 @@ struct TexturePipelineData {
 	uint8_t					   m_inputLayout  = 0;
 };
 
-// TextureRendering Handler handles most of the FullscreenTexture creations and all of it's rendering.
+// TextureRenderingHandler handles most of the FullscreenTexture creations and all of it's rendering.
 class TextureRenderingHandler
 {
 public:
@@ -95,13 +95,17 @@ public:
 		bool					   renderAsDepth = false
 	);
 
-	// Adds a pre-existing FullscreenTexture to the pipeline and specified point
+	// Adds a pre-existing FullscreenTexture to the pipeline and specified pass
 	void AddFullscreenTextureToPipeline(FullscreenTexture* fullscreenTexture, RENDER_PASS transitionPoint);
-	// Adds a pre-existing TextureRenderer to the pipeline and specified point
+	// Adds a pre-existing TextureRenderer to the pipeline and specified pass
 	void AddTextureRendererToPipeline(TextureRenderer* fullscreenTexture, RENDER_PASS renderPass);
 
-	const uint32_t DefaultBuffer()      { return m_defaultBufferOffset; }
-	const uint32_t DefaultLightBuffer() { return m_lightBufferOffset;   }
+	const uint32_t DefaultBuffer()      { return m_defaultBufferOffset; } 
+	const uint32_t DefaultLightBuffer() { return m_lightBufferOffset;   } 
+
+	const FullscreenTexture* GetLastRenderedTexture() {
+		return m_lastRenderedTexture;
+	}
 
 private:
 	friend class RenderManager;
@@ -116,16 +120,17 @@ private:
 
 	uint8_t m_frameIndex;
 
-	PSOHandler&		m_psoHandler;
+	PSOHandler&		m_psoHandler; // Allows acces to RootSignatures & PiplelineStateObjects
 	D3D12Framework& m_framework;
 
 	uint32_t m_defaultBufferOffset;
 	uint32_t m_lightBufferOffset;
 
 	std::unordered_map<std::wstring, uint32_t> m_textureMap;
-	std::array<std::vector<FullscreenTexture*>, RENDER_PASS_COUNT> m_textureList;
 
-	FullscreenTexture* m_lastRenderedTexture = nullptr;
-	std::array<std::vector<TextureRenderer*>, RENDER_PASS_COUNT> m_renderList;
+	std::array<std::vector<FullscreenTexture*>, RENDER_PASS_COUNT> m_textureList;
+	std::array<std::vector<TextureRenderer*>,   RENDER_PASS_COUNT> m_renderList;
+	
+	FullscreenTexture* m_lastRenderedTexture = nullptr; // Currently a easy fix to always render the last texture to the back buffer, want to maybe in the future to have the actual back buffer in here instead.
 };
 

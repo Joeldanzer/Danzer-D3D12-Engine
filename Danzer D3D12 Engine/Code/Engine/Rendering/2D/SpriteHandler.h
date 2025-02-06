@@ -19,7 +19,7 @@ public:
 	~SpriteHandler();
 	
 	Sprite CreateSpriteFromSheet(std::string sheetName, UINT frame);
-	Text CreateTextFromFont(std::string fontName);
+	TextOLD CreateTextFromFont(std::string fontName);
 
 	UINT GetCreatedSpriteSheet(const std::string sheetName) {
 		for (int i = 0; i < m_sprites.size(); i++)
