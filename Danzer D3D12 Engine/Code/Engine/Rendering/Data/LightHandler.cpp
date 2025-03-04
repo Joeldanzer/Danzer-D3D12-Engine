@@ -13,7 +13,6 @@ LightHandler::LightHandler(D3D12Framework& framework) :
     m_pointLightBuffer.Initialize(framework.GetDevice(), sizeof(PointLightData));
 }
 LightHandler::~LightHandler(){}
-
 void LightHandler::AddLightInstanceForRendering(const PointLight& light, const Transform& transform)
 {
     m_pointLightInstances.push_back({
@@ -22,11 +21,7 @@ void LightHandler::AddLightInstanceForRendering(const PointLight& light, const T
         light.m_range
     });
 }
-void LightHandler::AddLightInstanceForRendering(const SpotLight& light, const Transform& transform)
-{
-
-}
-
+void LightHandler::AddLightInstanceForRendering(const SpotLight& light, const Transform& transform){}
 void LightHandler::UpdateLightInstances(const uint8_t frameIndex)
 {
     if(!m_pointLightInstances.empty())
@@ -35,7 +30,6 @@ void LightHandler::UpdateLightInstances(const uint8_t frameIndex)
     if(!m_spotLightInstances.empty())
         m_spotLightBuffer.UpdateBuffer(reinterpret_cast<uint16_t*>(&m_spotLightInstances[0]), (uint32_t)m_spotLightInstances.size(), frameIndex);
 }
-
 void LightHandler::ClearAllInstances()
 {
     m_pointLightInstances.clear();

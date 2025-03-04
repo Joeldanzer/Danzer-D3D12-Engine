@@ -88,8 +88,8 @@ void SoundEngine::PlaySoundAtEntt(entt::entity entity, SOUND_ID sound, const flo
 		return;
 	}
 
-	Transform&   transform   = m_registry->get<Transform>(entity);
-	SoundSource& soundSource = m_registry->get<SoundSource>(entity);
+	Transform&   transform   = Reg::Instance()->Get<Transform>(entity);
+	SoundSource& soundSource = Reg::Instance()->Get<SoundSource>(entity);
 
 	Channel* newChannel = nullptr;
 	FmodResultCheck(m_soundSystem->playSound(m_sounds[sound], nullptr, true, &newChannel));
@@ -111,8 +111,8 @@ void SoundEngine::PlayStreamAtEntt(entt::entity entity, STREAM_ID sound, const f
 		return;
 	}
 
-	Transform& transform = m_registry->get<Transform>(entity);
-	SoundSource& soundSource = m_registry->get<SoundSource>(entity);
+	Transform&   transform   = Reg::Instance()->Get<Transform>(entity);
+	SoundSource& soundSource = Reg::Instance()->Get<SoundSource>(entity);
 
 	Channel* newChannel = nullptr;
 	FmodResultCheck(m_soundSystem->playSound(m_sounds[sound], nullptr, true, &newChannel));
@@ -130,14 +130,14 @@ void SoundEngine::PlayStreamAtEntt(entt::entity entity, STREAM_ID sound, const f
 void SoundEngine::UpdateSound(const float dt)
 {
 	
-	auto listenerView = m_registry->view<SoundListener, Transform, GameEntity>();
+	auto listenerView = Reg::Instance()->GetRegistry().view<SoundListener, Transform, GameEntity>();
 	for (auto entity : listenerView)
 	{	
-		SoundListener& listener = m_registry->get<SoundListener>(entity);
+		SoundListener& listener = Reg::Instance()->Get<SoundListener>(entity);
 		if (listener.m_id == s_invalidListener)
 			continue;
 
-		Transform& transform = m_registry->get<Transform>(entity);
+		Transform& transform = Reg::Instance()->Get<Transform>(entity);
 
 		Vect3f vel = transform.m_position - transform.LastPosition();
 		vel /= dt;
@@ -150,12 +150,12 @@ void SoundEngine::UpdateSound(const float dt)
 		FmodResultCheck(m_soundSystem->set3DListenerAttributes(listener.m_id, &fPos, &fVel, &fForward, &fUp));
 	}
 
-	auto sourceView = m_registry->view<SoundSource, Transform, GameEntity>();
+	auto sourceView = Reg::Instance()->GetRegistry().view<SoundSource, Transform, GameEntity>();
 	bool isPlaying = false;
 	for (auto entity : sourceView )
 	{
-		SoundSource& source  = m_registry->get<SoundSource>(entity);
-		Transform& transform = m_registry->get<Transform>(entity);
+		SoundSource& source  = Reg::Instance()->Get<SoundSource>(entity);
+		Transform& transform = Reg::Instance()->Get<Transform>(entity);
 
 		Vect3f velocity = transform.m_position - transform.LastPosition();
 		velocity /= dt;

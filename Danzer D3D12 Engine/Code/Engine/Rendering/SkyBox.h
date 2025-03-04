@@ -6,9 +6,9 @@ class ModelHandler;
 class TextureHandler;
 class PSOHandler;
 class DescriptorHeapWrapper;
+class ModelData;
 
-class  Transform;
-class  ModelData;
+struct Transform;
 struct Texture;
 struct ID3D12GraphicsCommandList;
 

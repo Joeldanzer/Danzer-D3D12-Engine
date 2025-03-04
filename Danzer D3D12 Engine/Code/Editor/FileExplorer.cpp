@@ -1,3 +1,5 @@
+#include "EditorPCH.h"
+
 #include "FileExplorer.h"
 
 #include <tchar.h>

@@ -392,12 +392,11 @@ void RenderManager::Impl::InitializeRenderTextures(TextureHandler& textureHandle
 
 void RenderManager::Impl::RenderImgui()
 {
-#if EDITOR_DEBUG_VIEW // Don't draw directly to back buffer after finishing the scene. 
+#if EDITOR_DEBUG_VIEW // Draw last texture to ImGui window before rendering to backbuffer.
 	ID3D12GraphicsCommandList* cmdList = m_framework.CurrentFrameResource()->CmdList();
 
 	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle = m_framework.RTVHeap().GET_CPU_DESCRIPTOR(m_framework.m_frameIndex);
 	cmdList->OMSetRenderTargets(1, &rtvHandle, false, nullptr);
-	cmdList->RSSetViewports(1, &m_framework.m_viewport);
 #else
 	m_framework.RenderToBackBuffer(m_textureRendering.FetchLastRenderedTexture()->SRVOffsetID(), m_psoHandler);
 #endif
@@ -488,12 +487,11 @@ void RenderManager::Impl::RenderScene(TextureHandler& textureHandler, SpriteHand
 
 	const UINT frameIndex = m_framework.m_frameIndex;
 
-	entt::registry& reg = scene.Registry();
 	UpdatePrimaryConstantBuffers(scene);
     m_bufferHandler.UpdateBufferDataForRendering();
 
-	Camera& cam = reg.get<Camera>(scene.GetMainCamera());
-	Transform& camTransform = reg.get<Transform>(scene.GetMainCamera());
+	Camera&             cam = Reg::Instance()->Get<Camera>(scene.GetMainCamera());
+	Transform& camTransform = Reg::Instance()->Get<Transform>(scene.GetMainCamera());
 
 	m_skyboxRenderer->FetchCameraPositionAndSkyboxModel(camTransform.m_position, modelHandler);
 	ID3D12DescriptorHeap* descHeaps[] = {
@@ -602,13 +600,11 @@ void RenderManager::Impl::FrustrumCulling(const Camera& camera, Transform& trans
 
 void RenderManager::Impl::Update3DInstances(const Camera& cam, SceneManager& scene, ModelHandler& modelHandler, ModelEffectHandler& effectHandler)
 {	
-	entt::registry& reg = scene.Registry();
-
-	auto view = reg.view<Transform, GameEntity>();
+	auto view = Reg::Instance()->GetRegistry().view<Transform, GameEntity>();
 
 	for (auto entity : view)
 	{
-		GameEntity& obj = reg.get<GameEntity>(entity);
+		GameEntity& obj = Reg::Instance()->Get<GameEntity>(entity);
 
 		if (obj.m_state == GameEntity::STATE::ACTIVE) {
 			Transform& transform = view.get<Transform>(entity);
@@ -640,12 +636,12 @@ void RenderManager::Impl::Update3DInstances(const Camera& cam, SceneManager& sce
 			transform.m_local = mat;
 			transform.m_world = !transform.Parent() ? transform.m_world = transform.m_local : transform.m_local * transform.Parent()->m_world;
 
-			Model* model = reg.try_get<Model>(entity);
+			Model* model = Reg::Instance()->TryGet<Model>(entity);
 			if (model) {
 				if (model->m_modelID != 0) {
-					Transform& transform = reg.get<Transform>(entity);
+					//Transform& transform = reg.get<Transform>(entity);
 						
-					if (!reg.try_get<ModelEffect>(entity)) {
+					if (!Reg::Instance()->TryGet<ModelEffect>(entity)) {
 
 						ModelData& modelData = modelHandler.GetLoadedModelInformation(model->m_modelID);
 						
@@ -656,7 +652,7 @@ void RenderManager::Impl::Update3DInstances(const Camera& cam, SceneManager& sce
 						}
 					}
 					else {
-						ModelEffect& effect = reg.get<ModelEffect>(entity);
+						ModelEffect&     effect     = Reg::Instance()->Get<ModelEffect>(entity);
 						ModelEffectData& effectData = effectHandler.GetModelEffectData(effect.m_effectID);
 						effectData.GetTransforms().emplace_back(DirectX::XMMatrixTranspose(transform.m_world));
 					}
@@ -761,27 +757,27 @@ void RenderManager::Impl::Update3DInstances(const Camera& cam, SceneManager& sce
 }
 void RenderManager::Impl::Update2DInstances(SceneManager& scene, SpriteHandler& spriteHandler)
 {
-	entt::registry& reg = scene.Registry();
-
-	auto spriteView = reg.view<Transform2D, Sprite>();
-	for (auto entity : spriteView) {
-		GameEntity& obj = reg.get<GameEntity>(entity);
-		if(obj.m_state == GameEntity::STATE::ACTIVE){
-			Sprite& sprite = reg.get<Sprite>(entity);
-			AddSpriteSheetInstance(sprite, reg.get<Transform2D>(entity), spriteHandler);
-		}
-	}
-
-	auto textView = reg.view<Transform2D, GameEntity, TextOLD>();
-	for (auto entity : textView) {
-		GameEntity& obj = reg.get<GameEntity>(entity);
-		if (obj.m_state == GameEntity::STATE::ACTIVE) {
-			TextOLD& text = reg.get<TextOLD>(entity);
-			if (text.m_fontID != 0) {
-				AddFontInstance(text, reg.get<Transform2D>(entity), spriteHandler);
-			}
-		}
-	}
+	//entt::registry& reg = scene.Registry();
+	//
+	//auto spriteView = reg.view<Transform2D, Sprite>();
+	//for (auto entity : spriteView) {
+	//	GameEntity& obj = reg.get<GameEntity>(entity);
+	//	if(obj.m_state == GameEntity::STATE::ACTIVE){
+	//		Sprite& sprite = reg.get<Sprite>(entity);
+	//		AddSpriteSheetInstance(sprite, reg.get<Transform2D>(entity), spriteHandler);
+	//	}
+	//}
+	//
+	//auto textView = reg.view<Transform2D, GameEntity, TextOLD>();
+	//for (auto entity : textView) {
+	//	GameEntity& obj = reg.get<GameEntity>(entity);
+	//	if (obj.m_state == GameEntity::STATE::ACTIVE) {
+	//		TextOLD& text = reg.get<TextOLD>(entity);
+	//		if (text.m_fontID != 0) {
+	//			AddFontInstance(text, reg.get<Transform2D>(entity), spriteHandler);
+	//		}
+	//	}
+	//}
 }
 
 void RenderManager::Impl::AddSpriteSheetInstance(Sprite& data, Transform2D& transform, SpriteHandler& spriteHandler)
@@ -832,11 +828,10 @@ void RenderManager::Impl::AddFontInstance(TextOLD& data, Transform2D& transform,
 
 void RenderManager::Impl::UpdatePrimaryConstantBuffers(SceneManager& scene)
 {
-	entt::registry& reg = scene.Registry();
-	Camera& cam = reg.get<Camera>(scene.GetMainCamera());
-	Transform& camTransform = reg.get<Transform>(scene.GetMainCamera());
+	Camera&    cam          = Reg::Instance()->Get<Camera>(scene.GetMainCamera());
+	Transform& camTransform = Reg::Instance()->Get<Transform>(scene.GetMainCamera());
 
-	auto list = scene.Registry().view<DirectionalLight, Transform, GameEntity>();
+	auto list = Reg::Instance()->GetRegistry().view<DirectionalLight, Transform, GameEntity>();
 	DirectionalLight directionalLight;
 	Vect4f dirLightPos = { 0.0f, 0.0f, 0.0f, 1.0f };
 	Vect4f directionaLightdir = { 0.f, 0.f, 0.f, 1.f };
@@ -857,9 +852,9 @@ void RenderManager::Impl::UpdatePrimaryConstantBuffers(SceneManager& scene)
 	};
 
 	for (auto entity : list) {
-		directionalLight = reg.get<DirectionalLight>(entity);
-		directionalLight.m_lightTransform = reg.get<Transform>(entity).m_local;
-		dirLightPos = reg.get<Transform>(entity).m_position;
+		directionalLight				  = Reg::Instance()->Get<DirectionalLight>(entity);
+		directionalLight.m_lightTransform = Reg::Instance()->Get<Transform>(entity).m_local;
+		dirLightPos						  = Reg::Instance()->Get<Transform>(entity).m_position;
 
 		lightData.m_lightTransform = DirectX::XMMatrixTranspose(directionalLight.m_lightTransform.Invert());
 		lightData.m_lightColor     = directionalLight.m_lightColor;

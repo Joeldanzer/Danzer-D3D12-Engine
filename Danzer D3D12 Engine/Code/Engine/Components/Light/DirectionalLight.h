@@ -1,7 +1,8 @@
 #pragma once
 #include "Core\MathDefinitions.h"
+#include "Components/ComponentRegister.h"
 
-struct DirectionalLight
+struct DirectionalLight : public BaseComponent
 {
 	DirectionalLight(){}
 	DirectionalLight(Vect4f light, Vect4f ambient, Vect3f positon = {0.0f, 100.0f, 0.f}) :
@@ -15,8 +16,6 @@ struct DirectionalLight
 		//m_lightProjection = DirectX::XMMatrixOrthographicLH(scale, scale, 1.0f, 2.0f);
 
 		//m_lightProjection = DirectX::XMMatrixOrthographicOffCenterLH(scale, -scale, scale, -scale, scale, -scale);
-		//m_lightProjection = DirectX::XMMatrixO
-		int s = 1;
 	}
 
 	Vect3f m_lightPosition;
@@ -24,5 +23,10 @@ struct DirectionalLight
 	Vect4f m_ambientColor;
 
 	Mat4f  m_lightTransform;
+
+	void DisplayInEditor(Entity entity) override;
 };
+REGISTER_COMPONENT(DirectionalLight)
+
+
 

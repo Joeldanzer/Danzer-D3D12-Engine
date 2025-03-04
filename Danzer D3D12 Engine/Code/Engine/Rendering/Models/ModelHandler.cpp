@@ -13,8 +13,7 @@
 #include "Rendering/FrustrumCulling.h"
 
 #include "Core/FrameResource.h"
-#include "Scene.h"
-#include "Components/Transform.h"
+#include "Components/AllComponents.h"
 
 #include <iostream>
 #include <filesystem>

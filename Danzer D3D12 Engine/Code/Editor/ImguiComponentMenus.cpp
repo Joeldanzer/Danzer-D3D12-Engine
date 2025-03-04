@@ -1,3 +1,5 @@
+#include "EditorPCH.h"
+
 #include "ImguiComponentMenus.h"
 
 #include "Components/AllComponents.h"
@@ -61,17 +63,19 @@ void ImguiComponentMenus::DisplayComponentData(Transform& transform)
 	transform.m_scale    = { scale[0], scale[1], scale[2], 1.f };
 }
 
-void ImguiComponentMenus::DisplayComponentSelection(entt::registry& reg, entt::entity entity)
+void ImguiComponentMenus::DisplayComponentSelection(entt::entity entity)
 {
 	//if (!reg.try_get<Model>(entity))
 	//	if (ImGui::Selectable(typeid(Model).name(), nullptr)) 
 	//		reg.emplace<Model>(entity);
 
-	if (!reg.try_get<PointLight>(entity))
-		if (ImGui::Selectable(typeid(PointLight).name(), nullptr))
-			reg.emplace<PointLight>(entity);
+	bool selected = false;
 
-	if (!reg.try_get<Camera>(entity))
-		if (ImGui::Selectable(typeid(Camera).name(), nullptr))
-			reg.emplace<Camera>(entity);
+	if (!Reg::Instance()->TryGet<PointLight>(entity))
+		if (ImGui::Selectable(typeid(PointLight).name(), selected))
+			Reg::Instance()->Emplace<PointLight>(entity);
+
+	if (!Reg::Instance()->TryGet<Camera>(entity))
+		if (ImGui::Selectable(typeid(Camera).name(), selected))
+			Reg::Instance()->Emplace<Camera>(entity);
 }

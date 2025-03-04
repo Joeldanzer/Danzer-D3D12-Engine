@@ -13,7 +13,6 @@
 #include "Buffers/PointLightBuffer.h"
 
 class Scene;
-class Camera; 
 class Skybox;
 class D3D12Framework;
 class DirectionalShadowMapping;
@@ -22,8 +21,9 @@ class ModelHandler;
 class LightHandler;
 class PSOHandler;
 class FullscreenTexture;
-class Transform;
 
+struct Camera; 
+struct Transform;
 struct DirectionalLight;
 struct GameEntity;
 

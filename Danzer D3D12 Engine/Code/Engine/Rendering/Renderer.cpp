@@ -3,7 +3,6 @@
 
 #include "Components/AllComponents.h"
 
-#include "Scene.h"
 #include "Camera.h"
 #include "SkyBox.h"
 #include "PSOHandler.h"

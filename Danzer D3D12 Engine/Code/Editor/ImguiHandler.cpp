@@ -14,8 +14,10 @@
 #include "Rendering/Models/ModelHandler.h"
 #include "Components/Light/DirectionalLight.h"
 #include "Rendering/TextureHandler.h"
+#include "Rendering/Camera.h"
 
 #include "Components/2D/Text.h"
+
 #include "Components/GameEntity.h"
 #include "Components/2D/Sprite.h"
 #include "Components/Transform.h"
@@ -57,29 +59,18 @@ ImguiHandler::~ImguiHandler()
 
 void ImguiHandler::Init()
 {
-	m_rightWindow.m_height    = WindowHandler::WindowData().m_h;
-	m_rightWindow.m_width     = 400;
-	m_rightWindow.m_positon.x = static_cast<float>(WindowHandler::WindowData().m_w - (m_rightWindow.m_width/2));
-	m_rightWindow.m_positon.y = static_cast<float>((m_rightWindow.m_height / 2) + 19);
-
-	m_leftWindow.m_height     = WindowHandler::WindowData().m_h / 2;
-	m_leftWindow.m_width      = 400;
-	m_leftWindow.m_positon.x  = static_cast<float>(m_leftWindow.m_width / 2);
-	m_leftWindow.m_positon.y  = static_cast<float>((m_leftWindow.m_height / 2) + 19);
-
 	m_tag  = new char;
 	m_name = new char;
 
 	SceneManager& scene = m_engine.GetSceneManager();
-	entt::registry& reg = scene.Registry();
 
-	auto dirLightList = reg.view<DirectionalLight, Transform>();
+	auto dirLightList = Reg::Instance()->GetRegistry().view<DirectionalLight, Transform>();
 
 	entt::entity ent;
 	for (entt::entity entity : dirLightList)
 		ent = entity;
 	
-	Transform& transform = reg.get<Transform>(ent);
+	Transform& transform = Reg::Instance()->Get<Transform>(ent);
 	m_dirLightRot	   = transform.m_rotation.ToEuler();
 	m_dirLightRot	   = { ToDegrees(m_dirLightRot.x), ToDegrees(m_dirLightRot.y), ToDegrees(m_dirLightRot.z) };
 	m_dirLightLastRot  = m_dirLightRot;
@@ -90,18 +81,18 @@ void ImguiHandler::Update(const float dt)
 	D3D12Framework& framework     = m_engine.GetFramework();
 	RenderManager&  renderManager = m_engine.GetRenderManager();
 	SceneManager&   scene		  = m_engine.GetSceneManager();
-	entt::registry& reg			  = scene.Registry();
 
+#if defined(_DEBUG) || defined(EDITOR_DEBUG_VIEW) // General Menu bar for DEBUG Game & Editor view.
 	if (ImGui::BeginMainMenuBar()) {
 		if (ImGui::BeginMenu("Scene Lighting")) {	
 			ImGui::Text("Directional Lighting");
-			auto dirLightList = reg.view<DirectionalLight, Transform, GameEntity>();
+			auto dirLightList = Reg::Instance()->GetRegistry().view<DirectionalLight, Transform, GameEntity>();
 			entt::entity ent;
 			for (auto entity : dirLightList)
 				ent = entity;
 
-			DirectionalLight& light = reg.get<DirectionalLight>(ent);
-			Transform&        transform = reg.get<Transform>(ent);
+			DirectionalLight& light     = REGISTRY->Get<DirectionalLight>(ent);
+			Transform&        transform = REGISTRY->Get<Transform>(ent);
 
 			float lightColor[3] = {light.m_lightColor.x, light.m_lightColor.y, light.m_lightColor.z};
 			ImGui::ColorPicker3("Light Color", &lightColor[0]);
@@ -198,10 +189,10 @@ void ImguiHandler::Update(const float dt)
 		//				Object& obj = reg.get<Object>(camEntt);
 		//
 		//				Scene& newScene = m_engine.GetSceneManager().CreateEmptyScene(sceneInString);
-		//				if (!newScene.Registry().empty())
-		//					newScene.Registry().clear();
+		//				if (!newScene.Reg::Instance()().empty())
+		//					newScene.Reg::Instance()().clear();
 		//
-		//				entt::registry& newReg = newScene.Registry();
+		//				entt::Reg::Instance()& newReg = newScene.Reg::Instance()();
 		//				entt::entity newCam = newReg.create();
 		//				newReg.emplace<Camera>(newCam, camera);
 		//				newReg.emplace<Transform>(newCam, transform);
@@ -227,11 +218,14 @@ void ImguiHandler::Update(const float dt)
 		//}
 	}
 	ImGui::EndMainMenuBar();	
-	
+#endif
+
+#if EDITOR_DEBUG_VIEW // Still want to keep some functions available
 	SetUpDockingWindows();
-	DrawSceneToWindow();
+	DrawSceneToWindow(Reg::Instance()->Get<Camera>(scene.GetMainCamera()));
 
 	StaticWindows();
+#endif
 }
 
 void ImguiHandler::SetUpDockingWindows()
@@ -242,18 +236,18 @@ void ImguiHandler::SetUpDockingWindows()
 
 	ImGuiViewport* viewport = ImGui::GetMainViewport();
 	ImGui::SetNextWindowPos(viewport->Pos);
-	ImGui::SetNextWindowSize(viewport->Size);
+	ImGui::SetNextWindowSize({ viewport->Size.x, viewport->Size.y / (3.0f/4.0f)});
 	ImGui::SetNextWindowViewport(viewport->ID);
-	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
-	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
-	windowFlags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding,   0.0f);
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1.0f);
+	windowFlags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove;
 	windowFlags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
 
 	if (dockSpaceFlags & ImGuiDockNodeFlags_PassthruCentralNode) {
 		windowFlags |= ImGuiWindowFlags_NoBackground;
 
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, {0.0f, 0.0f});
-		ImGui::Begin("Dockspace", nullptr, windowFlags);
+		ImGui::Begin("TopDockSpace", nullptr, windowFlags);
 		ImGui::PopStyleVar();
 		ImGui::PopStyleVar(2);
 
@@ -262,38 +256,58 @@ void ImguiHandler::SetUpDockingWindows()
 			ImGuiID dockSpaceID = ImGui::GetID("MyDockSpace");
 			ImGui::DockSpace(dockSpaceID, {0.0f, 0.0f}, dockSpaceFlags);
 
-			static bool firstTime = true;
-			if (firstTime) {
-				firstTime = false;
+
+			static bool setTopDocks = false;
+			if (!setTopDocks) {
+				setTopDocks = true;
 				ImGui::DockBuilderRemoveNode(dockSpaceID);
 				ImGui::DockBuilderAddNode(dockSpaceID, dockSpaceFlags | ImGuiDockNodeFlags_DockSpace);
 				ImGui::DockBuilderSetNodeSize(dockSpaceID, viewport->Size);
 				
-				auto dockLeftID = ImGui::DockBuilderSplitNode(dockSpaceID,  ImGuiDir_Left, 0.2f, nullptr, &dockSpaceID);
-				auto dockRightID = ImGui::DockBuilderSplitNode(dockSpaceID, ImGuiDir_Right, 0.2f, nullptr, &dockSpaceID);
-				
-				ImGui::DockBuilderDockWindow("Scene View", dockLeftID);
-				ImGui::DockBuilderDockWindow("Viewport", dockRightID);
-			}
-		}
-	}
+				auto up			 = ImGui::DockBuilderSplitNode(dockSpaceID,  ImGuiDir_Up,    0.1f,  nullptr, &dockSpaceID);
+				auto right		 = ImGui::DockBuilderSplitNode(dockSpaceID,  ImGuiDir_Right, 0.80f, nullptr, &up);				
+				auto secondRight = ImGui::DockBuilderSplitNode(right,        ImGuiDir_Right, 0.2f,  nullptr, &right);
 
-	ImGui::End();
+				ImGui::DockBuilderDockWindow("Scene View",		 up);
+				ImGui::DockBuilderDockWindow("Viewport",		 right);
+				ImGui::DockBuilderDockWindow("Component Window", secondRight);
+
+				ImGui::DockBuilderFinish(dockSpaceID);
+			}
+		}		
+		ImGui::End();	
+
+		//ImGui::Begin("BottomDockSpace", nullptr, windowFlags);
+		//ImGui::SetNextWindowPos(viewport->Pos);
+		//ImGui::SetNextWindowSize({ viewport->Size.x, viewport->Size.y / (3.0f / 4.0f) });
+		//ImGui::SetNextWindowViewport(viewport->ID);
+		//ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+		//ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1.0f);
+		//ImGui::End(); 
+	}
 }
 
-void ImguiHandler::DrawSceneToWindow()
+void ImguiHandler::DrawSceneToWindow(Camera& viewPortCam)
 {
 	uint32_t frameIndex = m_engine.GetFramework().GetFrameIndex();
 	const FullscreenTexture* sceneView = m_engine.GetRenderManager().GetTextureRendering().GetLastRenderedTexture();
 
 	// We skip the first frame since this texture hasn't been rendered yet.
 	if (sceneView != nullptr) {
-		ImVec2 windowSize = { WindowHandler::WindowData().m_w / 2.0f, WindowHandler::WindowData().m_h / 2.0f };
-		ImGui::SetNextWindowSize(windowSize);
-		ImGui::Begin("Viewport", &m_sceneViewOpen);
+		ImVec2 viewPortHalf = { WindowHandler::WindowData().m_w / 2.0f, WindowHandler::WindowData().m_h / 2.0f };
+		ImGui::SetNextWindowSize(viewPortHalf);
+		ImGui::Begin("Viewport", nullptr);
 
+		Vect2f windowSize = { ImGui::GetWindowSize().x, ImGui::GetWindowSize().y };
+
+		if (m_lastSceneToWindowSize != windowSize) {
+			m_lastSceneToWindowSize = windowSize;
+
+			viewPortCam.SetAspectRatio(windowSize.x / windowSize.y); // Only reconstruct cam when window has changed size
+		}
+			
 		CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle = m_engine.GetFramework().CbvSrvHeap().GET_GPU_DESCRIPTOR(sceneView->SRVOffsetID() + frameIndex);
-		ImGui::Image(ImTextureID(srvHandle.ptr), windowSize);
+		ImGui::Image(ImTextureID(srvHandle.ptr), {windowSize.x, windowSize.y});
 	
 		ImGui::End();
 	}
@@ -309,36 +323,33 @@ void ImguiHandler::StaticWindows()
 
 	ImVec2 windowSize = { (float)WindowHandler::WindowData().m_w, (float)WindowHandler::WindowData().m_h };
 
-	entt::registry& reg = m_engine.GetSceneManager().Registry();
 	//* Left Side window Begin
 	{
-		ImGui::SetNextWindowSize({ windowSize.x / 4.0f, windowSize.y / 2.0f });
-		ImGui::SetNextWindowPos({ 0.0f, 0.0f}, 0, { 0.0f, 0.0f });
 		bool isOpen = true;
 
-		if (ImGui::Begin("Scene View", &isOpen)) {
+		if (ImGui::Begin("Scene View", nullptr)) {
 			if (ImGui::Button("Create Empty GameEntity")) {
-				m_currentEntity = m_engine.GetSceneManager().CreateBasicEntity("Empty Entity", false).m_entity;
+				m_currentEntity = REGISTRY->Create3DEntity("Empty Entity", false);
 			}
 
 			ImGui::Separator();
 			if (ImGui::BeginListBox("##",  windowSize )) {
-				auto scene = reg.view<Transform, GameEntity>();
+				auto scene = Reg::Instance()->GetRegistry().view<Transform, GameEntity>();
 				entt::entity previousEntity;
 				for (auto entity : scene) {
-					GameEntity& obj = reg.get<GameEntity>(entity);
+					GameEntity& obj = Reg::Instance()->Get<GameEntity>(entity);
 					bool isSelected = (entity == m_currentEntity);
 					if (ImGui::Selectable(obj.m_name.c_str(), isSelected)) {
 						m_currentEntity = entity;
 						m_currentMesh = 0;
-						Transform& transform = reg.get<Transform>(entity);
+						Transform& transform = Reg::Instance()->Get<Transform>(entity);
 
 						if (m_removeEntity) {
 							if (previousEntity != entity) {
 								m_currentEntity = previousEntity;
 							}
 
-							reg.destroy(entity);
+							Reg::Instance()->DestroyEntity(entity);
 							m_removeEntity = false;
 						}
 
@@ -347,40 +358,41 @@ void ImguiHandler::StaticWindows()
 					}
 
 					previousEntity = entity;
+					
 				}
+				ImGui::EndListBox();
 
 			}
-			ImGui::EndListBox();
 
 		}
-		ImGui::End();
 	}
+	ImGui::End();
 	//* Left Side window End
 
 	//* Right side window begin
 	{
-		ImGui::SetNextWindowSize({ (float)m_rightWindow.m_width, (float)m_rightWindow.m_height });
-		ImGui::SetNextWindowPos({ m_rightWindow.m_positon.x, m_rightWindow.m_positon.y }, 0, { 0.5f, 0.5f });
+		//ImGui::SetNextWindowSize({ windowSize.x / 4.0f, windowSize.y / 2.0f });
+		//ImGui::SetNextWindowPos({ m_rightWindow.m_positon.x, m_rightWindow.m_positon.y }, 0, { 0.5f, 0.5f });
 		ImGui::SetNextWindowBgAlpha(1.f);
 		bool isOpen = true;
 
 		if (ImGui::Begin("Component Window", &isOpen)) {
-
 			if (m_itemsHasBeenSelected) {
-				if(ObjectSettings(reg))
-					ImGui::Separator();
-				if(TransformSettings(reg))
-					ImGui::Separator();
-				if (DirectionalLightSettings(reg))
-					ImGui::Separator();
-				if (ModelDataSettings(reg))
-					ImGui::Separator();
+				GameEntity& gameEntity = REGISTRY->Get<GameEntity>(m_currentEntity);
+				
+				for (uint32_t i = 0; i < gameEntity.m_emplacedComponents.size(); i++) {
+					if(ImGui::CollapsingHeader(gameEntity.m_emplacedComponents[i].c_str()))
+						COMPONENT_ENTRY_REGISTER.DisplayComponent(m_currentEntity, gameEntity.m_emplacedComponents[i]);
+				}
+
+				ImGui::Separator();
 
 				if (ImGui::Button("Add Component")) {
 					ImGui::OpenPopup("ComponentList");
 				}
+
 				if (ImGui::BeginPopup("ComponentList")) {	
-					ImguiComponentMenus::DisplayComponentSelection(reg, m_currentEntity);
+					ImguiComponentMenus::DisplayComponentSelection(m_currentEntity);
 					//std::string selectedComponent = "";
 					//
 					//for (UINT i = 0; i < m_componentList.size(); i++)
@@ -406,8 +418,8 @@ void ImguiHandler::StaticWindows()
 					//	}
 					//}
 				
+					ImGui::EndPopup();
 				}
-				ImGui::EndPopup();
 			}
 		
 		}
@@ -415,7 +427,7 @@ void ImguiHandler::StaticWindows()
 	}
 	//* Right side window end
 }
-void ImguiHandler::SaveScene(entt::registry& reg)
+void ImguiHandler::SaveScene()
 {
 	//if (!m_sceneLoader.CurrentScene().empty()) {
 	//	m_sceneLoader.SaveScene(m_sceneLoader.CurrentScene(), reg);
@@ -425,63 +437,63 @@ void ImguiHandler::SaveScene(entt::registry& reg)
 	//	m_sceneLoader.SaveScene({ scene.begin(), scene.end() }, reg);
 	//}
 }
-void ImguiHandler::SaveSceneAs(entt::registry& reg)
+void ImguiHandler::SaveSceneAs()
 {
 	//std::wstring scene = m_fileExplorer.OpenFileExplorer(FILE_EXPLORER_SAVE, m_fileExtensions["Scenes"]);
 	//m_sceneLoader.SaveScene({ scene.begin(), scene.end() }, reg);
 }
-bool ImguiHandler::ModelDataSettings(entt::registry& reg)
+bool ImguiHandler::ModelDataSettings()
 {
-	Model* model = reg.try_get<Model>(m_currentEntity);
-	if (model) {
-		if (ImGui::CollapsingHeader("ModelData")) {
-			if (ImGui::Button("Set Model")) {
-				std::wstring newModel = m_fileExplorer.OpenFileExplorer(FILE_EXPLORER_GET, m_fileExtensions["Model"]);
-				if (!newModel.empty()) {
-					UINT newModelID = m_engine.GetModelHandler().LoadModel(newModel, "").m_modelID;
-					if (newModelID != 0) {
-						model->m_modelID = newModelID;
-					}
-				}
-			}
-			ImGui::Separator();
-
-			if(model->m_modelID != 0) {
-				ModelData& data = m_engine.GetModelHandler().GetLoadedModelInformation(model->m_modelID);
-				
-				ImGui::Text("Model Name: ");
-				ImGui::SameLine();
-				ImGui::Text(data.Name().c_str());
-
-				if (m_currentMesh > data.GetMeshes().size() - 1)
-					m_currentMesh = 0;
-				
-				int lastMesh = m_currentMesh;
-				ImGui::SliderInt("Mesh", &m_currentMesh, 0, (UINT)data.GetMeshes().size() - 1);
-				ModelData::Mesh& currentMesh = data.GetMeshes()[m_currentMesh];
-
-				bool renderOnlyMesh = m_renderOnlyMesh;
-				ImGui::Checkbox("Render Only Mesh", &renderOnlyMesh);
-				if (renderOnlyMesh != m_renderOnlyMesh || m_currentMesh != lastMesh) {
-					for (int i = 0; i < data.GetMeshes().size(); i++)
-					{
-						if (i == m_currentMesh) {
-							data.GetMeshes()[i].m_renderMesh = true;
-							continue;
-						}
-
-						data.GetMeshes()[i].m_renderMesh = !renderOnlyMesh;
-					}
-
-					lastMesh		 = m_currentMesh;
-					m_renderOnlyMesh = renderOnlyMesh;
-				}
-
-				Material& material = currentMesh.m_material;
-				float roughness = material.m_roughness;
-				float metallic = material.m_shininess;
-				float emissive = material.m_emissvie;
-				float color[3] = { material.m_color[0], material.m_color[1], material.m_color[2] };
+	//Model* model = reg.try_get<Model>(m_currentEntity);
+	//if (model) {
+	//	if (ImGui::CollapsingHeader("ModelData")) {
+	//		if (ImGui::Button("Set Model")) {
+	//			std::wstring newModel = m_fileExplorer.OpenFileExplorer(FILE_EXPLORER_GET, m_fileExtensions["Model"]);
+	//			if (!newModel.empty()) {
+	//				UINT newModelID = m_engine.GetModelHandler().LoadModel(newModel, "").m_modelID;
+	//				if (newModelID != 0) {
+	//					model->m_modelID = newModelID;
+	//				}
+	//			}
+	//		}
+	//		ImGui::Separator();
+	//
+	//		if(model->m_modelID != 0) {
+	//			ModelData& data = m_engine.GetModelHandler().GetLoadedModelInformation(model->m_modelID);
+	//			
+	//			ImGui::Text("Model Name: ");
+	//			ImGui::SameLine();
+	//			ImGui::Text(data.Name().c_str());
+	//
+	//			if (m_currentMesh > data.GetMeshes().size() - 1)
+	//				m_currentMesh = 0;
+	//			
+	//			int lastMesh = m_currentMesh;
+	//			ImGui::SliderInt("Mesh", &m_currentMesh, 0, (UINT)data.GetMeshes().size() - 1);
+	//			ModelData::Mesh& currentMesh = data.GetMeshes()[m_currentMesh];
+	//
+	//			bool renderOnlyMesh = m_renderOnlyMesh;
+	//			ImGui::Checkbox("Render Only Mesh", &renderOnlyMesh);
+	//			if (renderOnlyMesh != m_renderOnlyMesh || m_currentMesh != lastMesh) {
+	//				for (int i = 0; i < data.GetMeshes().size(); i++)
+	//				{
+	//					if (i == m_currentMesh) {
+	//						data.GetMeshes()[i].m_renderMesh = true;
+	//						continue;
+	//					}
+	//
+	//					data.GetMeshes()[i].m_renderMesh = !renderOnlyMesh;
+	//				}
+	//
+	//				lastMesh		 = m_currentMesh;
+	//				m_renderOnlyMesh = renderOnlyMesh;
+	//			}
+	//
+	//			Material& material = currentMesh.m_material;
+	//			float roughness = material.m_roughness;
+	//			float metallic = material.m_shininess;
+	//			float emissive = material.m_emissvie;
+	//			float color[3] = { material.m_color[0], material.m_color[1], material.m_color[2] };
 
 				//ImGui::ColorEdit3("Albedo Color", color);
 				//{
@@ -525,9 +537,9 @@ bool ImguiHandler::ModelDataSettings(entt::registry& reg)
 				//	ImGui::Image((ImTextureID)srvHandle.ptr, { 50.f, 50.f });
 				//}
 				//ImGui::SameLine();
-				ImGui::DragFloat("Roughness", &roughness, 0.01f, 0.1f,  2.f);
-				ImGui::DragFloat("Metallic",  &metallic,  0.01f, 0.0f,  2.f);
-				ImGui::DragFloat("Emissive",  &emissive,  0.01f, 0.0f,  1.f);
+				//ImGui::DragFloat("Roughness", &roughness, 0.01f, 0.1f,  2.f);
+				//ImGui::DragFloat("Metallic",  &metallic,  0.01f, 0.0f,  2.f);
+				//ImGui::DragFloat("Emissive",  &emissive,  0.01f, 0.0f,  1.f);
 				
 				//{
 				//	std::wstring normmal;
@@ -566,122 +578,75 @@ bool ImguiHandler::ModelDataSettings(entt::registry& reg)
 				//	ImGui::Image((ImTextureID)srvHandle.ptr, { 50.f, 50.f });
 				//}
 
-				material.m_roughness = roughness;
-				material.m_shininess = metallic;
-				material.m_emissvie  = emissive;
-				memcpy(material.m_color, color, sizeof(float) * 3);
-			}
-		}
-			return true;
-	}
-
+				//material.m_roughness = roughness;
+				//material.m_shininess = metallic;
+				//material.m_emissvie  = emissive;
+				//memcpy(material.m_color, color, sizeof(float) * 3);
+	//		}
+	//	}
+	//		return true;
+	//}
+	//
 	return false;
 }
 
-bool ImguiHandler::ObjectSettings(entt::registry& reg)
+bool ImguiHandler::ObjectSettings()
 {	
-	GameEntity& obj = reg.get<GameEntity>(m_currentEntity);
-	ImGui::Text(obj.m_name.c_str());
-	ImGui::Separator();
-	if (ImGui::CollapsingHeader("Game Entity")) {
-
-		int len = (int)strlen(obj.m_tag.c_str());
-		memcpy(m_tag, obj.m_tag.c_str(), len + 1);
-		ImGui::InputText("Tag", m_tag, 30);
-		obj.m_tag = m_tag;
-
-		bool isStatic = obj.m_static;
-		ImGui::Checkbox("Static", &isStatic);
-		obj.m_static = isStatic;
-
-		//const char* stateCombo[] = { "ACTIVE", "NOT_ACTIVE" };
-		const char* currentState = nullptr;
-		if (ImGui::BeginCombo("State", currentState)) {
-			for (UINT i = 0; i < m_stateNames.size(); i++)
-			{
-				bool isSelected = (currentState == m_stateNames[i].c_str());
-
-				if (ImGui::Selectable(m_stateNames[i].c_str(), isSelected))
-					currentState = m_stateNames[i].c_str();
-
-				if (isSelected) {
-					ImGui::SetItemDefaultFocus();
-
-					if (currentState == m_stateNames[0]) {
-						obj.m_state = GameEntity::STATE::ACTIVE;
-					}
-
-					if (currentState == m_stateNames[1]) {
-						obj.m_state = GameEntity::STATE::DEACTIVE;
-					}
-
-					if (currentState == m_stateNames[2]) {
-						obj.m_state = GameEntity::STATE::DESTROY;
-					}
-				}
-			}
-			ImGui::EndCombo();
-		}
-
-		return true;
-
-	}
-
 	return false;
 }
-bool ImguiHandler::TransformSettings(entt::registry& reg)
+bool ImguiHandler::TransformSettings()
 {
-	Transform& transform = reg.get<Transform>(m_currentEntity);
-	if (ImGui::CollapsingHeader("Transform")) {
-		
-		float position[3] = {transform.m_position.x, transform.m_position.y, transform.m_position.z };
-		float scale[3]	  = {transform.m_scale.x,    transform.m_scale.y,    transform.m_scale.z	};
-		
-		Vect3f euler = transform.m_rotation.ToEuler();
-		float rotation[3] = { ToDegrees(euler.x), ToDegrees(euler.y), ToDegrees(euler.z) };
-		
-		ImGui::DragFloat3("Position", position, 0.01f, -FLT_MAX, FLT_MAX);
-		ImGui::DragFloat3("Rotation", rotation, 0.1f,  -360.f, 360.f);
-		ImGui::DragFloat3("Scale",    scale,    0.01f, -FLT_MAX, FLT_MAX);
-
-		transform.m_rotation = Quat4f::CreateFromYawPitchRoll({ToRadians(rotation[0]), ToRadians(rotation[1]), ToRadians(rotation[2])}); // * (qZ));
-
-		transform.m_position = { position[0], position[1], position[2], 1.f };
-		transform.m_scale	 = { scale[0], scale[1], scale[2], 1.f};
-
-		return true;
-	}
-
+	//Transform& transform = reg.get<Transform>(m_currentEntity);
+	//if (ImGui::CollapsingHeader("Transform")) {
+	//	
+	//	float position[3] = {transform.m_position.x, transform.m_position.y, transform.m_position.z };
+	//	float scale[3]	  = {transform.m_scale.x,    transform.m_scale.y,    transform.m_scale.z	};
+	//	
+	//	Vect3f euler = transform.m_rotation.ToEuler();
+	//	float rotation[3] = { ToDegrees(euler.x), ToDegrees(euler.y), ToDegrees(euler.z) };
+	//	
+	//	ImGui::DragFloat3("Position", position, 0.01f, -FLT_MAX, FLT_MAX);
+	//	ImGui::DragFloat3("Rotation", rotation, 0.1f,  -360.f, 360.f);
+	//	ImGui::DragFloat3("Scale",    scale,    0.01f, -FLT_MAX, FLT_MAX);
+	//
+	//	transform.m_rotation = Quat4f::CreateFromYawPitchRoll({ToRadians(rotation[0]), ToRadians(rotation[1]), ToRadians(rotation[2])}); // * (qZ));
+	//
+	//	transform.m_position = { position[0], position[1], position[2], 1.f };
+	//	transform.m_scale	 = { scale[0], scale[1], scale[2], 1.f};
+	//
+	//	return true;
+	//}
+	//
 	return false;
 }
 
-bool ImguiHandler::DirectionalLightSettings(entt::registry& reg)
+bool ImguiHandler::DirectionalLightSettings()
 {
-	DirectionalLight* light = reg.try_get<DirectionalLight>(m_currentEntity);
-	if (light) {
-		if (ImGui::CollapsingHeader("Directional Light")) {
-			float lightColor[3] = { light->m_lightColor.x, light->m_lightColor.y, light->m_lightColor.z };
-			ImGui::ColorEdit3("Light Color", lightColor);
-
-			float lightStr = light->m_lightColor.w;
-			ImGui::DragFloat("Light Strength", &lightStr, 0.1f, 0.f, 20.f);
-			light->m_lightColor.w = lightStr;
-
-			light->m_lightColor = { lightColor[0], lightColor[1], lightColor[2], lightStr };
-
-			float ambientColor[4] = { light->m_ambientColor.x, light->m_ambientColor.y, light->m_ambientColor.z, light->m_ambientColor.w };
-			ImGui::ColorEdit3("Ambient Color", ambientColor);
-
-			float ambientStr = light->m_ambientColor.w;
-			ImGui::DragFloat("Ambient Strength", &ambientStr, 0.1f, 0.f, 20.f);
-			light->m_ambientColor.w = ambientStr;
-
-			light->m_ambientColor = { ambientColor[0], ambientColor[1], ambientColor[2], ambientStr };
-
-			return true;
-		}
-	}
-
+	//DirectionalLight* light = reg.try_get<DirectionalLight>(m_currentEntity);
+	//if (light) {
+	//	if (ImGui::CollapsingHeader("Directional Light")) {
+	//		float lightColor[3] = { light->m_lightColor.x, light->m_lightColor.y, light->m_lightColor.z };
+	//		ImGui::ColorEdit3("Light Color", lightColor);
+	//
+	//		float lightStr = light->m_lightColor.w;
+	//		ImGui::DragFloat("Light Strength", &lightStr, 0.1f, 0.f, 20.f);
+	//		light->m_lightColor.w = lightStr;
+	//
+	//		light->m_lightColor = { lightColor[0], lightColor[1], lightColor[2], lightStr };
+	//
+	//		float ambientColor[4] = { light->m_ambientColor.x, light->m_ambientColor.y, light->m_ambientColor.z, light->m_ambientColor.w };
+	//		ImGui::ColorEdit3("Ambient Color", ambientColor);
+	//
+	//		float ambientStr = light->m_ambientColor.w;
+	//		ImGui::DragFloat("Ambient Strength", &ambientStr, 0.1f, 0.f, 20.f);
+	//		light->m_ambientColor.w = ambientStr;
+	//
+	//		light->m_ambientColor = { ambientColor[0], ambientColor[1], ambientColor[2], ambientStr };
+	//
+	//		return true;
+	//	}
+	//}
+	//
 	return false;
 }
 
@@ -698,57 +663,4 @@ std::wstring ImguiHandler::SelectTexture(UINT& texture)
 	}
 	else
 		return m_engine.GetTextureHandler().GetTextureData(texture).m_texturePath;
-}
-
-CD3DX12_GPU_DESCRIPTOR_HANDLE ImguiHandler::AddImguiImage(std::wstring path)
-{
-	
-	//for (UINT i = 0; i < m_imguiTextures.size(); i++)
-	//{
-	//	if (path == m_imguiTextures[i].m_imagePath)
-	//		return m_imguiTextures[i].m_srvGpuHandle;
-	//}
-	//
-	////if(!m_engine.GetFramework().CmdListIsRecording())
-	////	m_engine.GetFramework().ResetCommandListAndAllocator(nullptr, L"ImguiHandler: Line 570");
-	//
-	//ImguiTexture texture;
-	//
-	//ID3D12Device* device = m_engine.GetFramework().GetDevice();
-	//ID3D12GraphicsCommandList* cmdList = m_engine.GetFramework().CurrentFrameResource()->CmdList();
-	//
-	//CD3DX12_RESOURCE_BARRIER barrier = LoadATextures(
-	//	path,
-	//	device,
-	//	cmdList,
-	//	&texture.m_texture
-	//);
-	//
-	//cmdList->ResourceBarrier(1, &barrier);
-	//m_engine.GetFramework().ExecuteCommandList();
-	//m_engine.GetFramework().WaitForGPU();
-	//
-	//ID3D12DescriptorHeap* imguiDesc = m_engine.GetFramework().GetImguiHeap();
-	//
-	//CD3DX12_GPU_DESCRIPTOR_HANDLE srvGpuHandle;
-	//CD3DX12_CPU_DESCRIPTOR_HANDLE srvCpuHandle;
-	//
-	//UINT inrementSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-	//srvGpuHandle.InitOffsetted(imguiDesc->GetGPUDescriptorHandleForHeapStart(), static_cast<INT>(m_imguiTextures.size()) + 1, inrementSize);
-	//srvCpuHandle.InitOffsetted(imguiDesc->GetCPUDescriptorHandleForHeapStart(), static_cast<INT>(m_imguiTextures.size()) + 1, inrementSize);
-	//
-	//DirectX::CreateShaderResourceView(
-	//	device,
-	//	texture.m_texture,
-	//	srvCpuHandle
-	//);
-	//
-	//texture.m_imagePath = path;
-	//texture.m_srvGpuHandle = srvGpuHandle;
-	//m_imguiTextures.emplace_back(texture);
-	//
-	//
-	//return m_imguiTextures[m_imguiTextures.size() - 1].m_srvGpuHandle;
-
-	return CD3DX12_GPU_DESCRIPTOR_HANDLE();
 }

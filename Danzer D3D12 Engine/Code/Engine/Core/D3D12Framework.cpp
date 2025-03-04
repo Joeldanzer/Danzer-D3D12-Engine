@@ -47,8 +47,8 @@ D3D12Framework::D3D12Framework() :
 
 	DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
 	swapChainDesc.BufferCount	   = FrameCount;
-	swapChainDesc.Width			   = WindowHandler::WindowData().m_w;
-	swapChainDesc.Height		   = WindowHandler::WindowData().m_h;
+	swapChainDesc.Width			   = WindowHandler::GetViewPort().Width;
+	swapChainDesc.Height		   = WindowHandler::GetViewPort().Height;
 	swapChainDesc.Format		   = DXGI_FORMAT_R8G8B8A8_UNORM;
 	swapChainDesc.BufferUsage      = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 	swapChainDesc.SwapEffect       = DXGI_SWAP_EFFECT_FLIP_DISCARD;
@@ -93,9 +93,6 @@ D3D12Framework::D3D12Framework() :
 
 D3D12Framework::~D3D12Framework()
 {
-	//ExecuteCommandList();
-	//WaitForGPU();
-
 	m_rtvHeap.~DescriptorHeapWrapper();
 	m_dsvHeap.~DescriptorHeapWrapper();
 	m_cbvSrvHeap.~DescriptorHeapWrapper();
@@ -117,6 +114,10 @@ D3D12Framework::~D3D12Framework()
 
 		m_renderTargets[i].ReleaseAndGetAddressOf();
 	}
+
+	ImGui_ImplWin32_Shutdown();
+	ImGui_ImplDX12_Shutdown();
+
 	delete m_imguiDesc;
 }
 
@@ -242,7 +243,8 @@ void D3D12Framework::RenderToBackBuffer(const uint32_t textureToPresent, PSOHand
 	ID3D12GraphicsCommandList* cmdList = CurrentFrameResource()->CmdList();
 
 	CD3DX12_CPU_DESCRIPTOR_HANDLE backBuffer(RTVHeap().GET_CPU_DESCRIPTOR(m_frameIndex));
-	cmdList->RSSetViewports(1, &m_viewport);
+	D3D12_VIEWPORT viewPort = WindowHandler::GetViewPort();
+	cmdList->RSSetViewports(1, &viewPort);
 	cmdList->OMSetRenderTargets(1, &backBuffer, false, nullptr);
 
 	cmdList->SetGraphicsRootSignature(psoHandler.GetRootSignature(m_backBufferRS));
@@ -354,14 +356,13 @@ void D3D12Framework::LoadAssets()
 
 void D3D12Framework::InitImgui()
 {
-	
 	ImGui::CreateContext();
 	ImGui::StyleColorsDark();
 	ImGui_ImplWin32_Init(WindowHandler::GetHWND());
 
 	ImGuiIO& io = ImGui::GetIO();
-	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-
+	io.ConfigFlags  |= ImGuiConfigFlags_DockingEnable;
+	//io.BackendFlags |= ImGuiBackendFlags_PlatformHasViewports;
 
 	ImGui_ImplDX12_InitInfo initInfo;
 	initInfo.Device            = m_device.Get();
@@ -373,9 +374,6 @@ void D3D12Framework::InitImgui()
 	initInfo.LegacySingleSrvCpuDescriptor = CbvSrvHeap().GET_CPU_DESCRIPTOR(0);
 	initInfo.LegacySingleSrvGpuDescriptor = CbvSrvHeap().GET_GPU_DESCRIPTOR(0);
 	ImGui_ImplDX12_Init(&initInfo);
-
-	//ImGui_ImplDX12_Init(m_device.Get(), FrameCount, DXGI_FORMAT_R8G8B8A8_UNORM, m_cbvSrvHeap.GetDescriptorHeap(),
-	//	m_cbvSrvHeap.GetDescriptorHeap()->GetCPUDescriptorHandleForHeapStart(), m_cbvSrvHeap.GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart());
 }
 
 void D3D12Framework::ScanAdapter(IDXGIAdapter1* adapter, IDXGIFactory4* factory)

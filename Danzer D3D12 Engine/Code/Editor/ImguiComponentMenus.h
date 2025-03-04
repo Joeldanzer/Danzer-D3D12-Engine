@@ -20,13 +20,6 @@ public:
 	// General 
 	static void DisplayComponentData(GameEntity& gameEntity);
 	static void DisplayComponentData(Transform& transform);
-	static void DisplayComponentData(Model& model);
 
-	// Lighting 
-	static void DisplayComponentData(PointLight& pointLight);
-	static void DisplayComponentData(DirectionalLight& dirLight);
-	static void DisplayComponentData(Camera& canera);
-
-	static void DisplayComponentSelection(entt::registry& reg, entt::entity entity);
-
+	static void DisplayComponentSelection(entt::entity entity);
 };

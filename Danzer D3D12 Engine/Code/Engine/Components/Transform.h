@@ -1,8 +1,9 @@
 #pragma once
 #include "Core/MathDefinitions.h"
+#include "ComponentRegister.h"
 
 // Transform entity. Required component to render and update in scene
-class Transform {
+struct Transform : public BaseComponent {
 public:
 	Transform() : 
 	m_position(0.f, 0.f, 0.f),
@@ -51,6 +52,8 @@ public:
 		return m_parent;
 	}
 
+	void DisplayInEditor(Entity entity);
+
 private:
 	friend class SceneManager;
 	friend class RenderManager;
@@ -68,4 +71,4 @@ private:
 	
 	Transform* m_parent = nullptr;
 };
-
+REGISTER_COMPONENT(Transform);

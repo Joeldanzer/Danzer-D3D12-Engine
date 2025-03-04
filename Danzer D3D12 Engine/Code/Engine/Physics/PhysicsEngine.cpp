@@ -58,6 +58,9 @@ PhysicsEngine::PhysicsEngine(const UINT maxBodies, const UINT maxBodyMutexes, co
 	m_physicsSystem->SetGravity(gravity);
 
 	m_physicsSystem->SetPhysicsSettings(m_physicsSettings);
+
+	m_contactListener = new ContactListenerImpl(m_bodyInterface);
+	m_physicsSystem->SetContactListener(m_contactListener);
 }
 
 PhysicsEngine::~PhysicsEngine()
@@ -80,8 +83,3 @@ void PhysicsEngine::OptimizeBroadPhase()
 	m_physicsSystem->OptimizeBroadPhase();
 }
 
-void PhysicsEngine::SetRegistry(entt::registry& registry)
-{
-	m_contactListener = new ContactListenerImpl(registry, m_bodyInterface);
-	m_physicsSystem->SetContactListener(m_contactListener);
-}

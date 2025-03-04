@@ -17,8 +17,7 @@ class BodyInterfaceImpl;
 class ContactListenerImpl : public ContactListener
 {
 public:
-	ContactListenerImpl(entt::registry& reg, BodyInterfaceImpl& bodyInterface) :
-		m_registry(reg),
+	ContactListenerImpl(BodyInterfaceImpl& bodyInterface) :
 		m_interface(&bodyInterface)
 	{}
 
@@ -29,5 +28,4 @@ public:
 
 private:
 	BodyInterfaceImpl* m_interface;
-	entt::registry&    m_registry;
 };

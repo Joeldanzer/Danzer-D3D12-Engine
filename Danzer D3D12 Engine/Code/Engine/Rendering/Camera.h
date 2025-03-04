@@ -5,9 +5,9 @@
 
 #include <array>
 
-class Transform;
+struct Transform;
 
-class Camera
+struct Camera
 {
 public:
 	enum Faces : uint32_t {

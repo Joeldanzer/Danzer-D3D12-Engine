@@ -24,11 +24,11 @@ public:
 
 private:
 	// Sets Physics Position and Rotation before PhysicsSystem.Update()
-	void SetPhysicsPositionAndRotation(entt::registry& reg);
-	void UpdateStaticColliders(entt::registry& reg);
+	void SetPhysicsPositionAndRotation();
+	void UpdateStaticColliders();
 
 	// Update all the transform of entites after PhysicsSystem.Update() so the that the results are repclicated in rendering
-	void UpdatePhysicsEntities(entt::registry& reg);
+	void UpdatePhysicsEntities();
 
 	BodyInterfaceImpl&  m_bodyInterface;
 

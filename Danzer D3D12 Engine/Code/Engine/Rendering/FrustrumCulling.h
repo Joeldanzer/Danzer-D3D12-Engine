@@ -1,9 +1,9 @@
 #pragma once
 #include "Core/MathDefinitions.h"
 
-class Transform;
-class Camera;
-class DebugRenderingData;
+struct Transform;
+struct Camera;
+class  DebugRenderingData;
 
 class FrustrumCulling
 {

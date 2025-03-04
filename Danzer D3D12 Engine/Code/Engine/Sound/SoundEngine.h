@@ -32,8 +32,6 @@ public:
 	SoundEngine();
 	~SoundEngine();
 
-	void SetRegistry(entt::registry& reg) { m_registry = &reg; }
-
 	SOUND_ID  LoadSound( const std::string& soundFile,  bool loop);
 	STREAM_ID LoadStream(const std::string& streamFile, bool loop);
 
@@ -59,8 +57,6 @@ private:
 	
 	std::vector<FMOD::Sound*> m_sounds;
 	std::vector<FMOD::Sound*> m_streams;
-
-	entt::registry* m_registry  = nullptr;
 
 	FMOD::System* m_soundSystem = nullptr;
 };

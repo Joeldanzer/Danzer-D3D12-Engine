@@ -8,6 +8,7 @@
 #include <Jolt/Physics/Body/BodyInterface.h>
 
 #include "Components/GameEntity.h"
+
 //BodyInterfaceImpl::BodyInterfaceImpl(PhysicsEngine& physicsEngine)
 //{
 //}

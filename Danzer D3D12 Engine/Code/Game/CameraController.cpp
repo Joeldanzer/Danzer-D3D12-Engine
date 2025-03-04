@@ -1,3 +1,5 @@
+#include "GamePCH.h"
+
 #include "CameraController.h"
 
 //#include "Engine/GameObjects/Object.h"

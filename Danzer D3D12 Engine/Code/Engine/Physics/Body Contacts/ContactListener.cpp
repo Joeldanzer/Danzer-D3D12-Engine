@@ -18,10 +18,10 @@ ValidateResult ContactListenerImpl::OnContactValidate(const Body& inBody1, const
 void ContactListenerImpl::OnContactAdded(const Body& inBody1, const Body& inBody2, const ContactManifold& inManifold, ContactSettings& ioSettings)
 {
 	auto entity = m_interface->FetchEntityFromBodyID(inBody1.GetID().GetIndexAndSequenceNumber());
-	PhysicsBody& body1      = m_registry.get<PhysicsBody>(entity);
+	PhysicsBody& body1      = Reg::Instance()->Get<PhysicsBody>(entity);
 
 	entity = m_interface->FetchEntityFromBodyID(inBody2.GetID().GetIndexAndSequenceNumber());
-	GameEntity& gameEntity2 = m_registry.get<GameEntity>(entity);
+	GameEntity& gameEntity2 = Reg::Instance()->Get<GameEntity>(entity);
 
 	body1.m_onContactAddedList.emplace_back(&gameEntity2);
 }
@@ -34,10 +34,10 @@ void ContactListenerImpl::OnContactPersisted(const Body& inBody1, const Body& in
 void ContactListenerImpl::OnContactRemoved(const SubShapeIDPair& inSubShapePair)
 {
 	auto entity = m_interface->FetchEntityFromBodyID(inSubShapePair.GetBody1ID().GetIndexAndSequenceNumber());
-	PhysicsBody& body1 = m_registry.get<PhysicsBody>(entity);
+	PhysicsBody& body1 = RegistryWrapper::Instance()->Get<PhysicsBody>(entity);
 	
 	entity = m_interface->FetchEntityFromBodyID(inSubShapePair.GetBody2ID().GetIndexAndSequenceNumber());
-	GameEntity& gameEntity2 = m_registry.get<GameEntity>(entity);
+	GameEntity& gameEntity2 = Reg::Instance()->Get<GameEntity>(entity);
 
 	body1.m_onContactRemovedList.emplace_back(&gameEntity2);
 }

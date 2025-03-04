@@ -3,6 +3,7 @@
 
 #include "imgui/backends/imgui_impl_win32.h"
 
+
 WindowHandler::Data WindowHandler::s_data = WindowHandler::Data();
 HWND WindowHandler::s_hwnd = HWND();
 
@@ -76,7 +77,6 @@ LRESULT WindowHandler::WinProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 
 WindowHandler::WindowHandler(WindowHandler::Data data)
 {
-	// DurationTimer timer(__FUNCSIG__, true);
 	s_data = data;
 
 	WNDCLASS windowClass = {};
@@ -90,10 +90,36 @@ WindowHandler::WindowHandler(WindowHandler::Data data)
 	s_hwnd = CreateWindow(L"stuff", windowTitle, WS_OVERLAPPEDWINDOW | WS_POPUP | WS_VISIBLE,
 		s_data.m_x, s_data.m_y, s_data.m_w, s_data.m_h, nullptr, nullptr, nullptr, this);
 
-	//ShowWindow(s_hwnd, )
-	UpdateWindow(s_hwnd);
+	ShowWindow(s_hwnd, SW_MAXIMIZE);
+
 }
 
 WindowHandler::~WindowHandler()
 {
+}
+
+D3D12_VIEWPORT WindowHandler::GetViewPort()
+{
+	D3D12_VIEWPORT viewPort = {};
+	
+	RECT rcWind;
+	if (GetWindowRect(s_hwnd, &rcWind)) {
+		RECT rcClient;
+		POINT ptDiff = {0, 0};
+
+		if (s_data.m_windowed) { // if viewport is windowed we calculate in task bar and borders to get accurate size.
+			GetClientRect(s_hwnd, &rcClient);
+			ptDiff.x = (rcWind.right  - rcWind.left) - rcClient.right;
+			ptDiff.y = (rcWind.bottom - rcWind.top)  - rcClient.bottom;
+		}
+		viewPort.Width =  (rcWind.right - rcWind.left) - ptDiff.x;
+		viewPort.Height = (rcWind.bottom - rcWind.top) - ptDiff.y;
+		
+	}
+	else {
+		viewPort.Width  = s_data.m_w;
+		viewPort.Height = s_data.m_h;
+	}
+
+	return viewPort;
 }

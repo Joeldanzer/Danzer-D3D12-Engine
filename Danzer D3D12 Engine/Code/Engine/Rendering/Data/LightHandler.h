@@ -4,7 +4,7 @@
 
 class D3D12Framework;
 
-class  Transform;
+struct Transform;
 struct PointLight;
 struct SpotLight;
 

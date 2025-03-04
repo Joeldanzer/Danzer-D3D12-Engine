@@ -1,3 +1,5 @@
+#include "EditorPCH.h"
+
 #include "Editor.h"
 
 #include "Core/Engine.h"

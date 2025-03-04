@@ -183,6 +183,7 @@
   <ItemGroup>
     <ClInclude Include="Components\ComponentRegister.h" />
     <ClInclude Include="Components\Light\Spotlight.h" />
+    <ClInclude Include="Core\RegistryWrapper.h" />
     <ClInclude Include="Rendering\Screen Rendering\LightRenderer.h" />
     <ClInclude Include="Rendering\Data\DebugRenderingData.h" />
     <ClInclude Include="Rendering\Screen Rendering\DebugTextureRenderer.h" />
@@ -253,7 +254,7 @@
     <ClInclude Include="Rendering\2D\SpriteHandler.h" />
     <ClInclude Include="Rendering\Buffers\SpriteSheetBuffer.h" />
     <ClInclude Include="Rendering\SkyBox.h" />
-    <ClInclude Include="Scene.h" />
+    <ClInclude Include="SceneOLD.h" />
     <ClInclude Include="SceneManager.h" />
     <ClInclude Include="Rendering\Screen Rendering\ScreenTexture.h" />
     <ClInclude Include="Rendering\Buffers\SSAOBuffer.h" />
@@ -271,6 +272,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Components\ComponentRegister.cpp" />
+    <ClCompile Include="Components\Light\DirectionalLight.cpp" />
+    <ClCompile Include="Components\Transform.cpp" />
+    <ClCompile Include="Core\RegistryWrapper.cpp" />
+    <ClCompile Include="Components\GameEntity.cpp" />
     <ClCompile Include="Rendering\Screen Rendering\LightRenderer.cpp" />
     <ClCompile Include="Rendering\Data\DebugRenderingData.cpp" />
     <ClCompile Include="Rendering\Screen Rendering\DebugTextureRenderer.cpp" />
@@ -314,7 +319,7 @@
     <ClCompile Include="Rendering\2D\SpriteHandler.cpp" />
     <ClCompile Include="Rendering\Buffers\SpriteSheetBuffer.cpp" />
     <ClCompile Include="Rendering\SkyBox.cpp" />
-    <ClCompile Include="Scene.cpp" />
+    <ClCompile Include="SceneOLD.cpp" />
     <ClCompile Include="SceneManager.cpp" />
     <ClCompile Include="Rendering\Screen Rendering\ScreenTexture.cpp" />
     <ClCompile Include="Rendering\Buffers\SSAOBuffer.cpp" />

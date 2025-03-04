@@ -1,6 +1,8 @@
 #include "stdafx.h"
 #include "SceneManager.h"
 
+#include "Core/RegistryWrapper.h"
+
 #include "Components/AllComponents.h"
 #include "Rendering/Camera.h"
 
@@ -12,38 +14,37 @@ SceneManager::SceneManager(Camera& cam)
 {
 	cam = Camera(65.f, (float)WindowHandler::WindowData().m_w / (float)WindowHandler::WindowData().m_h, 0.1f, 1000.0f);
 
-	m_registry = entt::registry();
-
 	// Look up a scene in our bin folder, if it can't find any we create a new one.
 	
-	auto entity = CreateBasicEntity("MainCamera", false).m_entity;
-	m_registry.emplace<Camera>(entity, cam);
-	Transform& transform = m_registry.get<Transform>(entity);
+	//auto entity = CreateBasicEntity("MainCamera", false).m_entity;
+	Entity entity = Reg::Instance()->Create3DEntity("MainCamera");
+	Reg::Instance()->Emplace<Camera>(entity, cam);
+	Transform& transform = Reg::Instance()->Get<Transform>(entity);
 	transform.m_position = { 0.f, 10.0f, 0.f };
 	m_mainCamera = entity;
 
-	auto dirLight = CreateBasicEntity("DirectionalLight", true).m_entity;
-	m_registry.emplace<DirectionalLight>(dirLight, DirectionalLight(
+	Entity dirLight = Reg::Instance()->Create3DEntity("DirectionalLight");
+	Reg::Instance()->Emplace<DirectionalLight>(dirLight, DirectionalLight(
 		{ 255.0f / 255.0f, 214.0f / 255.f, 165.f / 255.f, 4.0f },
 		{ 1.0f, 1.0f, 1.0f, 0.25f }));
-	Transform& lightTransform  = m_registry.get<Transform>(dirLight);
+	Transform& lightTransform  = Reg::Instance()->Get<Transform>(dirLight);
 	lightTransform.m_rotation  = Quat4f::CreateFromAxisAngle(Vect3f::Right, ToRadians(70.0f));
 	lightTransform.m_rotation *= Quat4f::CreateFromAxisAngle(Vect3f::Up,    ToRadians(0.0f));
 	lightTransform.m_position  = { 0.0f, 0.0f, 0.0f };
 }
 
-Scene& SceneManager::CreateEmptyScene(std::string sceneName)
-{
-	Scene scene(sceneName);
-	m_scenes.emplace(sceneName, scene);
-	
-	return m_scenes[sceneName];
-}
+//Scene& SceneManager::CreateEmptyScene(std::string sceneName)
+//{
+//	Scene scene(sceneName);
+//	m_scenes.emplace(sceneName, scene);
+//	
+//	return m_scenes[sceneName];
+//}
 
-void SceneManager::AddScene(std::string name, const Scene& scene)
-{
-	m_scenes.emplace(name, scene);
-}
+//void SceneManager::AddScene(std::string name, const Scene& scene)
+//{
+//	m_scenes.emplace(name, scene);
+//}
 
 bool SceneManager::SetScene(std::string name, entt::entity camera, bool resetScene)
 {
@@ -60,22 +61,6 @@ bool SceneManager::SetScene(std::string name, entt::entity camera, bool resetSce
 	//return false;
 
 	return false;
-}
-
-GameEntity& SceneManager::CreateBasicEntity(std::string name, bool isStatic, GameEntity::STATE state)
-{
-	auto entity = m_registry.create();
-
-	GameEntity obj(entity);
-	obj.m_name = name;
-	obj.m_static = isStatic;
-	obj.m_state = state;
-	m_registry.emplace<GameEntity>(entity, obj);
-
-	Transform transform;
-	m_registry.emplace<Transform>(entity, transform);
-
-	return m_registry.get<GameEntity>(entity);
 }
 
 void SceneManager::SearchForExistingScenes()
@@ -133,14 +118,14 @@ void SceneManager::UpdateTransformsForRendering(bool updateStaticObjects)
 
 void SceneManager::UpdateLastPositions()
 {
-	auto view = m_registry.view<Transform, GameEntity>();
-	for (auto entity : view)
-	{
-		const GameEntity& gameEntt = view.get<GameEntity>(entity);
-		if (gameEntt.m_static || gameEntt.m_state != GameEntity::STATE::ACTIVE)
-			continue;
-
-		Transform& transform = view.get<Transform>(entity);
-		transform.m_lastPosition = transform.m_position;
-	}
+	//auto view = m_registry.view<Transform, GameEntity>();
+	//for (auto entity : view)
+	//{
+	//	const GameEntity& gameEntt = view.get<GameEntity>(entity);
+	//	if (gameEntt.m_static || gameEntt.m_state != GameEntity::STATE::ACTIVE)
+	//		continue;
+	//
+	//	Transform& transform = view.get<Transform>(entity);
+	//	transform.m_lastPosition = transform.m_position;
+	//}
 }

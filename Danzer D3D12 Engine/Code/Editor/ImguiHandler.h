@@ -12,23 +12,13 @@
 #include <vector>
 
 class Engine;
+class Camera;
 struct GameEntity;
 struct Object2D;
 
 class ImguiHandler
 {
 public:
-	struct ImGuiWindow {
-		UINT m_width;
-		UINT m_height;
-	
-		Vect2f m_positon;
-	};
-
-	struct EntityItem {
-		//entt::entity m_entity;
-	};
-
 	ImguiHandler(Engine& engine);
 	~ImguiHandler();
 
@@ -38,7 +28,8 @@ public:
 
 private:
 	void SetUpDockingWindows();
-	void DrawSceneToWindow();
+	void DrawSceneToWindow(Camera& viewPortCam);
+	Vect2f m_lastSceneToWindowSize;
 	bool m_sceneViewOpen = true;
 
 	void DisplayComponents(entt::registry& reg);
@@ -57,9 +48,6 @@ private:
 
 		CD3DX12_GPU_DESCRIPTOR_HANDLE m_srvGpuHandle;
 	};
-	
-	ImGuiWindow m_rightWindow;
-	ImGuiWindow m_leftWindow;
 
 	bool m_itemsHasBeenSelected = false;
 
@@ -80,13 +68,13 @@ private:
 	
 	void StaticWindows();
 
-	void SaveScene(entt::registry& reg);
-	void SaveSceneAs(entt::registry& reg);
+	void SaveScene();
+	void SaveSceneAs();
 
-	bool ModelDataSettings(entt::registry& reg);
-	bool ObjectSettings(entt::registry& reg);
-	bool TransformSettings(entt::registry& reg);
-	bool DirectionalLightSettings(entt::registry& reg);
+	bool ModelDataSettings();
+	bool ObjectSettings();
+	bool TransformSettings();
+	bool DirectionalLightSettings();
 
 	std::wstring SelectTexture(UINT& texture);
 

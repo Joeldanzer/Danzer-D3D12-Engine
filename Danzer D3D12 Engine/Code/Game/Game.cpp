@@ -1,4 +1,7 @@
+#include "GamePCH.h"
+
 #include "Game.h"
+
 #include "Engine/Core/Engine.h"
 
 #include "Rendering/Models/ModelEffectHandler.h"
@@ -25,6 +28,7 @@
 #include "Components/Sound/SoundListener.h"
 #include "Components/Sound/SoundSource.h"
 
+#include "Components/AllComponents.h"
 
 class Game::Impl {
 public:
@@ -56,7 +60,7 @@ private:
 Game::Impl::Impl(Engine& engine) :
 	m_engine(engine)
 {
-	entt::registry& reg = engine.GetSceneManager().Registry();
+	//std::strivb jn          ng name = instance.GetComponentName();
 
 	//engine.GetSpriteHandler().CreateSpriteSheet(L"Sprites/RunTestAnimation.dds", 8, 8);
 	//
@@ -71,16 +75,14 @@ Game::Impl::Impl(Engine& engine) :
 
 	m_currentTime = m_time;
 	
-	entt::entity entity = reg.create();
+	Entity entity = Reg::Instance()->Create3DEntity("Sponzra Atrium");
 
-	Transform& modelTransform = reg.emplace<Transform>(entity);
+	Transform& modelTransform = Reg::Instance()->Get<Transform>(entity);
 	modelTransform.m_scale	  = { 1.0f, 1.0f, 1.0f };
 	modelTransform.m_position = { 0.0f, 0.0f, 0.0f };
 	modelTransform.m_rotation = Quat4f::CreateFromAxisAngle(Vect3f::Up, ToRadians(180.0f));
-	GameEntity& sponzaObj = reg.emplace<GameEntity>(entity, entity);
-	sponzaObj.m_name = "Sponza Atrium";
 	
-    reg.emplace<Model>(entity, engine.GetModelHandler().LoadModel(L"Models/BlenderSponzaAtriumNew.fbx", "Sponza Atrium"));
+    //reg.emplace<Model>(entity, engine.GetModelHandler().LoadModel(L"Models/BlenderSponzaAtriumNew.fbx", "Sponza Atrium"));
 
 	//for (int32_t x = -5; x < 5 + 1; x++)
 	//{
@@ -96,9 +98,9 @@ Game::Impl::Impl(Engine& engine) :
 	//	}
 	//}
 
-	m_frustrumTest = engine.GetSceneManager().CreateBasicEntity("FrustrumTest", false).m_entity;
-	Camera& cam = reg.get<Camera>(engine.GetSceneManager().GetMainCamera());
-	cam.SetFrustrumTest(&reg.get<Transform>(m_frustrumTest));
+	//m_frustrumTest = engine.GetSceneManager().CreateBasicEntity("FrustrumTest", false).m_entity;
+	//Camera& cam = reg.get<Camera>(engine.GetSceneManager().GetMainCamera());
+	//cam.SetFrustrumTest(&reg.get<Transform>(m_frustrumTest));
 	//engine.GetSoundEngine().CreateSound("Sound/MetalPipe.wav", FMOD_DEFAULT, nullptr, &m_pipeSound);
 	//pipeSound = engine.GetSoundEngine().LoadSound("Sound/MetalPipe.wav", false);
 	//
@@ -157,8 +159,7 @@ Game::Impl::~Impl(){}
 
 void Game::Impl::Update(const float dt)
 {
-	entt::registry& reg = m_engine.GetSceneManager().Registry();
-	Transform& transform = reg.get<Transform>(m_engine.GetSceneManager().GetMainCamera());
+	Transform& transform = Reg::Instance()->Get<Transform>(m_engine.GetSceneManager().GetMainCamera());
 	
 	//Transform& frustrumTransform = reg.get<Transform>(m_frustrumTest);
 	//if (Input::GetInstance().IsKeyDown('Q')) {
@@ -212,10 +213,10 @@ void Game::Impl::Update(const float dt)
 		transform.m_position.y -= dt * speed;
 
 	if (Input::GetInstance().IsKeyPressed('Z')) {
-		auto cameraList = reg.view<Camera>();
+		auto cameraList = Reg::Instance()->GetRegistry().view<Camera>();
 		for (auto ent : cameraList)
 		{
-			Camera& cam = reg.get<Camera>(ent);
+			Camera& cam = Reg::Instance()->Get<Camera>(ent);
 			cam.RenderTarget() = cam.RenderTarget() < 9 ? cam.RenderTarget() + 1 : 0;
 		}
 	}
@@ -225,10 +226,10 @@ void Game::Impl::Update(const float dt)
 void Game::Impl::OnSphereContact(GameEntity& collidedEntity)
 {
 	//std::cout << "Sphere will do something!" << std::endl;
-	PhysicsBody& body = m_engine.GetSceneManager().Registry().get<PhysicsBody>(enttTest->m_entity);
-	body.AddLinearVelocity({ 0.0f, 15.0f, 0.0f });
-
-	m_engine.GetSoundEngine().PlaySoundAtEntt(enttTest->m_entity, pipeSound);
+	//PhysicsBody& body = m_engine.GetSceneManager().Registry().get<PhysicsBody>(enttTest->m_entity);
+	//body.AddLinearVelocity({ 0.0f, 15.0f, 0.0f });
+	//
+	//m_engine.GetSoundEngine().PlaySoundAtEntt(enttTest->m_entity, pipeSound);
 }
 
 Game::Game(Engine& engine) :

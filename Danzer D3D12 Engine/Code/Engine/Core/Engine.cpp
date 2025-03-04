@@ -13,7 +13,6 @@
 #include "Rendering/Buffers/BufferHandler.h"
 #include "Rendering/Screen Rendering/Textures/TextureRenderingHandler.h"
 #include "Rendering/2D/SpriteHandler.h"
-#include "Scene.h"
 #include "FrameTimer.h"
 #include "Rendering/Camera.h"
 #include "D3D12Framework.h"
@@ -101,9 +100,6 @@ Engine::Impl::Impl(unsigned int width, unsigned int height) :
 	io->Fonts->Build();
 
 	m_spriteHandler.CreateSpriteSheet(L"Sprites/testSpriteSheet.dds", 4, 4);
-
-	m_physicsEngine.SetRegistry(m_sceneManager.Registry());
-	m_soundEngine.SetRegistry(m_sceneManager.Registry());
 }
 
 Engine::Impl::~Impl()
@@ -134,9 +130,9 @@ void Engine::Impl::UpdateFrame() {
 	m_sceneManager.UpdateTransformsForRendering();
 
 	// Might move to main.cpp
-	m_physicsHandler.SetPhysicsPositionAndRotation(m_sceneManager.Registry());
+	m_physicsHandler.SetPhysicsPositionAndRotation();
 	m_physicsEngine.Update(1.0f / 60.0f, 0);
-	m_physicsHandler.UpdatePhysicsEntities(m_sceneManager.Registry());
+	m_physicsHandler.UpdatePhysicsEntities();
 
 	m_soundEngine.UpdateSound(deltaTime);
 
@@ -150,7 +146,7 @@ void Engine::Impl::UpdateFrame() {
 void Engine::Impl::EndInitFrame() {
 	m_sceneManager.UpdateTransformsForRendering(true);
 
-	m_physicsHandler.UpdateStaticColliders(m_sceneManager.Registry());
+	m_physicsHandler.UpdateStaticColliders();
 	m_physicsEngine.OptimizeBroadPhase();
 	m_framework.EndInitFrame();
 }

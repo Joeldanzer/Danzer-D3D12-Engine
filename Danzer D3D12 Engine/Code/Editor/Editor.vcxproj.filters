@@ -15,6 +15,7 @@
     <ClInclude Include="imgui\misc\single_file\imgui_single_file.h" />
     <ClInclude Include="imgui\backends\imgui_impl_dx12.h" />
     <ClInclude Include="imgui\backends\imgui_impl_win32.h" />
+    <ClInclude Include="EditorPCH.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Editor.cpp" />
@@ -29,5 +30,6 @@
     <ClCompile Include="imgui\imgui_widgets.cpp" />
     <ClCompile Include="imgui\backends\imgui_impl_dx12.cpp" />
     <ClCompile Include="imgui\backends\imgui_impl_win32.cpp" />
+    <ClCompile Include="EditorPCH.cpp" />
   </ItemGroup>
 </Project>

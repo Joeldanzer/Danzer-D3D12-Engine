@@ -1,6 +1,7 @@
 #pragma once
+#include "Components/ComponentRegister.h"
 
-struct ModelEffect {
+struct ModelEffect : public BaseComponent {
 	ModelEffect() : m_effectID(0) {}
 	ModelEffect(const unsigned int id)
 		: m_effectID(id)
@@ -8,3 +9,4 @@ struct ModelEffect {
 
 	unsigned int m_effectID;
 };
+REGISTER_COMPONENT(ModelEffect)

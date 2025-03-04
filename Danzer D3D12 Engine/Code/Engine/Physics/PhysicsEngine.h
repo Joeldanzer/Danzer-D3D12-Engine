@@ -19,7 +19,7 @@ class PhysicsEngine
 private:
 	static constexpr uint32_t s_MaxPhysicsJobs     = 2048; // Maximum amount of jobs to allow
 	static constexpr uint32_t s_MaxPhysicsBarriers = 8;    // Maximum amount of barriers to Allow
-
+	 
 	const uint32_t m_numberOfSteps = 1;
 	const uint32_t m_maxConcurrentJobs;
 
@@ -35,8 +35,6 @@ public:
 
 	void Update(const float physicsDT, const int collisionSteps);
 	void OptimizeBroadPhase();
-
-	void SetRegistry(entt::registry& registry);
 
 	JPH::PhysicsSystem* GetPhysicsSystem() {
 		return m_physicsSystem;
