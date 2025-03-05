@@ -19,7 +19,7 @@ public:
 	void InitializeRenderer(PSOHandler& psoHandler, const uint32_t cbvCount, const uint32_t srvCount);
 	
 private:
-	virtual bool RenderToTexture(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper& rtvHeap, DescriptorHeapWrapper& cbvSrvHeap, const uint8_t frameIndex) override;
+	bool RenderToTexture(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper& rtvHeap, DescriptorHeapWrapper& cbvSrvHeap, const uint8_t frameIndex) override;
 
 	LightHandler& m_lightHandler;
 

@@ -1,8 +1,11 @@
 #pragma once
+#include "Components/ComponentRegister.h"
 
 static const UINT s_invalidListener = 0xff;
 
-struct SoundListener {
+struct SoundListener : public BaseComponent {
+	COMP_FUNC(SoundListener)
+
 	SoundListener() : m_id(s_invalidListener) {};
 	~SoundListener() {};
 	//explicit SoundListener(SoundListener&) = default;
@@ -13,3 +16,4 @@ private:
 
 	UINT8 m_id = 0xff;
 };
+REGISTER_COMPONENT(SoundListener)

@@ -63,6 +63,8 @@
     <FxCompile Include="Colliders\DebugLineGS.hlsl" />
     <FxCompile Include="Colliders\DebugLinePS.hlsl" />
     <FxCompile Include="Light\PointLightVS.hlsl" />
+    <FxCompile Include="Light\SpotLightVS.hlsl" />
+    <FxCompile Include="Light\SpotLightPS.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="UI\UIstructs.hlsli">
@@ -89,5 +91,6 @@
     <None Include="Light\VolumetricLightHeader.hlsli" />
     <None Include="Fullscreen\OLD_SSAOHeader.hlsli" />
     <None Include="Colliders\DebugLineHeader.hlsli" />
+    <None Include="Light\SpotLightHeader.hlsli" />
   </ItemGroup>
 </Project>

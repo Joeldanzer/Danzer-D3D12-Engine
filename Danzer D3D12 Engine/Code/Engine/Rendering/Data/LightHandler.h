@@ -15,7 +15,7 @@ public:
 	~LightHandler();
 
 	void AddLightInstanceForRendering(const PointLight& light, const Transform& transform);
-	void AddLightInstanceForRendering(const SpotLight&  light, const Transform& transform);
+	void AddLightInstanceForRendering(const SpotLight&  light, Transform& transform);
 	
 	void UpdateLightInstances(const uint8_t frameIndex);
 
@@ -30,7 +30,12 @@ private:
 	};
 
 	struct SpotLightData {
-	
+		Vect4f m_position;
+		Vect4f m_color; 
+		Vect4f m_direction;
+		float  m_cutOff;
+		float  m_outerCutoff;
+		float  m_angle;
 	};
 
 	std::vector<PointLightData> m_pointLightInstances;

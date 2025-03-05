@@ -4,12 +4,15 @@
 
 struct DirectionalLight : public BaseComponent
 {
+	COMP_FUNC(DirectionalLight)
+
 	DirectionalLight(){}
 	DirectionalLight(Vect4f light, Vect4f ambient, Vect3f positon = {0.0f, 100.0f, 0.f}) :
 		m_lightColor(light),
 		m_ambientColor(ambient),
 		m_lightPosition(positon)
 	{}
+
 
 	void SetShadowProjection(const float scale, const float increase) {
 		//float scaleIncreas = scale * increase;

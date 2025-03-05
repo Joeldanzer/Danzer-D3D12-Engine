@@ -280,7 +280,7 @@ void RenderManager::Impl::InitializeRenderTextures(TextureHandler& textureHandle
 		WindowHandler::WindowData().m_h,
 		DXGI_FORMAT_R8G8B8A8_UNORM,
 		L"Scene Light Texture",
-		SCENE_PASS_2
+		SCENE_PASS_0
 	);
 	//m_textureRendering.m_lastRenderedTexture = dirLightTexture;
 	FullscreenTexture* hdrBlurTexture = m_textureRendering.CreateFullscreenTexture(
@@ -298,6 +298,20 @@ void RenderManager::Impl::InitializeRenderTextures(TextureHandler& textureHandle
 		SCENE_PASS_0
 	);
 
+	FullscreenTexture* pointLightTexture = m_textureRendering.CreateFullscreenTexture(
+		WindowHandler::WindowData().m_w,
+		WindowHandler::WindowData().m_h,
+		DXGI_FORMAT_R8G8B8A8_UNORM,
+		L"Point Light Texture",
+		SCENE_PASS_0
+	);
+	FullscreenTexture* spotLightTexture = m_textureRendering.CreateFullscreenTexture(
+		WindowHandler::WindowData().m_w,
+		WindowHandler::WindowData().m_h,
+		DXGI_FORMAT_R8G8B8A8_UNORM,
+		L"Spot Light Texture",
+		SCENE_PASS_0
+	);
 	dirLightRenderer->SetRenderTargetAtSlot(dirLightTexture, 0);
 	dirLightRenderer->SetRenderTargetAtSlot(hdrBlurTexture,  1);
 	dirLightRenderer->SetTextureAtSlot(m_gBuffer.GetSRVOffset(GBUFFER_ALBEDO),		   0, false);
@@ -317,15 +331,16 @@ void RenderManager::Impl::InitializeRenderTextures(TextureHandler& textureHandle
 
 	LightRenderer* lightRenderer = new LightRenderer(m_lightHandler);
 	lightRenderer->InitializeRenderer(m_psoHandler, 2, 11);
-	lightRenderer->SetRenderTargetAtSlot(dirLightTexture, 0);
-	lightRenderer->SetRenderTargetAtSlot(hdrBlurTexture, 1);
-	lightRenderer->SetTextureAtSlot(m_gBuffer.GetSRVOffset(GBUFFER_ALBEDO), 0, false);
-	lightRenderer->SetTextureAtSlot(m_gBuffer.GetSRVOffset(GBUFFER_NORMAL), 1, false);
-	lightRenderer->SetTextureAtSlot(m_gBuffer.GetSRVOffset(GBUFFER_MATERIAL), 2, false);
-	lightRenderer->SetTextureAtSlot(m_gBuffer.GetSRVOffset(GBUFFER_VERTEX_COLOR), 3, false);
-	lightRenderer->SetTextureAtSlot(m_gBuffer.GetSRVOffset(GBUFFER_VERTEX_NORMAL), 4, false);
+	lightRenderer->SetRenderTargetAtSlot(pointLightTexture, 0);
+	lightRenderer->SetRenderTargetAtSlot(spotLightTexture,  1);
+	lightRenderer->SetRenderTargetAtSlot(hdrBlurTexture,    2);
+	lightRenderer->SetTextureAtSlot(m_gBuffer.GetSRVOffset(GBUFFER_ALBEDO),			0, false);
+	lightRenderer->SetTextureAtSlot(m_gBuffer.GetSRVOffset(GBUFFER_NORMAL),			1, false);
+	lightRenderer->SetTextureAtSlot(m_gBuffer.GetSRVOffset(GBUFFER_MATERIAL),       2, false);
+	lightRenderer->SetTextureAtSlot(m_gBuffer.GetSRVOffset(GBUFFER_VERTEX_COLOR),   3, false);
+	lightRenderer->SetTextureAtSlot(m_gBuffer.GetSRVOffset(GBUFFER_VERTEX_NORMAL),  4, false);
 	lightRenderer->SetTextureAtSlot(m_gBuffer.GetSRVOffset(GBUFFER_WORLD_POSITION), 5, false);
-	lightRenderer->SetTextureAtSlot(m_gBuffer.GetSRVOffset(GBUFFER_DEPTH), 6, false);
+	lightRenderer->SetTextureAtSlot(m_gBuffer.GetSRVOffset(GBUFFER_DEPTH),			6, false);
 	lightRenderer->SetTextureAtSlot(textureHandler.GetTextureData(m_skyboxRenderer->TextureID()).m_offsetID, 7, false);
 	lightRenderer->SetTextureAtSlot(shadowMapTexture, 8);
 	lightRenderer->SetTextureAtSlot(ssaoBlurTexture, 9);
@@ -367,13 +382,15 @@ void RenderManager::Impl::InitializeRenderTextures(TextureHandler& textureHandle
 	TextureRenderer* bloomRenderer = m_textureRendering.CreateTextureRenderer(
 		rendererData,
 		0,
-		2,
+		4,
 		L"Bloom  Renderer",
 		POST_PROCESS_1
 	);
 	bloomRenderer->SetRenderTargetAtSlot(bloomTexture, 0);
 	bloomRenderer->SetTextureAtSlot(dirLightTexture,   0);
-	bloomRenderer->SetTextureAtSlot(bloomBlurTexture,  1);
+	bloomRenderer->SetTextureAtSlot(pointLightTexture, 1);
+	bloomRenderer->SetTextureAtSlot(spotLightTexture,  2);
+	bloomRenderer->SetTextureAtSlot(bloomBlurTexture,  3);
 
 #if DEBUG
 	m_debugRenderer = new DebugTextureRenderer(modelHandler);
@@ -659,6 +676,24 @@ void RenderManager::Impl::Update3DInstances(const Camera& cam, SceneManager& sce
 				}
 			}
 		}	
+	}
+
+	auto pointLightView = REGISTRY->GetRegistry().view<Transform, GameEntity, PointLight>();
+	for (auto entity : pointLightView)
+	{
+		const Transform&  transform  = REGISTRY->Get<Transform>(entity);
+		const PointLight& pointLight = REGISTRY->Get<PointLight>(entity);
+
+		m_lightHandler.AddLightInstanceForRendering(pointLight, transform);
+	}
+	
+	auto spotLightView = REGISTRY->GetRegistry().view<Transform, GameEntity, SpotLight>();
+	for (auto entity : spotLightView)
+	{
+		Transform& transform       = REGISTRY->Get<Transform>(entity);
+		const SpotLight& spotLight = REGISTRY->Get<SpotLight>(entity);
+
+		m_lightHandler.AddLightInstanceForRendering(spotLight, transform);
 	}
 
 	// Show debug lines for camera...

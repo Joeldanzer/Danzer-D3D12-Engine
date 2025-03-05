@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Components/ComponentRegister.h"
+
 #include <Jolt/Physics/EActivation.h>
 #include <Jolt/Physics/Body/BodyID.h>
 
@@ -10,8 +12,9 @@ namespace JPH {
 struct GameEntity;
 class BodyInterfaceImpl;
 
-struct PhysicsBody {
-	PhysicsBody() = delete;
+struct PhysicsBody : public BaseComponent {
+	COMP_FUNC(PhysicsBody)
+	PhysicsBody(){}
 	explicit PhysicsBody(const GameEntity& entity, BodyInterfaceImpl& bodyInterface, const JPH::BodyCreationSettings& settings, JPH::EActivation activation);
 	~PhysicsBody();
 
@@ -43,5 +46,6 @@ private:
 	JPH::BodyID m_id;
 	BodyInterfaceImpl* m_interface = nullptr;
 };
+REGISTER_COMPONENT(PhysicsBody)
 
 

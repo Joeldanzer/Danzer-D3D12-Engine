@@ -4,6 +4,8 @@
 
 // Transform entity. Required component to render and update in scene
 struct Transform : public BaseComponent {
+	COMP_FUNC(Transform)
+
 public:
 	Transform() : 
 	m_position(0.f, 0.f, 0.f),
@@ -22,6 +24,9 @@ public:
 		return m_last;
 	}
 	Mat4f& World() {
+		return m_world;
+	}
+	const Mat4f GetWorld() {
 		return m_world;
 	}
 

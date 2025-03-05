@@ -273,6 +273,8 @@
   <ItemGroup>
     <ClCompile Include="Components\ComponentRegister.cpp" />
     <ClCompile Include="Components\Light\DirectionalLight.cpp" />
+    <ClCompile Include="Components\Light\PointLight.cpp" />
+    <ClCompile Include="Components\Light\Spotlight.cpp" />
     <ClCompile Include="Components\Transform.cpp" />
     <ClCompile Include="Core\RegistryWrapper.cpp" />
     <ClCompile Include="Components\GameEntity.cpp" />

@@ -391,8 +391,20 @@ void ImguiHandler::StaticWindows()
 					ImGui::OpenPopup("ComponentList");
 				}
 
-				if (ImGui::BeginPopup("ComponentList")) {	
-					ImguiComponentMenus::DisplayComponentSelection(m_currentEntity);
+				if (ImGui::BeginPopup("ComponentList")) {
+					const std::map<std::string, BaseComponent*>& cReg = COMPONENT_ENTRY_REGISTER.GetComponentRegister();
+					
+					bool selectedComponent = false;
+					for (auto const& it : cReg)
+					{
+						if (REGISTRY->HasComponent(m_currentEntity, it.first))
+							continue;
+
+						if (ImGui::Selectable(it.first.c_str(), selectedComponent)) {
+							COMPONENT_ENTRY_REGISTER.EmplaceComponent(m_currentEntity, it.first);
+						}
+					}
+					//ImguiComponentMenus::DisplayComponentSelection(m_currentEntity);
 					//std::string selectedComponent = "";
 					//
 					//for (UINT i = 0; i < m_componentList.size(); i++)

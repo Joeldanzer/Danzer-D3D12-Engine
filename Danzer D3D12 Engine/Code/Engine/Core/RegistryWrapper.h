@@ -4,6 +4,8 @@
 #define COMPONENT_NAME(ComponentName) \
     std::string(#ComponentName)
 
+struct GameEntity;
+
 typedef entt::entity Entity;
 // Wrapper for entt::registry, this wrapper is designed to keep track what components entities have on them. 
 // Making it easier to fetch the data you want and to make working with the editor much smoother. 
@@ -29,6 +31,14 @@ public:
 
 	template<typename Component>
 	Component* TryGet(const Entity entity);
+	
+	template<typename Component>
+	bool HasComponent(const Entity entity);
+
+	bool HasComponent(const Entity entity, const std::string componentName);
+
+	template<typename Component>
+	const std::string FetchComponentName();
 
 	void DestroyEntity(const Entity entity);
 
@@ -40,6 +50,7 @@ private:
 	RegistryWrapper(){}
 	~RegistryWrapper(){}
 
+	bool ComponentExists(const std::string componentName, const GameEntity& gameEntity);
 	bool RegisterComponentToEntity(const Entity entity, std::string componentName);
 
 	static RegistryWrapper* m_singleton;
@@ -49,7 +60,6 @@ private:
 
 typedef RegistryWrapper Reg;
 
-#undef  REGISTRY
 #define REGISTRY RegistryWrapper::Instance()
 
 template<typename Component, typename ... Args>
@@ -71,4 +81,20 @@ template<typename Component>
 inline Component* RegistryWrapper::TryGet(const Entity entity)
 {
 	return m_registry.try_get<Component>(entity);
+}
+
+template<typename Component>
+inline bool RegistryWrapper::HasComponent(const Entity entity)
+{
+	if (ComponentExists(FetchComponentName<Component>(), m_registry.get<Component>())) {
+		return true;
+	}
+	return false;
+}
+
+template<typename Component>
+inline const std::string RegistryWrapper::FetchComponentName()
+{
+	std::string componentName = typeid(Component).name();
+	return componentName.erase(componentName.begin(), componentName.begin() + componentName.find_first_of(" ") + 1);
 }

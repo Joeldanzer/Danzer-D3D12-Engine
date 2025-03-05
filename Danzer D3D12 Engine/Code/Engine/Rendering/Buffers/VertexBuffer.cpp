@@ -29,7 +29,8 @@ void VertexBuffer::UpdateBuffer(uint16_t* bufferData, const uint32_t instanceCou
 	CHECK_HR(m_vertexBuffer[frameIndex]->Map(0, &readRange, reinterpret_cast<void**>(&m_data[frameIndex])));
 	
 	// Only send in the required amount of data to the vertex buffer. 
-	memcpy(m_data[frameIndex], bufferData, instanceCount > m_maxInstances ? m_maxInstances : instanceCount * m_sizeOfData);
+	const uint32_t count = instanceCount > m_maxInstances ? m_maxInstances : instanceCount;
+	memcpy(m_data[frameIndex], bufferData, count * m_sizeOfData);
 	m_vertexBuffer[frameIndex]->Unmap(0, nullptr);
 }
 

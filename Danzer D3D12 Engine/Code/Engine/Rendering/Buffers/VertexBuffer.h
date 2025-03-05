@@ -14,7 +14,7 @@ public:
 	void Initialize(ID3D12Device* device, uint32_t sizeOfData, uint32_t maxInstances = MAX_INSTANCES_PER_VERTEX_BUFFER);
 	void UpdateBuffer(uint16_t* bufferData, const uint32_t instanceCount, const uint8_t frameIndex);
 
-	D3D12_VERTEX_BUFFER_VIEW& GetBufferView(UINT frameIndex) { return m_vertexBufferView[frameIndex]; }
+	D3D12_VERTEX_BUFFER_VIEW& GetBufferView(const uint8_t frameIndex) { return m_vertexBufferView[frameIndex]; }
 
 protected:
 	void CreateHeap(ID3D12Device* device, ID3D12Resource** heap, D3D12_HEAP_TYPE type, D3D12_RESOURCE_STATES resourceState, UINT size);

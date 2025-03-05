@@ -2,10 +2,13 @@
 #include "Core/MathDefinitions.h"
 #include "Components/ComponentRegister.h"
 
-struct PointLight : public BaseComponent {
+struct PointLight : public BaseComponent 
+{
+	COMP_FUNC(PointLight)
+
 	PointLight() :
 		m_color(1.0f, 1.0f, 1.0f, 1.0f),
-		m_range(0.0f),
+		m_range(1.0f),
 		m_offset()
 	{}
 	PointLight(Colorf color, float range, Vect3f offset = Vect3f::Zero) :
@@ -14,8 +17,10 @@ struct PointLight : public BaseComponent {
 		m_offset(offset)
 	{}
 
+	void DisplayInEditor(Entity entity) override;
+
 	Colorf m_color;
-	float  m_range;
 	Vect3f m_offset;
+	float  m_range;
 };
-REGISTER_COMPONENT(PointLight)
+REGISTER_COMPONENT(PointLight);

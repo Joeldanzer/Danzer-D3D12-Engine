@@ -4,6 +4,8 @@
 
 // Game Entity holds general information of the object. Required component to render and update in scene
 struct GameEntity : public BaseComponent {
+	COMP_FUNC(GameEntity)
+
 	GameEntity() {}
 	explicit GameEntity(entt::entity entity) :
 		m_entity(entity)

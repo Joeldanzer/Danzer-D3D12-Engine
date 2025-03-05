@@ -3,6 +3,7 @@ struct InputToVertex
     float4 m_position : POSITION;
     float4 m_color    : COLOR;
     float  m_radius   : RADIUS;
+    uint   vertexID   : SV_VertexID;
 };
 
 struct VertexToPixel

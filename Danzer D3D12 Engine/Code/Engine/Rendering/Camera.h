@@ -1,15 +1,14 @@
 #pragma once
+
 #include "Core/MathDefinitions.h"
 #include "Rendering/FrustrumCulling.h"
 #include "Components/Transform.h"
 
 #include <array>
 
-struct Transform;
-
-struct Camera
+struct Camera : public BaseComponent
 {
-public:
+	COMP_FUNC(Camera)
 	enum Faces : uint32_t {
 		NEAR_FACE   = 0,
 		FAR_FACE    = 1,
@@ -63,4 +62,5 @@ private:
 	Transform* m_editorFrustrum = nullptr;
 	Mat4f      m_projection;
 };
+REGISTER_COMPONENT(Camera)
 

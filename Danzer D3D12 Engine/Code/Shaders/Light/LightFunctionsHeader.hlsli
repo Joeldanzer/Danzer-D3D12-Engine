@@ -362,3 +362,28 @@ float3 EvaluateDirectionalLight(float3 albedoColor, float3 specularColor, float3
    
    return diffuse + specular * lightColor.rgb * NdL;
 }
+
+float3 EvaluatePointLight(float3 diffuseColor, float3 specularColor, float3 normal, float roughness, float3 lightColorIntensity, float lightRange, float3 toLight, float lightDistance, float3 toEye)
+{
+    float NdL = saturate(dot(normal, toLight));
+    float lambert = NdL;
+    float3 h = normalize(toEye + toLight);
+    float NdH = saturate(dot(normal, h));
+    
+    float cosTheta = dot(toLight, normal);
+    
+    float D  = DistributionGGX(normal, h, roughness);
+    float G  = GeometrySmith(normal, toEye, toLight, roughness);
+    float3 F = FresnelSchlick(cosTheta, specularColor);
+  
+    float3 specular = ((D * G * F) / 4.f * dot(normal, toLight) * dot(normal, toEye));
+    float3 diffuse = max(dot(normal, toLight), 0.0f) * diffuseColor;
+    diffuse *= 1.f / PI;
+    float linearattenuation = lightDistance / lightRange;
+    linearattenuation = 1.0f - linearattenuation;
+    linearattenuation = saturate(linearattenuation);
+    float physicalattenuation = saturate(1.0f / (lightDistance * lightDistance));
+    float attenuation = lambert * linearattenuation * physicalattenuation;
+    
+    return lightColorIntensity * linearattenuation * physicalattenuation * (diffuse * (1.0f - specular) + specular) * PI;
+}

@@ -14,7 +14,7 @@ static const UINT MAX_INSTANCES_PER_MODEL = 10000;
 // Number of back buffers
 static const UINT FrameCount = 3;
 
-static const float ClearColor[4] = { 0.5f, 0.5f, 1.0f, 0.0f };
+static const float ClearColor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
 
 using namespace Microsoft::WRL;
 

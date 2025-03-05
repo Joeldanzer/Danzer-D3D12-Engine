@@ -86,6 +86,8 @@
     <ClCompile Include="Components\ComponentRegister.cpp" />
     <ClCompile Include="Components\Transform.cpp" />
     <ClCompile Include="Components\Light\DirectionalLight.cpp" />
+    <ClCompile Include="Components\Light\PointLight.cpp" />
+    <ClCompile Include="Components\Light\Spotlight.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Core\WindowHandler.h">
