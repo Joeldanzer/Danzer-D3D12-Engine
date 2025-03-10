@@ -13,6 +13,10 @@ public:
 		unsigned int m_w = 1920;
 		unsigned int m_h = 1080;
 		bool m_windowed = true;
+
+		const float AspectRatio() {
+			return m_w / m_h;
+		}
 	};
 
 	static LRESULT CALLBACK WinProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);

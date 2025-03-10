@@ -32,8 +32,6 @@ private:
 	Vect2f m_lastSceneToWindowSize;
 	bool m_sceneViewOpen = true;
 
-	void DisplayComponents(entt::registry& reg);
-
 	Vect3f m_dirLightRot     =  {0.0f, 0.0f, 0.0f};
 	Vect3f m_dirLightLastRot =  {0.0f, 0.0f, 0.0f};
 
@@ -71,17 +69,14 @@ private:
 	void SaveScene();
 	void SaveSceneAs();
 
-	bool ModelDataSettings();
-	bool ObjectSettings();
-	bool TransformSettings();
-	bool DirectionalLightSettings();
-
 	std::wstring SelectTexture(UINT& texture);
 
 	std::array<std::string, 3> m_stateNames = { "ACTIVE", "NOT_ACTIVE", "DESTROY" };
 	std::unordered_map<std::string, FileExplorer::FileType> m_fileExtensions;
 
 	std::vector<std::string> m_componentList;
+
+	std::string m_baseEntityName = "Empty Entity";
 
 	EditorLoadAndSave m_sceneLoader;
 	FileExplorer m_fileExplorer;

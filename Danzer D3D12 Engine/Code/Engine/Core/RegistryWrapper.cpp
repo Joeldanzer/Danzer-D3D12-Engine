@@ -32,6 +32,30 @@ bool RegistryWrapper::HasComponent(const Entity entity, const std::string compon
 	return ComponentExists(componentName, m_registry.get<GameEntity>(entity));
 }
 
+Entity RegistryWrapper::GetEntityWithName(const std::string name)
+{
+	auto view = m_registry.view<GameEntity>();
+	for (auto entity : view) {
+		GameEntity& gameEntity = m_registry.get<GameEntity>(entity);
+		if (gameEntity.m_name == name)
+			return entity;
+	}
+
+	return Entity();
+}
+
+bool RegistryWrapper::EntityWithNameExists(const std::string name)
+{
+	auto view = m_registry.view<GameEntity>();
+	for (auto entity : view) {
+		GameEntity& gameEntity = m_registry.get<GameEntity>(entity);
+		if (gameEntity.m_name == name)
+			return true;
+	}
+
+	return false;
+}
+
 void RegistryWrapper::DestroyEntity(const Entity entity) {
 	m_registry.destroy(entity);
 }

@@ -11,8 +11,6 @@
 #include <Jolt/Core/JobSystemThreadPool.h>
 #include <Jolt/Core/JobSystemSingleThreaded.h>
 
-#include <thread>
-
 using namespace JPH;
 
 PhysicsEngine::PhysicsEngine(const UINT maxBodies, const UINT maxBodyMutexes, const UINT maxBodyPairs, const UINT maxContactConstraints, const UINT maxConcurrentJobs) :
@@ -40,8 +38,8 @@ PhysicsEngine::PhysicsEngine(const UINT maxBodies, const UINT maxBodyMutexes, co
 	m_tempAllocator		  = new TempAllocatorImpl(32 * 1024 * 1024);
 
 #ifdef PHYSICS_THREADED
-	m_jobSystem			  = new JobSystemThreadPool(s_MaxPhysicsJobs, s_MaxPhysicsBarriers, m_maxConcurrentJobs);
-	m_jobSystemValidating = new JobSystemSingleThreaded(s_MaxPhysicsJobs);
+	//m_jobSystem			  = new JobSystemThreadPool(s_MaxPhysicsJobs, s_MaxPhysicsBarriers, m_maxConcurrentJobs);
+	//m_jobSystemValidating = new JobSystemSingleThreaded(s_MaxPhysicsJobs);
 #else
 	m_jobSystem = new JobSystemSingleThreaded(s_MaxPhysicsJobs);
 #endif
@@ -70,12 +68,13 @@ PhysicsEngine::~PhysicsEngine()
 	delete m_bodyActivationListener;
 	delete m_tempAllocator;
 	delete m_jobSystem;
+
 	if (m_jobSystemValidating) delete m_jobSystemValidating; // Only delete if we are doing physics on multiple threads
 }
 
 void PhysicsEngine::Update(const float physicsDT, const int collisionSteps)
 {
-	m_physicsSystem->Update(physicsDT, m_numberOfSteps, m_tempAllocator, m_jobSystem);
+	//m_physicsSystem->Update(physicsDT, m_numberOfSteps, m_tempAllocator, m_jobSystem);
 }
 
 void PhysicsEngine::OptimizeBroadPhase()

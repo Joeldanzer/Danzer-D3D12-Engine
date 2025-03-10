@@ -28,9 +28,9 @@ void LightHandler::AddLightInstanceForRendering(const SpotLight& light, Transfor
         light.m_color,
         Vect4f(transform.World().Forward()),
         light.m_cutOff,
-        light.m_outerCutOff,
+        light.m_cutOff - light.m_outerCutOff,
         light.m_range
-        });
+    });
 }
 void LightHandler::UpdateLightInstances(const uint8_t frameIndex)
 {

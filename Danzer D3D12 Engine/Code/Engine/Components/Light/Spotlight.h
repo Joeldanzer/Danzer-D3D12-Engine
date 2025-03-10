@@ -17,8 +17,8 @@ struct SpotLight : public BaseComponent {
 
 	Colorf m_color		= { 1.0f, 1.0f, 1.0f, 1.0f };
 	float m_range       = 5.0f;
-	float m_cutOff      = 0.1f;
-	float m_outerCutOff = 0.1f;
+	float m_cutOff      = 180.0f;
+	float m_outerCutOff = 5.0f;
 
 	Vect3f m_offset;
 };

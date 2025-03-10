@@ -135,8 +135,8 @@ private:
 	//std::vector<>
 	std::vector<uint32_t> m_meshToRender;
 
-	std::vector<Mat4f>    m_instanceTransforms;
-	std::vector<Mat4f>	  nstanceTransparentTransforms;
+	std::vector<Mat4f> m_instanceTransforms;
+	std::vector<Mat4f> m_instanceTransparentTransforms;
 
 	// Vertext paint inforamtion
 	std::vector<UINT> m_albedoTextures;

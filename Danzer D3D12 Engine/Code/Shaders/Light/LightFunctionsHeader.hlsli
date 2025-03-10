@@ -308,16 +308,16 @@ float3 EvaluateAmbience(TextureCube cubeMap, SamplerState defaultSampler, float3
     specRad *= ambientStr.rgb;
     diffRad *= ambientStr.rgb;
     
-    float fT = 1.0 - RdotNsat;
+    float fT  = 1.0 - RdotNsat;
     float fT5 = fT * fT;
     fT5 = fT5 * fT5 * fT;
     spccol = lerp(spccol, (float) 1.0, fT5);
     
     float fFade = GetReductionInMicroFacets(perceptualRoughness);
-    fFade *= EmpiricalSpecularAO(ao, perceptualRoughness);
-    fFade *= ApproximateSpecularSelfOcclusion(vR, org_normal);
+    fFade      *= EmpiricalSpecularAO(ao, perceptualRoughness);
+    fFade      *= ApproximateSpecularSelfOcclusion(vR, org_normal);
     
-    float3 ambientdiffuse = dfcol * diffRad;
+    float3 ambientdiffuse  = dfcol * diffRad;
     float3 ambientspecular = ao * fFade * spccol * specRad;
     return ambientdiffuse + ambientspecular;
 }
@@ -365,15 +365,15 @@ float3 EvaluateDirectionalLight(float3 albedoColor, float3 specularColor, float3
 
 float3 EvaluatePointLight(float3 diffuseColor, float3 specularColor, float3 normal, float roughness, float3 lightColorIntensity, float lightRange, float3 toLight, float lightDistance, float3 toEye)
 {
-    float NdL = saturate(dot(normal, toLight));
+    float NdL     = saturate(dot(normal, toLight));
     float lambert = NdL;
-    float3 h = normalize(toEye + toLight);
-    float NdH = saturate(dot(normal, h));
+    float3 h      = normalize(toEye + toLight);
+    float NdH     = saturate(dot(normal, h));
     
     float cosTheta = dot(toLight, normal);
     
-    float D  = DistributionGGX(normal, h, roughness);
-    float G  = GeometrySmith(normal, toEye, toLight, roughness);
+    float  D = DistributionGGX(normal, h, roughness);
+    float  G = GeometrySmith(normal, toEye, toLight, roughness);
     float3 F = FresnelSchlick(cosTheta, specularColor);
   
     float3 specular = ((D * G * F) / 4.f * dot(normal, toLight) * dot(normal, toEye));

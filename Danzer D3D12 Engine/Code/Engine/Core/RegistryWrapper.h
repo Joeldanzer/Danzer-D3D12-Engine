@@ -37,6 +37,9 @@ public:
 
 	bool HasComponent(const Entity entity, const std::string componentName);
 
+	Entity GetEntityWithName(const std::string name);
+	bool   EntityWithNameExists(const std::string name);
+
 	template<typename Component>
 	const std::string FetchComponentName();
 

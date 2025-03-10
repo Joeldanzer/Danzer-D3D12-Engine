@@ -16,11 +16,16 @@ void SpotLight::DisplayInEditor(const Entity entity)
 	float offset[3] = { light.m_offset.x, light.m_offset.y, light.m_offset.z };
 	ImGui::DragFloat3("Offset Position", &offset[0]);
 
+	float min = 15.0f;
+	float max = 180.0f;
+
 	float cutOff = light.m_cutOff;
-	ImGui::DragFloat("Cut Off", &cutOff, 0.01f, 0.0f, 1.0f);
+	ImGui::DragFloat("Cut Off", &cutOff, 0.1f, min - 0.1f, max + 0.1f);
+	cutOff = cutOff > max ? min : cutOff;
+	cutOff = cutOff < min ? max : cutOff;
 
 	float outerCutOff = light.m_outerCutOff;
-	ImGui::DragFloat("Outer Cut Off", &outerCutOff, 0.01f, 0.0f, 1.0f);
+	ImGui::DragFloat("Outer Cut Off", &outerCutOff, 0.1f, 0.01f, 10.0f);
 
 	float range = light.m_range;
 	ImGui::DragFloat("Range", &range, 0.01f, 0.01f, 100.0f);

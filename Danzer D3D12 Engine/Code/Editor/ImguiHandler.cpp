@@ -321,7 +321,7 @@ void ImguiHandler::StaticWindows()
 	//	ImGuiWindowFlags_NoResize |
 	//	ImGuiWindowFlags_NoCollapse;
 
-	ImVec2 windowSize = { (float)WindowHandler::WindowData().m_w, (float)WindowHandler::WindowData().m_h };
+	//ImVec2 windowSize = { (float)WindowHandler::WindowData().m_w, (float)WindowHandler::WindowData().m_h };
 
 	//* Left Side window Begin
 	{
@@ -329,27 +329,41 @@ void ImguiHandler::StaticWindows()
 
 		if (ImGui::Begin("Scene View", nullptr)) {
 			if (ImGui::Button("Create Empty GameEntity")) {
-				m_currentEntity = REGISTRY->Create3DEntity("Empty Entity", false);
+				if (REGISTRY->EntityWithNameExists(m_baseEntityName)) {
+					auto it = std::find_if(m_baseEntityName.begin(), m_baseEntityName.end(), ::isdigit);
+					if (it != m_baseEntityName.end()) {
+						int value = std::atoi(std::string(1, *it).c_str());
+						value++;
+						
+						m_baseEntityName.replace(it, it + 1, std::to_string(value));
+					}
+					else {
+						m_baseEntityName += " " + std::to_string(1);
+					}
+				}
+				m_currentEntity = REGISTRY->Create3DEntity(m_baseEntityName, false);
 			}
 
 			ImGui::Separator();
-			if (ImGui::BeginListBox("##",  windowSize )) {
+
+			if (ImGui::BeginListBox("##", ImGui::GetWindowSize())) {
 				auto scene = Reg::Instance()->GetRegistry().view<Transform, GameEntity>();
 				entt::entity previousEntity;
 				for (auto entity : scene) {
-					GameEntity& obj = Reg::Instance()->Get<GameEntity>(entity);
+					GameEntity& obj = REGISTRY->Get<GameEntity>(entity);
 					bool isSelected = (entity == m_currentEntity);
-					if (ImGui::Selectable(obj.m_name.c_str(), isSelected)) {
+
+					if (ImGui::Selectable(obj.m_name.empty() ? "##" : obj.m_name.c_str(), isSelected)) {
 						m_currentEntity = entity;
 						m_currentMesh = 0;
-						Transform& transform = Reg::Instance()->Get<Transform>(entity);
+						Transform& transform = REGISTRY->Get<Transform>(entity);
 
 						if (m_removeEntity) {
 							if (previousEntity != entity) {
 								m_currentEntity = previousEntity;
 							}
 
-							Reg::Instance()->DestroyEntity(entity);
+							REGISTRY->DestroyEntity(entity);
 							m_removeEntity = false;
 						}
 
@@ -371,8 +385,6 @@ void ImguiHandler::StaticWindows()
 
 	//* Right side window begin
 	{
-		//ImGui::SetNextWindowSize({ windowSize.x / 4.0f, windowSize.y / 2.0f });
-		//ImGui::SetNextWindowPos({ m_rightWindow.m_positon.x, m_rightWindow.m_positon.y }, 0, { 0.5f, 0.5f });
 		ImGui::SetNextWindowBgAlpha(1.f);
 		bool isOpen = true;
 
@@ -381,7 +393,7 @@ void ImguiHandler::StaticWindows()
 				GameEntity& gameEntity = REGISTRY->Get<GameEntity>(m_currentEntity);
 				
 				for (uint32_t i = 0; i < gameEntity.m_emplacedComponents.size(); i++) {
-					if(ImGui::CollapsingHeader(gameEntity.m_emplacedComponents[i].c_str()))
+					if(ImGui::CollapsingHeader(gameEntity.m_emplacedComponents[i].c_str(), ImGuiTreeNodeFlags_DefaultOpen))
 						COMPONENT_ENTRY_REGISTER.DisplayComponent(m_currentEntity, gameEntity.m_emplacedComponents[i]);
 				}
 
@@ -404,31 +416,6 @@ void ImguiHandler::StaticWindows()
 							COMPONENT_ENTRY_REGISTER.EmplaceComponent(m_currentEntity, it.first);
 						}
 					}
-					//ImguiComponentMenus::DisplayComponentSelection(m_currentEntity);
-					//std::string selectedComponent = "";
-					//
-					//for (UINT i = 0; i < m_componentList.size(); i++)
-					//{
-					//	bool selected = (selectedComponent == m_componentList[i]);
-					//	if (ImGui::Selectable(m_componentList[i].c_str(), selected)) {
-					//		selectedComponent = m_componentList[i];
-					//		
-					//		if (selectedComponent == "Model") {
-					//			if (!reg.try_get<Model>(m_currentEntity)) {
-					//				reg.emplace<Model>(m_currentEntity, 0);
-					//			}
-					//			break;
-					//		}
-					//
-					//		if (selectedComponent == "DirectionalLight") {
-					//			if (!reg.try_get<DirectionalLight>(m_currentEntity)) {
-					//				reg.emplace<DirectionalLight>(m_currentEntity);
-					//			}
-					//			break;
-					//		}
-					//
-					//	}
-					//}
 				
 					ImGui::EndPopup();
 				}
@@ -454,8 +441,7 @@ void ImguiHandler::SaveSceneAs()
 	//std::wstring scene = m_fileExplorer.OpenFileExplorer(FILE_EXPLORER_SAVE, m_fileExtensions["Scenes"]);
 	//m_sceneLoader.SaveScene({ scene.begin(), scene.end() }, reg);
 }
-bool ImguiHandler::ModelDataSettings()
-{
+
 	//Model* model = reg.try_get<Model>(m_currentEntity);
 	//if (model) {
 	//	if (ImGui::CollapsingHeader("ModelData")) {
@@ -599,68 +585,7 @@ bool ImguiHandler::ModelDataSettings()
 	//		return true;
 	//}
 	//
-	return false;
-}
 
-bool ImguiHandler::ObjectSettings()
-{	
-	return false;
-}
-bool ImguiHandler::TransformSettings()
-{
-	//Transform& transform = reg.get<Transform>(m_currentEntity);
-	//if (ImGui::CollapsingHeader("Transform")) {
-	//	
-	//	float position[3] = {transform.m_position.x, transform.m_position.y, transform.m_position.z };
-	//	float scale[3]	  = {transform.m_scale.x,    transform.m_scale.y,    transform.m_scale.z	};
-	//	
-	//	Vect3f euler = transform.m_rotation.ToEuler();
-	//	float rotation[3] = { ToDegrees(euler.x), ToDegrees(euler.y), ToDegrees(euler.z) };
-	//	
-	//	ImGui::DragFloat3("Position", position, 0.01f, -FLT_MAX, FLT_MAX);
-	//	ImGui::DragFloat3("Rotation", rotation, 0.1f,  -360.f, 360.f);
-	//	ImGui::DragFloat3("Scale",    scale,    0.01f, -FLT_MAX, FLT_MAX);
-	//
-	//	transform.m_rotation = Quat4f::CreateFromYawPitchRoll({ToRadians(rotation[0]), ToRadians(rotation[1]), ToRadians(rotation[2])}); // * (qZ));
-	//
-	//	transform.m_position = { position[0], position[1], position[2], 1.f };
-	//	transform.m_scale	 = { scale[0], scale[1], scale[2], 1.f};
-	//
-	//	return true;
-	//}
-	//
-	return false;
-}
-
-bool ImguiHandler::DirectionalLightSettings()
-{
-	//DirectionalLight* light = reg.try_get<DirectionalLight>(m_currentEntity);
-	//if (light) {
-	//	if (ImGui::CollapsingHeader("Directional Light")) {
-	//		float lightColor[3] = { light->m_lightColor.x, light->m_lightColor.y, light->m_lightColor.z };
-	//		ImGui::ColorEdit3("Light Color", lightColor);
-	//
-	//		float lightStr = light->m_lightColor.w;
-	//		ImGui::DragFloat("Light Strength", &lightStr, 0.1f, 0.f, 20.f);
-	//		light->m_lightColor.w = lightStr;
-	//
-	//		light->m_lightColor = { lightColor[0], lightColor[1], lightColor[2], lightStr };
-	//
-	//		float ambientColor[4] = { light->m_ambientColor.x, light->m_ambientColor.y, light->m_ambientColor.z, light->m_ambientColor.w };
-	//		ImGui::ColorEdit3("Ambient Color", ambientColor);
-	//
-	//		float ambientStr = light->m_ambientColor.w;
-	//		ImGui::DragFloat("Ambient Strength", &ambientStr, 0.1f, 0.f, 20.f);
-	//		light->m_ambientColor.w = ambientStr;
-	//
-	//		light->m_ambientColor = { ambientColor[0], ambientColor[1], ambientColor[2], ambientStr };
-	//
-	//		return true;
-	//	}
-	//}
-	//
-	return false;
-}
 
 std::wstring ImguiHandler::SelectTexture(UINT& texture)
 {

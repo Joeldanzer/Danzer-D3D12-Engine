@@ -9,6 +9,13 @@
 struct Camera : public BaseComponent
 {
 	COMP_FUNC(Camera)
+public:
+	enum Projection : uint8_t{
+		PERSPECTIVE,
+		ORTHOGRAPHIC,
+		COUNT
+	};
+
 	enum Faces : uint32_t {
 		NEAR_FACE   = 0,
 		FAR_FACE    = 1,
@@ -19,11 +26,11 @@ struct Camera : public BaseComponent
 		FACE_COUNT  = 6 // Number of faces
 	};
 	
-	Camera() : m_fov(0.f), m_nearPlane(0.f), m_farPlane(0.f), m_aspectRatio(0.f), m_renderTarget(0) {}
-	Camera(float fov, float aspectRatio, float nearPlane = 0.01f, float farPlane = 1000.f);
+	Camera();
+
 	~Camera();
 	
-	const Mat4f& GetProjection() { return m_projection; }
+	const Mat4f& GetProjection() { return m_projection[m_currentProj]; }
 
 	void SetFrustrumTest(Transform* transform) {
 		m_editorFrustrum = transform;
@@ -34,6 +41,11 @@ struct Camera : public BaseComponent
 	void SetFarPlane(float farPlane);
 	void SetAspectRatio(float aspectRatio);
 
+	void SetViewWidth(float width);
+	void SetViewHeight(float height);
+	void SetNearZ(float nearZ);
+	void SetFarZ(float farZ);
+
 	uint32_t& RenderTarget() {
 		return m_renderTarget;
 	}
@@ -42,25 +54,45 @@ struct Camera : public BaseComponent
 		return m_frustrum[face];
 	}
 
+	void DisplayInEditor(const Entity entity) override;
+	
+	void SetCameraProjection(const Projection proj) {
+		if (proj == Projection::COUNT)
+			m_currentProj = PERSPECTIVE;
+		else
+			m_currentProj = proj;
+	}
+
 private:
 	friend class Editor;
 	friend class Renderer;
 	friend class RenderManager;
 
-	void ConstructProjection();
+
+	void ConstructPerspective();
+	void ConstructOrthographic();
 	void ConstructFrustrum(const Mat4f& transform, const Vect3f& position);
 
 	uint32_t m_renderTarget;
 
 	std::array<Planef, FACE_COUNT> m_frustrum;
 
+	// Perspective Values
 	float m_fov;
 	float m_nearPlane;
 	float m_farPlane;
 	float m_aspectRatio;
 
+	// Orthographic Values
+	float m_viewWidth;
+	float m_viewHeight;
+	float m_nearZ;
+	float m_farZ;
+
 	Transform* m_editorFrustrum = nullptr;
-	Mat4f      m_projection;
+	
+	Projection m_currentProj;
+	Mat4f      m_projection[Projection::COUNT];
 };
 REGISTER_COMPONENT(Camera)
 

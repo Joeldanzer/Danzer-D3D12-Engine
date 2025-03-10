@@ -12,13 +12,18 @@
 
 SceneManager::SceneManager(Camera& cam)
 {
-	cam = Camera(65.f, (float)WindowHandler::WindowData().m_w / (float)WindowHandler::WindowData().m_h, 0.1f, 1000.0f);
+	cam = Camera();
+	cam.SetCameraProjection(Camera::PERSPECTIVE);
+	cam.SetFov(65.0f);
+	cam.SetAspectRatio(WindowHandler::WindowData().AspectRatio());
+	cam.SetNearPlane(0.01f);
+	cam.SetFarPlane(10000.0f);
 
 	// Look up a scene in our bin folder, if it can't find any we create a new one.
 	
 	//auto entity = CreateBasicEntity("MainCamera", false).m_entity;
-	Entity entity = Reg::Instance()->Create3DEntity("MainCamera");
-	Reg::Instance()->Emplace<Camera>(entity, cam);
+	Entity entity = REGISTRY->Create3DEntity("MainCamera");
+	REGISTRY->Emplace<Camera>(entity, cam);
 	Transform& transform = Reg::Instance()->Get<Transform>(entity);
 	transform.m_position = { 0.f, 10.0f, 0.f };
 	m_mainCamera = entity;

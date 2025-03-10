@@ -6,39 +6,39 @@ LightOutput main(VertexToPixel input) {
     float3 worldPosition = worldPositionTexture.Sample(defaultSample, input.m_uv);
 	
     float3 lightDir = normalize(-input.m_direction);
-    float3 toLight  = input.m_position.xyz - worldPosition; 
-    
-    float theta = dot(lightDir, normalize(-toLight));
-    float cutOff = cos(radians(input.m_cutOff));
+    float3 toLight  = input.m_position.xyz - worldPosition;  
+    float theta     = dot(lightDir, normalize(-toLight));
+    float cutOff    = cos(radians(input.m_cutOff));
 	
     LightOutput output;
-    output.m_brightColor = 0.0f.rrrr;
-    output.m_sceneColor  = 0.0f.rrrr;
+    output.m_brightColor = float4(0.0f, 0.0f, 0.0f, 0.0f);
+    output.m_sceneColor  = float4(0.0f, 0.0f, 0.0f, 0.0f);
     
     if (theta > cutOff)
     {
-        float4 albedo = albedoTexture.Sample(defaultSample, input.m_uv).rgba;
-        float4 normal = normalTexture.Sample(defaultSample, input.m_uv).rgba;
-        float4 material = materialTexture.Sample(defaultSample, input.m_uv);
+        float4 albedo       = albedoTexture.Sample(defaultSample, input.m_uv);
+        float4 normal       = normalTexture.Sample(defaultSample, input.m_uv);
+        float4 material     = materialTexture.Sample(defaultSample, input.m_uv);
         float3 vertexNormal = vertexNormalTexture.Sample(defaultSample, input.m_uv).xyz;
     
-        float metallic = material.r;
+        float metallic  = material.r;
         float roughness = material.g;
-        float height = material.b;
-        float ao = material.w;
+        float height    = material.b;
+        float ao        = material.w;
     
+        albedo.rgb = GammaToLinear(albedo.rgb);
+        
         float3 specularcolor = lerp((float3) 0.04, albedo.rgb, metallic);
-        float3 diffusecolor = lerp((float3) 0.00, albedo.rgb, 1 - metallic);
+        float3 diffusecolor  = lerp((float3) 0.00, albedo.rgb, 1 - metallic);
 
-        albedo.rgb   = GammaToLinear(albedo.rgb);
         float3 toEye = normalize(CameraPosition.xyz - worldPosition);
         
-        float3 lightColor = LinearToGamma(input.m_color.rgb);
+        float3 lightColor = GammaToLinear(input.m_color.rgb);
         
         float outerCutOff = cos(radians(input.m_outerCutOff));
         float epilson     = outerCutOff - cutOff;
         
-        float intensity = clamp((theta - outerCutOff) / epilson, 0.0f, 1.0f);
+        float intensity     = clamp((theta - outerCutOff) / epilson, 0.0f, 1.0f);
         float lightDistance = length(toLight);
         
         toLight = normalize(toLight);

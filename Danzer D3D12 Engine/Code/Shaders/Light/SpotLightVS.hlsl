@@ -24,7 +24,7 @@ VertexToPixel main(InputToVertex input)
     output.m_outerCutOff = input.m_outerCutOff;
     output.m_range       = input.m_range;
     output.m_svPosition  = positions[input.m_vertexID];
-    output.m_uv          = positions[input.m_vertexID];
+    output.m_uv          = uv[input.m_vertexID];
     
 	return output;
 }

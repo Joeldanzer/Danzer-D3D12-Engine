@@ -18,6 +18,6 @@ public:
 	}
 private:
 	Data m_data;
-	UINT m_sizeOfData;
+	UINT m_sizeOfData = UINT32_MAX;
 };
 
