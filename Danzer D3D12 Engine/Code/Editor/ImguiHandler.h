@@ -53,7 +53,6 @@ private:
 
 	Engine& m_engine;
 	int m_currentMesh = 0;
-	//float m_currentRotation[3] ={1.f, 5.f, 30.f};
 	entt::entity m_currentEntity;
 	bool m_entitySelected;
 	char* m_tag;
@@ -62,8 +61,7 @@ private:
 	bool m_renderOnlyMesh = false;
 
 	std::vector<ImguiTexture> m_imguiTextures;
-	// Object Imgui Settings
-	
+
 	void StaticWindows();
 
 	void SaveScene();
