@@ -25,26 +25,28 @@ public:
 	~FullscreenTexture();
 
 	void InitAsDepth(
-		ID3D12Device* device,
+		const std::wstring	   name,
+		ID3D12Device*		   device,
 		DescriptorHeapWrapper* cbvSrvHeap,
 		DescriptorHeapWrapper* dsvHeap,
-		const UINT width,
-		const UINT height,
-		DXGI_FORMAT textureDesc,
-		DXGI_FORMAT srvFormat,
-		D3D12_RESOURCE_FLAGS resourceFlag,
-		std::wstring name
+		const UINT			   width,
+		const UINT			   height,
+		DXGI_FORMAT			   textureDesc,
+		DXGI_FORMAT			   srvFormat,
+		D3D12_RESOURCE_FLAGS   resourceFlag,
+		const uint16_t		   mipLevels = 1	
 	);
 	void InitAsTexture(
-		ID3D12Device* device,
+		const std::wstring     name,
+		ID3D12Device*          device,
 		DescriptorHeapWrapper* cbvSrvHeap,
 		DescriptorHeapWrapper* rtvHeap,
-		const UINT width,				   // Width of texture
-		const UINT height,				   // Height of texture
-		DXGI_FORMAT textureDesc,		   // The format of the textures description 
-		DXGI_FORMAT srvFormat,			   // Format of the Shader Resource View, should be the same as textureDesc
-		D3D12_RESOURCE_FLAGS resourceFlag, // Specified flags for the Texture
-		std::wstring name
+		const UINT			   width,	     // Width of texture
+		const UINT			   height,	     // Height of texture
+		DXGI_FORMAT			   textureDesc,  // The format of the textures description 
+		DXGI_FORMAT			   srvFormat,    // Format of the Shader Resource View, should be the same as textureDesc
+		D3D12_RESOURCE_FLAGS   resourceFlag, // Specified flags for the Texture
+		const uint16_t		   mipLevels = 1	
 	);
 
 	void ClearTexture(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper& rtvWrapper, const uint8_t frameIndex);

@@ -29,6 +29,7 @@ void Skybox::Initialize(PSOHandler& psoHandler, TextureHandler& textureHandler, 
 		D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS;
 
 	InitializeRenderer(
+		L"Skybox",
 		L"Shaders/skyboxVS.cso",
 		L"Shaders/skyboxPS.cso",
 		WindowHandler::WindowData().m_w,
@@ -44,7 +45,6 @@ void Skybox::Initialize(PSOHandler& psoHandler, TextureHandler& textureHandler, 
 		1,
 		1,
 		PSOHandler::IL_INSTANCE_FORWARD,
-		L"Skybox",
 		psoHandler
 	);
 	m_textureID = textureHandler.GetTexture(skyBoxTexture);

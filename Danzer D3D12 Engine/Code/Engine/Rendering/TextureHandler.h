@@ -22,6 +22,10 @@ struct Texture {
 class TextureHandler
 {
 public:
+	static constexpr uint16_t MaxMipLevels = 6;
+	static constexpr uint16_t MinMipLevels = 1;
+	static constexpr uint16_t BaseMipLevel = 4;
+
 	TextureHandler() = delete;
 	TextureHandler(D3D12Framework& framework);
 	~TextureHandler();

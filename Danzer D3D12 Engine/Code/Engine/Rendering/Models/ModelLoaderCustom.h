@@ -106,6 +106,7 @@ public:
 	std::string FixModelName(std::string name);
 
 private:
+	const Vect4f NormalizeImportedNormal(const aiVector3D& aiNormal);
 	void FetchAllModelsInScene(const aiScene* scene, std::vector<std::unique_ptr<LoaderModel>>& models, std::vector<std::pair<std::string, Mat4f>>& transforms, bool uvFlipped);
 	void GetAllModelProperties(LoaderModel* out, aiNode* child, const aiScene* scene, Mat4f parentMat, bool uvFlipped);
 	void LoadVerticies(std::vector<Vect3f>& v3Verts, aiMesh* mesh, LoaderMesh* loaderMesh, bool uvFlipped);

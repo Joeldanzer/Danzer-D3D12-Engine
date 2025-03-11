@@ -16,7 +16,7 @@ bool DirectionalShadowMapping::RenderToTexture(ID3D12GraphicsCommandList* cmdLis
 		if (!m_models[i].IsTransparent()) {
 			ModelData& model = m_models[i];
 			
-			std::vector<uint32_t>   meshToRender = model.MeshToRender();
+			std::vector<uint32_t> meshToRender = model.MeshToRender();
 	
 			if (meshToRender.size() > 0) {
 				for (UINT j = 0; j < model.GetMeshes().size(); j++)
@@ -52,6 +52,7 @@ void DirectionalShadowMapping::SetPipelineAndRootSignature(PSOHandler& psoHandle
 				 D3D12_ROOT_SIGNATURE_FLAG_DENY_PIXEL_SHADER_ROOT_ACCESS;
 
 	InitializeRenderer(
+		L"Directional Shadow Mapping",
 		L"Shaders/ShadowDepthVS.cso",
 		L"",
 		8192,
@@ -67,7 +68,6 @@ void DirectionalShadowMapping::SetPipelineAndRootSignature(PSOHandler& psoHandle
 		1,
 		0,
 		PSOHandler::IL_INSTANCE_DEFFERED,
-		L"Directional Shadow Mapping",
 		psoHandler,
 		true
 	);

@@ -68,7 +68,6 @@ private:
 	friend class Renderer;
 	friend class RenderManager;
 
-
 	void ConstructPerspective();
 	void ConstructOrthographic();
 	void ConstructFrustrum(const Mat4f& transform, const Vect3f& position);

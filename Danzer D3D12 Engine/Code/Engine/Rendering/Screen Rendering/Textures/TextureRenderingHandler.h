@@ -56,25 +56,27 @@ public:
 
 	// Creates a new FullscreenTexture and adds it directly to the pipeline
 	FullscreenTexture* CreateFullscreenTexture(
+		const std::wstring	 textureName,
 		const uint16_t		 width, 
 		const uint16_t		 height,
 		DXGI_FORMAT			 srvFormat,
-		std::wstring		 textureName,
 		RENDER_PASS			 transitionPoint,
+		const uint16_t		 mipLevels = 1u,
 		bool				 depthTexture = false
 	);
 
 	// Creates a new TextureRenderer and adds it directly to the pipeline
 	TextureRenderer* CreateTextureRenderer(
+		const std::wstring  name,
 		TexturePipelineData data,
 		const uint8_t	    numberOfBuffers,
 		const uint8_t	    numberOfTextures,
-		std::wstring		name,
 		RENDER_PASS			renderPass,
 		bool				renderAsDepth = false
 	);
 	// Creates a new TextureRenderer and adds it directly to the pipeline
 	TextureRenderer* CreateTextureRenderer(
+		const std::wstring		   name,
 		std::wstring			   vertexShader,
 		std::wstring			   pixelShader,
 		const uint16_t			   viewportWidth,
@@ -90,7 +92,6 @@ public:
 		const uint8_t			   numberOfBuffers,
 		const uint8_t			   numberOfTextures,
 		const uint8_t			   inputLayout,
-		std::wstring			   name,
 		RENDER_PASS				   renderPass,
 		bool					   renderAsDepth = false
 	);

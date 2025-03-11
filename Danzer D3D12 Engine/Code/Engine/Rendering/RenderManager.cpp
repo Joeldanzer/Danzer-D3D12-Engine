@@ -64,8 +64,6 @@ public:
 	}
 
 private:
-	void UpdateLightInstances(entt::registry& reg);
-
 	void RenderScene(TextureHandler& textureHandler, SpriteHandler& spriteHandler, ModelHandler& modelHandler, ModelEffectHandler& effectHandler, SceneManager& scene);
 
 	void FrustrumCulling(const Camera& camera, Transform& transform, ModelData& model);
@@ -174,11 +172,12 @@ void RenderManager::Impl::InitializeRenderTextures(TextureHandler& textureHandle
 	m_shadowMap->CreateProjection(128.0f, 8.0f);
 	m_textureRendering.AddTextureRendererToPipeline(m_shadowMap, PRE_SCENE_PASS_0);
 	FullscreenTexture* shadowMapTexture = m_textureRendering.CreateFullscreenTexture(
+		L"Shadow Map Texture",
 		8192,
 		8192,
 		DXGI_FORMAT_R32_FLOAT,
-		L"Shadow Map Texture",
 		PRE_SCENE_PASS_0,
+		1,
 		true
 	);
 	m_shadowMap->SetDepthStencilView(shadowMapTexture->DSVOffsetID());
@@ -194,17 +193,17 @@ void RenderManager::Impl::InitializeRenderTextures(TextureHandler& textureHandle
 	rendererData.m_format       = { DXGI_FORMAT_R8_UNORM };
 	
 	FullscreenTexture* ssaoTexture = m_textureRendering.CreateFullscreenTexture(
+		L"SSAO Texture",
 		WindowHandler::WindowData().m_w,
 		WindowHandler::WindowData().m_h,
 		DXGI_FORMAT_R8_UNORM,
-		L"SSAO Texture",
 		PRE_SCENE_PASS_0
 	);
 	TextureRenderer* ssaoRenderer  = m_textureRendering.CreateTextureRenderer(
+		L"SSAO Renderer",
 		rendererData,
 		3,
 		3,
-		L"SSAO Renderer",
 		RENDER_PASS::PRE_SCENE_PASS_0
 	);
 	
@@ -224,17 +223,17 @@ void RenderManager::Impl::InitializeRenderTextures(TextureHandler& textureHandle
 	m_vlData.InitializeConstantBuffer(m_bufferHandler);
 
 	FullscreenTexture* volumetricTexture = m_textureRendering.CreateFullscreenTexture(
+		L"Volumetric Light Texture",
 		WindowHandler::WindowData().m_w,
 		WindowHandler::WindowData().m_h,
 		DXGI_FORMAT_R8G8B8A8_UNORM,
-		L"Volumetric Light Texture",
 		PRE_SCENE_PASS_1
 	);
 	TextureRenderer* volumetricRenderer = m_textureRendering.CreateTextureRenderer(
+		L"Volumetric Light Render Texture",
 		rendererData, // All the Data compacted into a struct for more cleaner code
 		3,			  // Number of Buffers
 		2,			  // Number of Textures
-		L"Volumetric Light Render Texture",
 		PRE_SCENE_PASS_1
 	);
 
@@ -254,17 +253,17 @@ void RenderManager::Impl::InitializeRenderTextures(TextureHandler& textureHandle
 	rendererData.m_format = { DXGI_FORMAT_R8_UNORM };
 
 	FullscreenTexture* ssaoBlurTexture = m_textureRendering.CreateFullscreenTexture(
+		L"SSAO Blur Texture",
 		WindowHandler::WindowData().m_w,
 		WindowHandler::WindowData().m_h,
 		DXGI_FORMAT_R8_UNORM,
-		L"SSAO Blur Texture",
 		PRE_SCENE_PASS_2
 	);
 	TextureRenderer* ssaoBlurRenderer = m_textureRendering.CreateTextureRenderer(
+		L"SSAO Render Texture",
 		rendererData,
 		1,
 		1,
-		L"SSAO Render Texture",
 		PRE_SCENE_PASS_2
 	);
 	
@@ -276,40 +275,40 @@ void RenderManager::Impl::InitializeRenderTextures(TextureHandler& textureHandle
 	rendererData.m_format      = { DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_R8G8B8A8_UNORM };
 
 	FullscreenTexture* dirLightTexture = m_textureRendering.CreateFullscreenTexture(
+		L"Scene Light Texture",
 		WindowHandler::WindowData().m_w,
 		WindowHandler::WindowData().m_h,
 		DXGI_FORMAT_R8G8B8A8_UNORM,
-		L"Scene Light Texture",
 		SCENE_PASS_0
 	);
 	//m_textureRendering.m_lastRenderedTexture = dirLightTexture;
 	FullscreenTexture* hdrBlurTexture = m_textureRendering.CreateFullscreenTexture(
+		L"HDR Blur Texture",
 		WindowHandler::WindowData().m_w,
 		WindowHandler::WindowData().m_h,
 		DXGI_FORMAT_R8G8B8A8_UNORM,
-		L"HDR Blur Texture",
 		SCENE_PASS_2
 	);
 	TextureRenderer* dirLightRenderer = m_textureRendering.CreateTextureRenderer(
+		L"Directional Light Renderer",
 		rendererData,
 		2,
 		11,
-		L"Directional Light Renderer",
 		SCENE_PASS_0
 	);
 
 	FullscreenTexture* pointLightTexture = m_textureRendering.CreateFullscreenTexture(
+		L"Point Light Texture",
 		WindowHandler::WindowData().m_w,
 		WindowHandler::WindowData().m_h,
 		DXGI_FORMAT_R8G8B8A8_UNORM,
-		L"Point Light Texture",
 		SCENE_PASS_0
 	);
 	FullscreenTexture* spotLightTexture = m_textureRendering.CreateFullscreenTexture(
+		L"Spot Light Texture",
 		WindowHandler::WindowData().m_w,
 		WindowHandler::WindowData().m_h,
 		DXGI_FORMAT_R8G8B8A8_UNORM,
-		L"Spot Light Texture",
 		SCENE_PASS_0
 	);
 	dirLightRenderer->SetRenderTargetAtSlot(dirLightTexture, 0);
@@ -353,37 +352,37 @@ void RenderManager::Impl::InitializeRenderTextures(TextureHandler& textureHandle
 	m_skyboxRenderer->SetRenderTargetAtSlot(dirLightTexture, 0);
 
 	FullscreenTexture* bloomBlurTexture = m_textureRendering.CreateFullscreenTexture(
+		L"Bloom Blur Texture",
 		WindowHandler::WindowData().m_w,
 		WindowHandler::WindowData().m_h,
 		DXGI_FORMAT_R8G8B8A8_UNORM,
-		L"Bloom Blur Texture",
 		POST_PROCESS_0
 	);
 	rendererData.m_pixelShader = L"Shaders/BloomBlurPS.cso";
 	rendererData.m_format = { DXGI_FORMAT_R8G8B8A8_UNORM };
 	TextureRenderer* bloomBlurRenderer = m_textureRendering.CreateTextureRenderer(
+		L"Bloom Blur Renderer",
 		rendererData,
 		0,
 		1,
-		L"Bloom Blur Renderer",
 		POST_PROCESS_0
 	);
 	bloomBlurRenderer->SetRenderTargetAtSlot(bloomBlurTexture, 0);
 	bloomBlurRenderer->SetTextureAtSlot(hdrBlurTexture,  0);
 	
 	FullscreenTexture* bloomTexture = m_textureRendering.CreateFullscreenTexture(
+		L"Bloom Texture",
 		WindowHandler::WindowData().m_w,
 		WindowHandler::WindowData().m_h,
 		DXGI_FORMAT_R8G8B8A8_UNORM,
-		L"Bloom Texture",
 		POST_PROCESS_1
 	);
 	rendererData.m_pixelShader = L"Shaders/BloomPS.cso";
 	TextureRenderer* bloomRenderer = m_textureRendering.CreateTextureRenderer(
+		L"Bloom  Renderer",
 		rendererData,
 		0,
 		4,
-		L"Bloom  Renderer",
 		POST_PROCESS_1
 	);
 	bloomRenderer->SetRenderTargetAtSlot(bloomTexture, 0);

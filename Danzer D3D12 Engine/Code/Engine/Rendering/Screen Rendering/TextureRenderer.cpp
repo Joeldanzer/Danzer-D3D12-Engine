@@ -7,7 +7,7 @@
 #include "Rendering/Buffers/ConstantBufferData.h"
 #include "Rendering/TextureHandler.h"
 
-void TextureRenderer::InitializeRenderer(std::wstring vertexShader, std::wstring pixelShader, const uint16_t viewportWidth, const uint16_t viewportHeight, bool useDepth, D3D12_DEPTH_STENCIL_DESC depthDesc, DXGI_FORMAT depthFormat, std::vector<DXGI_FORMAT> formats, const uint8_t blendDesc, const uint8_t rastDesc, const uint8_t samplerDesc, D3D12_ROOT_SIGNATURE_FLAGS flags, const uint8_t numberOfBuffers, const uint8_t numberOfTextures, const uint8_t inputLayout, std::wstring name, PSOHandler& psoHandler, bool renderAsDepth)
+void TextureRenderer::InitializeRenderer(const std::wstring name, std::wstring vertexShader, std::wstring pixelShader, const uint16_t viewportWidth, const uint16_t viewportHeight, bool useDepth, D3D12_DEPTH_STENCIL_DESC depthDesc, DXGI_FORMAT depthFormat, std::vector<DXGI_FORMAT> formats, const uint8_t blendDesc, const uint8_t rastDesc, const uint8_t samplerDesc, D3D12_ROOT_SIGNATURE_FLAGS flags, const uint8_t numberOfBuffers, const uint8_t numberOfTextures, const uint8_t inputLayout, PSOHandler& psoHandler, bool renderAsDepth)
 {
 	depthDesc.DepthEnable = useDepth;
 	

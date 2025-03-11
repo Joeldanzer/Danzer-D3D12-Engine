@@ -19,6 +19,7 @@ public:
 	{};
 
 	void InitializeRenderer(
+		const std::wstring		   name,
 		std::wstring			   vertexShader,
 		std::wstring			   pixelShader,
 		const uint16_t			   viewportWidth,
@@ -34,27 +35,9 @@ public:
 		const uint8_t			   numberOfBuffers,
 		const uint8_t			   numberOfTextures,
 		const uint8_t			   inputLayout,
-		std::wstring			   name,
 		PSOHandler&				   psoHandler,
 		bool					   renderAsDepth = false
 	);
-
-	//virtual void InitializeRenderer(
-	//	std::wstring			   vertexShader,
-	//	std::wstring			   pixelShader,
-	//	const uint16_t			   viewportWidth,
-	//	const uint16_t			   viewportHeight,
-	//	bool					   useDepth,
-	//	D3D12_DEPTH_STENCIL_DESC   depthDesc,
-	//	DXGI_FORMAT				   depthFormat,
-	//	std::vector<DXGI_FORMAT>   formats, 
-	//	D3D12_ROOT_SIGNATURE_FLAGS flags,
-	//	const uint8_t			   numberOfBuffers,
-	//	const uint8_t			   numberOfTextures,
-	//	std::wstring			   name,
-	//	PSOHandler&				   psoHandler,
-	//	bool					   renderAsDepth = false
-	//);
 
 	void SetTextureAtSlot(const FullscreenTexture* texture,		  const uint8_t slot, bool useRenderIndex = true);
 	void SetTextureAtSlot(const Texture* texture,				  const uint8_t slot, bool useRenderIndex = true);
@@ -65,9 +48,7 @@ public:
 
 	void SetRenderTargetAtSlot(const FullscreenTexture* texture,  const uint8_t slot, bool useRenderIndex = true);
 	void SetRenderTargetAtSlot(const uint32_t rtvHeapIndex,		  const uint8_t slot, bool useRenderIndex = true);
-	// Renders to the latest RTV 
-	//void SetLatestRenderTargetAtSlot(bool renderToLatestRTV) { m_renderToLatestRTV = renderToLatestRTV; }
-
+	
 	void SetDepthStencilView(const uint32_t dsvHeapIndex);
 
 	const uint32_t GetPSO()			  { return m_pso;}

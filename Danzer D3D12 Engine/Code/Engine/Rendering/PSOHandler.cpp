@@ -198,23 +198,23 @@ void PSOHandler::InitializeSamplerDescs()
 
 	m_samplerDescs[SAMPLER_CLAMP] = samplerDesc;
 
-	samplerDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
-	samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-	samplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-	samplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	samplerDesc.Filter           = D3D12_FILTER_COMPARISON_ANISOTROPIC;
+	samplerDesc.AddressU         = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	samplerDesc.AddressV         = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	samplerDesc.AddressW         = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
 	samplerDesc.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
-	samplerDesc.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
-	samplerDesc.BorderColor = D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK;
-	samplerDesc.MipLODBias = 0;
-	samplerDesc.MaxAnisotropy = 16;
-	samplerDesc.MinLOD = 0.f;
-	samplerDesc.MaxLOD = D3D12_FLOAT32_MAX;
-	samplerDesc.ShaderRegister = 0;
-	samplerDesc.RegisterSpace = 0;
+	samplerDesc.ComparisonFunc   = D3D12_COMPARISON_FUNC_NEVER;
+	samplerDesc.BorderColor      = D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK;
+	samplerDesc.MipLODBias       = 0;
+	samplerDesc.MaxAnisotropy    = 16;
+	samplerDesc.MinLOD			 = 0.f;
+	samplerDesc.MaxLOD			 = D3D12_FLOAT32_MAX;
+	samplerDesc.ShaderRegister   = 0;
+	samplerDesc.RegisterSpace    = 0;
 
 	m_samplerDescs[SAMPLER_WRAP] = samplerDesc;
 
-	samplerDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
+	samplerDesc.Filter   = D3D12_FILTER_MIN_MAG_MIP_POINT;
 	samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
 	samplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
 	samplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_BORDER;

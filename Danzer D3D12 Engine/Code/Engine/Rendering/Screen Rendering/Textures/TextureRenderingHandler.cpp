@@ -32,12 +32,13 @@ TextureRenderingHandler::~TextureRenderingHandler()
 	}
 }
 
-FullscreenTexture* TextureRenderingHandler::CreateFullscreenTexture(const uint16_t width, const uint16_t height, DXGI_FORMAT srvFormat, std::wstring textureName, RENDER_PASS transitionPoint, bool depthTexture)
+FullscreenTexture* TextureRenderingHandler::CreateFullscreenTexture(std::wstring textureName, const uint16_t width, const uint16_t height, DXGI_FORMAT srvFormat, RENDER_PASS transitionPoint, const uint16_t mipLevels, bool depthTexture)
 {
 	FullscreenTexture* texture = m_textureList[transitionPoint].emplace_back(new FullscreenTexture());
 
 	if (!depthTexture) {
 		texture->InitAsTexture(
+			textureName,
 			m_framework.GetDevice(),
 			&m_framework.CbvSrvHeap(),
 			&m_framework.RTVHeap(),
@@ -46,11 +47,12 @@ FullscreenTexture* TextureRenderingHandler::CreateFullscreenTexture(const uint16
 			srvFormat,
 			srvFormat,
 			D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET,
-			textureName
+			mipLevels
 		);
 	}
 	else {
 		texture->InitAsDepth(
+			textureName,
 			m_framework.GetDevice(),
 			&m_framework.CbvSrvHeap(),
 			&m_framework.DSVHeap(),
@@ -59,18 +61,19 @@ FullscreenTexture* TextureRenderingHandler::CreateFullscreenTexture(const uint16
 			DXGI_FORMAT_R32_TYPELESS,
 			srvFormat,
 			D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL,
-			textureName
+			mipLevels
 		);
 	}
 
 	return texture;
 }
 
-TextureRenderer* TextureRenderingHandler::CreateTextureRenderer(TexturePipelineData data, const uint8_t numberOfBuffers, const uint8_t numberOfTextures, std::wstring name, RENDER_PASS renderPass, bool renderAsDepth)
+TextureRenderer* TextureRenderingHandler::CreateTextureRenderer(const  std::wstring name, TexturePipelineData data, const uint8_t numberOfBuffers, const uint8_t numberOfTextures, RENDER_PASS renderPass, bool renderAsDepth)
 {
 	TextureRenderer* renderer = m_renderList[renderPass].emplace_back(new TextureRenderer());
 
 	renderer->InitializeRenderer(
+		name,
 		data.m_vertexShader,
 		data.m_pixelShader,
 		data.m_width,
@@ -86,7 +89,6 @@ TextureRenderer* TextureRenderingHandler::CreateTextureRenderer(TexturePipelineD
 		numberOfBuffers,
 		numberOfTextures,
 		data.m_inputLayout,
-		name,
 		m_psoHandler,
 		renderAsDepth
 	);
@@ -94,11 +96,12 @@ TextureRenderer* TextureRenderingHandler::CreateTextureRenderer(TexturePipelineD
 	return renderer;
 }
 
-TextureRenderer* TextureRenderingHandler::CreateTextureRenderer(std::wstring vertexShader, std::wstring pixelShader, const uint16_t viewportWidth, const uint16_t viewportHeight, bool useDepth, D3D12_DEPTH_STENCIL_DESC depthDesc, DXGI_FORMAT depthFormat, std::vector<DXGI_FORMAT> formats, const uint8_t blendDesc, const uint8_t rastDesc, const uint8_t samplerDesc, D3D12_ROOT_SIGNATURE_FLAGS flags, const uint8_t numberOfBuffers, const uint8_t numberOfTextures, const uint8_t inputLayout, std::wstring name, RENDER_PASS renderPass, bool renderAsDepth)
+TextureRenderer* TextureRenderingHandler::CreateTextureRenderer(const std::wstring name, std::wstring vertexShader, std::wstring pixelShader, const uint16_t viewportWidth, const uint16_t viewportHeight, bool useDepth, D3D12_DEPTH_STENCIL_DESC depthDesc, DXGI_FORMAT depthFormat, std::vector<DXGI_FORMAT> formats, const uint8_t blendDesc, const uint8_t rastDesc, const uint8_t samplerDesc, D3D12_ROOT_SIGNATURE_FLAGS flags, const uint8_t numberOfBuffers, const uint8_t numberOfTextures, const uint8_t inputLayout, RENDER_PASS renderPass, bool renderAsDepth)
 {
 	TextureRenderer* renderer = m_renderList[renderPass].emplace_back(new TextureRenderer());
 	
 	renderer->InitializeRenderer(
+		name,
 		vertexShader,
 		pixelShader,
 		viewportWidth,
@@ -114,7 +117,6 @@ TextureRenderer* TextureRenderingHandler::CreateTextureRenderer(std::wstring ver
 		numberOfBuffers,
 		numberOfTextures,
 		inputLayout,
-		name,
 		m_psoHandler,
 		renderAsDepth
 	);

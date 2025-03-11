@@ -98,20 +98,6 @@ std::vector<UINT> TextureHandler::CreateMultipleTextures(std::string* textures, 
 	return newTextures; 
 }
 
-//std::array<UINT, 3> TextureHandler::CreateMultipleTextures(std::string paths[3])
-//{
-//	std::array<UINT, 3> newTextures;
-//
-//	for (UINT i = 0; i < 3; i++)
-//	{
-//		newTextures[i] = CreateTexture({paths[i].begin(), paths[i].end()});
-//	}
-//
-//	LoadAllCreatedTexuresToGPU();
-//
-//	return newTextures;
-//}
-
 Material TextureHandler::CreateMaterial(std::string textures[6], float metallic, float roughness, float emissive, float color[4])
 {
 	std::vector<UINT> IDs = CreateMultipleTextures(&textures[0], 6);
@@ -220,7 +206,7 @@ std::wstring TextureHandler::GetCorrectPathAndName(std::wstring path)
 CD3DX12_RESOURCE_BARRIER TextureHandler::LoadTextures(std::wstring file, ID3D12Resource** textureBuffer, bool isCubeMap)
 {
 	std::vector<D3D12_SUBRESOURCE_DATA> subresourcedata = {};
-	std::unique_ptr<UINT8[]> pointerData;
+	std::unique_ptr<uint8_t[]> pointerData;
 
 	HRESULT result = DirectX::LoadDDSTextureFromFile(
 		m_framework.GetDevice(),
@@ -233,12 +219,13 @@ CD3DX12_RESOURCE_BARRIER TextureHandler::LoadTextures(std::wstring file, ID3D12R
 		&isCubeMap);
 	CHECK_HR(result);
 
+
 	const UINT64 uploadBufferSize = GetRequiredIntermediateSize(*textureBuffer, 0,
 		static_cast<UINT>(subresourcedata.size()));
 
 	CD3DX12_HEAP_PROPERTIES uploadHeap(D3D12_HEAP_TYPE_UPLOAD);
-	CD3DX12_RESOURCE_DESC buffer = CD3DX12_RESOURCE_DESC::Buffer(uploadBufferSize);
-
+	CD3DX12_RESOURCE_DESC   buffer = CD3DX12_RESOURCE_DESC::Buffer(uploadBufferSize);
+	
 	ID3D12Resource* uploadBuffer;
 	result = m_framework.GetDevice()->CreateCommittedResource(
 		&uploadHeap,
@@ -309,6 +296,7 @@ CD3DX12_RESOURCE_BARRIER TextureHandler::LoadTextures(void* data, const UINT siz
 	textureData.pData	   = data;
 	textureData.RowPitch   = (sizeof(float) * 4)  * sizeOfData;
 	textureData.SlicePitch = textureData.RowPitch * sizeOfData;
+
 	UpdateSubresources(
 		m_framework.InitCmdList(),
 		*textureBuffer,

@@ -36,7 +36,6 @@ std::unique_ptr<LoaderModel> ModelLoaderCustom::LoadModelFromAssimp(std::string 
     m_importer.SetPropertyBool(AI_CONFIG_IMPORT_FBX_PRESERVE_PIVOTS, true);
     auto flags = 0
         | aiProcessPreset_TargetRealtime_MaxQuality
-        | aiProcess_ConvertToLeftHanded
         | aiProcess_GenBoundingBoxes
         | aiProcess_Triangulate
         | aiProcess_TransformUVCoords
@@ -138,6 +137,28 @@ std::unique_ptr<LoaderModel> ModelLoaderCustom::LoadModelFromAiNode(const aiScen
     return model;
 }
 
+const Vect4f ModelLoaderCustom::NormalizeImportedNormal(const aiVector3D& aiNormal)
+{
+    Vect4f output = { static_cast<float>(aiNormal.x), static_cast<float>(aiNormal.y), static_cast<float>(aiNormal.z), 1.0f };
+    
+    // Implement a control or macro for changing normal directions
+   
+    output.x = output.x >  1.0f ?  1.0f : output.x;
+    output.x = output.x < -1.0f ? -1.0f : output.x;
+    //output.x *= -1.0f;
+
+    output.y = output.y >  1.0f ?  1.0f : output.y;
+    output.y = output.y < -1.0f ? -1.0f : output.y;
+    
+    output.z = output.z >  1.0f ?  1.0f : output.z;
+    output.z = output.z < -1.0f ? -1.0f : output.z;
+    //output.z *= -1.0f;
+
+    output.Normalize();
+
+    return output;
+}
+
 void ModelLoaderCustom::FetchAllModelsInScene(const aiScene* scene, std::vector<std::unique_ptr<LoaderModel>>& models, std::vector<std::pair<std::string, Mat4f>>& transforms, bool uvFlipped)
 {
     aiNode* rootNode = scene->mRootNode;
@@ -183,8 +204,6 @@ void ModelLoaderCustom::GetAllModelProperties(LoaderModel* out, aiNode* currentN
         FetchMeshOfChild(scene, child, transform, out, uvFlipped);
     }
 }
-
-
 
 // *Loads all the useful vertex information that we need from aiMesh 
 void ModelLoaderCustom::LoadVerticies(std::vector<Vect3f>& v3Verts, aiMesh* mesh, LoaderMesh* loaderMesh, bool uvFlipped)
@@ -237,7 +256,9 @@ void ModelLoaderCustom::LoadVerticies(std::vector<Vect3f>& v3Verts, aiMesh* mesh
         }
 
         if (normals) {
-            verticies.PushVec4({ -1.f * mesh->mNormals[i].x, mesh->mNormals[i].y, -1.f * mesh->mNormals[i].z, 1.f });
+            Vect4f normal(-1.f * mesh->mNormals[i].x, mesh->mNormals[i].y, -1.f * mesh->mNormals[i].z, 1.f);
+            normal.Normalize();
+            verticies.PushVec4(normal);
         }
 
         if (binormTan) {
@@ -318,12 +339,13 @@ void ModelLoaderCustom::LoadVerticiesWithTransform(std::vector<Vect3f>& v3Verts,
             verticies.PushVec4({ vertex.x, vertex.y, vertex.z, 1.f });
         }
 
-        if (normals) 
-            verticies.PushVec4({ mesh->mNormals[i].x,    mesh->mNormals[i].y,     mesh->mNormals[i].z, 1.f });
+        if (normals) {
+            verticies.PushVec4(NormalizeImportedNormal(mesh->mNormals[i]));
+        }
                                                        
-        if (binormTan) {                             
-            verticies.PushVec4({ mesh->mTangents[i].x,   mesh->mTangents[i].y,   mesh->mTangents[i].z,   1.f });
-            verticies.PushVec4({ mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z, 1.f });
+        if (binormTan) {     
+            verticies.PushVec4(NormalizeImportedNormal(mesh->mTangents[i]));
+            verticies.PushVec4(NormalizeImportedNormal(mesh->mBitangents[i]));
         }
 
         if (color) {    

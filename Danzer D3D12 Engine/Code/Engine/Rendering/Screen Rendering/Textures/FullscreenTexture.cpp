@@ -6,7 +6,6 @@
 
 #include "Rendering/TextureHandler.h"
 #include "Rendering/Buffers/ConstantBufferData.h"
-#include "Rendering/PSOHandler.h"
 
 FullscreenTexture::~FullscreenTexture()
 {
@@ -14,7 +13,7 @@ FullscreenTexture::~FullscreenTexture()
 		m_resource[i]->Release();	
 }
 
-void FullscreenTexture::InitAsDepth(ID3D12Device* device, DescriptorHeapWrapper* cbvSrvHeap, DescriptorHeapWrapper* dsvHeap, const UINT width, const UINT height, DXGI_FORMAT textureDesc, DXGI_FORMAT srvFormat, D3D12_RESOURCE_FLAGS flag, std::wstring name)
+void FullscreenTexture::InitAsDepth(const std::wstring name, ID3D12Device* device, DescriptorHeapWrapper* cbvSrvHeap, DescriptorHeapWrapper* dsvHeap, const UINT width, const UINT height, DXGI_FORMAT textureDesc, DXGI_FORMAT srvFormat, D3D12_RESOURCE_FLAGS resourceFlag, const uint16_t mipLevels)
 {
 	CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle = cbvSrvHeap->GET_CPU_DESCRIPTOR(0);
 	srvHandle.Offset(cbvSrvHeap->m_handleCurrentOffset * cbvSrvHeap->DESCRIPTOR_SIZE());
@@ -28,6 +27,9 @@ void FullscreenTexture::InitAsDepth(ID3D12Device* device, DescriptorHeapWrapper*
 
 	cbvSrvHeap->m_handleCurrentOffset++;
 
+	uint16_t mip = mipLevels > TextureHandler::MaxMipLevels ? TextureHandler::MaxMipLevels : mipLevels;
+	mip = mipLevels <= 0 ? TextureHandler::MinMipLevels : mipLevels;
+
 	for (UINT i = 0; i < FrameCount; i++)
 	{
 		CD3DX12_RESOURCE_DESC desc(
@@ -35,18 +37,19 @@ void FullscreenTexture::InitAsDepth(ID3D12Device* device, DescriptorHeapWrapper*
 			0,
 			width,
 			height,
-			1,
+			mip,
 			1,
 			textureDesc,
 			1,
 			0,
 			D3D12_TEXTURE_LAYOUT_UNKNOWN,
-			flag
+			resourceFlag
 		);
 
+
 		D3D12_CLEAR_VALUE clearValue;
-		clearValue.DepthStencil.Depth   = 1.0f;	
-		clearValue.DepthStencil.Stencil = 0;	
+		clearValue.DepthStencil.Depth = 1.0f;
+		clearValue.DepthStencil.Stencil = 0;
 		clearValue.Format = DXGI_FORMAT_D32_FLOAT;
 
 		D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
@@ -65,14 +68,14 @@ void FullscreenTexture::InitAsDepth(ID3D12Device* device, DescriptorHeapWrapper*
 			IID_PPV_ARGS(&m_resource[i])
 		));
 
-	    D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
-	    dsvDesc.Format = DXGI_FORMAT_D32_FLOAT;
-	    dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
-	    dsvDesc.Texture2D.MipSlice = 0;
-	    
-	    device->CreateDepthStencilView(m_resource[i].Get(), &dsvDesc, dsvHandle);
-	    dsvHandle.Offset(dsvHeap->DESCRIPTOR_SIZE());
-	    dsvHeap->m_handleCurrentOffset++;
+		D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
+		dsvDesc.Format = DXGI_FORMAT_D32_FLOAT;
+		dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+		dsvDesc.Texture2D.MipSlice = 0;
+
+		device->CreateDepthStencilView(m_resource[i].Get(), &dsvDesc, dsvHandle);
+		dsvHandle.Offset(dsvHeap->DESCRIPTOR_SIZE());
+		dsvHeap->m_handleCurrentOffset++;
 
 		device->CreateShaderResourceView(m_resource[i].Get(), &srvDesc, srvHandle);
 		srvHandle.Offset(cbvSrvHeap->DESCRIPTOR_SIZE());
@@ -86,16 +89,19 @@ void FullscreenTexture::InitAsDepth(ID3D12Device* device, DescriptorHeapWrapper*
 	m_viewPort = CD3DX12_VIEWPORT(0.0f, 0.0f, FLOAT(width), FLOAT(height));
 }
 
-void FullscreenTexture::InitAsTexture(ID3D12Device* device, DescriptorHeapWrapper* cbvSrvHeap, DescriptorHeapWrapper* rtvHeap, const UINT width, const UINT height, DXGI_FORMAT textureDesc, DXGI_FORMAT srvFormat, D3D12_RESOURCE_FLAGS flag, std::wstring name)
+void FullscreenTexture::InitAsTexture(const std::wstring name, ID3D12Device* device, DescriptorHeapWrapper* cbvSrvHeap, DescriptorHeapWrapper* rtvHeap, const UINT width, const UINT height, DXGI_FORMAT textureDesc, DXGI_FORMAT srvFormat, D3D12_RESOURCE_FLAGS resourceFlag, const uint16_t mipLevels)
 {
 	CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle = cbvSrvHeap->GET_CPU_DESCRIPTOR(0);
 	srvHandle.Offset(cbvSrvHeap->m_handleCurrentOffset * cbvSrvHeap->DESCRIPTOR_SIZE());
-	
+
 	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle = rtvHeap->GET_CPU_DESCRIPTOR(0);
 	rtvHandle.Offset(rtvHeap->m_handleCurrentOffset * rtvHeap->DESCRIPTOR_SIZE());
-	
+
 	m_rtvOffsetID = rtvHeap->m_handleCurrentOffset;
 	m_srvOffsetID = cbvSrvHeap->m_handleCurrentOffset;
+
+	uint16_t mip = mipLevels > TextureHandler::MaxMipLevels ? TextureHandler::MaxMipLevels : mipLevels;
+	mip			 = mipLevels <= 0 ? TextureHandler::MinMipLevels : mipLevels;
 
 	for (UINT i = 0; i < FrameCount; i++)
 	{
@@ -104,13 +110,13 @@ void FullscreenTexture::InitAsTexture(ID3D12Device* device, DescriptorHeapWrappe
 			0,
 			width,
 			height,
-			1,
+			mip,
 			1,
 			textureDesc,
 			1,
 			0,
 			D3D12_TEXTURE_LAYOUT_UNKNOWN,
-			flag
+			resourceFlag
 		);
 
 		D3D12_CLEAR_VALUE clearValue;
@@ -120,7 +126,7 @@ void FullscreenTexture::InitAsTexture(ID3D12Device* device, DescriptorHeapWrappe
 		D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 		srvDesc.Format = srvFormat;
 		srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-		srvDesc.Texture2D.MipLevels = -1; 
+		srvDesc.Texture2D.MipLevels = -1;
 		srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 
 		CD3DX12_HEAP_PROPERTIES heapProperties(D3D12_HEAP_TYPE_DEFAULT);
@@ -144,7 +150,7 @@ void FullscreenTexture::InitAsTexture(ID3D12Device* device, DescriptorHeapWrappe
 		m_resource[i]->SetName(std::wstring(name + std::to_wstring(i)).c_str());
 	}
 
-	m_resourceName  = name;
+	m_resourceName = name;
 	m_resourceState = D3D12_RESOURCE_STATE_RENDER_TARGET;
 	m_viewPort = CD3DX12_VIEWPORT(0.0f, 0.0f, FLOAT(width), FLOAT(height));
 }
