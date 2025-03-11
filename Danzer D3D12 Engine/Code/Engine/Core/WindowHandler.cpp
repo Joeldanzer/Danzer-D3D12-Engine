@@ -91,7 +91,6 @@ WindowHandler::WindowHandler(WindowHandler::Data data)
 		s_data.m_x, s_data.m_y, s_data.m_w, s_data.m_h, nullptr, nullptr, nullptr, this);
 
 	ShowWindow(s_hwnd, SW_MAXIMIZE);
-
 }
 
 WindowHandler::~WindowHandler()

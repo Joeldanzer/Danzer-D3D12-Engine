@@ -26,55 +26,67 @@ void DebugWindow() {
 #pragma warning( pop )
 }
 
+class Launcher {
+public:
+	Launcher() {
+		MSG msg;
+		ZeroMemory(&msg, sizeof(MSG));
+
+		RECT desktop;
+		const HWND hDesktop = GetDesktopWindow();
+		GetWindowRect(hDesktop, &desktop);
+
+		WindowHandler::Data windowData;
+		windowData.m_w = desktop.right;
+		windowData.m_h = desktop.left;
+		
+		// Initialise engine through ::GetInstance
+		Engine::GetInstance();
+
+		Editor editor(Engine::GetInstance());
+		Game   game(Engine::GetInstance());
+
+		Engine::GetInstance().EndInitFrame();
+
+		while (true) {
+
+			Input::GetInstance().Update();
+
+			if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+
+				TranslateMessage(&msg);
+				DispatchMessage(&msg);
+
+				if (msg.message == WM_QUIT)
+					break;
+
+				Input::GetInstance().UpdateEvents(msg.message, msg.wParam, msg.lParam);
+			}
+
+			if (GetAsyncKeyState(VK_ESCAPE)) {
+				break;
+			}
+
+			Engine::GetInstance().BeginFrame();
+
+			game.Update(Engine::GetInstance().GetDeltaTime());
+			editor.Update(Engine::GetInstance().GetDeltaTime());
+
+			Engine::GetInstance().UpdateFrame();
+		}
+
+	}
+};
 
 int main(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ PWSTR lpCmdLine, _In_ int nShowCmd) 
 {
 	hInstance; hPrevInstance; lpCmdLine; nShowCmd;
 
-	MSG msg;
-	ZeroMemory(&msg, sizeof(MSG));
-
 #ifdef DEBUG
 	DebugWindow();
 #endif // _DEBUG
 
-	// Fetch default desktop Resolution
-	RECT desktop;
-	const HWND hDesktop = GetDesktopWindow();
-	GetWindowRect(hDesktop, &desktop);
-
-	Engine engine = Engine(desktop.right, desktop.bottom);	
-	Editor editor(engine);
-	Game game(engine);
-
-	engine.EndInitFrame();
-	
-	while (true) {
-
-		Input::GetInstance().Update();
-
-		if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
-
-			TranslateMessage(&msg);
-			DispatchMessage(&msg);
-			
-			if (msg.message == WM_QUIT)
-				break;
-
-			Input::GetInstance().UpdateEvents(msg.message, msg.wParam, msg.lParam);
-		}
-
-		if (GetAsyncKeyState(VK_ESCAPE)) {
-			break;
-		}
-
-		engine.BeginFrame();
-
-		game.Update(engine.GetDeltaTime());
-		editor.Update(engine.GetDeltaTime());
-
-		engine.UpdateFrame();
-	}
+	Launcher launcher;
 
 	return 0;
 }

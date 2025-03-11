@@ -1,0 +1,59 @@
+#include "stdafx.h"
+#include "Model.h"
+
+#ifdef EDITOR_DEBUG_VIEW
+#include "imgui/imgui.h"
+#include "Core/Engine.h"
+#include "Core/D3D12Framework.h"
+#include "Core/DesriptorHeapWrapper.h"
+#include "Rendering/Models/ModelHandler.h"
+#include "Rendering/TextureHandler.h"
+void DisplayModelTexture(const uint32_t texture, const std::string textureType) {
+	Engine& eng = Engine::GetInstance();
+	CD3DX12_GPU_DESCRIPTOR_HANDLE textureHandle(
+		eng.GetFramework().CbvSrvHeap().GET_GPU_DESCRIPTOR(
+			eng.GetTextureHandler().GetTextureData(texture).m_offsetID
+		)
+	);
+	ImGui::Image(ImTextureID(textureHandle.ptr), { 50.0f, 50.0f });
+	ImGui::SameLine();
+	ImGui::Text(textureType.c_str());
+}
+
+void Model::DisplayInEditor(const Entity entity)
+{
+	Model&     model	  = REGISTRY->Get<Model>(entity);
+	ModelData& modelData  = Engine::GetInstance().GetModelHandler().GetLoadedModelInformation(model.m_modelID);
+
+	Engine& eng = Engine::GetInstance();
+
+	const int32_t meshCount = modelData.GetMeshes().size() - 1;
+
+	static int32_t selectedMesh = 0;
+	
+	ImGui::DragInt("Selected Mesh", &selectedMesh, 1.0f, 0, meshCount);
+	selectedMesh = selectedMesh >= meshCount ? meshCount : selectedMesh;
+	selectedMesh = selectedMesh < 0 ? 0 : selectedMesh;
+	
+	ModelData::Mesh& mesh = modelData.GetSingleMesh(selectedMesh);
+
+	bool renderOnlyMesh = false;
+	ImGui::Checkbox("Render Only Selected Mesh", &renderOnlyMesh);
+	
+	for (uint32_t i = 0; i < meshCount + 1; i++)
+	{
+		if (i != selectedMesh)
+			modelData.GetSingleMesh(i).m_renderMesh = !renderOnlyMesh;
+	}
+	
+	Material& material = mesh.m_material;
+
+	DisplayModelTexture(material.m_albedo,		 "Albedo");
+	DisplayModelTexture(material.m_normal,		 "Normal");
+	DisplayModelTexture(material.m_metallicMap,  "Metallic Map");
+	DisplayModelTexture(material.m_roughnessMap, "Roughness Map");
+	DisplayModelTexture(material.m_aoMap,		 "AO Map");
+}
+#else
+void Model::DisplayInEditor(const Entity entity){}
+#endif

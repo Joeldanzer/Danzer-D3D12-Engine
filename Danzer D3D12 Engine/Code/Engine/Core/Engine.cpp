@@ -23,10 +23,11 @@
 #include "imgui/backends/imgui_impl_dx12.h"
 #include "imgui/backends/imgui_impl_win32.h"
 
+Engine* Engine::s_engineSingleton = nullptr;
 
 class Engine::Impl {
 public:
-	Impl(unsigned int width, unsigned int height);
+	Impl(const uint16_t width, const uint16_t height);
 	~Impl();
 
 	void UpdateFrame();
@@ -68,7 +69,7 @@ private:
 	float m_deltaTime;
 };
 
-Engine::Impl::Impl(unsigned int width, unsigned int height) :
+Engine::Impl::Impl(const uint16_t width, const uint16_t height) :
 	m_windowHandler({ 0, 0, width, height }), 
 	m_framework(),
 	m_textureHandler(m_framework),

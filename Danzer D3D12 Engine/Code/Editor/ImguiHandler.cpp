@@ -92,45 +92,10 @@ void ImguiHandler::Update(const float dt)
 				ent = entity;
 
 			DirectionalLight& light     = REGISTRY->Get<DirectionalLight>(ent);
-			Transform&        transform = REGISTRY->Get<Transform>(ent);
-
-			float lightColor[3] = {light.m_lightColor.x, light.m_lightColor.y, light.m_lightColor.z};
-			ImGui::ColorPicker3("Light Color", &lightColor[0]);
-
-			float lightStrength = light.m_lightColor.w;
-			ImGui::DragFloat("Light Strength", &lightStrength, 0.01f, 0.0f, 10.0f);
-
-			float ambientColor[3] = {light.m_ambientColor.x, light.m_ambientColor.y, light.m_ambientColor.z};
-			ImGui::ColorPicker3("Ambient Color", &ambientColor[0]);
-
-			float ambientStrength = light.m_ambientColor.w;
-			ImGui::DragFloat("Ambient Strength", &ambientStrength, 0.01f, 10.0f);
-
-			light.m_lightColor   = { lightColor[0],   lightColor[1],   lightColor[2],   lightStrength   };
-			light.m_ambientColor = { ambientColor[0], ambientColor[1], ambientColor[2], ambientStrength };
-
-			float rotation[3] = { m_dirLightRot.x, m_dirLightRot.y, m_dirLightRot.z };
-			if (ImGui::DragFloat3("Light Direction", &rotation[0], 0.1f, -0.001f, 360.001f)) {
-				rotation[0] = rotation[0] > 360.0f ? 0.0f : rotation[0] < 0.0f ? 360.0f : rotation[0];
-				rotation[1] = rotation[1] > 360.0f ? 0.0f : rotation[1] < 0.0f ? 360.0f : rotation[1];
-				rotation[2] = rotation[2] > 360.0f ? 0.0f : rotation[2] < 0.0f ? 360.0f : rotation[2];
-
-				m_dirLightRot   = { rotation[0], rotation[1], rotation[2] };
-				Vect3f deltaRot = m_dirLightRot - m_dirLightLastRot; 
-				
-				Quat4f ddeltaQuat    = DirectX::XMQuaternionRotationRollPitchYaw(ToRadians(deltaRot.x), ToRadians(deltaRot.y), ToRadians(deltaRot.z));
-				transform.m_rotation = DirectX::XMQuaternionMultiply(transform.m_rotation, ddeltaQuat);
-				
-				m_dirLightLastRot    = m_dirLightRot;
-			}
+			light.DisplayInEditor(ent);
 			
-			float lightPosition[3] = { transform.m_position.x, transform.m_position.y, transform.m_position.z };
-			ImGui::DragFloat3("Light Position", &lightPosition[0], 0.1f);
-			transform.m_position = { lightPosition[0], lightPosition[1], lightPosition[2] };
-
 			//ImGui::Text("Volumetric Lighting");
 			//VolumetricLight& vl = renderManager.GetVolumetricLight();
-			
 			//int steps = vl.GetVolumetricData().m_numberOfSteps;
 			//ImGui::DragInt("Number Of Steps", &steps, 5.0f, 10, 1000);
 			//
@@ -144,78 +109,6 @@ void ImguiHandler::Update(const float dt)
 
 			ImGui::EndMenu();
 		}
-
-
-		//if (ImGui::BeginMenu("File")) {
-		//	if (ImGui::MenuItem("Load Scene", "CTRL+O")) {
-		//		std::wstring scene = m_fileExplorer.OpenFileExplorer(FILE_EXPLORER_GET, m_fileExtensions["Scenes"]);
-		//		if (!scene.empty()) {
-		//
-		//			// This section is not my proudest programming moment...
-		//			// Definetly Gonna rewrite this whole section when I have remade
-		//			// Scenes and how they function.
-		//
-		//			bool loadScene = false;
-		//
-		//			std::string sceneInString = { scene.begin(), scene.end() };
-		//			if (sceneInString != m_engine.GetSceneManager().GetCurrentScene().SceneName()) {
-		//				loadScene = true;
-		//			}
-		//			else {
-		//				if (ImGui::BeginPopupContextWindow()) {
-		//					ImGui::Text("Want to save scene before loading the same/a new one?");
-		//
-		//					if (ImGui::Button("Save")) {
-		//						SaveScene(reg);
-		//						loadScene = true;
-		//					}
-		//					ImGui::SameLine();
-		//					if(ImGui::Button("Load"))
-		//						loadScene = true;
-		//
-		//					ImGui::SameLine();
-		//					if (ImGui::Button("Close")){}
-		//					
-		//					ImGui::EndPopup();
-		//				}
-		//			}
-		//
-		//			if (loadScene) {
-		//				// This is very complicated for no reason atm, something i really want to fix 
-		//				// once i get a good idea how to handle scenes between edtior and game
-		//				entt::entity camEntt = m_engine.GetSceneManager().GetCurrentScene().GetMainCamera();
-		//				Camera& camera = reg.get<Camera>(camEntt);
-		//				Transform& transform = reg.get<Transform>(camEntt);
-		//				Object& obj = reg.get<Object>(camEntt);
-		//
-		//				Scene& newScene = m_engine.GetSceneManager().CreateEmptyScene(sceneInString);
-		//				if (!newScene.Reg::Instance()().empty())
-		//					newScene.Reg::Instance()().clear();
-		//
-		//				entt::Reg::Instance()& newReg = newScene.Reg::Instance()();
-		//				entt::entity newCam = newReg.create();
-		//				newReg.emplace<Camera>(newCam, camera);
-		//				newReg.emplace<Transform>(newCam, transform);
-		//				newReg.emplace<Object>(newCam, obj);
-		//
-		//				m_engine.GetSceneManager().SetScene(sceneInString, newCam);
-		//				m_sceneLoader.LoadScene(sceneInString, newReg);
-		//
-		//				m_itemsHasBeenSelected = false;
-		//			}
-		//		}
-		//	}
-		//
-		//	if (ImGui::MenuItem("Save Scene", "CTRL+S")) {
-		//		SaveScene(reg);
-		//	}
-		//	
-		//	if (ImGui::MenuItem("Save Scene as", "F12")) {
-		//		SaveSceneAs(reg);
-		//	}
-		//
-		//	ImGui::EndMenu();
-		//}
 	}
 	ImGui::EndMainMenuBar();	
 #endif

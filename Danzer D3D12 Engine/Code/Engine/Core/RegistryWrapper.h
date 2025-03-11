@@ -2,7 +2,7 @@
 #include "entt/entt.hpp"
 
 #define COMPONENT_NAME(ComponentName) \
-    std::string(#ComponentName)
+    const std::string(#ComponentName)
 
 struct GameEntity;
 

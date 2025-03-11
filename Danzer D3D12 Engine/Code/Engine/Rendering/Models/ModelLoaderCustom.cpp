@@ -38,6 +38,7 @@ std::unique_ptr<LoaderModel> ModelLoaderCustom::LoadModelFromAssimp(std::string 
         | aiProcessPreset_TargetRealtime_MaxQuality
         | aiProcess_GenBoundingBoxes
         | aiProcess_Triangulate
+        | aiProcess_FlipUVs
         | aiProcess_TransformUVCoords
         | aiProcess_CalcTangentSpace
         | aiProcess_GlobalScale

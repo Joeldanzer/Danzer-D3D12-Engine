@@ -1,4 +1,5 @@
 #pragma once
+#include "WindowHandler.h"
 
 class ModelHandler;
 class SpriteHandler;
@@ -16,10 +17,6 @@ class SoundEngine;
 class TextureRenderingHandler;
 class BufferHandler;
 
-/*
-* Want to turn Engine into a static class so it can be accessed anywhere without needing to send it through
-* function calls.
-*/
 class Engine
 {
 public:
@@ -27,10 +24,14 @@ public:
 	explicit Engine(unsigned int width, unsigned int height);
 	~Engine();
 
-	void BeginFrame();
-	void UpdateFrame();
+	static Engine& GetInstance() {
+		if (s_engineSingleton == nullptr)
+			s_engineSingleton = new Engine(WindowHandler::WindowData().m_w, WindowHandler::WindowData().m_h);
+		
+		return *s_engineSingleton;
+	}
 
-	void EndInitFrame();
+	// These should not be accesible
 
 	const float				 GetFPS()					  const noexcept;
 	const float				 GetDeltaTime()				  const noexcept;
@@ -49,6 +50,13 @@ public:
 	
 
 private:
+	static Engine* s_engineSingleton;
+	
+	void EndInitFrame();
+	void BeginFrame();
+	void UpdateFrame();
+
+	friend class Launcher;
 	friend class Impl;
 	class Impl;
 	Impl* m_Impl;
