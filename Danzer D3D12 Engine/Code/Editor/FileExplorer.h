@@ -10,20 +10,14 @@ enum FILE_EXPLORER {
 	FILE_EXPLORER_SAVE
 };
 
+#define INVALID_FILE_FECTHED L"Error: Invalid File!"
+
 class FileExplorer
 {
 public:
-	FileExplorer();
-	~FileExplorer();
-
-	struct FileType {
-		std::wstring m_fileType;
-		std::wstring m_folder;
-	};
-
-	std::wstring OpenFileExplorer(FILE_EXPLORER state, FileType fileType);
+	static const std::wstring FetchFileFromExplorer(const std::wstring fileLocation, const std::wstring fileType);
 
 private:
-	std::wstring GetCorrectPath(WCHAR* filePath, FileType& fileType);
+	static const std::wstring GetCorrectPath(WCHAR* filePath, const std::wstring fileLocation, const std::wstring fileType);
 };
 

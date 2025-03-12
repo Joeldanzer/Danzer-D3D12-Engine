@@ -8,14 +8,21 @@
 #include "Core/DesriptorHeapWrapper.h"
 #include "Rendering/Models/ModelHandler.h"
 #include "Rendering/TextureHandler.h"
-void DisplayModelTexture(const uint32_t texture, const std::string textureType) {
+#include "FileExplorer.h"
+void DisplayModelTexture(uint32_t& texture, const std::string textureType) {
 	Engine& eng = Engine::GetInstance();
 	CD3DX12_GPU_DESCRIPTOR_HANDLE textureHandle(
 		eng.GetFramework().CbvSrvHeap().GET_GPU_DESCRIPTOR(
 			eng.GetTextureHandler().GetTextureData(texture).m_offsetID
 		)
 	);
-	ImGui::Image(ImTextureID(textureHandle.ptr), { 50.0f, 50.0f });
+
+	if (ImGui::ImageButton(textureType.c_str(), ImTextureID(textureHandle.ptr), { 100.0f, 100.0f })) {
+		const std::wstring texturePath = FileExplorer::FetchFileFromExplorer(L"Sprites\\", L".dds");
+		if (texturePath != INVALID_FILE_FECTHED && texturePath != L"") {
+			texture = eng.GetTextureHandler().GetTexture(texturePath);
+		}
+	}
 	ImGui::SameLine();
 	ImGui::Text(textureType.c_str());
 }
@@ -26,9 +33,17 @@ void Model::DisplayInEditor(const Entity entity)
 	ModelData& modelData  = Engine::GetInstance().GetModelHandler().GetLoadedModelInformation(model.m_modelID);
 
 	Engine& eng = Engine::GetInstance();
+	
+	ImGui::Text(std::string(modelData.GetModelPath().begin(), modelData.GetModelPath().end()).c_str());
+	if (ImGui::Button("Select New Model")) {
+		const std::wstring modelPath = FileExplorer::FetchFileFromExplorer(L"Models\\", L".fbx");
+		if (modelPath != INVALID_FILE_FECTHED && modelPath != L"") {
+			model = eng.GetModelHandler().LoadModel(modelPath); // Jump out of this function so we dont get problems with ModelData
+			return;
+		}
+	}
 
-	const int32_t meshCount = modelData.GetMeshes().size() - 1;
-
+	const int32_t  meshCount = modelData.GetMeshes().size() - 1;
 	static int32_t selectedMesh = 0;
 	
 	ImGui::DragInt("Selected Mesh", &selectedMesh, 1.0f, 0, meshCount);

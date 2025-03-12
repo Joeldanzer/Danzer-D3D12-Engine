@@ -23,7 +23,7 @@ public:
 		bool transparent
 	);
 	
-	//ModelEffect GetModelEffect(std::wstring shaderName);
+	//ModelEffect GetModelEffect(std::wstring shaderName);W
 	ModelEffectData& GetModelEffectData(UINT effectID) {
 		return m_modelEffects[effectID - 1];
 	}

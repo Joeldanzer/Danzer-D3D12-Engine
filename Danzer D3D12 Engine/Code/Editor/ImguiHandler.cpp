@@ -37,14 +37,14 @@ ImguiHandler::ImguiHandler(Engine& engine) :
 	m_tag(nullptr),
 	m_sceneLoader(engine)
 {
-	FileExplorer::FileType textures = { L".dds", L"Sprites\\" };
-	m_fileExtensions.emplace("Texture", textures);
-
-	FileExplorer::FileType models = { L".fbx", L"Models\\" };
-	m_fileExtensions.emplace("Model", models); 	
-
-	FileExplorer::FileType  scenes = { L".json", L"Scenes\\" };
-	m_fileExtensions.emplace("Scenes", scenes);
+	//FileExplorer::FileType textures = { L".dds", L"Sprites\\" };
+	//m_fileExtensions.emplace("Texture", textures);
+	//
+	//FileExplorer::FileType models = { L".fbx", L"Models\\" };
+	//m_fileExtensions.emplace("Model", models); 	
+	//
+	//FileExplorer::FileType  scenes = { L".json", L"Scenes\\" };
+	//m_fileExtensions.emplace("Scenes", scenes);
 
 	m_componentList = {
 		"Model",
@@ -479,18 +479,3 @@ void ImguiHandler::SaveSceneAs()
 	//}
 	//
 
-
-std::wstring ImguiHandler::SelectTexture(UINT& texture)
-{
-	std::wstring newAlbedo = m_fileExplorer.OpenFileExplorer(FILE_EXPLORER_GET, m_fileExtensions["Texture"]);
-	if (!newAlbedo.empty()) {
-		texture = m_engine.GetTextureHandler().GetTexture(newAlbedo);
-		if (texture == 0) {
-			texture = m_engine.GetTextureHandler().CreateTexture(newAlbedo);
-		}
-
-		return newAlbedo;
-	}
-	else
-		return m_engine.GetTextureHandler().GetTextureData(texture).m_texturePath;
-}

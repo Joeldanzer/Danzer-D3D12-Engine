@@ -89,6 +89,9 @@
     <ClCompile Include="Components\Light\PointLight.cpp" />
     <ClCompile Include="Components\Light\Spotlight.cpp" />
     <ClCompile Include="Components\Model.cpp" />
+    <ClCompile Include="Physics\Assignment\SimplePhysics.cpp" />
+    <ClCompile Include="Physics\Assignment\Components\BoxCollider.cpp" />
+    <ClCompile Include="Physics\Assignment\Components\SphereCollider.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Core\WindowHandler.h">
@@ -201,6 +204,9 @@
     <ClInclude Include="Rendering\Screen Rendering\LightRenderer.h" />
     <ClInclude Include="Components\ComponentRegister.h" />
     <ClInclude Include="Core\RegistryWrapper.h" />
+    <ClInclude Include="Physics\Assignment\SimplePhysics.h" />
+    <ClInclude Include="Physics\Assignment\Components\BoxCollider.h" />
+    <ClInclude Include="Physics\Assignment\Components\SphereCollider.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

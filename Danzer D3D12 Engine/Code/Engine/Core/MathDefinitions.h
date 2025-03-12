@@ -79,3 +79,12 @@ inline const Vect3f PlaneIntersecting(const Planef& p1, const Planef& p2, const 
 
 	return intersection;
 }
+
+inline const Mat4f Matrix4Abs(const Mat4f& mat) {
+	Mat4f absMat = Mat4f::Identity;
+	for (uint32_t y = 0; y < 4; y++)
+		for (uint32_t x = 0; x < 4; x++)
+			absMat.m[y][x] = std::fabs(mat.m[y][x]);
+		
+	return absMat;
+}

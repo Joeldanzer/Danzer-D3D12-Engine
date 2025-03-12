@@ -64,24 +64,6 @@ namespace COMPONENT_REGISTRY {
         }
     };
 
-    //#define REGISTER_COMPONENT(TYPE)                                                                                 \                                                                    \
-//        template<class B, class T>                                                                               \
-//        class ComponentRegistration;                                                                             \
-//                                                                                                                 \
-//        template<>                                                                                               \
-//        class ComponentRegistration<BaseComponent, TYPE>                                                         \
-//        {                                                                                                        \
-//        public:                                                                                                  \
-//            explicit ComponentRegistration(const char* name){                                                    \
-//                ComponentFactory<BaseComponent>::GetInstance().RegisterComponentStruct<TYPE>(std::string(name)); \
-//            }                                                                                                    \
-//        };                                                                                                       \
-//        ComponentRegistration<BaseComponent, TYPE> registerComponent(typeid(TYPE).name());                       \                                                                              \
-//                                                                                                                 
-//       // const ::component::detail::RegistryEntry<TYPE>&                       \
-//       //     ComponentRegistration<TYPE>::reg =                                \
-//       //         ::component::detail::RegistryEntry<TYPE>::Instance(NAME);     \
-    
     template<class T>                              
     class ComponentAdder {                                
     public:

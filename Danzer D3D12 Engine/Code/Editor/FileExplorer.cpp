@@ -4,71 +4,44 @@
 
 #include <tchar.h>
 
-FileExplorer::FileExplorer(){}
-FileExplorer::~FileExplorer(){}
-
-std::wstring FileExplorer::OpenFileExplorer(FILE_EXPLORER state, FileType file)
+const std::wstring FileExplorer::FetchFileFromExplorer(const std::wstring fileLocation, const std::wstring fileType)
 {
 	WCHAR fileName[MAX_PATH];
 	OPENFILENAME ofn;
-	ZeroMemory(&ofn, sizeof(ofn));
+	ZeroMemory(&ofn,      sizeof(ofn));
 	ZeroMemory(&fileName, sizeof(fileName));
-	ofn.lStructSize = sizeof(ofn);
-	ofn.hwndOwner = NULL;
-
-	if (file.m_fileType == L".fbx")
-		ofn.lpstrFilter = _T(".fbx");
-
-	else if (file.m_fileType == L".dds")
-		ofn.lpstrFilter = _T(".dds");
-
-	else if (file.m_fileType == L".json")
-		ofn.lpstrFilter = _T(".json");
-	else
-		ofn.lpstrFilter = _T("");
-
-	ofn.lpstrFile = fileName;
-	ofn.lpstrInitialDir = LPCWSTR(file.m_folder.c_str());
-	ofn.nMaxFile = MAX_PATH;
-	ofn.lpstrTitle = _T("Select File");
 	
-	switch (state)
-	{
-	case FILE_EXPLORER_GET:
-		ofn.Flags = OFN_DONTADDTORECENT | OFN_NOCHANGEDIR | OFN_FILEMUSTEXIST;
-		if (GetOpenFileName(&ofn)) {
-			return GetCorrectPath(fileName, file);
-		}
-		break;
-	case FILE_EXPLORER_SAVE:
-		ofn.Flags = OFN_DONTADDTORECENT | OFN_NOCHANGEDIR;
-		if (GetSaveFileName(&ofn)) {
-			return GetCorrectPath(fileName, file);
-		}
-		break;
-	default:
-		break;
+	ofn.lStructSize     = sizeof(ofn);
+	ofn.hwndOwner       = NULL;
+	ofn.lpstrFilter		= fileType.c_str();
+	ofn.lpstrFile		= fileName;
+	ofn.lpstrInitialDir = LPCWSTR(fileLocation.c_str());
+	ofn.nMaxFile		= MAX_PATH;
+	ofn.lpstrTitle		= _T("Select File");
+	ofn.Flags			= OFN_DONTADDTORECENT | OFN_NOCHANGEDIR | OFN_FILEMUSTEXIST;
+	
+	if (GetOpenFileName(&ofn)) {
+		return GetCorrectPath(&fileName[0], fileLocation, fileType);
 	}
 
-	return L"";
+	return INVALID_FILE_FECTHED;
 }
 
-std::wstring FileExplorer::GetCorrectPath(WCHAR* filePath, FileType& fileType)
+const std::wstring FileExplorer::GetCorrectPath(WCHAR* filePath, const std::wstring fileLocation, const std::wstring fileType)
 {
-	std::wstring texture(filePath);
-	if (!texture.empty() || texture.find_last_of(fileType.m_fileType) != std::wstring::npos) {
-		size_t pos = texture.find(fileType.m_folder);
-		texture = texture.erase(0, pos);
+	std::wstring newPath(filePath);
+	if (!newPath.empty() && newPath.find(fileType) != std::wstring::npos) {
+		size_t pos = newPath.find(fileLocation);
+		newPath = newPath.erase(0, pos);
+		pos = newPath.find(L"\\");
+		newPath.replace(pos, 1, L"/");
 
-		pos = texture.find(L"\\");
-		texture.replace(pos, 1, L"/");
-
-		if (texture.find(fileType.m_fileType) == std::string::npos) {
-			texture += fileType.m_fileType;
+		if (newPath.find(fileType) == std::string::npos) {
+			newPath += fileType;
 		}
 
-		return texture;
+		return newPath;
 	}
 
-	return L"";
+	return INVALID_FILE_FECTHED;
 }

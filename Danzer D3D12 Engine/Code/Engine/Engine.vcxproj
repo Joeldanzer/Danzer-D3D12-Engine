@@ -184,6 +184,8 @@
     <ClInclude Include="Components\ComponentRegister.h" />
     <ClInclude Include="Components\Light\Spotlight.h" />
     <ClInclude Include="Core\RegistryWrapper.h" />
+    <ClInclude Include="Physics\Assignment\Components\BoxCollider.h" />
+    <ClInclude Include="Physics\Assignment\Components\SphereCollider.h" />
     <ClInclude Include="Rendering\Screen Rendering\LightRenderer.h" />
     <ClInclude Include="Rendering\Data\DebugRenderingData.h" />
     <ClInclude Include="Rendering\Screen Rendering\DebugTextureRenderer.h" />
@@ -258,6 +260,7 @@
     <ClInclude Include="SceneManager.h" />
     <ClInclude Include="Rendering\Screen Rendering\ScreenTexture.h" />
     <ClInclude Include="Rendering\Buffers\SSAOBuffer.h" />
+    <ClInclude Include="Physics\Assignment\SimplePhysics.h" />
     <ClInclude Include="Sound\SoundEngine.h" />
     <ClInclude Include="Sound\SoundHeader.h" />
     <ClInclude Include="Rendering\Data\SSAOData.h" />
@@ -279,6 +282,8 @@
     <ClCompile Include="Components\Transform.cpp" />
     <ClCompile Include="Core\RegistryWrapper.cpp" />
     <ClCompile Include="Components\GameEntity.cpp" />
+    <ClCompile Include="Physics\Assignment\Components\BoxCollider.cpp" />
+    <ClCompile Include="Physics\Assignment\Components\SphereCollider.cpp" />
     <ClCompile Include="Rendering\Screen Rendering\LightRenderer.cpp" />
     <ClCompile Include="Rendering\Data\DebugRenderingData.cpp" />
     <ClCompile Include="Rendering\Screen Rendering\DebugTextureRenderer.cpp" />
@@ -326,6 +331,7 @@
     <ClCompile Include="SceneManager.cpp" />
     <ClCompile Include="Rendering\Screen Rendering\ScreenTexture.cpp" />
     <ClCompile Include="Rendering\Buffers\SSAOBuffer.cpp" />
+    <ClCompile Include="Physics\Assignment\SimplePhysics.cpp" />
     <ClCompile Include="Sound\SoundEngine.cpp" />
     <ClCompile Include="Rendering\Data\SSAOData.cpp" />
     <ClCompile Include="stdafx.cpp">

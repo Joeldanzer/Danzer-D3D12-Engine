@@ -67,10 +67,7 @@ private:
 	void SaveScene();
 	void SaveSceneAs();
 
-	std::wstring SelectTexture(UINT& texture);
-
 	std::array<std::string, 3> m_stateNames = { "ACTIVE", "NOT_ACTIVE", "DESTROY" };
-	std::unordered_map<std::string, FileExplorer::FileType> m_fileExtensions;
 
 	std::vector<std::string> m_componentList;
 
