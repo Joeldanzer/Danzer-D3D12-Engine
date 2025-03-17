@@ -85,7 +85,7 @@ D3D12Framework::D3D12Framework() :
 		m_cbvSrvHeap.CreateDescriptorHeap(m_device.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, MAX_NUMBER_OF_DESCTRIPTORS, true);
 	}
 
-	CHECK_HR(m_device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&m_commandAllocator)));
+	//CHECK_HR(m_device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&m_commandAllocator)));
 	
 	InitImgui();
 	LoadAssets();
@@ -100,9 +100,9 @@ D3D12Framework::~D3D12Framework()
 	m_swapChain.~ComPtr();
 	m_device.~ComPtr();
 	
-	m_commandAllocator.~ComPtr();
+	//m_commandAllocator.~ComPtr();
 	m_commandQueue.~ComPtr();
-	m_initCmdList.~ComPtr();
+	//m_initCmdList.~ComPtr();
 
 	m_depthStencil.~ComPtr();
 	m_fence.~ComPtr();
@@ -121,6 +121,27 @@ D3D12Framework::~D3D12Framework()
 	delete m_imguiDesc;
 }
 
+void D3D12Framework::UploadResourcesToGPU(FrameResource* frameResource)
+{
+	frameResource->CmdList()->Close();
+	ID3D12CommandList* cmdList[] = { frameResource->CmdList() };
+	m_commandQueue->ExecuteCommandLists(1, cmdList);
+
+	CHECK_HR(m_device->CreateFence(m_fenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence)));
+	m_fenceValue++;
+
+	m_fenceEvent = CreateEvent(nullptr, false, false, nullptr);
+
+	const UINT64 fenceToWaitFor = m_fenceValue;
+	CHECK_HR(m_commandQueue->Signal(m_fence.Get(), fenceToWaitFor));
+	m_fenceValue++;
+
+	CHECK_HR(m_fence->SetEventOnCompletion(fenceToWaitFor, m_fenceEvent));
+
+#pragma warning( suppress: 6387) 
+	WaitForSingleObject(m_fenceEvent, INFINITE);
+}
+
 void D3D12Framework::InitiateCommandList(ID3D12PipelineState* pso, std::wstring message)
 {
 	OutputDebugString(message.c_str());
@@ -131,13 +152,12 @@ void D3D12Framework::ExecuteCommandList()
 {
 	OutputDebugString(L"Executed Command List \n");
 
-	CHECK_HR(m_frameResources[m_frameIndex]->CmdList()->Close());
+	m_frameResources[m_frameIndex]->Close();
 
 	ID3D12CommandList* commandLists[] = { m_frameResources[m_frameIndex]->CmdList() };
 	m_commandQueue->ExecuteCommandLists(_countof(commandLists), commandLists);
 
 	CHECK_HR(m_commandQueue->Signal(m_fence.Get(), m_fenceValue));
-
 }
 
 void D3D12Framework::WaitForGPU()
@@ -215,25 +235,25 @@ void D3D12Framework::TransitionAllResources()
 
 void D3D12Framework::EndInitFrame()
 {
-	CHECK_HR(m_initCmdList->Close());
-	ID3D12CommandList* cmdList[] = { m_initCmdList.Get() };
-	m_commandQueue->ExecuteCommandLists(1, cmdList);
-
-	CHECK_HR(m_device->CreateFence(m_fenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence)));
-	m_fenceValue++;
-
-	m_fenceEvent = CreateEvent(nullptr, false, false, nullptr);
-
-	const UINT64 fenceToWaitFor = m_fenceValue;
-	CHECK_HR(m_commandQueue->Signal(m_fence.Get(), fenceToWaitFor));
-	m_fenceValue++;
-
-	CHECK_HR(m_fence->SetEventOnCompletion(fenceToWaitFor, m_fenceEvent));
-
-#pragma warning( suppress: 6387) 
-	WaitForSingleObject(m_fenceEvent, INFINITE);
-
-	m_initFrame = false;
+ //	CHECK_HR(m_initCmdList->Close());
+ //	ID3D12CommandList* cmdList[] = { m_initCmdList.Get() };
+ //	m_commandQueue->ExecuteCommandLists(1, cmdList);
+ //
+ //	CHECK_HR(m_device->CreateFence(m_fenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence)));
+ //	m_fenceValue++;
+ //
+ //	m_fenceEvent = CreateEvent(nullptr, false, false, nullptr);
+ //
+ //	const UINT64 fenceToWaitFor = m_fenceValue;
+ //	CHECK_HR(m_commandQueue->Signal(m_fence.Get(), fenceToWaitFor));
+ //	m_fenceValue++;
+ //
+ //	CHECK_HR(m_fence->SetEventOnCompletion(fenceToWaitFor, m_fenceEvent));
+ //
+ //#pragma warning( suppress: 6387) 
+ //	WaitForSingleObject(m_fenceEvent, INFINITE);
+ //
+ //	m_initFrame = false;
 }
 
 //* Render the last texture rendered to back buffer.
@@ -294,8 +314,10 @@ void D3D12Framework::SetBackBufferPSO(PSOHandler& psoHandler)
 
 void D3D12Framework::LoadAssets()
 {
+	m_resourceUploader = new FrameResource(m_device.Get(), 0, L"Resource Upload CmdList", D3D12_COMMAND_LIST_TYPE_COPY, false);
+
 	// Temporary Command List
-	CHECK_HR(m_device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_commandAllocator.Get(), nullptr, IID_PPV_ARGS(&m_initCmdList)));
+	//CHECK_HR(m_device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_commandAllocator.Get(), nullptr, IID_PPV_ARGS(&m_initCmdList)));
 
 	// Create RTV's
 	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap.GET_CPU_DESCRIPTOR(0));
@@ -307,10 +329,6 @@ void D3D12Framework::LoadAssets()
 		rtvHandle.Offset(1, m_rtvHeap.DESCRIPTOR_SIZE());
 		m_rtvHeap.m_handleCurrentOffset++;
 	}
-
-#if EDITOR_DEBUG_VIEW // Create Imgui RenderTargets
-
-#endif
 
 	// Create Depth Stencil
 	{
@@ -351,7 +369,7 @@ void D3D12Framework::LoadAssets()
 
 	// Frame Resource Creation
 	for (UINT i = 0; i < FrameCount; i++)		
-		m_frameResources[i] = new FrameResource(m_device.Get(), i);
+		m_frameResources[i] = new FrameResource(m_device.Get(), i, L"Render CmdList", D3D12_COMMAND_LIST_TYPE_DIRECT);
 }
 
 void D3D12Framework::InitImgui()

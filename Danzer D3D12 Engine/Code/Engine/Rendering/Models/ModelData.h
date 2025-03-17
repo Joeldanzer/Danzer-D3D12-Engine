@@ -2,7 +2,6 @@
 #include "../VertexAndTextures.h"
 #include "Rendering/Buffers/VertexBuffer.h"
 #include "Rendering/Buffers/MaterialBuffer.h"
-
 #include "Rendering/FrustrumCulling.h"
 
 #include "Material.h"

@@ -5,14 +5,21 @@
 
 #include <string>
 
-FrameResource::FrameResource(ID3D12Device* device, const UINT index) :
+FrameResource::FrameResource(ID3D12Device* device, const uint32_t index, std::wstring cmdListName, const D3D12_COMMAND_LIST_TYPE type, const bool close) :
 	m_cmdIndex(index)
 {
-	device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&m_cmdAllocator));
-	device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_cmdAllocator.Get(), nullptr, IID_PPV_ARGS(&m_cmdList));
-	m_cmdList->Close(); // Close CommandList, Don't want to record into it now
+	device->CreateCommandAllocator(type, IID_PPV_ARGS(&m_cmdAllocator));
+	device->CreateCommandList(0, type, m_cmdAllocator.Get(), nullptr, IID_PPV_ARGS(&m_cmdList));
+	
+	if (close) {
+		m_cmdListIsOpen = false;
+		m_cmdList->Close(); // Close CommandList, Don't want to record into it now
+	}else
+		m_cmdListIsOpen = true;
 
-	m_cmdList->SetName(std::wstring(L"CmdList " + std::to_wstring(index)).c_str());
+
+	cmdListName += std::to_wstring(index);
+	m_cmdList->SetName(cmdListName.c_str());
 }
 
 FrameResource::~FrameResource()
@@ -21,9 +28,22 @@ FrameResource::~FrameResource()
 	m_cmdList.ReleaseAndGetAddressOf();
 }
 
-void FrameResource::Initiate(ID3D12PipelineState* pso)
+ID3D12GraphicsCommandList* FrameResource::Initiate(ID3D12PipelineState* pso)
 {
-	CHECK_HR(m_cmdAllocator->Reset());
-	CHECK_HR(m_cmdList->Reset(m_cmdAllocator.Get(), pso));
+	if (!m_cmdListIsOpen) {
+		CHECK_HR(m_cmdAllocator->Reset());
+		CHECK_HR(m_cmdList->Reset(m_cmdAllocator.Get(), pso));
+		m_cmdListIsOpen = true;
+	}
+
+	return m_cmdList.Get();
+}
+
+void FrameResource::Close()
+{
+	if (m_cmdListIsOpen) {
+		CHECK_HR(m_cmdList->Close());
+		m_cmdListIsOpen = false;
+	}
 }
 

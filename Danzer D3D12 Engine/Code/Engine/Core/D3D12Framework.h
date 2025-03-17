@@ -25,13 +25,18 @@ public:
 	D3D12Framework();
     ~D3D12Framework();
 	
+    FrameResource* ResourceUploader() {
+        return m_resourceUploader;
+    }
     FrameResource* CurrentFrameResource() {
         return m_frameResources[m_frameIndex];
     }
-    ID3D12GraphicsCommandList* InitCmdList() {
-        return m_initCmdList.Get();
-    }
+    //ID3D12GraphicsCommandList* InitCmdList() {
+    //    return m_initCmdList.Get();
+    //}
     
+    void UploadResourcesToGPU(FrameResource* frameResource);
+
     void InitiateCommandList(ID3D12PipelineState* pso, std::wstring message);
     void ExecuteCommandList();
     void WaitForGPU();
@@ -70,9 +75,9 @@ public:
         return m_renderTargets[m_frameIndex].Get();
     }
 
-    ID3D12GraphicsCommandList* GetInitCmdList() {
-        return m_initCmdList.Get();
-    }
+    //ID3D12GraphicsCommandList* GetInitCmdList() {
+    //    return m_initCmdList.Get();
+    //}
     ID3D12Device* GetDevice() {
         return m_device.Get();
     }
@@ -101,9 +106,9 @@ private:
     ComPtr<ID3D12Resource> m_renderTargets[FrameCount];
     ComPtr<ID3D12Resource> m_depthStencil;
     
-    ComPtr<ID3D12CommandAllocator>    m_commandAllocator;
+    //ComPtr<ID3D12CommandAllocator>    m_commandAllocator;
     ComPtr<ID3D12CommandQueue>        m_commandQueue;
-    ComPtr<ID3D12GraphicsCommandList> m_initCmdList; // This commandList is only used on Initialization
+    //ComPtr<ID3D12GraphicsCommandList> m_initCmdList; // This commandList is only used on Initialization
     
     DescriptorHeapWrapper m_rtvHeap;
     DescriptorHeapWrapper m_dsvHeap;
@@ -111,6 +116,7 @@ private:
 
     ID3D12DescriptorHeap* m_imguiDesc;
 
+    FrameResource* m_resourceUploader;
     FrameResource* m_frameResources[FrameCount];
 
     UINT   m_frameIndex;

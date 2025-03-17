@@ -88,7 +88,7 @@ Model ModelHandler::CreateCustomModel(CustomModel customModel, bool transparent)
 	return Model(id);
 }
 
-Model ModelHandler::LoadModel(std::wstring fileName, std::string name, bool transparent, bool uvFlipped)
+Model ModelHandler::LoadModel(std::wstring fileName, bool transparent, bool uvFlipped)
 {	
 	UINT exists = GetExistingModel(fileName);
 	if (exists != 0) {
@@ -99,13 +99,13 @@ Model ModelHandler::LoadModel(std::wstring fileName, std::string name, bool tran
 
 	// If we are in Intialization frame then don't queue to m_loadRequests.
 	if (m_framework.IsInitFrame()) {
-		std::unique_ptr<LoaderModel> loadedModel = FetchLoaderModel(fileName, name, uvFlipped);
-		return CreateModelFromLoadedData(loadedModel.get(), name, fileName, transparent);
+		std::unique_ptr<LoaderModel> loadedModel = FetchLoaderModel(fileName, uvFlipped);
+		return CreateModelFromLoadedData(loadedModel.get(), fileName, transparent);
 	}
 	else {
-		m_loadRequests.push_back({ FetchLoaderModel(fileName, name, uvFlipped), transparent, name, fileName});
-		id = (uint32_t)m_models.size() + m_modelRequestCounter; // Reserve this models id.
-		m_modelRequestCounter++;
+		//m_loadRequests.push_back({ FetchLoaderModel(fileName, uvFlipped), transparent, fileName});
+		//id = (uint32_t)m_models.size() + m_modelRequestCounter; // Reserve this models id.
+		//m_modelRequestCounter++;
 	}
 
 	return Model(id);
@@ -188,11 +188,11 @@ void ModelHandler::SetMaterialForModel(UINT model, Material material, UINT meshI
 // Loads all the requested models to the gpu during the frame rendering. Not the most ideal but it will do for now.
 void ModelHandler::LoadRequestedModels()
 {
-	for (uint32_t i = 0; i < m_loadRequests.size(); i++)
-		CreateModelFromLoadedData(m_loadRequests[i].m_model.get(), m_loadRequests[i].m_modelName, m_loadRequests[i].m_fileName, m_loadRequests[i].m_transparent);
-
-	m_loadRequests.clear();
-	m_modelRequestCounter = 1;
+	//for (uint32_t i = 0; i < m_loadRequests.size(); i++)
+	//	CreateModelFromLoadedData(m_loadRequests[i].m_model.get(), m_loadRequests[i].m_modelName, m_loadRequests[i].m_fileName, m_loadRequests[i].m_transparent);
+	//
+	//m_loadRequests.clear();
+	//m_modelRequestCounter = 1;
 }
 
 Material ModelHandler::GetNewMaterialFromLoadedModel(const std::string& materialName)
@@ -250,9 +250,9 @@ UINT ModelHandler::GetNewlyCreatedModelID(ModelData model)
 	return id;
 }
 
-uint32_t ModelHandler::CreateModelFromLoadedData(LoaderModel* loadedModel, std::string name, std::wstring fileName, bool transparent)
+uint32_t ModelHandler::CreateModelFromLoadedData(LoaderModel* loadedModel, std::wstring fileName, bool transparent)
 {
-	std::vector<ModelData::Mesh> meshes = LoadMeshFromLoaderModel(loadedModel, name);
+	std::vector<ModelData::Mesh> meshes = LoadMeshFromLoaderModel(loadedModel);
 	std::vector<Vect3f>	      verticies = loadedModel->m_verticies;
 
 	// Now we set the buffer infromation into our BUFFER_VIEWS as well as 
@@ -269,7 +269,7 @@ uint32_t ModelHandler::CreateModelFromLoadedData(LoaderModel* loadedModel, std::
 
 	}
 
-	WriteToBinaryModelFile(loadedModel, meshes, name);
+	WriteToBinaryModelFile(loadedModel, meshes);
 	return GetNewlyCreatedModelID(ModelData(meshes, m_framework.GetDevice(), &m_framework.CbvSrvHeap(), verticies, fileName, name, transparent));
 }
 
@@ -352,7 +352,7 @@ std::vector<ModelData::Mesh> ModelHandler::LoadMeshFromLoaderModel(LoaderModel* 
 
 std::vector<ModelData::Mesh> ModelHandler::LoadMeshFromLoaderModel(LoaderModel* loadedModel, std::vector<UINT>& textures)
 {
-	ID3D12Device* device = m_framework.GetDevice();
+	ID3D12Device*			   device  = m_framework.GetDevice();
 	ID3D12GraphicsCommandList* cmdList = m_framework.InitCmdList();
 
 	std::vector<ModelData::Mesh> meshes;
@@ -422,21 +422,15 @@ std::string ModelHandler::SetModelName(std::wstring modelPath)
 		result.replace(0, firstPos + 1, "");
 		
 		size_t lastPos = result.find_first_of(".");
-		result.replace(lastPos, lastPos + 4, "");
+		result.replace(lastPos, result.size(), "");
 	}
 
 	return result;
 }
 
-std::unique_ptr<LoaderModel> ModelHandler::FetchLoaderModel(std::wstring fileName, std::string name, bool uvFlipped)
+std::unique_ptr<LoaderModel> ModelHandler::FetchLoaderModel(std::wstring fileName, bool uvFlipped)
 {
-	std::string modelName = "";
-	if (name.empty())
-		modelName = SetModelName(fileName);
-	else
-		modelName = name;
-
-;
+	std::string modelName = modelName = SetModelName(fileName);
 	if (BinaryModelFileExists(modelName)) {
 		std::unique_ptr<LoaderModel> loadedModel = std::make_unique<LoaderModel>();
 		ReadFromBinaryModelFile(modelName, loadedModel.get());
@@ -446,8 +440,7 @@ std::unique_ptr<LoaderModel> ModelHandler::FetchLoaderModel(std::wstring fileNam
 	std::string modelStr = { fileName.begin(), fileName.end() };
 	return m_modelLoader.LoadModelFromAssimp(modelStr, uvFlipped);
 }
-
-void ModelHandler::WriteToBinaryModelFile(const LoaderModel* loadedModel, const std::vector<ModelData::Mesh>& meshes, std::string modelName)
+void ModelHandler::WriteToBinaryModelFile(const LoaderModel* loadedModel, const std::string modelName, const std::vector<ModelData::Mesh>& meshes)
 {
 	std::string fileName = "Models/Binary/" + modelName + ".bmf";
 
@@ -501,7 +494,6 @@ void ModelHandler::WriteToBinaryModelFile(const LoaderModel* loadedModel, const 
 		modelFile.close();
 	}
 }
-
 void ModelHandler::ReadFromBinaryModelFile(std::string modelName, LoaderModel* loaderModel)
 {
 	std::string fileName = "Models/Binary/" + modelName + ".bmf";
@@ -573,7 +565,6 @@ void ModelHandler::ReadFromBinaryModelFile(std::string modelName, LoaderModel* l
 	std::cout << modelName << " took " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << " ms." << std::endl;
 #endif
 }
-
 bool ModelHandler::BinaryModelFileExists(std::string modelName)
 {
 	std::string fileName = "Models/Binary/" + modelName + ".bmf";

@@ -48,5 +48,5 @@ bool SimplePhysics::BoxToBoxIntersect(const Entity box1Entity, const Entity box2
 	Vect3f halfSize2 = box2.m_extents * 0.5f;
 
 
-
+	return false;
 }

@@ -27,6 +27,6 @@ private:
 	bool BoxToSphereIntersect(const Entity boxEntity,  const Entity sphereEntity);
 	bool BoxToBoxIntersect(const    Entity box1Entity, const Entity box2Entity);
 
-	bool SeparatingAxisTheorem
+	//bool SeparatingAxisTheorem
 };
 
