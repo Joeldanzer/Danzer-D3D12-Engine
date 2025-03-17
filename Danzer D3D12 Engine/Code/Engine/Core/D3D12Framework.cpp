@@ -123,7 +123,7 @@ D3D12Framework::~D3D12Framework()
 
 void D3D12Framework::UploadResourcesToGPU(FrameResource* frameResource)
 {
-	frameResource->CmdList()->Close();
+	frameResource->Close();
 	ID3D12CommandList* cmdList[] = { frameResource->CmdList() };
 	m_commandQueue->ExecuteCommandLists(1, cmdList);
 

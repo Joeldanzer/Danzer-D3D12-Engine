@@ -31,10 +31,7 @@ public:
     FrameResource* CurrentFrameResource() {
         return m_frameResources[m_frameIndex];
     }
-    //ID3D12GraphicsCommandList* InitCmdList() {
-    //    return m_initCmdList.Get();
-    //}
-    
+
     void UploadResourcesToGPU(FrameResource* frameResource);
 
     void InitiateCommandList(ID3D12PipelineState* pso, std::wstring message);
