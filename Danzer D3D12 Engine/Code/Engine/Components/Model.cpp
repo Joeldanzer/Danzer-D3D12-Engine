@@ -17,7 +17,7 @@ void DisplayModelTexture(uint32_t& texture, const std::string textureType) {
 		)
 	);
 
-	if (ImGui::ImageButton(textureType.c_str(), ImTextureID(textureHandle.ptr), { 100.0f, 100.0f })) {
+	if (ImGui::ImageButton(textureType.c_str(), ImTextureID(textureHandle.ptr), { 50.0f, 50.0f })) {
 		const std::wstring texturePath = FileExplorer::FetchFileFromExplorer(L"Sprites\\", L".dds");
 		if (texturePath != INVALID_FILE_FECTHED && texturePath != L"") {
 			texture = eng.GetTextureHandler().GetTexture(texturePath);
@@ -29,12 +29,9 @@ void DisplayModelTexture(uint32_t& texture, const std::string textureType) {
 
 void Model::DisplayInEditor(const Entity entity)
 {
-	Model&     model	  = REGISTRY->Get<Model>(entity);
-	ModelData& modelData  = Engine::GetInstance().GetModelHandler().GetLoadedModelInformation(model.m_modelID);
-
-	Engine& eng = Engine::GetInstance();
+	Model&     model = REGISTRY->Get<Model>(entity);
+	Engine&    eng   = Engine::GetInstance();
 	
-	ImGui::Text(std::string(modelData.GetModelPath().begin(), modelData.GetModelPath().end()).c_str());
 	if (ImGui::Button("Select New Model")) {
 		const std::wstring modelPath = FileExplorer::FetchFileFromExplorer(L"Models\\", L".fbx");
 		if (modelPath != INVALID_FILE_FECTHED && modelPath != L"") {
@@ -42,6 +39,12 @@ void Model::DisplayInEditor(const Entity entity)
 			return;
 		}
 	}
+	
+	if (model.m_modelID == UINT32_MAX)
+		model.m_modelID = 1;
+
+	ModelData& modelData  = Engine::GetInstance().GetModelHandler().GetLoadedModelInformation(model.m_modelID);
+	ImGui::Text(std::string(modelData.GetModelPath().begin(), modelData.GetModelPath().end()).c_str());
 
 	const int32_t  meshCount = modelData.GetMeshes().size() - 1;
 	static int32_t selectedMesh = 0;

@@ -776,7 +776,7 @@ void RenderManager::Impl::Update3DInstances(const Camera& cam, SceneManager& sce
 	//	m_debugRenderingData.RenderLine(Vect3f::Zero, normal * 10.0f, { 0.0f, 0.0f, 1.0f, 1.0f });
 	//
 	//	normal = cam.GetFrustrumFace(Camera::LEFT_FACE).Normal();
-	//	m_debugRenderingData.RenderLine(Vect3f::Zero, normal * 10.0f, { 0.0f, 1.0f, 1.0f, 1.0f });
+	//	m_debugRenderingData.RenderLine(Vect3f::Zero , normal * 10.0f, { 0.0f, 1.0f, 1.0f, 1.0f });
 	//	
 	//	normal = cam.GetFrustrumFace(Camera::BOTTOM_FACE).Normal();
 	//	m_debugRenderingData.RenderLine(Vect3f::Zero, normal * 10.0f, { 1.0f, 1.0f, 1.0f, 1.0f });

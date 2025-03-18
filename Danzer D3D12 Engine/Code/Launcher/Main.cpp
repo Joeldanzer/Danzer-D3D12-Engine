@@ -6,6 +6,7 @@
 #include "..\Editor\Editor.h"
 #include "..\Engine\Core\Engine.h"
 #include "..\Engine\Core\Input.hpp"
+#include "..\Engine\Physics\Assignment\SimplePhysics.h"
 #include "..\Game\Game.h"
 
 
@@ -41,10 +42,11 @@ public:
 		windowData.m_h = desktop.left;
 		
 		// Initialise engine through ::GetInstance
-		Engine::GetInstance();
+		Engine& engine = Engine::GetInstance();
 
-		Editor editor(Engine::GetInstance());
-		Game   game(Engine::GetInstance());
+		Editor		  editor(Engine::GetInstance());
+		Game		  game(Engine::GetInstance());
+		SimplePhysics physics;
 
 		Engine::GetInstance().EndInitFrame();
 
@@ -67,19 +69,20 @@ public:
 				break;
 			}
 
-			Engine::GetInstance().BeginFrame();
+			engine.BeginFrame();
 
-			game.Update(Engine::GetInstance().GetDeltaTime());
-			editor.Update(Engine::GetInstance().GetDeltaTime());
+			game.Update(engine.GetDeltaTime());
+			editor.Update(engine.GetDeltaTime());
 
-			Engine::GetInstance().UpdateFrame();
+			physics.SimulatePhysics(engine.GetDeltaTime());
+
+			engine.UpdateFrame();
 		}
 
 	}
 };
 
-int main(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ PWSTR lpCmdLine, _In_ int nShowCmd) 
-{
+int main(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ PWSTR lpCmdLine, _In_ int nShowCmd) {
 	hInstance; hPrevInstance; lpCmdLine; nShowCmd;
 
 #ifdef DEBUG

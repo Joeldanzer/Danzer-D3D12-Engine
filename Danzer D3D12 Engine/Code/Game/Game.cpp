@@ -16,9 +16,11 @@
 #include "Rendering/Data/LightHandler.h"
 #include "Components/Render & Effects/WaterPlaneBufferData.h"
 #include "Sound/SoundHeader.h"
+#include "Physics/RayCaster.h"
 
 #include "Physics/PhysicsHeader.h"
 
+#include "Physics/Assignment/Components/BoxCollider.h"
 #include "Components/Light/PointLight.h"
 #include "Components/2D/Transform2D.h"
 #include "Components/Model.h"
@@ -75,14 +77,17 @@ Game::Impl::Impl(Engine& engine) :
 
 	m_currentTime = m_time;
 	
-	Entity entity = Reg::Instance()->Create3DEntity("Sponzra Atrium");
+	Entity entity = REGISTRY->Create3DEntity("Sponzra Atrium");
 
-	Transform& modelTransform = Reg::Instance()->Get<Transform>(entity);
-	modelTransform.m_scale	  = { 1.0f, 1.0f, 1.0f };
+	Transform& modelTransform = REGISTRY->Get<Transform>(entity);
+	modelTransform.m_scale	  = { 10.0f, 1.0f, 10.0f };
 	modelTransform.m_position = { 0.0f, 0.0f, 0.0f };
 	modelTransform.m_rotation = Quat4f::CreateFromAxisAngle(Vect3f::Up, ToRadians(180.0f));
 	
-    REGISTRY->Emplace<Model>(entity, engine.GetModelHandler().LoadModel(L"Models/BlenderSponzaAtriumNew.fbx", "Sponza Atrium"));
+    REGISTRY->Emplace<Model>(entity, engine.GetModelHandler().CreateCustomModel(ModelData::GetCube()));
+	BoxCollider& collider = REGISTRY->Emplace<BoxCollider>(entity, modelTransform.m_scale);
+	collider.m_gravity   = false;
+	collider.m_kinematic = true;
 
 	//for (int32_t x = -5; x < 5 + 1; x++)
 	//{
@@ -219,6 +224,10 @@ void Game::Impl::Update(const float dt)
 			Camera& cam = Reg::Instance()->Get<Camera>(ent);
 			cam.RenderTarget() = cam.RenderTarget() < 9 ? cam.RenderTarget() + 1 : 0;
 		}
+	}
+
+	if (Input::GetInstance().IsMousePressed(Input::MouseButton::Middle)) {
+		RayCaster::GetInstance().CastRay(transform.m_position, transform.World().Forward());
 	}
 }
 

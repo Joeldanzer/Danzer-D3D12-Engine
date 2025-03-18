@@ -30,7 +30,7 @@ public:
 	UINT GetExistingModel(std::wstring modelPath);
 
 	ModelData& GetLoadedModelInformation(UINT id) {
-		if (id - 1 < m_models.size() && id != 0)
+		if (id - 1 < m_models.size() && id != UINT32_MAX)
 			return m_models[id - 1];
 
 		printf("Model with ID:%d doesnt exist! \n", id);

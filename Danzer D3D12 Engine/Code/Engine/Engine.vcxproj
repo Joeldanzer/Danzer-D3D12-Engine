@@ -186,6 +186,7 @@
     <ClInclude Include="Core\RegistryWrapper.h" />
     <ClInclude Include="Physics\Assignment\Components\BoxCollider.h" />
     <ClInclude Include="Physics\Assignment\Components\SphereCollider.h" />
+    <ClInclude Include="Physics\RayCaster.h" />
     <ClInclude Include="Rendering\Screen Rendering\LightRenderer.h" />
     <ClInclude Include="Rendering\Data\DebugRenderingData.h" />
     <ClInclude Include="Rendering\Screen Rendering\DebugTextureRenderer.h" />
@@ -284,6 +285,7 @@
     <ClCompile Include="Components\GameEntity.cpp" />
     <ClCompile Include="Physics\Assignment\Components\BoxCollider.cpp" />
     <ClCompile Include="Physics\Assignment\Components\SphereCollider.cpp" />
+    <ClCompile Include="Physics\RayCaster.cpp" />
     <ClCompile Include="Rendering\Screen Rendering\LightRenderer.cpp" />
     <ClCompile Include="Rendering\Data\DebugRenderingData.cpp" />
     <ClCompile Include="Rendering\Screen Rendering\DebugTextureRenderer.cpp" />
