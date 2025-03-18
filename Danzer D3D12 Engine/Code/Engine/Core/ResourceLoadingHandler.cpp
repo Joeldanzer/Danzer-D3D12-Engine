@@ -4,7 +4,10 @@
 #include "FrameResource.h"
 #include "Engine.h"
 
+ResourceLoadingHandler* ResourceLoadingHandler::s_instance = nullptr;
+
 ResourceLoadingHandler::ResourceLoadingHandler(D3D12Framework& framework) :
+	m_framework(framework),
 	m_loadingQueueActive(true)
 {
 	m_resourceUploader = new FrameResource(framework.GetDevice(), 0, L"Resource Upload CmdList", D3D12_COMMAND_LIST_TYPE_COPY);
@@ -26,16 +29,17 @@ ResourceLoadingHandler& ResourceLoadingHandler::Instance()
 void ResourceLoadingHandler::UpdateResourceLoading()
 {
 	while (m_loadingQueueActive) {
-		if (!m_loadingQueue.empty()) {
+		while (!m_loadingQueue.empty()) {
 			LoadRequest* loadReq = m_loadingQueue.front();
 			loadReq->LoadData();
 			m_loadingQueue.pop();
 		}
 
 		if (!m_resourceQueue.empty()) {
-				m_resourceUploader->CmdList()->ResourceBarrier(
-				static_cast<uint32_t>(m_resourceQueue.size()),
-				&m_resourceQueue[0]
+			m_resourceUploader->Initiate();
+
+			m_resourceUploader->CmdList()->ResourceBarrier(
+				static_cast<uint32_t>(m_resourceQueue.size()), &m_resourceQueue[0]
 			);
 			
 			m_framework.UploadResourcesToGPU(m_resourceUploader);
@@ -49,14 +53,14 @@ void ResourceLoadingHandler::QueueLoadRequest(LoadRequest* loader)
 	m_loadingQueue.emplace(loader);
 }
 
-void ResourceLoadingHandler::QueueResourceBarruer(ID3D12Resource* destBuffer, ID3D12Resource* fromBuffer, uint32_t* ptrData, const uint32_t sizeOfData, const uint32_t count, const D3D12_RESOURCE_STATES state)
+void ResourceLoadingHandler::QueueResourceBarrier(ID3D12Resource* destBuffer, ID3D12Resource* fromBuffer, uint32_t* ptrData, const uint32_t sizeOfData, const uint32_t count, const D3D12_RESOURCE_STATES state, const uint32_t numberOfSubResources)
 {
 	D3D12_SUBRESOURCE_DATA data = {};
-	data.pData = ptrData;
-	data.RowPitch = sizeOfData * count;
+	data.pData      = ptrData;
+	data.RowPitch   = sizeOfData * count;
 	data.SlicePitch = data.RowPitch;
 
-	UpdateSubresources(m_resourceUploader->CmdList(), destBuffer, fromBuffer, 0, 0, 1, &data);
+	UpdateSubresources(m_resourceUploader->CmdList(), destBuffer, fromBuffer, 0, 0, numberOfSubResources, &data);
 
 	CD3DX12_RESOURCE_BARRIER resourceBarrier;
 	resourceBarrier = CD3DX12_RESOURCE_BARRIER::Transition(

@@ -16,14 +16,15 @@ public:
 		return m_cmdList.Get();
 	}	
 
-	ID3D12GraphicsCommandList* Initiate(ID3D12PipelineState* = nullptr);
-
 	const uint32_t CmdListIndex() {
 		return m_cmdIndex;
 	}
 
+	ID3D12GraphicsCommandList* Initiate(ID3D12PipelineState* = nullptr);
+
 private:
 	friend class D3D12Framework;
+	
 	void Close();
 
 	bool							  m_cmdListIsOpen;

@@ -64,6 +64,14 @@ public:
 
 		m_transformBuffer.Initialize(device, sizeof(Mat4f));
 	};
+	explicit ModelData(const uint32_t id, const bool transparent, const std::wstring modelPath, const std::string name) : 
+		m_finishedLoading(false),
+		m_renderModel(false),
+		m_ID(id),
+		m_transparent(transparent),
+		m_modelPath(modelPath),
+		m_name(name)
+	{}
 
 	void ClearInstanceTransform();
 	const std::vector<Mat4f>& GetInstanceTransforms() { return m_instanceTransforms; }
@@ -90,9 +98,6 @@ public:
 		m_transformBuffer.UpdateBuffer(reinterpret_cast<uint16_t*>(&m_instanceTransforms[0]), (uint32_t)m_instanceTransforms.size(), frameIndex);
 	}
 
-	//void UpdateTransformInstanceBuffer(std::vector<Mat4f>& transform, const UINT frameIndex) {
-	//	m_transformBuffer.UpdateBuffer(reinterpret_cast<uint8_t*>(&transform[0]), (uint32_t)transform.size(), frameIndex);
-	//}
 	void UpdatedMaterialBuffer(UINT frameIndex) {
 		//MaterialBuffer::Data data;
 		//data.m_hasMaterialTexture = m_hasMaterialTextures;
@@ -125,8 +130,26 @@ public:
 		return m_modelPath;
 	}
 
+	const bool ModelFinished() {
+		return m_finishedLoading;
+	}
+
 private:
 	friend class ModelHandler;
+
+	void FinilizeModelData(std::vector<Mesh>& data, ID3D12Device* device, DescriptorHeapWrapper* cbvWrapper, std::vector<Vect3f>& verticies) {
+		m_meshes    = data;
+		m_verticies = verticies;
+
+		for (auto& mesh : m_meshes) {
+			mesh.m_materialBuffer.Init(device, cbvWrapper, sizeof(MaterialBuffer::Data));
+			mesh.m_meshBuffer.Initialize(device, sizeof(Mat4f));
+		}
+
+		m_transformBuffer.Initialize(device, sizeof(Mat4f));
+
+		m_finishedLoading = true;
+	}
 
 	std::vector<Mesh>   m_meshes;
 	std::vector<Vect3f> m_verticies;
@@ -138,18 +161,21 @@ private:
 	std::vector<Mat4f> m_instanceTransparentTransforms;
 
 	// Vertext paint inforamtion
-	std::vector<UINT> m_albedoTextures;
-	std::vector<UINT> m_normalTextures;
-	std::vector<UINT> m_materialTextures;
+	std::vector<uint32_t> m_albedoTextures;
+	std::vector<uint32_t> m_normalTextures;
+	std::vector<uint32_t> m_materialTextures;
 
 	VertexBuffer m_transformBuffer;
 	VertexBuffer m_transparentTransformBuffer;
 
-	UINT m_ID;	
+	uint32_t m_ID;	
 
 	std::string  m_name;
 	std::wstring m_modelPath;
 
 	bool m_renderModel;
 	bool m_transparent;
+	
+	bool m_finishedLoading;
+
 };

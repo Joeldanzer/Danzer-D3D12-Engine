@@ -2,6 +2,8 @@
 
 #include "DesriptorHeapWrapper.h"
 #include <dxgi1_4.h>
+#include <thread>
+
 
 class FrameResource;
 class PSOHandler;
@@ -130,5 +132,7 @@ private:
         D3D12_RESOURCE_STATES m_newState;
     };
     std::vector<std::pair<ID3D12Resource*, StateTransition>> m_transitionQeueu;
+
+    std::thread m_resourceLoadingThread;
 };
 

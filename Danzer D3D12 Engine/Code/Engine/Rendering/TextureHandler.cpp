@@ -12,7 +12,7 @@
 TextureHandler::TextureHandler(D3D12Framework& framework) :
 	m_framework(framework)
 {
-	LoadAllExistingTextures();
+	//LoadAllExistingTextures();
 }
 TextureHandler::~TextureHandler()
 {
@@ -24,9 +24,8 @@ TextureHandler::~TextureHandler()
 
 void TextureHandler::Init(D3D12Framework& framework, bool loadAllTexures)
 {
-	m_framework = framework;
 	if (loadAllTexures) {
-		LoadAllExistingTextures();
+		//LoadAllExistingTextures();
 	}
 }
 
@@ -236,6 +235,7 @@ CD3DX12_RESOURCE_BARRIER TextureHandler::LoadTextures(std::wstring file, ID3D12R
 		IID_PPV_ARGS(&uploadBuffer));
 	CHECK_HR(result);
 
+
 	UpdateSubresources(
 		m_framework.InitCmdList(),
 		*textureBuffer,
@@ -291,6 +291,8 @@ CD3DX12_RESOURCE_BARRIER TextureHandler::LoadTextures(void* data, const UINT siz
 		nullptr,
 		IID_PPV_ARGS(&uploadBuffer))
 	);
+
+	
 
 	D3D12_SUBRESOURCE_DATA textureData = {};
 	textureData.pData	   = data;

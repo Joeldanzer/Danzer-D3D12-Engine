@@ -28,7 +28,6 @@ public:
 	Model CreateCustomModel(CustomModel model, bool transparent = false);
 	Model LoadModel(std::wstring fileName, bool transparent = false, bool uvFlipped = false);
 	void  LoadModelsToScene(entt::registry& reg, std::wstring fileName, std::string name = "", bool uvFlipped = false);
-	UINT GetExistingModel(std::wstring modelPath);
 
 	ModelData& GetLoadedModelInformation(UINT id) {
 		if (id - 1 < m_models.size() && id != 0)
@@ -47,14 +46,25 @@ public:
 
 	void LoadRequestedModels();
 
+	const uint32_t ModelExists(const std::wstring modelPath);
+	const uint32_t ModelExists(const std::string  name);
+
 private:	
 	friend struct ModelLoadRequest;
 
 	struct ModelLoadRequest : public LoadRequest {
+		ModelLoadRequest(ModelHandler* modelHandler, const std::wstring fileName, const std::string modelName, bool transparent, bool uvFlipped) :
+			m_modelHandler(modelHandler),
+			m_fileName(fileName),
+			m_transparent(transparent),
+			m_uvFlipped(uvFlipped)
+		{}
+
 		void LoadData() override;
 
 		ModelHandler* m_modelHandler;
 		std::wstring m_fileName;
+		std::string  m_modelName;
 		bool m_transparent;
 		bool m_uvFlipped;
 	};
@@ -69,7 +79,7 @@ private:
 	Material GetNewMaterialFromLoadedModel(const std::string& material);
 	UINT GetNewlyCreatedModelID(ModelData model);
 
-	uint32_t CreateModelFromLoadedData(LoaderModel* loadedModel, std::wstring fileName, bool transparent);
+	uint32_t CreateModelFromLoadedData(LoaderModel* loadedModel, const std::string name, bool transparent);
 
 	std::vector<ModelData::Mesh> LoadMeshFromLoaderModel(LoaderModel* loadedModel, std::string name);
 	std::vector<ModelData::Mesh> LoadMeshFromLoaderModel(LoaderModel* loadedModel, std::vector<UINT>& textures);

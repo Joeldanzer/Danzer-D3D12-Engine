@@ -1,11 +1,11 @@
 #pragma once
 #include <queue>
 
+class  FrameResource;
 class  D3D12Framework;
 struct ID3D12Resource;
 
 struct LoadRequest {
-	 LoadRequest() = delete;
 	 virtual void LoadData() = 0;
 };
 
@@ -17,19 +17,24 @@ public:
 
 	static ResourceLoadingHandler& Instance();
 
+	FrameResource* ResourceUploader() {
+		return m_resourceUploader;
+	}
+
 	void QueueLoadRequest(LoadRequest* loader);
-	void QueueResourceBarruer(
+	// Queues subresource data to be uploaded to the gpu, this always happens after loading of 
+	void UploadSubResource(
 		ID3D12Resource* destBuffer,
 		ID3D12Resource* fromBuffer,
 		uint32_t* ptrData,
 		const uint32_t sizeOfData,
 		const uint32_t count,
-		const D3D12_RESOURCE_STATES state
+		const D3D12_RESOURCE_STATES state,
+		const uint32_t numberOfSubResources = 1
 	);
 
 private:
-	friend class Engine;
-	friend class Launcher;
+	friend class D3D12Framework;
 
 	ResourceLoadingHandler(D3D12Framework& framework);
 	
@@ -37,9 +42,10 @@ private:
 		m_loadingQueueActive = false;
 	}
 	void UpdateResourceLoading();
-	// Uploading data to the gpu, only used for resources that are used for rendering.
+
 	D3D12Framework&						  m_framework;
 	FrameResource*						  m_resourceUploader;
+	// Uploading data to the gpu, only used for resources that are used for rendering.
 	std::vector<CD3DX12_RESOURCE_BARRIER> m_resourceQueue;
 
 	// Loading data to the cpu, this can be anything from models to sound. 
@@ -50,3 +56,4 @@ private:
 	static ResourceLoadingHandler* s_instance;
 };
 
+typedef ResourceLoadingHandler RLH;

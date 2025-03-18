@@ -4,10 +4,10 @@
 #include <thread>
 
 #include "..\Editor\Editor.h"
-#include "..\Engine\Core\Engine.h"
-#include "..\Engine\Core\Input.hpp"
+#include "Core\Engine.h"
+#include "Core\Input.hpp"
+#include "Core/ResourceLoadingHandler.h"
 #include "..\Game\Game.h"
-
 
 void DebugWindow() {
 #pragma warning( push )
@@ -46,7 +46,9 @@ public:
 		Editor editor(Engine::GetInstance());
 		Game   game(Engine::GetInstance());
 
-		Engine::GetInstance().EndInitFrame();
+		//Engine::GetInstance().EndInitFrame();
+		//RLH& rlh = RLH::Instance();
+
 
 		while (true) {
 

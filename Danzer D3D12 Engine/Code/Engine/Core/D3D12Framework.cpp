@@ -3,6 +3,7 @@
 #include "D3D12Framework.h"
 #include "WindowHandler.h"
 #include "FrameResource.h"
+#include "ResourceLoadingHandler.h"
 
 #include "Rendering/PSOHandler.h"
 #include "Rendering/Screen Rendering/GBuffer.h"
@@ -370,6 +371,11 @@ void D3D12Framework::LoadAssets()
 	// Frame Resource Creation
 	for (UINT i = 0; i < FrameCount; i++)		
 		m_frameResources[i] = new FrameResource(m_device.Get(), i, L"Render CmdList", D3D12_COMMAND_LIST_TYPE_DIRECT);
+
+	// Start Resource Loading Thread...
+	RLH::Instance();
+	m_resourceLoadingThread = std::thread(RLH::UpdateResourceLoading, RLH::Instance());
+	m_resourceLoadingThread.join();
 }
 
 void D3D12Framework::InitImgui()
