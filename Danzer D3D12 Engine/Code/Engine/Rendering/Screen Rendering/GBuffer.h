@@ -70,7 +70,7 @@ public:
 	CD3DX12_GPU_DESCRIPTOR_HANDLE GetGPUHandle(GBUFFER_TEXTURES texture, DescriptorHeapWrapper* srvWrapper);
 
 	struct Resource {
-		UINT m_offsetID = 0;
+		UINT m_offsetID = UINT32_MAX;
 		ComPtr<ID3D12Resource> m_resource;
 	};
 	
@@ -86,8 +86,8 @@ private:
 	uint32_t m_transparentPso;
 	uint32_t m_rs;
 
-	uint32_t m_rtvOffsetID;
-	uint32_t m_srvOffsetID;
+	uint32_t m_rtvOffsetID = UINT32_MAX;
+	uint32_t m_srvOffsetID = UINT32_MAX;
 
 	std::array<UINT, GBUFFER_COUNT>        m_rtvHeapSize; 
 	std::array<Resource, GBUFFER_COUNT>    m_resources;

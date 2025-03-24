@@ -35,8 +35,8 @@ void Renderer2D::Init(D3D12Framework& framework, PSOHandler& psoHandler)
 
 	m_framework = &framework;
 	
-	m_windowBuffer.Init(framework.GetDevice(), &framework.CbvSrvHeap(), sizeof(WindowBuffer::Data));
-	m_spriteSheetBuffer.Init(framework.GetDevice(), &framework.CbvSrvHeap(), sizeof(WindowBuffer::Data));
+	//m_windowBuffer.Init(framework.GetDevice(), &framework.CbvSrvHeap(), sizeof(WindowBuffer::Data));
+	//m_spriteSheetBuffer.Init(framework.GetDevice(), &framework.CbvSrvHeap(), sizeof(WindowBuffer::Data));
 	CreateUIVertexAndIndexBuffers(framework);
 }
 

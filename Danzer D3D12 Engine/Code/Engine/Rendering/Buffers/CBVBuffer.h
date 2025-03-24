@@ -28,7 +28,7 @@ protected:
 	// Need buffer information for each back buffer available. 
 	ComPtr<ID3D12Resource>		  m_bufferUpload[FrameCount];
 	UINT16*						  m_bufferGPUAddress[FrameCount];
-	UINT						  m_offsetID = 0; 
+	UINT						  m_offsetID = UINT32_MAX; 
 	UINT						  m_sizeOfData = 0;
 
 };

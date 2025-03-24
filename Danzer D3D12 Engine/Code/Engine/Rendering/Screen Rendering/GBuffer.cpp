@@ -109,7 +109,6 @@ void GBuffer::InitializeGBuffers(D3D12Framework& framework, PSOHandler& psoHandl
 		L"Depth_GBuffer"
 	};
 	
-
 	m_rtvDescSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 	m_srvDescSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 	
@@ -117,15 +116,6 @@ void GBuffer::InitializeGBuffers(D3D12Framework& framework, PSOHandler& psoHandl
 	
 	DescriptorHeapWrapper& srvWrapper = framework.CbvSrvHeap();
 	DescriptorHeapWrapper& rtvWrapper = framework.RTVHeap();
-
-	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(rtvWrapper.GET_CPU_DESCRIPTOR(0));
-	CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(framework.CbvSrvHeap().GET_CPU_DESCRIPTOR(0));
-
-	srvHandle.Offset(srvWrapper.m_handleCurrentOffset * srvWrapper.DESCRIPTOR_SIZE());
-	rtvHandle.Offset(rtvWrapper.m_handleCurrentOffset * rtvWrapper.DESCRIPTOR_SIZE());
-
-	m_rtvOffsetID = rtvWrapper.m_handleCurrentOffset;
-	m_srvOffsetID = srvWrapper.m_handleCurrentOffset;
 
 	for (UINT i = 0; i < GBUFFER_COUNT; i++)
 	{
@@ -146,14 +136,18 @@ void GBuffer::InitializeGBuffers(D3D12Framework& framework, PSOHandler& psoHandl
 			IID_PPV_ARGS(m_resources[i].m_resource.GetAddressOf()));
 		CHECK_HR(result);
 
-		device->CreateRenderTargetView(m_resources[i].m_resource.Get(), nullptr, rtvHandle);
-		rtvHandle.Offset(m_rtvDescSize);
-		rtvWrapper.m_handleCurrentOffset++;
+		CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle;
+		const uint32_t srvOffset = srvWrapper.CreateDescriptorHandle(srvHandle);
+		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle;
+		const uint32_t rtvOffset = rtvWrapper.CreateDescriptorHandle(rtvHandle);
 
-		m_resources[i].m_offsetID = srvWrapper.m_handleCurrentOffset;
+		m_srvOffsetID = m_srvOffsetID == UINT32_MAX ? srvOffset : m_srvOffsetID;
+		m_rtvOffsetID = m_rtvOffsetID == UINT32_MAX ? rtvOffset : m_rtvOffsetID;
+
+		device->CreateRenderTargetView(m_resources[i].m_resource.Get(), nullptr, rtvHandle);
+
+		m_resources[i].m_offsetID = srvOffset;
 		device->CreateShaderResourceView(m_resources[i].m_resource.Get(), nullptr, srvHandle);
-		srvHandle.Offset(m_srvDescSize);
-		srvWrapper.m_handleCurrentOffset++;
 
 		m_resources[i].m_resource->SetName((LPCWSTR)bufferNames[i].c_str());
 	}

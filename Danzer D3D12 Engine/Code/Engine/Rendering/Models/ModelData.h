@@ -141,7 +141,7 @@ private:
 		m_meshes    = data;
 
 		for (auto& mesh : m_meshes) {
-			mesh.m_materialBuffer.Init(device, cbvWrapper, sizeof(MaterialBuffer::Data));
+		    mesh.m_materialBuffer.Init(device, cbvWrapper, sizeof(MaterialBuffer::Data));
 			mesh.m_meshBuffer.Initialize(device, sizeof(Mat4f));
 		}
 

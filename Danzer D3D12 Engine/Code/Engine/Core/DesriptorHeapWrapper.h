@@ -20,7 +20,8 @@ public:
 	CD3DX12_CPU_DESCRIPTOR_HANDLE GET_CPU_DESCRIPTOR(const uint32_t size);
 	CD3DX12_GPU_DESCRIPTOR_HANDLE GET_GPU_DESCRIPTOR(const uint32_t size);
     
-	uint32_t CreateDescriptorHandle(CD3DX12_CPU_DESCRIPTOR_HANDLE& cpuHandle);
+	uint32_t CreateDescriptorHandle(CD3DX12_CPU_DESCRIPTOR_HANDLE& cpuHandle, const uint32_t count = 1);
+	uint32_t CreateDescriptorHandle(const uint32_t count = 1);
 
 	ID3D12DescriptorHeap*        GetDescriptorHeap()	  { return m_desctiptorHeap.Get(); }
 	const uint32_t			     DESCRIPTOR_SIZE()        { return m_handleIncrementSize; }

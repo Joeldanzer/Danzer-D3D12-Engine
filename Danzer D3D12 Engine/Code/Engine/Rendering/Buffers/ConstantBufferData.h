@@ -10,7 +10,7 @@ class ConstantBufferData
 {
 public:
 #pragma warning ( suppress : 26495)
-	ConstantBufferData() : m_offsetID(0), m_sizeOfData(0)
+	ConstantBufferData() : m_offsetID(UINT32_MAX), m_sizeOfData(0)
 	{}
 
 	void UpdateBufferData(uint16_t* data);
