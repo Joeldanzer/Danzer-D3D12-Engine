@@ -42,7 +42,7 @@ ID3D12GraphicsCommandList* FrameResource::Initiate(ID3D12PipelineState* pso)
 void FrameResource::Close()
 {
 	if (m_cmdListIsOpen) {
-		CHECK_HR(m_cmdList->Close());
+		m_cmdList->Close();
 		m_cmdListIsOpen = false;
 	}
 }

@@ -3,8 +3,8 @@
 #include "Screen Rendering/TextureRenderer.h"
 
 class ModelHandler;
-class TextureHandler;
 class PSOHandler;
+class TextureHandler;
 class DescriptorHeapWrapper;
 class ModelData;
 

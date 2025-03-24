@@ -94,5 +94,9 @@ void ModelData::UpdateAllMeshInstanceBuffer(uint32_t frameIndex)
 		Mesh& mesh = m_meshes[i];
 		if(!mesh.m_instanceTransforms.empty())
 			mesh.m_meshBuffer.UpdateBuffer(reinterpret_cast<uint16_t*>(&mesh.m_instanceTransforms[0]), (uint32_t)mesh.m_instanceTransforms.size(), frameIndex);
+		
+		// Update the GPU Virtual addresses for the models Index & Vertex Buffer. 
+		mesh.m_indexBufferView.BufferLocation  = mesh.m_indexBuffer->GetGPUVirtualAddress();
+		mesh.m_vertexBufferView.BufferLocation = mesh.m_vertexBuffer->GetGPUVirtualAddress();
 	}
 }

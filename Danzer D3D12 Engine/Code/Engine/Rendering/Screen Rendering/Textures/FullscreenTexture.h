@@ -17,9 +17,9 @@ class FullscreenTexture
 public:
 	FullscreenTexture() : 
 		m_resourceState(D3D12_RESOURCE_STATE_COMMON),
-		m_dsvOffsetID(0), 
-		m_srvOffsetID(0),
-		m_rtvOffsetID(0), 
+		m_dsvOffsetID(UINT32_MAX), 
+		m_srvOffsetID(UINT32_MAX),
+		m_rtvOffsetID(UINT32_MAX), 
 		m_viewPort({})
 	{}
 	~FullscreenTexture();

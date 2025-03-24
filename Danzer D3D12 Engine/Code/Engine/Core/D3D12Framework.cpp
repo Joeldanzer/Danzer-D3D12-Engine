@@ -46,6 +46,12 @@ D3D12Framework::D3D12Framework() :
 
 	CHECK_HR(m_device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&m_commandQueue)));
 
+	D3D12_COMMAND_QUEUE_DESC copyQueueDesc = {};
+	copyQueueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
+	copyQueueDesc.Type  = D3D12_COMMAND_LIST_TYPE_COPY;
+
+	CHECK_HR(m_device->CreateCommandQueue(&copyQueueDesc, IID_PPV_ARGS(&m_copyCmnQueue)));
+
 	DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
 	swapChainDesc.BufferCount	   = FrameCount;
 	swapChainDesc.Width			   = WindowHandler::GetViewPort().Width;
@@ -128,7 +134,7 @@ void D3D12Framework::UploadResourcesToGPU(FrameResource* frameResource)
 	ID3D12CommandList* cmdList[] = { frameResource->CmdList() };
 	m_commandQueue->ExecuteCommandLists(1, cmdList);
 
-	CHECK_HR(m_device->CreateFence(m_fenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence)));
+	//CHECK_HR(m_device->CreateFence(m_fenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence)));
 	m_fenceValue++;
 
 	m_fenceEvent = CreateEvent(nullptr, false, false, nullptr);
@@ -236,6 +242,14 @@ void D3D12Framework::TransitionAllResources()
 
 void D3D12Framework::EndInitFrame()
 {
+	m_initFrame = false;
+
+	// Wait for InitFrame to load everything before continuing
+	while (!RLH::Instance().m_resourceQueue.empty()) {
+		int s = 1;
+	}
+
+	int g = 2;
  //	CHECK_HR(m_initCmdList->Close());
  //	ID3D12CommandList* cmdList[] = { m_initCmdList.Get() };
  //	m_commandQueue->ExecuteCommandLists(1, cmdList);
@@ -255,6 +269,30 @@ void D3D12Framework::EndInitFrame()
  //	WaitForSingleObject(m_fenceEvent, INFINITE);
  //
  //	m_initFrame = false;
+}
+
+void D3D12Framework::UpdateResourceLoading()
+{
+	RLH& rlh = RLH::Instance();
+	while (m_loadingQueueActive) {
+		while (!rlh.m_loadingQueue.empty()) {
+			std::cout << "Load request is being handled..." << std::endl;
+ 			LoadRequest* loadReq = rlh.m_loadingQueue.front();
+			loadReq->LoadData();
+			rlh.m_loadingQueue.pop();
+		}
+
+		if (!rlh.m_resourceQueue.empty() && !m_initFrame) {
+			rlh.m_resourceUploader->Initiate();
+
+			rlh.m_resourceUploader->CmdList()->ResourceBarrier(
+				static_cast<uint32_t>(rlh.m_resourceQueue.size()), &rlh.m_resourceQueue[0]
+			);
+
+			UploadResourcesToGPU(rlh.m_resourceUploader);
+			rlh.m_resourceQueue.clear();
+		}
+	}
 }
 
 //* Render the last texture rendered to back buffer.
@@ -315,10 +353,7 @@ void D3D12Framework::SetBackBufferPSO(PSOHandler& psoHandler)
 
 void D3D12Framework::LoadAssets()
 {
-	m_resourceUploader = new FrameResource(m_device.Get(), 0, L"Resource Upload CmdList", D3D12_COMMAND_LIST_TYPE_COPY, false);
-
-	// Temporary Command List
-	//CHECK_HR(m_device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_commandAllocator.Get(), nullptr, IID_PPV_ARGS(&m_initCmdList)));
+	RLH::InitializeInstance(*this);
 
 	// Create RTV's
 	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtvHeap.GET_CPU_DESCRIPTOR(0));
@@ -372,10 +407,10 @@ void D3D12Framework::LoadAssets()
 	for (UINT i = 0; i < FrameCount; i++)		
 		m_frameResources[i] = new FrameResource(m_device.Get(), i, L"Render CmdList", D3D12_COMMAND_LIST_TYPE_DIRECT);
 
+	CHECK_HR(m_device->CreateFence(m_fenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence)));
+
 	// Start Resource Loading Thread...
-	RLH::Instance();
-	m_resourceLoadingThread = std::thread(RLH::UpdateResourceLoading, RLH::Instance());
-	m_resourceLoadingThread.join();
+	m_resourceLoadingThread = std::thread(&D3D12Framework::UpdateResourceLoading, this);
 }
 
 void D3D12Framework::InitImgui()
@@ -394,6 +429,7 @@ void D3D12Framework::InitImgui()
 	initInfo.NumFramesInFlight = FrameCount;
 	initInfo.RTVFormat		   = DXGI_FORMAT_R8G8B8A8_UNORM;
 	
+	CbvSrvHeap().m_handleCurrentOffset++;
 	initInfo.SrvDescriptorHeap = CbvSrvHeap().GetDescriptorHeap();
 	initInfo.LegacySingleSrvCpuDescriptor = CbvSrvHeap().GET_CPU_DESCRIPTOR(0);
 	initInfo.LegacySingleSrvGpuDescriptor = CbvSrvHeap().GET_GPU_DESCRIPTOR(0);

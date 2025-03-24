@@ -2,6 +2,7 @@
 #include "SkyBox.h"
 
 #include "PSOHandler.h"
+#include "Core/Engine.h"
 #include "TextureHandler.h"
 #include "Models/ModelHandler.h"
 
@@ -47,9 +48,7 @@ void Skybox::Initialize(PSOHandler& psoHandler, TextureHandler& textureHandler, 
 		PSOHandler::IL_INSTANCE_FORWARD,
 		psoHandler
 	);
-	m_textureID = textureHandler.GetTexture(skyBoxTexture);
-
-	SetTextureAtSlot(textureHandler.GetTextureData(m_textureID).m_offsetID, 0, false);
+	m_textureID = textureHandler.CreateTexture(skyBoxTexture, true);
 }
 
 void Skybox::Update(const float dt)
@@ -61,8 +60,11 @@ void Skybox::Update(const float dt)
 
 bool Skybox::RenderToTexture(ID3D12GraphicsCommandList* cmdList, DescriptorHeapWrapper& heap, DescriptorHeapWrapper& cbvSrvHeap, const uint8_t frameIndex)
 {
-	if (!m_modelData->GetInstanceTransforms().empty())
-		m_modelData->ClearInstanceTransform();
+	if (!m_modelData->GetSingleMesh(0).m_instanceTransforms.empty())
+		m_modelData->GetSingleMesh(0).m_instanceTransforms.clear();
+	
+	Texture& texture = Engine::GetInstance().GetTextureHandler().GetTextureData(m_textureID);
+	SetTextureAtSlot(texture.m_offsetID, 0, false);
 
 	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle = heap.GET_CPU_DESCRIPTOR(m_rtvSlots[0].first + frameIndex);
 
@@ -75,18 +77,20 @@ bool Skybox::RenderToTexture(ID3D12GraphicsCommandList* cmdList, DescriptorHeapW
 	transform *= DirectX::XMMatrixScaling(5.0f, 5.0f, 5.0f);
 	transform *= DirectX::XMMatrixTranslation(m_camPosition.x, m_camPosition.y, m_camPosition.z);
 
-	m_modelData->AddModelInstanceTransform(DirectX::XMMatrixTranspose(transform));
-	m_modelData->UpdateTransformInstanceBuffer(frameIndex);
+	ModelData::Mesh& mesh = m_modelData->GetSingleMesh(0);
+
+	m_modelData->AddMeshToRender(0, DirectX::XMMatrixTranspose(transform));
+	m_modelData->UpdateAllMeshInstanceBuffer(frameIndex);
 	D3D12_VERTEX_BUFFER_VIEW bufferView[2] = {
-		m_modelData->GetMeshes()[0].m_vertexBufferView, m_modelData->GetTransformInstanceBuffer().GetBufferView(frameIndex)
+		mesh.m_vertexBufferView, mesh.m_meshBuffer.GetBufferView(frameIndex)
 	};
 	cmdList->IASetVertexBuffers(0, 2, &bufferView[0]);
-	cmdList->IASetIndexBuffer(&m_modelData->GetMeshes()[0].m_indexBufferView);
+	cmdList->IASetIndexBuffer(&mesh.m_indexBufferView);
 	cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-	cmdList->DrawIndexedInstanced(m_modelData->GetMeshes()[0].m_numIndices, 1, 0, 0, 0);
+	cmdList->DrawIndexedInstanced(mesh.m_numIndices, 1, 0, 0, 0);
 
-	m_modelData->ClearInstanceTransform();
+	m_modelData->GetSingleMesh(0).m_instanceTransforms.clear();
 
 	return true;
 }

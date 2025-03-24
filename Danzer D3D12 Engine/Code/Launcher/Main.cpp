@@ -46,7 +46,7 @@ public:
 		Editor editor(Engine::GetInstance());
 		Game   game(Engine::GetInstance());
 
-		//Engine::GetInstance().EndInitFrame();
+		Engine::GetInstance().EndInitFrame();
 		//RLH& rlh = RLH::Instance();
 
 

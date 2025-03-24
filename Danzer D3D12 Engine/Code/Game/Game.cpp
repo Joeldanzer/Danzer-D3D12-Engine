@@ -83,7 +83,8 @@ Game::Impl::Impl(Engine& engine) :
 	modelTransform.m_rotation = Quat4f::CreateFromAxisAngle(Vect3f::Up, ToRadians(180.0f));
 	
     REGISTRY->Emplace<Model>(entity, engine.GetModelHandler().LoadModel(L"Models/BlenderSponzaAtriumNew.fbx", "Sponza Atrium"));
-
+	Model& model = REGISTRY->Get<Model>(entity);
+	int s = 1;
 	//for (int32_t x = -5; x < 5 + 1; x++)
 	//{
 	//	for (int32_t z = -5; z < 5 + 1; z++)

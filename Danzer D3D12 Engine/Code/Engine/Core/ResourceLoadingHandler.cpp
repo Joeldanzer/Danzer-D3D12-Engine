@@ -6,11 +6,16 @@
 
 ResourceLoadingHandler* ResourceLoadingHandler::s_instance = nullptr;
 
-ResourceLoadingHandler::ResourceLoadingHandler(D3D12Framework& framework) :
-	m_framework(framework),
-	m_loadingQueueActive(true)
+void ResourceLoadingHandler::InitializeInstance(D3D12Framework& framework)
 {
-	m_resourceUploader = new FrameResource(framework.GetDevice(), 0, L"Resource Upload CmdList", D3D12_COMMAND_LIST_TYPE_COPY);
+	if (s_instance == nullptr)
+		s_instance = new ResourceLoadingHandler(framework);
+}
+
+ResourceLoadingHandler::ResourceLoadingHandler(D3D12Framework& framework)
+{
+	m_resourceUploader = new FrameResource(framework.GetDevice(), 0, L"Resource Upload CmdList", D3D12_COMMAND_LIST_TYPE_DIRECT, false);
+	m_loadingQueue     = std::queue<LoadRequest*>();
 }
 ResourceLoadingHandler::~ResourceLoadingHandler() {
 	while (!m_loadingQueue.empty()) {
@@ -21,39 +26,17 @@ ResourceLoadingHandler::~ResourceLoadingHandler() {
 ResourceLoadingHandler& ResourceLoadingHandler::Instance()
 {
 	if (s_instance == nullptr)
-		s_instance = new ResourceLoadingHandler(Engine::GetInstance().GetFramework());
+		throw;
 
 	return *s_instance;
 }
 
-void ResourceLoadingHandler::UpdateResourceLoading()
-{
-	while (m_loadingQueueActive) {
-		while (!m_loadingQueue.empty()) {
-			LoadRequest* loadReq = m_loadingQueue.front();
-			loadReq->LoadData();
-			m_loadingQueue.pop();
-		}
-
-		if (!m_resourceQueue.empty()) {
-			m_resourceUploader->Initiate();
-
-			m_resourceUploader->CmdList()->ResourceBarrier(
-				static_cast<uint32_t>(m_resourceQueue.size()), &m_resourceQueue[0]
-			);
-			
-			m_framework.UploadResourcesToGPU(m_resourceUploader);
-			m_resourceQueue.clear();
-		}
-	}
-}
-
 void ResourceLoadingHandler::QueueLoadRequest(LoadRequest* loader)
 {
-	m_loadingQueue.emplace(loader);
+	m_loadingQueue.push(loader);
 }
 
-void ResourceLoadingHandler::QueueResourceBarrier(ID3D12Resource* destBuffer, ID3D12Resource* fromBuffer, uint32_t* ptrData, const uint32_t sizeOfData, const uint32_t count, const D3D12_RESOURCE_STATES state, const uint32_t numberOfSubResources)
+void ResourceLoadingHandler::UploadSubResource(ID3D12Resource* destBuffer, ID3D12Resource* fromBuffer, uint32_t* ptrData, const uint32_t sizeOfData, const uint32_t count, const D3D12_RESOURCE_STATES state, const uint32_t numberOfSubResources)
 {
 	D3D12_SUBRESOURCE_DATA data = {};
 	data.pData      = ptrData;
@@ -67,5 +50,10 @@ void ResourceLoadingHandler::QueueResourceBarrier(ID3D12Resource* destBuffer, ID
 		destBuffer, D3D12_RESOURCE_STATE_COPY_DEST, state);
 
 	m_resourceQueue.emplace_back(resourceBarrier);
+}
+
+void ResourceLoadingHandler::UploadSubResource(CD3DX12_RESOURCE_BARRIER subResource)
+{
+	m_resourceQueue.emplace_back(subResource);
 }
 

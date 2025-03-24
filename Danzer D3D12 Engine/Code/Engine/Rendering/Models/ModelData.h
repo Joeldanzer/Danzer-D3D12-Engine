@@ -139,7 +139,6 @@ private:
 
 	void FinilizeModelData(std::vector<Mesh>& data, ID3D12Device* device, DescriptorHeapWrapper* cbvWrapper, std::vector<Vect3f>& verticies) {
 		m_meshes    = data;
-		m_verticies = verticies;
 
 		for (auto& mesh : m_meshes) {
 			mesh.m_materialBuffer.Init(device, cbvWrapper, sizeof(MaterialBuffer::Data));
@@ -148,6 +147,7 @@ private:
 
 		m_transformBuffer.Initialize(device, sizeof(Mat4f));
 
+		m_transparent     = false;
 		m_finishedLoading = true;
 	}
 

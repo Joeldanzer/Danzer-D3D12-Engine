@@ -87,8 +87,10 @@ public:
 private:
     friend class RenderManager;
 
-    bool m_initFrame = true;
+    bool m_initFrame          = true;
+    bool m_loadingQueueActive = true;
 
+    void UpdateResourceLoading();
     void RenderToBackBuffer(const uint32_t textureToPresent, PSOHandler& psoHandler);
     void SetBackBufferPSO(PSOHandler& psoHandler);
 
@@ -107,6 +109,7 @@ private:
     
     //ComPtr<ID3D12CommandAllocator>    m_commandAllocator;
     ComPtr<ID3D12CommandQueue>        m_commandQueue;
+    ComPtr<ID3D12CommandQueue>        m_copyCmnQueue;
     //ComPtr<ID3D12GraphicsCommandList> m_initCmdList; // This commandList is only used on Initialization
     
     DescriptorHeapWrapper m_rtvHeap;

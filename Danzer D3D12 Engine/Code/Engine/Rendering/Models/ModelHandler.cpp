@@ -25,57 +25,59 @@ ModelHandler::~ModelHandler(){
 
 Model ModelHandler::CreateCustomModel(CustomModel customModel, bool transparent)
 {
-	ID3D12Device* device               = m_framework.GetDevice();
-	ID3D12GraphicsCommandList* cmdList = RLH::Instance().ResourceUploader()->CmdList();
+	ID3D12Device* device = m_framework.GetDevice();
 
 	uint32_t modelExist = ModelExists(customModel.m_customModelName);
 	if (modelExist != UINT32_MAX) {
 		return modelExist;
 	}
 	
-	std::vector<CD3DX12_RESOURCE_BARRIER> resourceBarriers;
 	VertexIndexBufferInfo bufferInfo = GetIndexAndVertexBuffer(ToWstring(customModel.m_customModelName), sizeof(Vertex) * (unsigned int)customModel.m_verticies.size(),
 		sizeof(unsigned int) * (unsigned int)customModel.m_indices.size(), device);
 	
-	ModelData::Mesh mesh;
-	resourceBarriers.emplace_back(SetSubresourceData(
-		cmdList,
+	
+	RLH::Instance().UploadSubResource(
 		bufferInfo.m_vBuffer,
 		bufferInfo.m_vBufferUpload,
-		reinterpret_cast<UINT*>(&customModel.m_verticies[0]),
-		sizeof(Vertex), static_cast<UINT>(customModel.m_verticies.size()), 
+		reinterpret_cast<uint32_t*>(&customModel.m_verticies[0]),
+		sizeof(Vertex), static_cast<uint32_t>(customModel.m_verticies.size()),
 		D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER
-		));
-	
-	resourceBarriers.emplace_back(SetSubresourceData(
-		cmdList,
+	);
+	RLH::Instance().UploadSubResource(
 		bufferInfo.m_iBuffer,
 		bufferInfo.m_iBufferUpload,
-		reinterpret_cast<UINT*>(&customModel.m_indices[0]),
-		sizeof(UINT), static_cast<UINT>(customModel.m_indices.size()),
+		reinterpret_cast<uint32_t*>(&customModel.m_indices[0]),
+		sizeof(uint32_t), static_cast<uint32_t>(customModel.m_indices.size()),
 		D3D12_RESOURCE_STATE_INDEX_BUFFER
-	));
+	);
+	//resourceBarriers.emplace_back(SetSubresourceData(
+	//	cmdList,
+	//	bufferInfo.m_vBuffer,
+	//	bufferInfo.m_vBufferUpload,
+	//	reinterpret_cast<UINT*>(&customModel.m_verticies[0]),
+	//	sizeof(Vertex), static_cast<UINT>(customModel.m_verticies.size()), 
+	//	D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER
+	//	));
+	//resourceBarriers.emplace_back(SetSubresourceData(
+	//	cmdList,
+	//	bufferInfo.m_iBuffer,
+	//	bufferInfo.m_iBufferUpload,
+	//	reinterpret_cast<UINT*>(&customModel.m_indices[0]),
+	//	sizeof(UINT), static_cast<UINT>(customModel.m_indices.size()),
+	//	D3D12_RESOURCE_STATE_INDEX_BUFFER
+	//));
 	
-	mesh.m_vertexBuffer = bufferInfo.m_vBuffer;
-	mesh.m_vertexSize   = sizeof(Vertex);
-	mesh.m_numVerticies = static_cast<UINT>(customModel.m_verticies.size());
+	ModelData::Mesh mesh;
+	mesh.m_vertexBuffer					   = bufferInfo.m_vBuffer;
+	mesh.m_vertexSize					   = sizeof(Vertex);
+	mesh.m_numVerticies					   = static_cast<UINT>(customModel.m_verticies.size());
+	mesh.m_indexBuffer					   = bufferInfo.m_iBuffer;
+	mesh.m_numIndices					   = static_cast<UINT>(customModel.m_indices.size());
+	mesh.m_indexBufferView.Format		   = DXGI_FORMAT_R32_UINT;
+	mesh.m_indexBufferView.SizeInBytes     = sizeof(unsigned int) * mesh.m_numIndices;	
+	mesh.m_vertexBufferView.StrideInBytes  = sizeof(Vertex);
+	mesh.m_vertexBufferView.SizeInBytes    = sizeof(Vertex) * mesh.m_numVerticies;
 	
-	mesh.m_indexBuffer  = bufferInfo.m_iBuffer;
-	mesh.m_numIndices   = static_cast<UINT>(customModel.m_indices.size());
-	
-	//Faster to execute them at the same time
-	cmdList->ResourceBarrier(static_cast<UINT>(resourceBarriers.size()), &resourceBarriers[0]);
-	
-	{
-		mesh.m_indexBufferView.BufferLocation  = mesh.m_indexBuffer->GetGPUVirtualAddress();
-		mesh.m_indexBufferView.Format		   = DXGI_FORMAT_R32_UINT;
-		mesh.m_indexBufferView.SizeInBytes     = sizeof(unsigned int) * mesh.m_numIndices;
-		
-		mesh.m_vertexBufferView.BufferLocation = mesh.m_vertexBuffer->GetGPUVirtualAddress();
-		mesh.m_vertexBufferView.StrideInBytes  = sizeof(Vertex);
-		mesh.m_vertexBufferView.SizeInBytes    = sizeof(Vertex) * mesh.m_numVerticies;
-	}
-
 	std::vector<Vect3f> verticies;
 	for (uint16_t i = 0; i < customModel.m_verticies.size(); i++)
 	{
@@ -84,7 +86,8 @@ Model ModelHandler::CreateCustomModel(CustomModel customModel, bool transparent)
 	}
 
 	std::vector<ModelData::Mesh> meshes = { mesh };
-	uint32_t id = GetNewlyCreatedModelID(ModelData(meshes, m_framework.GetDevice(), &m_framework.CbvSrvHeap(), verticies, L"", customModel.m_customModelName, transparent));
+	uint32_t id = m_models.size();
+	m_models.emplace_back(meshes, device, &m_framework.CbvSrvHeap(), verticies, L"", customModel.m_customModelName);
 	
 	return Model(id);
 }
@@ -92,7 +95,7 @@ Model ModelHandler::CreateCustomModel(CustomModel customModel, bool transparent)
 Model ModelHandler::LoadModel(std::wstring fileName, bool transparent, bool uvFlipped)
 {	
 	uint32_t exists = ModelExists(fileName);
-	if (exists != 0) {
+	if (exists != UINT32_MAX) {
 		return exists;
 	}
 
@@ -213,12 +216,12 @@ Material ModelHandler::GetNewMaterialFromLoadedModel(const std::string& material
 		smoothness = L"Sprites/Fabric_Round_Smoothness.dds";
 	}
 
-	material.m_albedo	    = m_textureHandler.GetTexture(albedo);
-	material.m_normal	    = m_textureHandler.GetTexture(normal);
-	material.m_aoMap	    = m_textureHandler.GetTexture(ao);
-	material.m_metallicMap  = m_textureHandler.GetTexture(metal);
-	material.m_roughnessMap = m_textureHandler.GetTexture(smoothness);
-	material.m_heightMap    = m_textureHandler.GetTexture(height);
+	material.m_albedo	    = m_textureHandler.CreateTexture(albedo);
+	material.m_normal	    = m_textureHandler.CreateTexture(normal);
+	material.m_aoMap	    = m_textureHandler.CreateTexture(ao);
+	material.m_metallicMap  = m_textureHandler.CreateTexture(metal);
+	material.m_roughnessMap = m_textureHandler.CreateTexture(smoothness);
+	material.m_heightMap    = m_textureHandler.CreateTexture(height);
 
 	return material;
 }
@@ -247,20 +250,6 @@ uint32_t ModelHandler::CreateModelFromLoadedData(LoaderModel* loadedModel, const
 {
 	std::vector<ModelData::Mesh> meshes = LoadMeshFromLoaderModel(loadedModel, name);
 	std::vector<Vect3f>	      verticies = loadedModel->m_verticies;
-
-	// Now we set the buffer infromation into our BUFFER_VIEWS as well as 
-	// creating DescriptorHeaps and SRV for our textures
-	for (UINT i = 0; i < meshes.size(); i++)
-	{
-		meshes[i].m_indexBufferView.BufferLocation = meshes[i].m_indexBuffer->GetGPUVirtualAddress();
-		meshes[i].m_indexBufferView.SizeInBytes = sizeof(unsigned int) * meshes[i].m_numIndices;
-		meshes[i].m_indexBufferView.Format = DXGI_FORMAT_R32_UINT;
-
-		meshes[i].m_vertexBufferView.BufferLocation = meshes[i].m_vertexBuffer->GetGPUVirtualAddress();
-		meshes[i].m_vertexBufferView.StrideInBytes = meshes[i].m_vertexSize;
-		meshes[i].m_vertexBufferView.SizeInBytes = meshes[i].m_vertexSize * meshes[i].m_numVerticies;
-
-	}
 
 	const uint32_t id = ModelExists(name);
 	ModelData& model = m_models[id];
@@ -293,21 +282,21 @@ std::vector<ModelData::Mesh> ModelHandler::LoadMeshFromLoaderModel(LoaderModel* 
 			device
 		);
 
-		RLH::Instance().QueueResourceBarrier(
+		RLH::Instance().UploadSubResource(
 			bufferInfo.m_vBuffer,
 			bufferInfo.m_vBufferUpload,
-			reinterpret_cast<UINT*>(loadedMesh->m_verticies),
+			reinterpret_cast<uint32_t*>(loadedMesh->m_verticies),
 			loadedMesh->m_vertexSize,
 			loadedMesh->m_vertexCount,
 			D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER
 		);
 
-		RLH::Instance().QueueResourceBarrier(
+		RLH::Instance().UploadSubResource(
 			bufferInfo.m_iBuffer,
 			bufferInfo.m_iBufferUpload,
-			reinterpret_cast<UINT*>(loadedMesh->m_indices.data()),
-			sizeof(UINT),
-			static_cast<UINT>(loadedMesh->m_indices.size()),
+			reinterpret_cast<uint32_t*>(loadedMesh->m_indices.data()),
+			sizeof(uint32_t),
+			static_cast<uint32_t>(loadedMesh->m_indices.size()),
 			D3D12_RESOURCE_STATE_INDEX_BUFFER
 		);
 
@@ -338,14 +327,20 @@ std::vector<ModelData::Mesh> ModelHandler::LoadMeshFromLoaderModel(LoaderModel* 
 		mesh.m_numVerticies = loadedMesh->m_vertexCount;
 		mesh.m_vertexSize   = loadedMesh->m_vertexSize;
 
+		mesh.m_indexBufferView.SizeInBytes = sizeof(unsigned int) * loadedMesh->m_indices.size();
+		mesh.m_indexBufferView.Format = DXGI_FORMAT_R32_UINT;
+
+		mesh.m_vertexBufferView.StrideInBytes = loadedMesh->m_vertexSize;
+		mesh.m_vertexBufferView.SizeInBytes   = loadedMesh->m_vertexSize * loadedMesh->m_vertexCount;
+
 		// Yeah this solution stinks!!!
 		if (!loadedMesh->m_textures.empty()) {
-			mesh.m_material.m_albedo       = m_textureHandler.GetTexture(loadedMesh->m_textures[0]);
-			mesh.m_material.m_normal       = m_textureHandler.GetTexture(loadedMesh->m_textures[1]);
-			mesh.m_material.m_metallicMap  = m_textureHandler.GetTexture(loadedMesh->m_textures[2]);
-			mesh.m_material.m_roughnessMap = m_textureHandler.GetTexture(loadedMesh->m_textures[3]);
-			mesh.m_material.m_heightMap    = m_textureHandler.GetTexture(loadedMesh->m_textures[4]);
-			mesh.m_material.m_aoMap		   = m_textureHandler.GetTexture(loadedMesh->m_textures[5]);
+			mesh.m_material.m_albedo       = m_textureHandler.CreateTexture(loadedMesh->m_textures[0]);
+			mesh.m_material.m_normal       = m_textureHandler.CreateTexture(loadedMesh->m_textures[1]);
+			mesh.m_material.m_metallicMap  = m_textureHandler.CreateTexture(loadedMesh->m_textures[2]);
+			mesh.m_material.m_roughnessMap = m_textureHandler.CreateTexture(loadedMesh->m_textures[3]);
+			mesh.m_material.m_heightMap    = m_textureHandler.CreateTexture(loadedMesh->m_textures[4]);
+			mesh.m_material.m_aoMap		   = m_textureHandler.CreateTexture(loadedMesh->m_textures[5]);
 		}
 		else {
 			if (!loadedModel->m_textures.empty())
@@ -389,7 +384,7 @@ std::vector<ModelData::Mesh> ModelHandler::LoadMeshFromLoaderModel(LoaderModel* 
 		);
 
 		// Queue subresource data to be uploaded to the gpu,
-		RLH::Instance().QueueResourceBarrier(
+		RLH::Instance().UploadSubResource(
 			bufferInfo.m_vBuffer,
 			bufferInfo.m_vBufferUpload,
 			reinterpret_cast<uint32_t*>(loadedMesh->m_verticies),
@@ -398,7 +393,7 @@ std::vector<ModelData::Mesh> ModelHandler::LoadMeshFromLoaderModel(LoaderModel* 
 			D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER
 		);
 
-		RLH::Instance().QueueResourceBarrier(
+		RLH::Instance().UploadSubResource(
 			bufferInfo.m_iBuffer,
 			bufferInfo.m_iBufferUpload,
 			reinterpret_cast<uint32_t*>(loadedMesh->m_indices.data()),

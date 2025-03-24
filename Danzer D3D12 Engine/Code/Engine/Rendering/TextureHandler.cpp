@@ -58,7 +58,7 @@ void TextureHandler::LoadAllCreatedTexuresToGPU()
 
 	CD3DX12_CPU_DESCRIPTOR_HANDLE cbvSrvHandle(srvWrapper->GetDescriptorHeap()->GetCPUDescriptorHandleForHeapStart());
 	if (!m_resourceBarriers.empty()) {
-		m_framework.InitCmdList()->ResourceBarrier((UINT)m_resourceBarriers.size(), &m_resourceBarriers[0]);
+		//m_framework.InitCmdList()->ResourceBarrier((UINT)m_resourceBarriers.size(), &m_resourceBarriers[0]);
 
 		cbvSrvHandle.Offset(srvWrapper->m_handleCurrentOffset * srvWrapper->DESCRIPTOR_SIZE());
 
@@ -126,39 +126,46 @@ Material TextureHandler::CreateMaterial(std::string textures[6], float metallic,
 UINT TextureHandler::CreateTexture(std::wstring file, bool isCubeMap)
 {	
 	file = GetCorrectPathAndName(file);
-	for (UINT i = 0; i < m_textures.size(); i++)
+	for (uint32_t i = 0; i < m_textures.size(); i++)
 	{
 		if (file == m_textures[i].m_texturePath)
-			return i + 1;
+			return i;
 	}
-		
-	Texture texture;
+	
+	uint32_t id = m_textures.size();
+
+	m_textures.emplace_back();
+	Texture& texture      = m_textures[id];
 	texture.m_texturePath = file;
 	texture.m_cubeMap	  = isCubeMap;
-	CD3DX12_RESOURCE_BARRIER resource = LoadTextures(file, &texture.m_textureBuffer, isCubeMap);
-	m_resourceBarriers.emplace_back(resource);
-	m_tempTextures.emplace_back(texture);
 
-	return (UINT)m_textures.size() + (UINT)m_tempTextures.size();
+	RLH::Instance().QueueLoadRequest(new TextureLoadRequest(this, id));
+	
+	//CD3DX12_RESOURCE_BARRIER resource = LoadTextures(file, &texture.m_textureBuffer, isCubeMap);
+	//LoadTexture(file, &texture.m_textureBuffer, isCubeMap);
+
+	//m_resourceBarriers.emplace_back(resource);
+	//m_tempTextures.emplace_back(texture);
+
+	return id;
 }
 
 UINT TextureHandler::CreateCustomTexture(void* data, const UINT sizeOfData, std::wstring name)
 {
-	//name = GetCorrectPathAndName(name);
-	//for (UINT i = 0; i < m_textures.size(); i++)
-	//{
-	//	if (name == m_textures[i].m_texturePath)
-	//		return i + 1;
-	//}
-
+	uint32_t id = m_textures.size();
+	
 	Texture texture;
 	texture.m_texturePath = name;
 	texture.m_cubeMap = false;
-	CD3DX12_RESOURCE_BARRIER resource = LoadTextures(data, sizeOfData, &texture.m_textureBuffer);
-	m_resourceBarriers.emplace_back(resource);
-	m_tempTextures.emplace_back(texture);
+	m_textures.emplace_back(texture);
+	
+	RLH::Instance().QueueLoadRequest(new TextureLoadRequest(this, id, data, sizeOfData));
+	//CD3DX12_RESOURCE_BARRIER resource = LoadTextures(data, sizeOfData, &texture.m_textureBuffer);
+	//LoadTexture(data, sizeOfData, &texture.m_textureBuffer);
+	//m_resourceBarriers.emplace_back(resource);
+	//m_tempTextures.emplace_back(texture);
 
-	return (UINT)m_textures.size() + (UINT)m_tempTextures.size() - 1;
+	return id;
 }
 
 
@@ -235,21 +242,22 @@ CD3DX12_RESOURCE_BARRIER TextureHandler::LoadTextures(std::wstring file, ID3D12R
 		IID_PPV_ARGS(&uploadBuffer));
 	CHECK_HR(result);
 
-
 	UpdateSubresources(
-		m_framework.InitCmdList(),
+		RLH::Instance().ResourceUploader()->CmdList(),
 		*textureBuffer,
 		uploadBuffer,
 		0, 0,
 		static_cast<UINT>(subresourcedata.size()),
 		subresourcedata.data()
 	);
-
+	
 	CD3DX12_RESOURCE_BARRIER transition = CD3DX12_RESOURCE_BARRIER::Transition(
 		*textureBuffer,
 		D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 
-	// Return resourc barrier so it's possible to upload multiple at the same time
+	RLH::Instance().UploadSubResource(transition);
+	//
+	//// Return resourc barrier so it's possible to upload multiple at the same time
 	return transition;
 }
 
@@ -299,8 +307,119 @@ CD3DX12_RESOURCE_BARRIER TextureHandler::LoadTextures(void* data, const UINT siz
 	textureData.RowPitch   = (sizeof(float) * 4)  * sizeOfData;
 	textureData.SlicePitch = textureData.RowPitch * sizeOfData;
 
+	//UpdateSubresources(
+	//	m_framework.InitCmdList(),
+	//	*textureBuffer,
+	//	uploadBuffer,
+	//	0, 0,
+	//	1,
+	//	&textureData
+	//);
+
+	CD3DX12_RESOURCE_BARRIER transition = CD3DX12_RESOURCE_BARRIER::Transition(
+		*textureBuffer,
+		D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+
+	return transition;
+}
+
+void TextureHandler::LoadTexture(std::wstring file, ID3D12Resource** textureBuffer, bool isCubeMap)
+{
+	std::vector<D3D12_SUBRESOURCE_DATA> subresourcedata = {};
+	std::unique_ptr<uint8_t[]> pointerData;
+
+	HRESULT result = DirectX::LoadDDSTextureFromFile(
+		m_framework.GetDevice(),
+		file.c_str(),
+		textureBuffer,
+		pointerData,
+		subresourcedata,
+		0,
+		nullptr,
+		&isCubeMap);
+	CHECK_HR(result);
+
+
+	const UINT64 uploadBufferSize = GetRequiredIntermediateSize(*textureBuffer, 0,
+		static_cast<UINT>(subresourcedata.size()));
+
+	CD3DX12_HEAP_PROPERTIES uploadHeap(D3D12_HEAP_TYPE_UPLOAD);
+	CD3DX12_RESOURCE_DESC   buffer = CD3DX12_RESOURCE_DESC::Buffer(uploadBufferSize);
+
+	ID3D12Resource* uploadBuffer;
+	result = m_framework.GetDevice()->CreateCommittedResource(
+		&uploadHeap,
+		D3D12_HEAP_FLAG_NONE,
+		&buffer,
+		D3D12_RESOURCE_STATE_GENERIC_READ,
+		nullptr,
+		IID_PPV_ARGS(&uploadBuffer));
+	CHECK_HR(result);
+
 	UpdateSubresources(
-		m_framework.InitCmdList(),
+		RLH::Instance().ResourceUploader()->CmdList(),
+		*textureBuffer,
+		uploadBuffer,
+		0, 0,
+		static_cast<UINT>(subresourcedata.size()),
+		subresourcedata.data()
+	);
+
+	CD3DX12_RESOURCE_BARRIER transition = CD3DX12_RESOURCE_BARRIER::Transition(
+		*textureBuffer,
+		D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+
+	RLH::Instance().UploadSubResource(transition);
+}
+
+void TextureHandler::LoadTexture(void* data, const UINT sizeOfData, ID3D12Resource** textureBuffer)
+{
+	D3D12_RESOURCE_DESC textureDesc = {};
+	textureDesc.MipLevels = 1;
+	textureDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+	textureDesc.Width = sizeOfData;
+	textureDesc.Height = sizeOfData;
+	textureDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+	textureDesc.DepthOrArraySize = 1;
+	textureDesc.SampleDesc.Count = 1;
+	textureDesc.SampleDesc.Quality = 1;
+	textureDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+
+	CD3DX12_HEAP_PROPERTIES heapType(D3D12_HEAP_TYPE_DEFAULT);
+
+	CHECK_HR(m_framework.GetDevice()->CreateCommittedResource(
+		&heapType,
+		D3D12_HEAP_FLAG_NONE,
+		&textureDesc,
+		D3D12_RESOURCE_STATE_COPY_DEST,
+		nullptr,
+		IID_PPV_ARGS(textureBuffer))
+	);
+
+	const UINT64 uploadBufferSize = GetRequiredIntermediateSize(*textureBuffer, 0, 1);
+
+	CD3DX12_HEAP_PROPERTIES uploadHeap(D3D12_HEAP_TYPE_UPLOAD);
+	CD3DX12_RESOURCE_DESC   buffer = CD3DX12_RESOURCE_DESC::Buffer(uploadBufferSize);
+
+	ID3D12Resource* uploadBuffer;
+	CHECK_HR(m_framework.GetDevice()->CreateCommittedResource(
+		&uploadHeap,
+		D3D12_HEAP_FLAG_NONE,
+		&buffer,
+		D3D12_RESOURCE_STATE_GENERIC_READ,
+		nullptr,
+		IID_PPV_ARGS(&uploadBuffer))
+	);
+
+
+
+	D3D12_SUBRESOURCE_DATA textureData = {};
+	textureData.pData = data;
+	textureData.RowPitch = (sizeof(float) * 4) * sizeOfData;
+	textureData.SlicePitch = textureData.RowPitch * sizeOfData;
+
+	UpdateSubresources(
+		RLH::Instance().ResourceUploader()->CmdList(),
 		*textureBuffer,
 		uploadBuffer,
 		0, 0,
@@ -312,5 +431,25 @@ CD3DX12_RESOURCE_BARRIER TextureHandler::LoadTextures(void* data, const UINT siz
 		*textureBuffer,
 		D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 
-	return transition;
+	RLH::Instance().UploadSubResource(transition);
+}
+
+void TextureHandler::TextureLoadRequest::LoadData()
+{
+	Texture& texture = m_textureHandler->m_textures[m_id];
+
+	if(m_customTexture)
+		m_textureHandler->LoadTexture(m_data, m_sizeOfData, &texture.m_textureBuffer);
+	else
+		m_textureHandler->LoadTexture(texture.m_texturePath, &texture.m_textureBuffer, texture.m_cubeMap);
+
+	CD3DX12_CPU_DESCRIPTOR_HANDLE handle;
+	texture.m_offsetID = m_textureHandler->m_framework.CbvSrvHeap().CreateDescriptorHandle(handle);
+
+	DirectX::CreateShaderResourceView(
+		m_textureHandler->m_framework.GetDevice(),
+		texture.m_textureBuffer.Get(),
+		handle,
+		texture.m_cubeMap
+	);
 }

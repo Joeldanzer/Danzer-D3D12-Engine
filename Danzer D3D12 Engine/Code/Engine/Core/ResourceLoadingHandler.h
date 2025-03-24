@@ -32,27 +32,21 @@ public:
 		const D3D12_RESOURCE_STATES state,
 		const uint32_t numberOfSubResources = 1
 	);
-
+	void UploadSubResource(CD3DX12_RESOURCE_BARRIER subResource);
+	
 private:
 	friend class D3D12Framework;
+	friend class Engine;
 
+	static void InitializeInstance(D3D12Framework& framework);
 	ResourceLoadingHandler(D3D12Framework& framework);
-	
-	void DeactivateLoadingQueue() {
-		m_loadingQueueActive = false;
-	}
-	void UpdateResourceLoading();
 
-	D3D12Framework&						  m_framework;
 	FrameResource*						  m_resourceUploader;
 	// Uploading data to the gpu, only used for resources that are used for rendering.
 	std::vector<CD3DX12_RESOURCE_BARRIER> m_resourceQueue;
 
 	// Loading data to the cpu, this can be anything from models to sound. 
 	std::queue<LoadRequest*>			  m_loadingQueue;
-
-	bool								  m_loadingQueueActive;
-
 	static ResourceLoadingHandler* s_instance;
 };
 

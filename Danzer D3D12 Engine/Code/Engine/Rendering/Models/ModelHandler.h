@@ -30,8 +30,8 @@ public:
 	void  LoadModelsToScene(entt::registry& reg, std::wstring fileName, std::string name = "", bool uvFlipped = false);
 
 	ModelData& GetLoadedModelInformation(UINT id) {
-		if (id - 1 < m_models.size() && id != 0)
-			return m_models[id - 1];
+		if (id < m_models.size() && id != UINT32_MAX)
+			return m_models[id];
 
 		printf("Model with ID:%d doesnt exist! \n", id);
 		return m_models[0];
@@ -56,6 +56,7 @@ private:
 		ModelLoadRequest(ModelHandler* modelHandler, const std::wstring fileName, const std::string modelName, bool transparent, bool uvFlipped) :
 			m_modelHandler(modelHandler),
 			m_fileName(fileName),
+			m_modelName(modelName),
 			m_transparent(transparent),
 			m_uvFlipped(uvFlipped)
 		{}

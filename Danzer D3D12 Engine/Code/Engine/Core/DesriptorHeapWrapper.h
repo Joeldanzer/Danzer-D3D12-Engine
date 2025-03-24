@@ -30,12 +30,14 @@ public:
 private:
 	friend class D3D12Framework;
 
+
 	D3D12_DESCRIPTOR_HEAP_DESC   m_desc;
 	ComPtr<ID3D12DescriptorHeap> m_desctiptorHeap;
 
-	D3D12_CPU_DESCRIPTOR_HANDLE m_cpuHeapStart;
-	D3D12_GPU_DESCRIPTOR_HANDLE m_gpuHeapStart; 
+	D3D12_CPU_DESCRIPTOR_HANDLE  m_cpuHeapStart;
+	D3D12_GPU_DESCRIPTOR_HANDLE  m_gpuHeapStart; 
 
-	UINT m_handleIncrementSize; 
+	UINT						 m_handleIncrementSize; 
+	bool						 m_waitForHeapCreation = false;
 };
 

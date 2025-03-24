@@ -49,6 +49,8 @@ CD3DX12_GPU_DESCRIPTOR_HANDLE DescriptorHeapWrapper::GET_GPU_DESCRIPTOR(const ui
 
 uint32_t DescriptorHeapWrapper::CreateDescriptorHandle(CD3DX12_CPU_DESCRIPTOR_HANDLE& cpuHandle)
 {
+	while(m_waitForHeapCreation){}
+	m_waitForHeapCreation = true;
 	assert(m_handleCurrentOffset < m_desc.NumDescriptors);
 
 	cpuHandle = GetDescriptorHeap()->GetCPUDescriptorHandleForHeapStart();
@@ -57,5 +59,6 @@ uint32_t DescriptorHeapWrapper::CreateDescriptorHandle(CD3DX12_CPU_DESCRIPTOR_HA
 	const uint32_t offset = m_handleCurrentOffset;
 	m_handleCurrentOffset++;
 	
+	m_waitForHeapCreation = false;
 	return offset;
 }
