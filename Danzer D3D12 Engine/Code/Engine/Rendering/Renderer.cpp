@@ -26,11 +26,11 @@ void Renderer::Init(D3D12Framework& framework)
 {
 	m_framework = &framework;
 	
-	m_shadowBuffer.Init(framework.GetDevice(),	   &framework.CbvSrvHeap(),	sizeof(CameraBuffer::Data));
+	//m_shadowBuffer.Init(framework.GetDevice(),	   &framework.CbvSrvHeap(),	sizeof(CameraBuffer::Data));
 	m_cameraBuffer.Init(framework.GetDevice(),	   &framework.CbvSrvHeap(),	sizeof(CameraBuffer::Data));
 	m_lightBuffer.Init(framework.GetDevice(),	   &framework.CbvSrvHeap(),	sizeof(LightBuffer::Data));
 	m_materialBuffer.Init(framework.GetDevice(),   &framework.CbvSrvHeap(),	sizeof(MaterialBuffer::Data));
-	m_pointLightBuffer.Init(framework.GetDevice(), &framework.CbvSrvHeap(), sizeof(PointLightBuffer::Data));
+	//m_pointLightBuffer.Init(framework.GetDevice(), &framework.CbvSrvHeap(), sizeof(PointLightBuffer::Data));
 }
 
 //* Default Buffers for all existing 3D models. Should only be updated once per frame!

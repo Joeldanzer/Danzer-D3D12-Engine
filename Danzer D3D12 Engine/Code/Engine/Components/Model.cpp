@@ -41,12 +41,15 @@ void Model::DisplayInEditor(const Entity entity)
 	}
 	
 	if (model.m_modelID == UINT32_MAX)
-		model.m_modelID = 1;
+		return;
 
 	ModelData& modelData  = Engine::GetInstance().GetModelHandler().GetLoadedModelInformation(model.m_modelID);
 	ImGui::Text(std::string(modelData.GetModelPath().begin(), modelData.GetModelPath().end()).c_str());
 
-	const int32_t  meshCount = modelData.GetMeshes().size() - 1;
+	if (!modelData.ModelFinished())
+		return;
+
+	const  int32_t meshCount = modelData.GetMeshes().size() - 1;
 	static int32_t selectedMesh = 0;
 	
 	ImGui::DragInt("Selected Mesh", &selectedMesh, 1.0f, 0, meshCount);

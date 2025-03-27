@@ -37,7 +37,7 @@ void VertexBuffer::UpdateBuffer(uint16_t* bufferData, const uint32_t instanceCou
 void VertexBuffer::CreateHeap(ID3D12Device* device, ID3D12Resource** resource, D3D12_HEAP_TYPE type, D3D12_RESOURCE_STATES resourceState, UINT size)
 {
 	CD3DX12_HEAP_PROPERTIES uploadHeap = CD3DX12_HEAP_PROPERTIES(type);
-	CD3DX12_RESOURCE_DESC buffer       = CD3DX12_RESOURCE_DESC::Buffer(size);
+	CD3DX12_RESOURCE_DESC   buffer     = CD3DX12_RESOURCE_DESC::Buffer(size);
 
 	CHECK_HR(
 		device->CreateCommittedResource(

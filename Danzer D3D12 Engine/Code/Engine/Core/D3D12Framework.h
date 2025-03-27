@@ -2,6 +2,8 @@
 
 #include "DesriptorHeapWrapper.h"
 #include <dxgi1_4.h>
+#include <thread>
+
 
 class FrameResource;
 class PSOHandler;
@@ -25,13 +27,15 @@ public:
 	D3D12Framework();
     ~D3D12Framework();
 	
+    FrameResource* ResourceUploader() {
+        return m_resourceUploader;
+    }
     FrameResource* CurrentFrameResource() {
         return m_frameResources[m_frameIndex];
     }
-    ID3D12GraphicsCommandList* InitCmdList() {
-        return m_initCmdList.Get();
-    }
-    
+
+    void UploadResourcesToGPU(FrameResource* frameResource);
+
     void InitiateCommandList(ID3D12PipelineState* pso, std::wstring message);
     void ExecuteCommandList();
     void WaitForGPU();
@@ -70,9 +74,9 @@ public:
         return m_renderTargets[m_frameIndex].Get();
     }
 
-    ID3D12GraphicsCommandList* GetInitCmdList() {
-        return m_initCmdList.Get();
-    }
+    //ID3D12GraphicsCommandList* GetInitCmdList() {
+    //    return m_initCmdList.Get();
+    //}
     ID3D12Device* GetDevice() {
         return m_device.Get();
     }
@@ -83,8 +87,14 @@ public:
 private:
     friend class RenderManager;
 
-    bool m_initFrame = true;
+    bool m_firstRscUpload       = false;
+    bool m_initFrame            = true;
+    bool m_loadingQueueActive   = true;
 
+    bool m_renderFrameActive    = false;
+    bool m_resourceUploadActive = true;
+
+    void UpdateResourceLoading();
     void RenderToBackBuffer(const uint32_t textureToPresent, PSOHandler& psoHandler);
     void SetBackBufferPSO(PSOHandler& psoHandler);
 
@@ -101,9 +111,10 @@ private:
     ComPtr<ID3D12Resource> m_renderTargets[FrameCount];
     ComPtr<ID3D12Resource> m_depthStencil;
     
-    ComPtr<ID3D12CommandAllocator>    m_commandAllocator;
+    //ComPtr<ID3D12CommandAllocator>    m_commandAllocator;
     ComPtr<ID3D12CommandQueue>        m_commandQueue;
-    ComPtr<ID3D12GraphicsCommandList> m_initCmdList; // This commandList is only used on Initialization
+    ComPtr<ID3D12CommandQueue>        m_copyCmnQueue;
+    //ComPtr<ID3D12GraphicsCommandList> m_initCmdList; // This commandList is only used on Initialization
     
     DescriptorHeapWrapper m_rtvHeap;
     DescriptorHeapWrapper m_dsvHeap;
@@ -111,6 +122,7 @@ private:
 
     ID3D12DescriptorHeap* m_imguiDesc;
 
+    FrameResource* m_resourceUploader;
     FrameResource* m_frameResources[FrameCount];
 
     UINT   m_frameIndex;
@@ -127,5 +139,7 @@ private:
         D3D12_RESOURCE_STATES m_newState;
     };
     std::vector<std::pair<ID3D12Resource*, StateTransition>> m_transitionQeueu;
+
+    std::thread m_resourceLoadingThread;
 };
 

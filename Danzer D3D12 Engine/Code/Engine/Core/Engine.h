@@ -21,7 +21,6 @@ class Engine
 {
 public:
 	Engine() = delete;
-	explicit Engine(unsigned int width, unsigned int height);
 	~Engine();
 
 	static Engine& GetInstance() {
@@ -50,6 +49,7 @@ public:
 	
 
 private:
+	explicit Engine(unsigned int width, unsigned int height);
 	static Engine* s_engineSingleton;
 	
 	void EndInitFrame();

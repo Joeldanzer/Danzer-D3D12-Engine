@@ -35,8 +35,8 @@ void Renderer2D::Init(D3D12Framework& framework, PSOHandler& psoHandler)
 
 	m_framework = &framework;
 	
-	m_windowBuffer.Init(framework.GetDevice(), &framework.CbvSrvHeap(), sizeof(WindowBuffer::Data));
-	m_spriteSheetBuffer.Init(framework.GetDevice(), &framework.CbvSrvHeap(), sizeof(WindowBuffer::Data));
+	//m_windowBuffer.Init(framework.GetDevice(), &framework.CbvSrvHeap(), sizeof(WindowBuffer::Data));
+	//m_spriteSheetBuffer.Init(framework.GetDevice(), &framework.CbvSrvHeap(), sizeof(WindowBuffer::Data));
 	CreateUIVertexAndIndexBuffers(framework);
 }
 
@@ -138,9 +138,9 @@ void Renderer2D::CreateUIVertexAndIndexBuffers(D3D12Framework& framework)
 		vertexData.RowPitch = sizeof(Vertex) * verticies.size();
 		vertexData.SlicePitch = vertexData.RowPitch;
 
-		UpdateSubresources(framework.InitCmdList(), m_vertexBuffer.Get(), bufferInfo.m_vBufferUpload, 0, 0, 1, &vertexData);
-		resourceBarriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(
-			m_vertexBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
+		//UpdateSubresources(framework.InitCmdList(), m_vertexBuffer.Get(), bufferInfo.m_vBufferUpload, 0, 0, 1, &vertexData);
+		//resourceBarriers[0] = CD3DX12_RESOURCE_BARRIER::Transition(
+		//	m_vertexBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
 	}
 
 	// Update subresource data to index buffer and add the data to a buffer view
@@ -152,12 +152,12 @@ void Renderer2D::CreateUIVertexAndIndexBuffers(D3D12Framework& framework)
 		indexData.RowPitch = sizeof(unsigned int) * indices.size();
 		indexData.SlicePitch = indexData.RowPitch;
 
-		UpdateSubresources(m_framework->InitCmdList(), m_indexBuffer.Get(), bufferInfo.m_iBufferUpload, 0, 0, 1, &indexData);
-		resourceBarriers[1] = CD3DX12_RESOURCE_BARRIER::Transition(
-			m_indexBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDEX_BUFFER);
+		//UpdateSubresources(m_framework->InitCmdList(), m_indexBuffer.Get(), bufferInfo.m_iBufferUpload, 0, 0, 1, &indexData);
+		//resourceBarriers[1] = CD3DX12_RESOURCE_BARRIER::Transition(
+		//	m_indexBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDEX_BUFFER);
 	}
 
-	m_framework->InitCmdList()->ResourceBarrier(2, &resourceBarriers[0]);
+	//m_framework->InitCmdList()->ResourceBarrier(2, &resourceBarriers[0]);
 
 	//framework.ExecuteCommandList();
 

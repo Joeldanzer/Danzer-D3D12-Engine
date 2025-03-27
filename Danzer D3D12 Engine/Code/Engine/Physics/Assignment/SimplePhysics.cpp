@@ -273,9 +273,6 @@ const bool SimplePhysics::BoxToBoxIntersect(const Entity box1Entity, const Entit
 	//Vect3f halfSize1 = box1.m_extents * 0.5f;
 	//Vect3f halfSize2 = box2.m_extents * 0.5f;
 	
-	if (!SeparatingAxisTheoremForBox(translation, absRotation, box1.m_extents, box2.m_extents))
-		return false;
-
 	if (!SeparatingAxisTheoremForBox(translation, absRotation, box2.m_extents, box1.m_extents))
 		return false;
 

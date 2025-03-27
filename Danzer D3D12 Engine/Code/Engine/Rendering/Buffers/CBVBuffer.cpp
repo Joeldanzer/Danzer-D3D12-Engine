@@ -11,11 +11,10 @@ void CBVBuffer::Init(ID3D12Device* device, DescriptorHeapWrapper* cbvWrapper, UI
 {	
 	m_sizeOfData = sizeOfData;
 	UINT size = AssignBufferSize(sizeOfData);
-	m_offsetID = 0;
 
-	CD3DX12_CPU_DESCRIPTOR_HANDLE cbvHandle(cbvWrapper->GetDescriptorHeap()->GetCPUDescriptorHandleForHeapStart());
-	cbvHandle.Offset(cbvWrapper->m_handleCurrentOffset * cbvWrapper->DESCRIPTOR_SIZE());
-	
+	CD3DX12_CPU_DESCRIPTOR_HANDLE cbvHandle;
+	m_offsetID = cbvWrapper->CreateDescriptorHandle(cbvHandle, 3);
+
 	const UINT actualSize = sizeOfData;
 	for (unsigned int i = 0; i < FrameCount; i++)
 	{
@@ -34,11 +33,9 @@ void CBVBuffer::Init(ID3D12Device* device, DescriptorHeapWrapper* cbvWrapper, UI
 		D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
 		cbvDesc.BufferLocation = m_bufferUpload[i]->GetGPUVirtualAddress();
 		cbvDesc.SizeInBytes = size; // Contant buffer size is required to be 256-byte aligned.
+		
 		device->CreateConstantBufferView(&cbvDesc, cbvHandle);
-
-		m_offsetID = m_offsetID == 0 ? cbvWrapper->m_handleCurrentOffset : m_offsetID;
 		cbvHandle.Offset(cbvWrapper->DESCRIPTOR_SIZE());
-		cbvWrapper->m_handleCurrentOffset++;
 
 		CD3DX12_RANGE readRange(0, 0); // Don't intend to read this resource on the CPU
 		CHECK_HR(m_bufferUpload[i]->Map(0, &readRange, reinterpret_cast<void**>(&m_bufferGPUAddress[i])));

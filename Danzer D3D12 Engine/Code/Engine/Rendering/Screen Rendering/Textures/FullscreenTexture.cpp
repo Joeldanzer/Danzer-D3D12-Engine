@@ -15,20 +15,12 @@ FullscreenTexture::~FullscreenTexture()
 
 void FullscreenTexture::InitAsDepth(const std::wstring name, ID3D12Device* device, DescriptorHeapWrapper* cbvSrvHeap, DescriptorHeapWrapper* dsvHeap, const UINT width, const UINT height, DXGI_FORMAT textureDesc, DXGI_FORMAT srvFormat, D3D12_RESOURCE_FLAGS resourceFlag, const uint16_t mipLevels)
 {
-	CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle = cbvSrvHeap->GET_CPU_DESCRIPTOR(0);
-	srvHandle.Offset(cbvSrvHeap->m_handleCurrentOffset * cbvSrvHeap->DESCRIPTOR_SIZE());
-
-	CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle = dsvHeap->GET_CPU_DESCRIPTOR(0);
-	dsvHandle = dsvHeap->GET_CPU_DESCRIPTOR(0);
-	dsvHandle.Offset(dsvHeap->m_handleCurrentOffset * dsvHeap->DESCRIPTOR_SIZE());
-
-	m_dsvOffsetID = dsvHeap->m_handleCurrentOffset;
-	m_srvOffsetID = cbvSrvHeap->m_handleCurrentOffset;
-
-	cbvSrvHeap->m_handleCurrentOffset++;
-
 	uint16_t mip = mipLevels > TextureHandler::MaxMipLevels ? TextureHandler::MaxMipLevels : mipLevels;
 	mip = mipLevels <= 0 ? TextureHandler::MinMipLevels : mipLevels;
+
+	CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle, dsvHandle;
+	m_srvOffsetID = cbvSrvHeap->CreateDescriptorHandle(srvHandle, FrameCount);
+	m_dsvOffsetID = dsvHeap->CreateDescriptorHandle(dsvHandle, FrameCount);
 
 	for (UINT i = 0; i < FrameCount; i++)
 	{
@@ -74,12 +66,10 @@ void FullscreenTexture::InitAsDepth(const std::wstring name, ID3D12Device* devic
 		dsvDesc.Texture2D.MipSlice = 0;
 
 		device->CreateDepthStencilView(m_resource[i].Get(), &dsvDesc, dsvHandle);
-		dsvHandle.Offset(dsvHeap->DESCRIPTOR_SIZE());
-		dsvHeap->m_handleCurrentOffset++;
-
 		device->CreateShaderResourceView(m_resource[i].Get(), &srvDesc, srvHandle);
+
+		dsvHandle.Offset(dsvHeap->DESCRIPTOR_SIZE());
 		srvHandle.Offset(cbvSrvHeap->DESCRIPTOR_SIZE());
-		cbvSrvHeap->m_handleCurrentOffset++;
 
 		m_resource[i]->SetName(std::wstring(name + std::to_wstring(i)).c_str());
 	}
@@ -91,17 +81,12 @@ void FullscreenTexture::InitAsDepth(const std::wstring name, ID3D12Device* devic
 
 void FullscreenTexture::InitAsTexture(const std::wstring name, ID3D12Device* device, DescriptorHeapWrapper* cbvSrvHeap, DescriptorHeapWrapper* rtvHeap, const UINT width, const UINT height, DXGI_FORMAT textureDesc, DXGI_FORMAT srvFormat, D3D12_RESOURCE_FLAGS resourceFlag, const uint16_t mipLevels)
 {
-	CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle = cbvSrvHeap->GET_CPU_DESCRIPTOR(0);
-	srvHandle.Offset(cbvSrvHeap->m_handleCurrentOffset * cbvSrvHeap->DESCRIPTOR_SIZE());
-
-	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle = rtvHeap->GET_CPU_DESCRIPTOR(0);
-	rtvHandle.Offset(rtvHeap->m_handleCurrentOffset * rtvHeap->DESCRIPTOR_SIZE());
-
-	m_rtvOffsetID = rtvHeap->m_handleCurrentOffset;
-	m_srvOffsetID = cbvSrvHeap->m_handleCurrentOffset;
-
 	uint16_t mip = mipLevels > TextureHandler::MaxMipLevels ? TextureHandler::MaxMipLevels : mipLevels;
 	mip			 = mipLevels <= 0 ? TextureHandler::MinMipLevels : mipLevels;
+
+	CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle, rtvHandle;
+	m_srvOffsetID = cbvSrvHeap->CreateDescriptorHandle(srvHandle, FrameCount);
+	m_rtvOffsetID = rtvHeap->CreateDescriptorHandle(rtvHandle, FrameCount);
 
 	for (UINT i = 0; i < FrameCount; i++)
 	{
@@ -140,12 +125,10 @@ void FullscreenTexture::InitAsTexture(const std::wstring name, ID3D12Device* dev
 		));
 
 		device->CreateRenderTargetView(m_resource[i].Get(), nullptr, rtvHandle);
-		rtvHandle.Offset(rtvHeap->DESCRIPTOR_SIZE());
-		rtvHeap->m_handleCurrentOffset++;
-
 		device->CreateShaderResourceView(m_resource[i].Get(), &srvDesc, srvHandle);
+
+		rtvHandle.Offset(rtvHeap->DESCRIPTOR_SIZE());
 		srvHandle.Offset(cbvSrvHeap->DESCRIPTOR_SIZE());
-		cbvSrvHeap->m_handleCurrentOffset++;
 
 		m_resource[i]->SetName(std::wstring(name + std::to_wstring(i)).c_str());
 	}

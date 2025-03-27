@@ -9,7 +9,6 @@
 #include "..\Engine\Physics\Assignment\SimplePhysics.h"
 #include "..\Game\Game.h"
 
-
 void DebugWindow() {
 #pragma warning( push )
 #pragma warning( disable : 4996 )
@@ -49,6 +48,8 @@ public:
 		SimplePhysics physics;
 
 		Engine::GetInstance().EndInitFrame();
+		//RLH& rlh = RLH::Instance();
+
 
 		while (true) {
 

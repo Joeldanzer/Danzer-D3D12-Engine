@@ -237,6 +237,10 @@ void ImguiHandler::StaticWindows()
 				m_currentEntity = REGISTRY->Create3DEntity(m_baseEntityName, false);
 			}
 
+			if (ImGui::Button("Destry Selected Entity")) {
+				m_removeEntity = true;
+			}
+
 			ImGui::Separator();
 
 			if (ImGui::BeginListBox("##", ImGui::GetWindowSize())) {

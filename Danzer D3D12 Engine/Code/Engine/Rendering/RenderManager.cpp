@@ -654,7 +654,7 @@ void RenderManager::Impl::Update3DInstances(const Camera& cam, SceneManager& sce
 
 			Model* model = Reg::Instance()->TryGet<Model>(entity);
 			if (model) {
-				if (model->m_modelID != 0) {
+				if (model->m_modelID != UINT32_MAX) {
 					//Transform& transform = reg.get<Transform>(entity);
 						
 					if (!Reg::Instance()->TryGet<ModelEffect>(entity)) {

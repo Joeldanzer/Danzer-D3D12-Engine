@@ -41,7 +41,6 @@ private:
 		//Collision(BaseCollider*)
 		//std::string m_colliderOne;
 		//std::string m_colliderTwo;
-
 		Vect3f m_collisionPoint;
 	};
 	

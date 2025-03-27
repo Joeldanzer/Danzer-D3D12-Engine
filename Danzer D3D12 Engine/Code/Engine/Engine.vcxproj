@@ -257,6 +257,7 @@
     <ClInclude Include="Rendering\2D\SpriteHandler.h" />
     <ClInclude Include="Rendering\Buffers\SpriteSheetBuffer.h" />
     <ClInclude Include="Rendering\SkyBox.h" />
+    <ClInclude Include="Core\ResourceLoadingHandler.h" />
     <ClInclude Include="SceneOLD.h" />
     <ClInclude Include="SceneManager.h" />
     <ClInclude Include="Rendering\Screen Rendering\ScreenTexture.h" />
@@ -329,6 +330,7 @@
     <ClCompile Include="Rendering\2D\SpriteHandler.cpp" />
     <ClCompile Include="Rendering\Buffers\SpriteSheetBuffer.cpp" />
     <ClCompile Include="Rendering\SkyBox.cpp" />
+    <ClCompile Include="Core\ResourceLoadingHandler.cpp" />
     <ClCompile Include="SceneOLD.cpp" />
     <ClCompile Include="SceneManager.cpp" />
     <ClCompile Include="Rendering\Screen Rendering\ScreenTexture.cpp" />

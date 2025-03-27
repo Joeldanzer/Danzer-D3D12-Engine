@@ -14,6 +14,7 @@
 
 #include "Core/FrameResource.h"
 #include "Components/AllComponents.h"
+#include "Core/ResourceLoadingHandler.h"
 
 #include <iostream>
 #include <filesystem>
@@ -25,56 +26,58 @@ ModelHandler::~ModelHandler(){
 Model ModelHandler::CreateCustomModel(CustomModel customModel, bool transparent)
 {
 	ID3D12Device* device = m_framework.GetDevice();
-	ID3D12GraphicsCommandList* cmdList = m_framework.InitCmdList();
 
-	UINT modelExist = GetExistingModel(L"CustomCube");
-	if (modelExist != 0) {
+	uint32_t modelExist = ModelExists(customModel.m_customModelName);
+	if (modelExist != UINT32_MAX) {
 		return modelExist;
 	}
 	
-	std::vector<CD3DX12_RESOURCE_BARRIER> resourceBarriers;
 	VertexIndexBufferInfo bufferInfo = GetIndexAndVertexBuffer(ToWstring(customModel.m_customModelName), sizeof(Vertex) * (unsigned int)customModel.m_verticies.size(),
 		sizeof(unsigned int) * (unsigned int)customModel.m_indices.size(), device);
 	
-	ModelData::Mesh mesh;
-	resourceBarriers.emplace_back(SetSubresourceData(
-		cmdList,
+	
+	RLH::Instance().UploadSubResource(
 		bufferInfo.m_vBuffer,
 		bufferInfo.m_vBufferUpload,
-		reinterpret_cast<UINT*>(&customModel.m_verticies[0]),
-		sizeof(Vertex), static_cast<UINT>(customModel.m_verticies.size()), 
+		reinterpret_cast<uint32_t*>(&customModel.m_verticies[0]),
+		sizeof(Vertex), static_cast<uint32_t>(customModel.m_verticies.size()),
 		D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER
-		));
-	
-	resourceBarriers.emplace_back(SetSubresourceData(
-		cmdList,
+	);
+	RLH::Instance().UploadSubResource(
 		bufferInfo.m_iBuffer,
 		bufferInfo.m_iBufferUpload,
-		reinterpret_cast<UINT*>(&customModel.m_indices[0]),
-		sizeof(UINT), static_cast<UINT>(customModel.m_indices.size()),
+		reinterpret_cast<uint32_t*>(&customModel.m_indices[0]),
+		sizeof(uint32_t), static_cast<uint32_t>(customModel.m_indices.size()),
 		D3D12_RESOURCE_STATE_INDEX_BUFFER
-	));
+	);
+	//resourceBarriers.emplace_back(SetSubresourceData(
+	//	cmdList,
+	//	bufferInfo.m_vBuffer,
+	//	bufferInfo.m_vBufferUpload,
+	//	reinterpret_cast<UINT*>(&customModel.m_verticies[0]),
+	//	sizeof(Vertex), static_cast<UINT>(customModel.m_verticies.size()), 
+	//	D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER
+	//	));
+	//resourceBarriers.emplace_back(SetSubresourceData(
+	//	cmdList,
+	//	bufferInfo.m_iBuffer,
+	//	bufferInfo.m_iBufferUpload,
+	//	reinterpret_cast<UINT*>(&customModel.m_indices[0]),
+	//	sizeof(UINT), static_cast<UINT>(customModel.m_indices.size()),
+	//	D3D12_RESOURCE_STATE_INDEX_BUFFER
+	//));
 	
-	mesh.m_vertexBuffer = bufferInfo.m_vBuffer;
-	mesh.m_vertexSize   = sizeof(Vertex);
-	mesh.m_numVerticies = static_cast<UINT>(customModel.m_verticies.size());
+	ModelData::Mesh mesh;
+	mesh.m_vertexBuffer					   = bufferInfo.m_vBuffer;
+	mesh.m_vertexSize					   = sizeof(Vertex);
+	mesh.m_numVerticies					   = static_cast<UINT>(customModel.m_verticies.size());
+	mesh.m_indexBuffer					   = bufferInfo.m_iBuffer;
+	mesh.m_numIndices					   = static_cast<UINT>(customModel.m_indices.size());
+	mesh.m_indexBufferView.Format		   = DXGI_FORMAT_R32_UINT;
+	mesh.m_indexBufferView.SizeInBytes     = sizeof(unsigned int) * mesh.m_numIndices;	
+	mesh.m_vertexBufferView.StrideInBytes  = sizeof(Vertex);
+	mesh.m_vertexBufferView.SizeInBytes    = sizeof(Vertex) * mesh.m_numVerticies;
 	
-	mesh.m_indexBuffer  = bufferInfo.m_iBuffer;
-	mesh.m_numIndices   = static_cast<UINT>(customModel.m_indices.size());
-	
-	//Faster to execute them at the same time
-	cmdList->ResourceBarrier(static_cast<UINT>(resourceBarriers.size()), &resourceBarriers[0]);
-	
-	{
-		mesh.m_indexBufferView.BufferLocation  = mesh.m_indexBuffer->GetGPUVirtualAddress();
-		mesh.m_indexBufferView.Format		   = DXGI_FORMAT_R32_UINT;
-		mesh.m_indexBufferView.SizeInBytes     = sizeof(unsigned int) * mesh.m_numIndices;
-		
-		mesh.m_vertexBufferView.BufferLocation = mesh.m_vertexBuffer->GetGPUVirtualAddress();
-		mesh.m_vertexBufferView.StrideInBytes  = sizeof(Vertex);
-		mesh.m_vertexBufferView.SizeInBytes    = sizeof(Vertex) * mesh.m_numVerticies;
-	}
-
 	std::vector<Vect3f> verticies;
 	for (uint16_t i = 0; i < customModel.m_verticies.size(); i++)
 	{
@@ -83,31 +86,37 @@ Model ModelHandler::CreateCustomModel(CustomModel customModel, bool transparent)
 	}
 
 	std::vector<ModelData::Mesh> meshes = { mesh };
-	uint32_t id = GetNewlyCreatedModelID(ModelData(meshes, m_framework.GetDevice(), &m_framework.CbvSrvHeap(), verticies, L"", customModel.m_customModelName, transparent));
+	uint32_t id = m_models.size();
+	m_models.emplace_back(meshes, device, &m_framework.CbvSrvHeap(), verticies, L"", customModel.m_customModelName);
 	
 	return Model(id);
 }
 
-Model ModelHandler::LoadModel(std::wstring fileName, std::string name, bool transparent, bool uvFlipped)
+Model ModelHandler::LoadModel(std::wstring fileName, bool transparent, bool uvFlipped)
 {	
-	UINT exists = GetExistingModel(fileName);
-	if (exists != 0) {
+	uint32_t exists = ModelExists(fileName);
+	if (exists != UINT32_MAX) {
 		return exists;
 	}
 
-	UINT id = UINT32_MAX;
+	const std::string modelName = SetModelName(fileName);
+	const uint32_t           id = m_models.size();
+	m_models.emplace_back(id, transparent, fileName, modelName);
+
+	RLH::Instance().QueueLoadRequest(new ModelLoadRequest(this, fileName, modelName, transparent, uvFlipped));
 
 	// If we are in Intialization frame then don't queue to m_loadRequests.
-	if (m_framework.IsInitFrame()) {
-		std::unique_ptr<LoaderModel> loadedModel = FetchLoaderModel(fileName, name, uvFlipped);
-		return CreateModelFromLoadedData(loadedModel.get(), name, fileName, transparent);
-	}
-	else {
-		m_loadRequests.push_back({ FetchLoaderModel(fileName, name, uvFlipped), transparent, name, fileName});
-		id = (uint32_t)m_models.size() + m_modelRequestCounter; // Reserve this models id.
-		m_modelRequestCounter++;
-	}
-
+	//if (m_framework.IsInitFrame()) {
+	//	std::unique_ptr<LoaderModel> loadedModel = FetchLoaderModel(fileName, uvFlipped);
+	//	return CreateModelFromLoadedData(loadedModel.get(), fileName, transparent);
+	//}
+	//else {
+	//	//m_loadRequests.push_back({ FetchLoaderModel(fileName, uvFlipped), transparent, fileName});
+	//	//id = (uint32_t)m_models.size() + m_modelRequestCounter; // Reserve this models id.
+	//	//m_modelRequestCounter++;
+	//}
+	//
+	//return Model(id);
 	return Model(id);
 }
 
@@ -164,19 +173,6 @@ void ModelHandler::LoadModelsToScene(entt::registry& reg, std::wstring fileName,
 		}
 	}
 }
-
-UINT ModelHandler::GetExistingModel(std::wstring modelPath)
-{
-	for (UINT i = 0; i < m_models.size(); i++)
-	{
-		if (modelPath == m_models[i].m_modelPath) {
-			return i + 1;
-		}
-	}
-
-	return 0;
-}
-
 void ModelHandler::SetMaterialForModel(UINT model, Material material, UINT meshIndex)
 {
 	ModelData& modelData = m_models[model - 1]; 
@@ -188,11 +184,11 @@ void ModelHandler::SetMaterialForModel(UINT model, Material material, UINT meshI
 // Loads all the requested models to the gpu during the frame rendering. Not the most ideal but it will do for now.
 void ModelHandler::LoadRequestedModels()
 {
-	for (uint32_t i = 0; i < m_loadRequests.size(); i++)
-		CreateModelFromLoadedData(m_loadRequests[i].m_model.get(), m_loadRequests[i].m_modelName, m_loadRequests[i].m_fileName, m_loadRequests[i].m_transparent);
-
-	m_loadRequests.clear();
-	m_modelRequestCounter = 1;
+	//for (uint32_t i = 0; i < m_loadRequests.size(); i++)
+	//	CreateModelFromLoadedData(m_loadRequests[i].m_model.get(), m_loadRequests[i].m_modelName, m_loadRequests[i].m_fileName, m_loadRequests[i].m_transparent);
+	//
+	//m_loadRequests.clear();
+	//m_modelRequestCounter = 1;
 }
 
 Material ModelHandler::GetNewMaterialFromLoadedModel(const std::string& materialName)
@@ -220,19 +216,19 @@ Material ModelHandler::GetNewMaterialFromLoadedModel(const std::string& material
 		smoothness = L"Sprites/Fabric_Round_Smoothness.dds";
 	}
 
-	material.m_albedo	    = m_textureHandler.GetTexture(albedo);
-	material.m_normal	    = m_textureHandler.GetTexture(normal);
-	material.m_aoMap	    = m_textureHandler.GetTexture(ao);
-	material.m_metallicMap  = m_textureHandler.GetTexture(metal);
-	material.m_roughnessMap = m_textureHandler.GetTexture(smoothness);
-	material.m_heightMap    = m_textureHandler.GetTexture(height);
+	material.m_albedo	    = m_textureHandler.CreateTexture(albedo);
+	material.m_normal	    = m_textureHandler.CreateTexture(normal);
+	material.m_aoMap	    = m_textureHandler.CreateTexture(ao);
+	material.m_metallicMap  = m_textureHandler.CreateTexture(metal);
+	material.m_roughnessMap = m_textureHandler.CreateTexture(smoothness);
+	material.m_heightMap    = m_textureHandler.CreateTexture(height);
 
 	return material;
 }
 
 UINT ModelHandler::GetNewlyCreatedModelID(ModelData model)
 {
-	UINT id = 0;
+	uint32_t id = 0;
 
 	for (UINT i = 0; i < m_models.size(); i++)
 	{
@@ -250,33 +246,23 @@ UINT ModelHandler::GetNewlyCreatedModelID(ModelData model)
 	return id;
 }
 
-uint32_t ModelHandler::CreateModelFromLoadedData(LoaderModel* loadedModel, std::string name, std::wstring fileName, bool transparent)
+uint32_t ModelHandler::CreateModelFromLoadedData(LoaderModel* loadedModel, const std::string name, bool transparent)
 {
 	std::vector<ModelData::Mesh> meshes = LoadMeshFromLoaderModel(loadedModel, name);
 	std::vector<Vect3f>	      verticies = loadedModel->m_verticies;
 
-	// Now we set the buffer infromation into our BUFFER_VIEWS as well as 
-	// creating DescriptorHeaps and SRV for our textures
-	for (UINT i = 0; i < meshes.size(); i++)
-	{
-		meshes[i].m_indexBufferView.BufferLocation = meshes[i].m_indexBuffer->GetGPUVirtualAddress();
-		meshes[i].m_indexBufferView.SizeInBytes = sizeof(unsigned int) * meshes[i].m_numIndices;
-		meshes[i].m_indexBufferView.Format = DXGI_FORMAT_R32_UINT;
+	const uint32_t id = ModelExists(name);
+	ModelData& model = m_models[id];
 
-		meshes[i].m_vertexBufferView.BufferLocation = meshes[i].m_vertexBuffer->GetGPUVirtualAddress();
-		meshes[i].m_vertexBufferView.StrideInBytes = meshes[i].m_vertexSize;
-		meshes[i].m_vertexBufferView.SizeInBytes = meshes[i].m_vertexSize * meshes[i].m_numVerticies;
-
-	}
-
-	WriteToBinaryModelFile(loadedModel, meshes, name);
-	return GetNewlyCreatedModelID(ModelData(meshes, m_framework.GetDevice(), &m_framework.CbvSrvHeap(), verticies, fileName, name, transparent));
+	model.FinilizeModelData(meshes, m_framework.GetDevice(), &m_framework.CbvSrvHeap(), verticies);
+	WriteToBinaryModelFile(loadedModel, name, meshes);
+	return id;
 }
 
 std::vector<ModelData::Mesh> ModelHandler::LoadMeshFromLoaderModel(LoaderModel* loadedModel, std::string name)
 {
-	ID3D12Device* device = m_framework.GetDevice();
-	ID3D12GraphicsCommandList* cmdList = m_framework.IsInitFrame() ? m_framework.InitCmdList() : m_framework.CurrentFrameResource()->CmdList();
+	ID3D12Device*			   device  = m_framework.GetDevice();
+	ID3D12GraphicsCommandList* cmdList = RLH::Instance().ResourceUploader()->CmdList();
 
 	std::vector<ModelData::Mesh> meshes;
 	meshes.reserve(loadedModel->m_meshes.size());
@@ -296,26 +282,44 @@ std::vector<ModelData::Mesh> ModelHandler::LoadMeshFromLoaderModel(LoaderModel* 
 			device
 		);
 
-		// Set upload Vertex Buffer SubResourceData to our vertex destBuffer
-		resourceBarriers.emplace_back(SetSubresourceData(
-			cmdList, 
-			bufferInfo.m_vBuffer, 
+		RLH::Instance().UploadSubResource(
+			bufferInfo.m_vBuffer,
 			bufferInfo.m_vBufferUpload,
-			reinterpret_cast<UINT*>(loadedMesh->m_verticies), 
-			loadedMesh->m_vertexSize, 
+			reinterpret_cast<uint32_t*>(loadedMesh->m_verticies),
+			loadedMesh->m_vertexSize,
 			loadedMesh->m_vertexCount,
 			D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER
-		));
+		);
 
-		resourceBarriers.emplace_back(SetSubresourceData(
-			cmdList, 
-			bufferInfo.m_iBuffer, 
+		RLH::Instance().UploadSubResource(
+			bufferInfo.m_iBuffer,
 			bufferInfo.m_iBufferUpload,
-			reinterpret_cast<UINT*>(loadedMesh->m_indices.data()), 
-			sizeof(UINT), 
-			static_cast<UINT>(loadedMesh->m_indices.size()),
+			reinterpret_cast<uint32_t*>(loadedMesh->m_indices.data()),
+			sizeof(uint32_t),
+			static_cast<uint32_t>(loadedMesh->m_indices.size()),
 			D3D12_RESOURCE_STATE_INDEX_BUFFER
-		));
+		);
+
+		// Set upload Vertex Buffer SubResourceData to our vertex destBuffer
+		//resourceBarriers.emplace_back(SetSubresourceData(
+		//	cmdList, 
+		//	bufferInfo.m_vBuffer, 
+		//	bufferInfo.m_vBufferUpload,
+		//	reinterpret_cast<UINT*>(loadedMesh->m_verticies), 
+		//	loadedMesh->m_vertexSize, 
+		//	loadedMesh->m_vertexCount,
+		//	D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER
+		//));
+
+		//resourceBarriers.emplace_back(SetSubresourceData(
+		//	cmdList, 
+		//	bufferInfo.m_iBuffer, 
+		//	bufferInfo.m_iBufferUpload,
+		//	reinterpret_cast<UINT*>(loadedMesh->m_indices.data()), 
+		//	sizeof(UINT), 
+		//	static_cast<UINT>(loadedMesh->m_indices.size()),
+		//	D3D12_RESOURCE_STATE_INDEX_BUFFER
+		//));
 
 		mesh.m_indexBuffer  = bufferInfo.m_iBuffer;
 		mesh.m_vertexBuffer = bufferInfo.m_vBuffer;
@@ -323,14 +327,20 @@ std::vector<ModelData::Mesh> ModelHandler::LoadMeshFromLoaderModel(LoaderModel* 
 		mesh.m_numVerticies = loadedMesh->m_vertexCount;
 		mesh.m_vertexSize   = loadedMesh->m_vertexSize;
 
+		mesh.m_indexBufferView.SizeInBytes = sizeof(unsigned int) * loadedMesh->m_indices.size();
+		mesh.m_indexBufferView.Format = DXGI_FORMAT_R32_UINT;
+
+		mesh.m_vertexBufferView.StrideInBytes = loadedMesh->m_vertexSize;
+		mesh.m_vertexBufferView.SizeInBytes   = loadedMesh->m_vertexSize * loadedMesh->m_vertexCount;
+
 		// Yeah this solution stinks!!!
 		if (!loadedMesh->m_textures.empty()) {
-			mesh.m_material.m_albedo       = m_textureHandler.GetTexture(loadedMesh->m_textures[0]);
-			mesh.m_material.m_normal       = m_textureHandler.GetTexture(loadedMesh->m_textures[1]);
-			mesh.m_material.m_metallicMap  = m_textureHandler.GetTexture(loadedMesh->m_textures[2]);
-			mesh.m_material.m_roughnessMap = m_textureHandler.GetTexture(loadedMesh->m_textures[3]);
-			mesh.m_material.m_heightMap    = m_textureHandler.GetTexture(loadedMesh->m_textures[4]);
-			mesh.m_material.m_aoMap		   = m_textureHandler.GetTexture(loadedMesh->m_textures[5]);
+			mesh.m_material.m_albedo       = m_textureHandler.CreateTexture(loadedMesh->m_textures[0]);
+			mesh.m_material.m_normal       = m_textureHandler.CreateTexture(loadedMesh->m_textures[1]);
+			mesh.m_material.m_metallicMap  = m_textureHandler.CreateTexture(loadedMesh->m_textures[2]);
+			mesh.m_material.m_roughnessMap = m_textureHandler.CreateTexture(loadedMesh->m_textures[3]);
+			mesh.m_material.m_heightMap    = m_textureHandler.CreateTexture(loadedMesh->m_textures[4]);
+			mesh.m_material.m_aoMap		   = m_textureHandler.CreateTexture(loadedMesh->m_textures[5]);
 		}
 		else {
 			if (!loadedModel->m_textures.empty())
@@ -345,15 +355,15 @@ std::vector<ModelData::Mesh> ModelHandler::LoadMeshFromLoaderModel(LoaderModel* 
 		meshes.emplace_back(mesh);
 	}
 
-	cmdList->ResourceBarrier(static_cast<UINT>(resourceBarriers.size()), &resourceBarriers[0]);
+	//cmdList->ResourceBarrier(static_cast<UINT>(resourceBarriers.size()), &resourceBarriers[0]);
 
 	return meshes;
 }
 
 std::vector<ModelData::Mesh> ModelHandler::LoadMeshFromLoaderModel(LoaderModel* loadedModel, std::vector<UINT>& textures)
 {
-	ID3D12Device* device = m_framework.GetDevice();
-	ID3D12GraphicsCommandList* cmdList = m_framework.InitCmdList();
+	ID3D12Device*			   device  = m_framework.GetDevice();
+	ID3D12GraphicsCommandList* cmdList = RLH::Instance().ResourceUploader()->Initiate();
 
 	std::vector<ModelData::Mesh> meshes;
 	meshes.reserve(loadedModel->m_meshes.size());
@@ -373,25 +383,44 @@ std::vector<ModelData::Mesh> ModelHandler::LoadMeshFromLoaderModel(LoaderModel* 
 			device
 		);
 
-		// Set upload Vertex Buffer SubResourceData to our vertex destBuffer
-		resourceBarriers.emplace_back(SetSubresourceData(
-			cmdList, 
-			bufferInfo.m_vBuffer, 
+		// Queue subresource data to be uploaded to the gpu,
+		RLH::Instance().UploadSubResource(
+			bufferInfo.m_vBuffer,
 			bufferInfo.m_vBufferUpload,
-			reinterpret_cast<UINT*>(loadedMesh->m_verticies), 
-			loadedMesh->m_vertexSize, 
+			reinterpret_cast<uint32_t*>(loadedMesh->m_verticies),
+			loadedMesh->m_vertexSize,
 			loadedMesh->m_vertexCount,
 			D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER
-		));
+		);
 
-		resourceBarriers.emplace_back(SetSubresourceData(
-			cmdList, bufferInfo.m_iBuffer, 
+		RLH::Instance().UploadSubResource(
+			bufferInfo.m_iBuffer,
 			bufferInfo.m_iBufferUpload,
-			reinterpret_cast<UINT*>(loadedMesh->m_indices.data()), 
-			sizeof(UINT), 
-			static_cast<UINT>(loadedMesh->m_indices.size()),
+			reinterpret_cast<uint32_t*>(loadedMesh->m_indices.data()),
+			sizeof(uint32_t),
+			loadedMesh->m_indices.size(),
 			D3D12_RESOURCE_STATE_INDEX_BUFFER
-		));
+		);
+
+		// Set upload Vertex Buffer SubResourceData to our vertex destBuffer
+		//resourceBarriers.emplace_back(SetSubresourceData(
+		//	cmdList, 
+		//	bufferInfo.m_vBuffer, 
+		//	bufferInfo.m_vBufferUpload,
+		//	reinterpret_cast<UINT*>(loadedMesh->m_verticies), 
+		//	loadedMesh->m_vertexSize, 
+		//	loadedMesh->m_vertexCount,
+		//	D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER
+		//));
+		//
+		//resourceBarriers.emplace_back(SetSubresourceData(
+		//	cmdList, bufferInfo.m_iBuffer, 
+		//	bufferInfo.m_iBufferUpload,
+		//	reinterpret_cast<UINT*>(loadedMesh->m_indices.data()), 
+		//	sizeof(UINT), 
+		//	static_cast<UINT>(loadedMesh->m_indices.size()),
+		//	D3D12_RESOURCE_STATE_INDEX_BUFFER
+		//));
 
 		// Upload the newly transitioned Resource Barriers to our cmdList
 		mesh.m_indexBuffer  = bufferInfo.m_iBuffer;
@@ -405,7 +434,7 @@ std::vector<ModelData::Mesh> ModelHandler::LoadMeshFromLoaderModel(LoaderModel* 
 	}
 
 	// Queue to the GPU
-	cmdList->ResourceBarrier(static_cast<UINT>(resourceBarriers.size()), &resourceBarriers[0]);
+	//cmdList->ResourceBarrier(static_cast<UINT>(resourceBarriers.size()), &resourceBarriers[0]);
 	
 	return meshes;
 }
@@ -422,21 +451,15 @@ std::string ModelHandler::SetModelName(std::wstring modelPath)
 		result.replace(0, firstPos + 1, "");
 		
 		size_t lastPos = result.find_first_of(".");
-		result.replace(lastPos, lastPos + 4, "");
+		result.replace(lastPos, result.size(), "");
 	}
 
 	return result;
 }
 
-std::unique_ptr<LoaderModel> ModelHandler::FetchLoaderModel(std::wstring fileName, std::string name, bool uvFlipped)
+std::unique_ptr<LoaderModel> ModelHandler::FetchLoaderModel(std::wstring fileName, bool uvFlipped)
 {
-	std::string modelName = "";
-	if (name.empty())
-		modelName = SetModelName(fileName);
-	else
-		modelName = name;
-
-;
+	const std::string modelName = SetModelName(fileName);
 	if (BinaryModelFileExists(modelName)) {
 		std::unique_ptr<LoaderModel> loadedModel = std::make_unique<LoaderModel>();
 		ReadFromBinaryModelFile(modelName, loadedModel.get());
@@ -447,7 +470,7 @@ std::unique_ptr<LoaderModel> ModelHandler::FetchLoaderModel(std::wstring fileNam
 	return m_modelLoader.LoadModelFromAssimp(modelStr, uvFlipped);
 }
 
-void ModelHandler::WriteToBinaryModelFile(const LoaderModel* loadedModel, const std::vector<ModelData::Mesh>& meshes, std::string modelName)
+void ModelHandler::WriteToBinaryModelFile(const LoaderModel* loadedModel, const std::string modelName, const std::vector<ModelData::Mesh>& meshes)
 {
 	std::string fileName = "Models/Binary/" + modelName + ".bmf";
 
@@ -501,7 +524,6 @@ void ModelHandler::WriteToBinaryModelFile(const LoaderModel* loadedModel, const 
 		modelFile.close();
 	}
 }
-
 void ModelHandler::ReadFromBinaryModelFile(std::string modelName, LoaderModel* loaderModel)
 {
 	std::string fileName = "Models/Binary/" + modelName + ".bmf";
@@ -573,9 +595,32 @@ void ModelHandler::ReadFromBinaryModelFile(std::string modelName, LoaderModel* l
 	std::cout << modelName << " took " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << " ms." << std::endl;
 #endif
 }
-
 bool ModelHandler::BinaryModelFileExists(std::string modelName)
 {
 	std::string fileName = "Models/Binary/" + modelName + ".bmf";
 	return std::filesystem::exists(fileName.c_str());
 }
+const uint32_t ModelHandler::ModelExists(std::wstring modelPath)
+{
+	for (uint32_t i = 0; i < m_models.size(); i++)
+		if (modelPath == m_models[i].m_modelPath)
+			return i;
+
+	return UINT32_MAX;
+}
+const uint32_t ModelHandler::ModelExists(std::string name)
+{
+	for (uint32_t i = 0; i < m_models.size(); i++)
+		if (name == m_models[i].m_name)
+			return i;
+
+	return UINT32_MAX;
+}
+
+void ModelHandler::ModelLoadRequest::LoadData()
+{
+	std::unique_ptr<LoaderModel> loadedModel = m_modelHandler->FetchLoaderModel(m_fileName, m_uvFlipped);
+	m_modelHandler->CreateModelFromLoadedData(loadedModel.get(), m_modelName, m_transparent);
+}
+
+
