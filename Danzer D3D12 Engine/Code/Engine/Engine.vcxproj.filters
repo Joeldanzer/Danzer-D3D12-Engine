@@ -93,6 +93,7 @@
     <ClCompile Include="Physics\Assignment\Components\BoxCollider.cpp" />
     <ClCompile Include="Physics\Assignment\Components\SphereCollider.cpp" />
     <ClCompile Include="Core\ResourceLoadingHandler.cpp" />
+    <ClCompile Include="Physics\RayCaster.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Core\WindowHandler.h">
@@ -209,6 +210,7 @@
     <ClInclude Include="Physics\Assignment\Components\BoxCollider.h" />
     <ClInclude Include="Physics\Assignment\Components\SphereCollider.h" />
     <ClInclude Include="Core\ResourceLoadingHandler.h" />
+    <ClInclude Include="Physics\RayCaster.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

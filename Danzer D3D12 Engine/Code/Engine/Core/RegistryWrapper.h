@@ -63,6 +63,7 @@ private:
 
 typedef RegistryWrapper Reg;
 
+// Macro for fetching Singleton of RegsitryWrapper.
 #define REGISTRY RegistryWrapper::Instance()
 
 template<typename Component, typename ... Args>

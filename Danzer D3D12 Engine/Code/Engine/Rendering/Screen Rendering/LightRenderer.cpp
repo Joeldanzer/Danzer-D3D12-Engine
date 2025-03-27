@@ -92,7 +92,6 @@ bool LightRenderer::RenderToTexture(ID3D12GraphicsCommandList* cmdList, Descript
 		}
 	}
 
-
 	// SpotLights
 	{
 		if (!m_lightHandler.m_spotLightInstances.empty()) {
