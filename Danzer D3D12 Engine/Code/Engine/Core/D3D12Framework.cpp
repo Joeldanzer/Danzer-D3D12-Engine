@@ -130,29 +130,35 @@ D3D12Framework::~D3D12Framework()
 
 void D3D12Framework::UploadResourcesToGPU(FrameResource* frameResource)
 {
-	frameResource->Close();
-	ID3D12CommandList* cmdList[] = { frameResource->CmdList() };
-	m_commandQueue->ExecuteCommandLists(1, cmdList);
+	if (!m_firstRscUpload) {
+		m_firstRscUpload = true;
+		frameResource->Close();
+		ID3D12CommandList* cmdList[] = { frameResource->CmdList() };
+		m_commandQueue->ExecuteCommandLists(1, cmdList);
 
-	//CHECK_HR(m_device->CreateFence(m_fenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence)));
-	m_fenceValue++;
+		//CHECK_HR(m_device->CreateFence(m_fenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence)));
+		m_fenceValue++;
 
-	m_fenceEvent = CreateEvent(nullptr, false, false, nullptr);
+		m_fenceEvent = CreateEvent(nullptr, false, false, nullptr);
 
-	const UINT64 fenceToWaitFor = m_fenceValue;
-	CHECK_HR(m_commandQueue->Signal(m_fence.Get(), fenceToWaitFor));
-	m_fenceValue++;
+		const UINT64 fenceToWaitFor = m_fenceValue;
+		CHECK_HR(m_commandQueue->Signal(m_fence.Get(), fenceToWaitFor));
+		m_fenceValue++;
 
-	CHECK_HR(m_fence->SetEventOnCompletion(fenceToWaitFor, m_fenceEvent));
+		CHECK_HR(m_fence->SetEventOnCompletion(fenceToWaitFor, m_fenceEvent));
 
 #pragma warning( suppress: 6387) 
-	WaitForSingleObject(m_fenceEvent, INFINITE);
+		WaitForSingleObject(m_fenceEvent, INFINITE);
+	}
 }
 
 void D3D12Framework::InitiateCommandList(ID3D12PipelineState* pso, std::wstring message)
 {
+	while(m_resourceUploadActive){}
+
 	OutputDebugString(message.c_str());
 	m_frameResources[m_frameIndex]->Initiate(pso);
+	m_renderFrameActive = true;
 }
 
 void D3D12Framework::ExecuteCommandList()
@@ -160,9 +166,17 @@ void D3D12Framework::ExecuteCommandList()
 	OutputDebugString(L"Executed Command List \n");
 
 	m_frameResources[m_frameIndex]->Close();
+	
+	if (RLH::Instance().ResourceUploader()->m_cmdListIsOpen) {
+		RLH::Instance().ResourceUploader()->Close();
+		ID3D12CommandList* commandLists[] = { m_frameResources[m_frameIndex]->CmdList(), RLH::Instance().ResourceUploader()->CmdList()};
+		m_commandQueue->ExecuteCommandLists(_countof(commandLists), commandLists);
+	}
+	else {
+		ID3D12CommandList* commandLists[] = { m_frameResources[m_frameIndex]->CmdList() };
+		m_commandQueue->ExecuteCommandLists(_countof(commandLists), commandLists);
+	}
 
-	ID3D12CommandList* commandLists[] = { m_frameResources[m_frameIndex]->CmdList() };
-	m_commandQueue->ExecuteCommandLists(_countof(commandLists), commandLists);
 
 	CHECK_HR(m_commandQueue->Signal(m_fence.Get(), m_fenceValue));
 }
@@ -182,6 +196,8 @@ void D3D12Framework::WaitForGPU()
 	}
 
 	m_fenceValue++;
+
+	m_renderFrameActive = false;
 }
 
 void D3D12Framework::TransitionRenderTarget(D3D12_RESOURCE_STATES present, D3D12_RESOURCE_STATES newState)
@@ -243,32 +259,6 @@ void D3D12Framework::TransitionAllResources()
 void D3D12Framework::EndInitFrame()
 {
 	m_initFrame = false;
-
-	// Wait for InitFrame to load everything before continuing
-	while (!RLH::Instance().m_resourceQueue.empty()) {
-		int s = 1;
-	}
-
-	int g = 2;
- //	CHECK_HR(m_initCmdList->Close());
- //	ID3D12CommandList* cmdList[] = { m_initCmdList.Get() };
- //	m_commandQueue->ExecuteCommandLists(1, cmdList);
- //
- //	CHECK_HR(m_device->CreateFence(m_fenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence)));
- //	m_fenceValue++;
- //
- //	m_fenceEvent = CreateEvent(nullptr, false, false, nullptr);
- //
- //	const UINT64 fenceToWaitFor = m_fenceValue;
- //	CHECK_HR(m_commandQueue->Signal(m_fence.Get(), fenceToWaitFor));
- //	m_fenceValue++;
- //
- //	CHECK_HR(m_fence->SetEventOnCompletion(fenceToWaitFor, m_fenceEvent));
- //
- //#pragma warning( suppress: 6387) 
- //	WaitForSingleObject(m_fenceEvent, INFINITE);
- //
- //	m_initFrame = false;
 }
 
 void D3D12Framework::UpdateResourceLoading()
@@ -283,7 +273,9 @@ void D3D12Framework::UpdateResourceLoading()
 		}
 
 		if (!rlh.m_resourceQueue.empty() && !m_initFrame) {
-			rlh.m_resourceUploader->Initiate();
+			while(m_renderFrameActive){}
+
+			m_resourceUploadActive = true;
 
 			rlh.m_resourceUploader->CmdList()->ResourceBarrier(
 				static_cast<uint32_t>(rlh.m_resourceQueue.size()), &rlh.m_resourceQueue[0]
@@ -291,6 +283,8 @@ void D3D12Framework::UpdateResourceLoading()
 
 			UploadResourcesToGPU(rlh.m_resourceUploader);
 			rlh.m_resourceQueue.clear();
+
+			m_resourceUploadActive = false;
 		}
 	}
 }

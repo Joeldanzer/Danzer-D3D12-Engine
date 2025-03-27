@@ -43,6 +43,9 @@ void ResourceLoadingHandler::UploadSubResource(ID3D12Resource* destBuffer, ID3D1
 	data.RowPitch   = sizeOfData * count;
 	data.SlicePitch = data.RowPitch;
 
+	if (!m_resourceUploader->CmdListIsOpen())
+		m_resourceUploader->Initiate();
+
 	UpdateSubresources(m_resourceUploader->CmdList(), destBuffer, fromBuffer, 0, 0, numberOfSubResources, &data);
 
 	CD3DX12_RESOURCE_BARRIER resourceBarrier;

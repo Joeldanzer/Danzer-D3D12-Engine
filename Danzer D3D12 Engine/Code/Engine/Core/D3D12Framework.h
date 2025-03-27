@@ -87,8 +87,12 @@ public:
 private:
     friend class RenderManager;
 
-    bool m_initFrame          = true;
-    bool m_loadingQueueActive = true;
+    bool m_firstRscUpload       = false;
+    bool m_initFrame            = true;
+    bool m_loadingQueueActive   = true;
+
+    bool m_renderFrameActive    = false;
+    bool m_resourceUploadActive = true;
 
     void UpdateResourceLoading();
     void RenderToBackBuffer(const uint32_t textureToPresent, PSOHandler& psoHandler);

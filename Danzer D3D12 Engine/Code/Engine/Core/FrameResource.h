@@ -15,7 +15,9 @@ public:
 	ID3D12GraphicsCommandList* CmdList() {
 		return m_cmdList.Get();
 	}	
-
+	bool CmdListIsOpen() {
+		return m_cmdListIsOpen;
+	}
 	const uint32_t CmdListIndex() {
 		return m_cmdIndex;
 	}

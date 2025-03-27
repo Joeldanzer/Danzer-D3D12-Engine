@@ -12,6 +12,7 @@
 TextureHandler::TextureHandler(D3D12Framework& framework) :
 	m_framework(framework)
 {
+	CreateTexture(L"Sprites/0aDefaultTexture.dds");
 	//LoadAllExistingTextures();
 }
 TextureHandler::~TextureHandler()
@@ -24,6 +25,8 @@ TextureHandler::~TextureHandler()
 
 void TextureHandler::Init(D3D12Framework& framework, bool loadAllTexures)
 {
+	//CreateTexture(L"Sprites/0aDefaultTexture.dds");
+
 	if (loadAllTexures) {
 		//LoadAllExistingTextures();
 	}
