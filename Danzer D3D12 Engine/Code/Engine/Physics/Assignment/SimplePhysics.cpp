@@ -244,8 +244,8 @@ const bool SimplePhysics::BoxToSphereIntersect(const Entity boxEntity, const Ent
 
 	Mat4f inverse = Mat4f::Identity;
 
-	Mat4f reScale = DirectX::XMMatrixRotationQuaternion(boxTransform.m_rotation);
-	reScale *= DirectX::XMMatrixScaling(1.0f, 1.0f, 1.0f);
+	Mat4f reScale = DirectX::XMMatrixScaling(1.0f, 1.0f, 1.0f);
+	reScale		 *= DirectX::XMMatrixRotationQuaternion(boxTransform.m_rotation);
 	reScale.Translation(boxTransform.m_position);
 	reScale.Invert(inverse);
 

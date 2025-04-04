@@ -21,6 +21,7 @@
 #include "Physics/PhysicsHeader.h"
 
 #include "Physics/Assignment/Components/BoxCollider.h"
+#include "Physics/Assignment/Components/SphereCollider.h"
 #include "Components/Light/PointLight.h"
 #include "Components/2D/Transform2D.h"
 #include "Components/Model.h"
@@ -62,36 +63,26 @@ private:
 Game::Impl::Impl(Engine& engine) :
 	m_engine(engine)
 {
-	//std::strivb jn          ng name = instance.GetComponentName();
-
-	//engine.GetSpriteHandler().CreateSpriteSheet(L"Sprites/RunTestAnimation.dds", 8, 8);
-	//
-	//m_entity = reg.create();
-	//Transform2D& transform = reg.emplace<Transform2D>(m_entity);
-	//Object& obj			   = reg.emplace<Object>(m_entity);
-	//Sprite& sprite		   = reg.emplace<Sprite>(m_entity);
-	//obj.m_state = Object::STATE::ACTIVE;
-	//sprite.m_spriteSheet = engine.GetSpriteHandler().GetCreatedSpriteSheet("testSpriteSheet");
-	//transform.m_scale    = { 0.2f, 0.2f };
-	//transform.m_position = {-0.9f, 0.8f };
-
 	m_currentTime = m_time;
 	
 	Entity entity = REGISTRY->Create3DEntity("Sponzra Atrium");
 
 	Transform& modelTransform = REGISTRY->Get<Transform>(entity);
 	//modelTransform.m_scale	  = { 10.0f, 1.0f, 10.0f };
-	modelTransform.m_position = { 0.0f, 0.0f, 0.0f };
+	modelTransform.m_position = { 0.0f, 8.0f, 0.0f };
 	modelTransform.m_rotation = Quat4f::CreateFromAxisAngle(Vect3f::Up, ToRadians(180.0f));
 	
     //REGISTRY->Emplace<Model>(entity, engine.GetModelHandler().LoadModel(L"Models/BlenderSponzaAtriumNew.fbx"));
     REGISTRY->Emplace<Model>(entity, engine.GetModelHandler().LoadModel(L"Models/sphere.fbx", 4));
-	//Model& model = REGISTRY->Get<Model>(entity);
+	SphereCollider& sphereCol = REGISTRY->Emplace<SphereCollider>(entity);
 	
-    //REGISTRY->Emplace<Model>(entity, engine.GetModelHandler().LoadModel(L"Models/cube.fbx"));
-	//BoxCollider& collider = REGISTRY->Emplace<BoxCollider>(entity, modelTransform.m_scale);
-	//collider.m_gravity   = false;
-	//collider.m_kinematic = true;
+	Entity boxEntity = REGISTRY->Create3DEntity("Floor Test");
+    REGISTRY->Emplace<Model>(boxEntity, engine.GetModelHandler().LoadModel(L"Models/cube.fbx"));
+	REGISTRY->Get<Transform>(boxEntity).m_scale = { 5.0f, 1.0f, 5.0f };
+	BoxCollider& collider = REGISTRY->Emplace<BoxCollider>(boxEntity, modelTransform.m_scale);
+	collider.m_extents   = { 5.0f, 1.0f, 5.0f };
+	collider.m_gravity   = false;
+	collider.m_kinematic = true;
 
 	//for (int32_t x = -5; x < 5 + 1; x++)
 	//{
@@ -106,7 +97,6 @@ Game::Impl::Impl(Engine& engine) :
 	//		
 	//	}
 	//}
-
 	//m_frustrumTest = engine.GetSceneManager().CreateBasicEntity("FrustrumTest", false).m_entity;
 	//Camera& cam = reg.get<Camera>(engine.GetSceneManager().GetMainCamera());
 	//cam.SetFrustrumTest(&reg.get<Transform>(m_frustrumTest));
@@ -120,16 +110,12 @@ Game::Impl::Impl(Engine& engine) :
 	//m_sphere = &reg.emplace<PhysicsBody>(enttTest->m_entity, engine.GetPhysicsHandler().CreatePhyscisSphere(*enttTest, 1.0f, EMotionType::Dynamic, EActivation::DontActivate, Layers::MOVING));
 	//reg.emplace<SoundSource>(enttTest->m_entity);
 	//m_sphere->OnContactAdded = std::bind(&Game::Impl::OnSphereContact, this, std::placeholders::_1);
-
 	//reg.emplace<Model>(enttTest->m_entity, engine.GetModelHandler().LoadModel(L"Models/sphere.fbx"));
 	//Transform& sphereT = reg.get<Transform>(enttTest->m_entity);
 	//sphereT.m_position = { 0.0f, 10.0f, 0.0f };
-
-
 	//GameEntity& staticbox = engine.GetSceneManager().CreateBasicEntity("Static Box", true);
 	//reg.emplace<Model>(staticbox.m_entity, engine.GetModelHandler().LoadModel(L"Models/cube.fbx"));
 	//reg.emplace<PhysicsBody>(staticbox.m_entity, engine.GetPhysicsHandler().CreatePhysicsBox(staticbox, {20.0f, 0.2f, 20.0f}, EMotionType::Static, EActivation::Activate, Layers::NON_MOVING));
-
 	//Transform& boxT = reg.get<Transform>(staticbox.m_entity);
 	//boxT.m_scale = { 20.0f, 0.2f, 20.0f };
 	//boxT.m_rotation = Quat4f::CreateFromAxisAngle(Vect3f::Right, ToRadians(0.0f));
@@ -156,7 +142,6 @@ Game::Impl::Impl(Engine& engine) :
 	//waterData.m_far				  = 1000.0f;
 	//waterData.m_edgeScale	      = 1.0f;
 	//waterData.m_edgeColor	      = { 1.0f, 1.0f, 1.0f };
-
 	//reg.emplace<ModelEffect>(waterPlane, engine.GetModelEffectHandler().CreateModelEffect({L"Shaders/WaterPlaneVS.cso", L"Shaders/WaterPlanePS.cso"}, waterModel.m_modelID, &waterData, sizeof(WaterPlaneData), textures, true));
 	//Transform& waterTransform = reg.get<Transform>(waterPlane);
 	//waterTransform.m_position = { 0.0f, 2.0f, 0.0f };
@@ -169,28 +154,6 @@ Game::Impl::~Impl(){}
 void Game::Impl::Update(const float dt)
 {
 	Transform& transform = Reg::Instance()->Get<Transform>(m_engine.GetSceneManager().GetMainCamera());
-	
-	//Transform& frustrumTransform = reg.get<Transform>(m_frustrumTest);
-	//if (Input::GetInstance().IsKeyDown('Q')) {
-	//	frustrumTransform.m_rotation *= DirectX::XMQuaternionRotationAxis(Vect3f::Up, dt * -2.0f);
-	//}
-	//if (Input::GetInstance().IsKeyDown('E')) {
-	//	frustrumTransform.m_rotation *= DirectX::XMQuaternionRotationAxis(Vect3f::Up, dt * 2.0f);
-	//}
-
-	//if (Input::GetInstance().IsKeyDown('C')) {
-	//	frustrumTransform.m_position.z += 8.0f * dt;
-	//}
-	//if (Input::GetInstance().IsKeyDown('X')) {
-	//	frustrumTransform.m_position.z -= 8.0f * dt;
-	//}
-	//if (Input::GetInstance().IsKeyDown('B')) {
-	//	frustrumTransform.m_position.x += 8.0f * dt;
-	//}
-	//if (Input::GetInstance().IsKeyDown('N')) {
-	//	frustrumTransform.m_position.x -= 8.0f * dt;
-	// 
-	//}
 
 	float speed = 5.0f;
 

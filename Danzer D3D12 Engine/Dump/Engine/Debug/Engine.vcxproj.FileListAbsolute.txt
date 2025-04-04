@@ -1,3 +1,6 @@
 C:\Users\joeld\OneDrive\Documents\GitHub\Danzer-D3D12-Engine\Danzer D3D12 Engine\Dump\Engine\Debug\Engine.vcxproj.MdMergeInputs.cache
 C:\Users\joeld\OneDrive\Documents\GitHub\Danzer-D3D12-Engine\Danzer D3D12 Engine\Dump\Engine\Debug\Engine.vcxproj.cppwinrt_plat.cache
 C:\Users\joeld\OneDrive\Documents\GitHub\Danzer-D3D12-Engine\Danzer D3D12 Engine\Dump\Engine\Debug\Engine.vcxproj.cppwinrt_comp.cache
+C:\Users\joel.danzer\Documents\GitHub\Danzer-D3D12-Engine\Danzer D3D12 Engine\Dump\Engine\Debug\Engine.vcxproj.MdMergeInputs.cache
+C:\Users\joel.danzer\Documents\GitHub\Danzer-D3D12-Engine\Danzer D3D12 Engine\Dump\Engine\Debug\Engine.vcxproj.cppwinrt_plat.cache
+C:\Users\joel.danzer\Documents\GitHub\Danzer-D3D12-Engine\Danzer D3D12 Engine\Dump\Engine\Debug\Engine.vcxproj.cppwinrt_comp.cache
