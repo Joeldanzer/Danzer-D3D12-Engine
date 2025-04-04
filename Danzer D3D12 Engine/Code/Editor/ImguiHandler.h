@@ -1,7 +1,6 @@
 #pragma once
 
 #include "DirectX/include/directx/d3dx12.h"
-#include "ImguiComponentMenus.h"
 
 #include "Core/MathDefinitions.h"
 
@@ -53,7 +52,10 @@ private:
 
 	Engine& m_engine;
 	int m_currentMesh = 0;
+
 	entt::entity m_currentEntity;
+	entt::entity m_previousEntity;
+	
 	bool m_entitySelected;
 	char* m_tag;
 	char* m_name;

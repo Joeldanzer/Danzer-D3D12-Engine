@@ -627,26 +627,10 @@ void RenderManager::Impl::Update3DInstances(const Camera& cam, SceneManager& sce
 			const Vector3& pos   = transform.m_position;
 			const Vector3& scale = transform.m_scale;
 
-			// Handling of last pos and rot data.
-			{
-				if (transform.m_lastPosCheck != transform.m_position) {
-					transform.m_lastPosition = transform.m_lastPosCheck;
-					transform.m_lastPosCheck = transform.m_lastPosition;
-				}
-				
-				Vect3f euler = transform.m_rotation.ToEuler();
-				if (transform.m_lastRotCheck != euler) {
-					transform.m_lastRotation = transform.m_lastRotCheck;
-					transform.m_lastPosCheck = euler;
-				}
-			}
-
-			transform.m_last		 = transform.m_world;
-
 			Mat4f mat;
 			DirectX::XMVECTOR quatv = DirectX::XMLoadFloat4(&transform.m_rotation);
-			mat *= DirectX::XMMatrixRotationQuaternion(quatv);
 			mat *= DirectX::XMMatrixScaling(transform.m_scale.x, transform.m_scale.y, transform.m_scale.z);
+			mat *= DirectX::XMMatrixRotationQuaternion(quatv);
 			mat *= DirectX::XMMatrixTranslation(pos.x, pos.y, pos.z);
 
 			transform.m_local = mat;

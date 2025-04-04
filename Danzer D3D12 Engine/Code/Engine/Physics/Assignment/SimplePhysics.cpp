@@ -243,10 +243,14 @@ const bool SimplePhysics::BoxToSphereIntersect(const Entity boxEntity, const Ent
 	Transform&		boxTransform	= REGISTRY->Get<Transform>(boxEntity);
 
 	Mat4f inverse = Mat4f::Identity;
-	boxTransform.World().Invert(inverse);
+
+	Mat4f reScale = DirectX::XMMatrixRotationQuaternion(boxTransform.m_rotation);
+	reScale *= DirectX::XMMatrixScaling(1.0f, 1.0f, 1.0f);
+	reScale.Translation(boxTransform.m_position);
+	reScale.Invert(inverse);
 
 	Vect3f localSphereCenter = Mul(inverse, sphereTransform.m_position);
-	Vect3f closestPoint		 = DirectX::XMVectorClamp(localSphereCenter, -box.m_extents, box.m_extents);
+	Vect3f closestPoint		 = DirectX::XMVectorClamp(localSphereCenter, -(box.m_extents), (box.m_extents));
 
 	float dist2 = Vect3f(localSphereCenter - closestPoint).LengthSquared();
 

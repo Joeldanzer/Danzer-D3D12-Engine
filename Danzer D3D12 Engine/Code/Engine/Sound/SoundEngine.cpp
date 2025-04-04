@@ -129,7 +129,6 @@ void SoundEngine::PlayStreamAtEntt(entt::entity entity, STREAM_ID sound, const f
 
 void SoundEngine::UpdateSound(const float dt)
 {
-	
 	auto listenerView = Reg::Instance()->GetRegistry().view<SoundListener, Transform, GameEntity>();
 	for (auto entity : listenerView)
 	{	
@@ -139,13 +138,15 @@ void SoundEngine::UpdateSound(const float dt)
 
 		Transform& transform = Reg::Instance()->Get<Transform>(entity);
 
-		Vect3f vel = transform.m_position - transform.LastPosition();
+		Vect3f vel = transform.m_position - listener.m_lastPosition;
 		vel /= dt;
 
 		FMOD_VECTOR fPos	 = { transform.m_position.x, transform.m_position.y, transform.m_position.y };
 		FMOD_VECTOR fVel	 = { vel.x, vel.y, vel.z };
 		FMOD_VECTOR fUp		 = { transform.World().Up().x, transform.World().Up().y, transform.World().Up().z };
 		FMOD_VECTOR fForward = { transform.World().Forward().x, transform.World().Forward().y, transform.World().Forward().z };
+
+		listener.m_lastPosition = transform.m_position;
 
 		FmodResultCheck(m_soundSystem->set3DListenerAttributes(listener.m_id, &fPos, &fVel, &fForward, &fUp));
 	}
@@ -157,11 +158,13 @@ void SoundEngine::UpdateSound(const float dt)
 		SoundSource& source  = Reg::Instance()->Get<SoundSource>(entity);
 		Transform& transform = Reg::Instance()->Get<Transform>(entity);
 
-		Vect3f velocity = transform.m_position - transform.LastPosition();
+		Vect3f velocity = transform.m_position - source.m_lastPosition;
 		velocity /= dt;
 
 		FMOD_VECTOR pos = { transform.m_position.x, transform.m_position.y,	transform.m_position.z };
 		FMOD_VECTOR vel = { velocity.x, velocity.y, velocity.z};
+
+		source.m_lastPosition = transform.m_position;
 
 		for (uint32_t i = 0; i < source.m_channels.size(); i++)
 		{

@@ -89,6 +89,9 @@ void ModelData::ClearInstanceTransform()
 void ModelData::UpdateAllMeshInstanceBuffer(uint32_t frameIndex)
 {
 	// Doing it this method means we can render transparent meshes seperatly
+	if (!m_finishedLoading)
+		return;
+
 	for (uint32_t i = 0; i < m_meshes.size(); i++)
 	{
 		Mesh& mesh = m_meshes[i];
@@ -98,5 +101,17 @@ void ModelData::UpdateAllMeshInstanceBuffer(uint32_t frameIndex)
 		// Update the GPU Virtual addresses for the models Index & Vertex Buffer. 
 		mesh.m_indexBufferView.BufferLocation  = mesh.m_indexBuffer->GetGPUVirtualAddress();
 		mesh.m_vertexBufferView.BufferLocation = mesh.m_vertexBuffer->GetGPUVirtualAddress();
+	}
+
+	for (uint16_t i = 0; i < m_lodMeshes.size(); i++)
+	{
+		for (uint32_t j = 0; j < m_lodMeshes[i].size(); j++)
+		{
+			if(!m_meshes[j].m_instanceTransforms.empty())
+				m_lodMeshes[i][j].m_meshBuffer.UpdateBuffer(reinterpret_cast<uint16_t*>(&m_meshes[j].m_instanceTransforms[0]), (uint32_t)m_meshes[j].m_instanceTransforms.size(), frameIndex);
+
+			m_lodMeshes[i][j].m_indexBufferView.BufferLocation = m_lodMeshes[i][j].m_indexBuffer->GetGPUVirtualAddress();
+			m_lodMeshes[i][j].m_vertexBufferView.BufferLocation = m_lodMeshes[i][j].m_vertexBuffer->GetGPUVirtualAddress();
+		}
 	}
 }

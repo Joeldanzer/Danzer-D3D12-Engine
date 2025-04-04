@@ -167,13 +167,20 @@ void Renderer::RenderToGbuffer(ID3D12GraphicsCommandList* cmdList, std::vector<M
 			if (!model.MeshToRender().empty()) {
 				model.UpdateAllMeshInstanceBuffer(frameIndex);
 
-				for (UINT j = 0; j < model.GetMeshes().size(); j++)
-				{
-					// Fetch mesh index from the meshes list that we will render.
-					ModelData::Mesh& mesh = model.GetMeshes()[j];
+				std::vector<ModelData::Mesh> meshes = model.GetMeshes();
+				
+				if (model.GetLoD() >= 0) {
+					meshes = model.GetLoDMesh();
+				}
 
+				for (UINT j = 0; j < meshes.size(); j++)
+				{
+					// Fetch mesh index from the mesh list that we will render.
+					ModelData::Mesh& mesh = meshes[j];
+
+					ModelData::Mesh& realMesh = models[i].GetSingleMesh(j);
 					// Check if we want to render this mesh or if there are any instance transforms for this frame. 
-					if (mesh.m_renderMesh && !mesh.m_instanceTransforms.empty()) {
+					if (mesh.m_renderMesh && !realMesh.m_instanceTransforms.empty()) {
 						// Set Material buffer 
 
 						MaterialBuffer::Data materialData;
@@ -189,12 +196,12 @@ void Renderer::RenderToGbuffer(ID3D12GraphicsCommandList* cmdList, std::vector<M
 
 						// Handle for each texture that will be used
 						CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandles[6] = {
-							CD3DX12_GPU_DESCRIPTOR_HANDLE(cbvSrvHeapStart, textures[mesh.m_material.m_albedo].m_offsetID,       cbvSrvDescSize), // Albedo
-							CD3DX12_GPU_DESCRIPTOR_HANDLE(cbvSrvHeapStart, textures[mesh.m_material.m_normal].m_offsetID,	    cbvSrvDescSize), // Normal
-							CD3DX12_GPU_DESCRIPTOR_HANDLE(cbvSrvHeapStart, textures[mesh.m_material.m_metallicMap].m_offsetID,  cbvSrvDescSize), // Metallic
-							CD3DX12_GPU_DESCRIPTOR_HANDLE(cbvSrvHeapStart, textures[mesh.m_material.m_roughnessMap].m_offsetID, cbvSrvDescSize), // Roughness/Smoothness
-							CD3DX12_GPU_DESCRIPTOR_HANDLE(cbvSrvHeapStart, textures[mesh.m_material.m_heightMap].m_offsetID,    cbvSrvDescSize), // Height 
-							CD3DX12_GPU_DESCRIPTOR_HANDLE(cbvSrvHeapStart, textures[mesh.m_material.m_aoMap].m_offsetID,	    cbvSrvDescSize)  // AO
+							CD3DX12_GPU_DESCRIPTOR_HANDLE(cbvSrvHeapStart, textures[realMesh.m_material.m_albedo].m_offsetID,       cbvSrvDescSize), // Albedo
+							CD3DX12_GPU_DESCRIPTOR_HANDLE(cbvSrvHeapStart, textures[realMesh.m_material.m_normal].m_offsetID,	    cbvSrvDescSize), // Normal
+							CD3DX12_GPU_DESCRIPTOR_HANDLE(cbvSrvHeapStart, textures[realMesh.m_material.m_metallicMap].m_offsetID,  cbvSrvDescSize), // Metallic
+							CD3DX12_GPU_DESCRIPTOR_HANDLE(cbvSrvHeapStart, textures[realMesh.m_material.m_roughnessMap].m_offsetID, cbvSrvDescSize), // Roughness/Smoothness
+							CD3DX12_GPU_DESCRIPTOR_HANDLE(cbvSrvHeapStart, textures[realMesh.m_material.m_heightMap].m_offsetID,    cbvSrvDescSize), // Height 
+							CD3DX12_GPU_DESCRIPTOR_HANDLE(cbvSrvHeapStart, textures[realMesh.m_material.m_aoMap].m_offsetID,	    cbvSrvDescSize)  // AO
 						};
 
 						for (UINT i = 0; i < _countof(srvHandles); i++)
@@ -202,14 +209,14 @@ void Renderer::RenderToGbuffer(ID3D12GraphicsCommandList* cmdList, std::vector<M
 
 						// Set the vertex & transform buffers 
 						D3D12_VERTEX_BUFFER_VIEW vBufferViews[2] = {
-							mesh.m_vertexBufferView, mesh.m_meshBuffer.GetBufferView(frameIndex)
+							mesh.m_vertexBufferView, realMesh.m_meshBuffer.GetBufferView(frameIndex)
 						};
 						cmdList->IASetVertexBuffers(0, 2, &vBufferViews[0]);
 						cmdList->IASetIndexBuffer(&mesh.m_indexBufferView);
 						cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 						// Draw
-						cmdList->DrawIndexedInstanced(mesh.m_numIndices, mesh.m_instanceTransforms.size(), 0, 0, 0);
+						cmdList->DrawIndexedInstanced(mesh.m_numIndices, realMesh.m_instanceTransforms.size(), 0, 0, 0);
 					}
 				}
 			}

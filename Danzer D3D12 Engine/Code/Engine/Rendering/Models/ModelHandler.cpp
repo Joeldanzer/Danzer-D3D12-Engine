@@ -92,7 +92,7 @@ Model ModelHandler::CreateCustomModel(CustomModel customModel, bool transparent)
 	return Model(id);
 }
 
-Model ModelHandler::LoadModel(std::wstring fileName, bool transparent, bool uvFlipped)
+Model ModelHandler::LoadModel(std::wstring fileName, const uint16_t lodCount, bool transparent, bool uvFlipped)
 {	
 	uint32_t exists = ModelExists(fileName);
 	if (exists != UINT32_MAX) {
@@ -103,7 +103,7 @@ Model ModelHandler::LoadModel(std::wstring fileName, bool transparent, bool uvFl
 	const uint32_t           id = m_models.size();
 	m_models.emplace_back(id, transparent, fileName, modelName);
 
-	RLH::Instance().QueueLoadRequest(new ModelLoadRequest(this, fileName, modelName, transparent, uvFlipped));
+	RLH::Instance().QueueLoadRequest(new ModelLoadRequest(this, fileName, modelName, lodCount, transparent, uvFlipped));
 
 	// If we are in Intialization frame then don't queue to m_loadRequests.
 	//if (m_framework.IsInitFrame()) {
@@ -257,6 +257,33 @@ uint32_t ModelHandler::CreateModelFromLoadedData(LoaderModel* loadedModel, const
 	model.FinilizeModelData(meshes, m_framework.GetDevice(), &m_framework.CbvSrvHeap(), verticies);
 	WriteToBinaryModelFile(loadedModel, name, meshes);
 	return id;
+}
+
+uint32_t ModelHandler::CreateModelFromLoadedData(LoaderModel* loadedModel, const std::wstring fileName, const std::string name, const uint16_t lodCount, bool transparent)
+{
+	std::vector<ModelData::Mesh> meshes = LoadMeshFromLoaderModel(loadedModel, name);
+	std::vector<Vect3f>	      verticies = loadedModel->m_verticies;
+	
+	const uint32_t id = ModelExists(name);
+	ModelData& model = m_models[id];
+
+	for (uint16_t i = 0; i < lodCount; i++)
+		model.AddLoDMesh(CreateLODFromModel(fileName, i + 1));
+
+	model.FinilizeModelData(meshes, m_framework.GetDevice(), &m_framework.CbvSrvHeap(), verticies);
+	WriteToBinaryModelFile(loadedModel, name, meshes);
+	
+	return id;
+}
+
+std::vector<ModelData::Mesh> ModelHandler::CreateLODFromModel(std::wstring fileName, const uint16_t currentCount)
+{
+	size_t findLocation = fileName.find_first_of(L".");
+	fileName.insert(findLocation, L"_LOD" + std::to_wstring(currentCount));
+
+	std::unique_ptr<LoaderModel> lodLoadedModel = FetchLoaderModel(fileName, false);
+
+	return LoadMeshFromLoaderModel(lodLoadedModel.get(), "LOD" + std::to_string(currentCount));
 }
 
 std::vector<ModelData::Mesh> ModelHandler::LoadMeshFromLoaderModel(LoaderModel* loadedModel, std::string name)
@@ -620,7 +647,10 @@ const uint32_t ModelHandler::ModelExists(std::string name)
 void ModelHandler::ModelLoadRequest::LoadData()
 {
 	std::unique_ptr<LoaderModel> loadedModel = m_modelHandler->FetchLoaderModel(m_fileName, m_uvFlipped);
-	m_modelHandler->CreateModelFromLoadedData(loadedModel.get(), m_modelName, m_transparent);
+	if(m_lodCount > 0)
+		m_modelHandler->CreateModelFromLoadedData(loadedModel.get(), m_fileName, m_modelName, m_lodCount, m_transparent);
+	else
+		m_modelHandler->CreateModelFromLoadedData(loadedModel.get(), m_modelName, m_transparent);
 }
 
 

@@ -183,7 +183,6 @@
     <ClInclude Include="EditorLoadAndSave.h" />
     <ClInclude Include="EditorPCH.h" />
     <ClInclude Include="FileExplorer.h" />
-    <ClInclude Include="ImguiComponentMenus.h" />
     <ClInclude Include="ImguiHandler.h" />
     <ClInclude Include="imgui\backends\imgui_impl_dx12.h" />
     <ClInclude Include="imgui\backends\imgui_impl_win32.h" />
@@ -200,7 +199,6 @@
     <ClCompile Include="EditorLoadAndSave.cpp" />
     <ClCompile Include="EditorPCH.cpp" />
     <ClCompile Include="FileExplorer.cpp" />
-    <ClCompile Include="ImguiComponentMenus.cpp" />
     <ClCompile Include="ImguiHandler.cpp" />
     <ClCompile Include="imgui\backends\imgui_impl_dx12.cpp" />
     <ClCompile Include="imgui\backends\imgui_impl_win32.cpp" />

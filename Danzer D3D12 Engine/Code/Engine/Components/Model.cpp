@@ -49,6 +49,17 @@ void Model::DisplayInEditor(const Entity entity)
 	if (!modelData.ModelFinished())
 		return;
 
+	if (!modelData.m_lodMeshes.empty()) {
+		int lod = modelData.m_currentLoD;
+		ImGui::DragInt("LoD", &lod, -1, modelData.m_lodMeshes.size() - 1, 0.1f);
+		lod = lod < -1 ? -1 : lod;
+
+		if (lod >= (int)modelData.m_lodMeshes.size())
+			lod = modelData.m_lodMeshes.size() - 1;
+
+		modelData.m_currentLoD = lod;
+	}
+
 	const  int32_t meshCount = modelData.GetMeshes().size() - 1;
 	static int32_t selectedMesh = 0;
 	

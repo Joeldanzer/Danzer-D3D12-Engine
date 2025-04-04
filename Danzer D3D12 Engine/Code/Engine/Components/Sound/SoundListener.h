@@ -14,6 +14,7 @@ private:
 	friend class SoundEngine;
 	SoundListener(UINT8 listenerID);
 
-	UINT8 m_id = 0xff;
+	Vect3f m_lastPosition;
+	UINT8  m_id = 0xff;
 };
 REGISTER_COMPONENT(SoundListener)

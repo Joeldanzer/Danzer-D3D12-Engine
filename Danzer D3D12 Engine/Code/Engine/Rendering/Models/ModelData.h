@@ -130,19 +130,41 @@ public:
 		return m_modelPath;
 	}
 
+	std::vector<ModelData::Mesh> GetLoDMesh() {
+		if (m_currentLoD < 0)
+			return std::vector<ModelData::Mesh>();
+		else
+			return m_lodMeshes[m_currentLoD];
+	}
+	const int16_t GetLoD() {
+		return m_currentLoD;
+	}
+
 	const bool ModelFinished() {
 		return m_finishedLoading;
 	}
 
 private:
+	friend struct Model;
 	friend class ModelHandler;
 
 	void FinilizeModelData(std::vector<Mesh>& data, ID3D12Device* device, DescriptorHeapWrapper* cbvWrapper, std::vector<Vect3f>& verticies) {
 		m_meshes    = data;
+		m_currentLoD = -1;
 
 		for (auto& mesh : m_meshes) {
 		    mesh.m_materialBuffer.Init(device, cbvWrapper, sizeof(MaterialBuffer::Data));
 			mesh.m_meshBuffer.Initialize(device, sizeof(Mat4f));
+		}
+
+		for (short i = 0; i < m_lodMeshes.size(); i++)
+		{
+			
+			for (auto& mesh : m_lodMeshes[i]) {
+				mesh.m_renderMesh = true;
+				mesh.m_materialBuffer.Init(device, cbvWrapper, sizeof(MaterialBuffer::Data));
+				mesh.m_meshBuffer.Initialize(device, sizeof(Mat4f));
+			}
 		}
 
 		m_transformBuffer.Initialize(device, sizeof(Mat4f));
@@ -150,6 +172,13 @@ private:
 		m_transparent     = false;
 		m_finishedLoading = true;
 	}
+	void AddLoDMesh(const std::vector<Mesh> data) {
+		m_lodMeshes.emplace_back(data);
+	}
+
+	// LoD 
+	std::vector<std::vector<Mesh>> m_lodMeshes;
+	int16_t						   m_currentLoD = -1;
 
 	std::vector<Mesh>   m_meshes;
 	std::vector<Vect3f> m_verticies;

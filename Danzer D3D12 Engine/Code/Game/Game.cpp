@@ -80,14 +80,15 @@ Game::Impl::Impl(Engine& engine) :
 	Entity entity = REGISTRY->Create3DEntity("Sponzra Atrium");
 
 	Transform& modelTransform = REGISTRY->Get<Transform>(entity);
-	modelTransform.m_scale	  = { 1.0f, 1.0f, 1.0f };
+	//modelTransform.m_scale	  = { 10.0f, 1.0f, 10.0f };
 	modelTransform.m_position = { 0.0f, 0.0f, 0.0f };
 	modelTransform.m_rotation = Quat4f::CreateFromAxisAngle(Vect3f::Up, ToRadians(180.0f));
 	
-    REGISTRY->Emplace<Model>(entity, engine.GetModelHandler().LoadModel(L"Models/BlenderSponzaAtriumNew.fbx", "Sponza Atrium"));
-	Model& model = REGISTRY->Get<Model>(entity);
+    //REGISTRY->Emplace<Model>(entity, engine.GetModelHandler().LoadModel(L"Models/BlenderSponzaAtriumNew.fbx"));
+    REGISTRY->Emplace<Model>(entity, engine.GetModelHandler().LoadModel(L"Models/sphere.fbx", 4));
+	//Model& model = REGISTRY->Get<Model>(entity);
 	
-    //REGISTRY->Emplace<Model>(entity, engine.GetModelHandler().CreateCustomModel(ModelData::GetCube()));
+    //REGISTRY->Emplace<Model>(entity, engine.GetModelHandler().LoadModel(L"Models/cube.fbx"));
 	//BoxCollider& collider = REGISTRY->Emplace<BoxCollider>(entity, modelTransform.m_scale);
 	//collider.m_gravity   = false;
 	//collider.m_kinematic = true;

@@ -26,7 +26,7 @@ public:
 	~ModelHandler();
 
 	Model CreateCustomModel(CustomModel model, bool transparent = false);
-	Model LoadModel(std::wstring fileName, bool transparent = false, bool uvFlipped = false);
+	Model LoadModel(std::wstring fileName, const uint16_t lodCount = 0, bool transparent = false, bool uvFlipped = false);
 	void  LoadModelsToScene(entt::registry& reg, std::wstring fileName, std::string name = "", bool uvFlipped = false);
 
 	ModelData& GetLoadedModelInformation(UINT id) {
@@ -53,10 +53,11 @@ private:
 	friend struct ModelLoadRequest;
 
 	struct ModelLoadRequest : public LoadRequest {
-		ModelLoadRequest(ModelHandler* modelHandler, const std::wstring fileName, const std::string modelName, bool transparent, bool uvFlipped) :
+		ModelLoadRequest(ModelHandler* modelHandler, const std::wstring fileName, const std::string modelName, uint16_t lodCount, bool transparent, bool uvFlipped) :
 			m_modelHandler(modelHandler),
 			m_fileName(fileName),
 			m_modelName(modelName),
+			m_lodCount(lodCount),
 			m_transparent(transparent),
 			m_uvFlipped(uvFlipped)
 		{}
@@ -66,6 +67,7 @@ private:
 		ModelHandler* m_modelHandler;
 		std::wstring m_fileName;
 		std::string  m_modelName;
+		uint16_t     m_lodCount = 0;
 		bool m_transparent;
 		bool m_uvFlipped;
 	};
@@ -81,6 +83,8 @@ private:
 	UINT GetNewlyCreatedModelID(ModelData model);
 
 	uint32_t CreateModelFromLoadedData(LoaderModel* loadedModel, const std::string name, bool transparent);
+	uint32_t CreateModelFromLoadedData(LoaderModel* loadedModel, const std::wstring fileName, const std::string name, const uint16_t lodCount, bool transparent);
+	std::vector<ModelData::Mesh> CreateLODFromModel(std::wstring fileName, const uint16_t currentCount);
 
 	std::vector<ModelData::Mesh> LoadMeshFromLoaderModel(LoaderModel* loadedModel, std::string name);
 	std::vector<ModelData::Mesh> LoadMeshFromLoaderModel(LoaderModel* loadedModel, std::vector<UINT>& textures);

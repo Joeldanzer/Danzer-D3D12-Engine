@@ -238,38 +238,26 @@ void ImguiHandler::StaticWindows()
 			}
 
 			if (ImGui::Button("Destry Selected Entity")) {
-				m_removeEntity = true;
+				REGISTRY->DestroyEntity(m_currentEntity);
+				m_itemsHasBeenSelected = false;
+				//m_currentEntity = m_previousEntity;
 			}
 
 			ImGui::Separator();
 
 			if (ImGui::BeginListBox("##", ImGui::GetWindowSize())) {
 				auto scene = Reg::Instance()->GetRegistry().view<Transform, GameEntity>();
-				entt::entity previousEntity;
+
 				for (auto entity : scene) {
 					GameEntity& obj = REGISTRY->Get<GameEntity>(entity);
 					bool isSelected = (entity == m_currentEntity);
 
 					if (ImGui::Selectable(obj.m_name.empty() ? "##" : obj.m_name.c_str(), isSelected)) {
-						m_currentEntity = entity;
-						m_currentMesh = 0;
-						Transform& transform = REGISTRY->Get<Transform>(entity);
-
-						if (m_removeEntity) {
-							if (previousEntity != entity) {
-								m_currentEntity = previousEntity;
-							}
-
-							REGISTRY->DestroyEntity(entity);
-							m_removeEntity = false;
-						}
-
+						m_currentEntity  = entity;
+			
 						if (!m_itemsHasBeenSelected)
 							m_itemsHasBeenSelected = true;
-					}
-
-					previousEntity = entity;
-					
+					}				
 				}
 				ImGui::EndListBox();
 

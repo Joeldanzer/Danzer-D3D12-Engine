@@ -5,7 +5,6 @@
     <ClInclude Include="ImguiHandler.h" />
     <ClInclude Include="EditorLoadAndSave.h" />
     <ClInclude Include="FileExplorer.h" />
-    <ClInclude Include="ImguiComponentMenus.h" />
     <ClInclude Include="imgui\imconfig.h" />
     <ClInclude Include="imgui\imgui.h" />
     <ClInclude Include="imgui\imgui_internal.h" />
@@ -22,7 +21,6 @@
     <ClCompile Include="ImguiHandler.cpp" />
     <ClCompile Include="EditorLoadAndSave.cpp" />
     <ClCompile Include="FileExplorer.cpp" />
-    <ClCompile Include="ImguiComponentMenus.cpp" />
     <ClCompile Include="imgui\imgui.cpp" />
     <ClCompile Include="imgui\imgui_demo.cpp" />
     <ClCompile Include="imgui\imgui_draw.cpp" />

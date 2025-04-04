@@ -130,7 +130,7 @@ D3D12Framework::~D3D12Framework()
 
 void D3D12Framework::UploadResourcesToGPU(FrameResource* frameResource)
 {
-	if (!m_firstRscUpload) {
+	//if (!m_firstRscUpload) {
 		m_firstRscUpload = true;
 		frameResource->Close();
 		ID3D12CommandList* cmdList[] = { frameResource->CmdList() };
@@ -146,10 +146,10 @@ void D3D12Framework::UploadResourcesToGPU(FrameResource* frameResource)
 		m_fenceValue++;
 
 		CHECK_HR(m_fence->SetEventOnCompletion(fenceToWaitFor, m_fenceEvent));
-
+		 
 #pragma warning( suppress: 6387) 
 		WaitForSingleObject(m_fenceEvent, INFINITE);
-	}
+	//}
 }
 
 void D3D12Framework::InitiateCommandList(ID3D12PipelineState* pso, std::wstring message)
@@ -167,15 +167,15 @@ void D3D12Framework::ExecuteCommandList()
 
 	m_frameResources[m_frameIndex]->Close();
 	
-	if (RLH::Instance().ResourceUploader()->m_cmdListIsOpen) {
-		RLH::Instance().ResourceUploader()->Close();
-		ID3D12CommandList* commandLists[] = { m_frameResources[m_frameIndex]->CmdList(), RLH::Instance().ResourceUploader()->CmdList()};
-		m_commandQueue->ExecuteCommandLists(_countof(commandLists), commandLists);
-	}
-	else {
-		ID3D12CommandList* commandLists[] = { m_frameResources[m_frameIndex]->CmdList() };
-		m_commandQueue->ExecuteCommandLists(_countof(commandLists), commandLists);
-	}
+	//if (RLH::Instance().ResourceUploader()->m_cmdListIsOpen) {
+	//	RLH::Instance().ResourceUploader()->Close();
+	//	ID3D12CommandList* commandLists[] = { m_frameResources[m_frameIndex]->CmdList(), RLH::Instance().ResourceUploader()->CmdList()};
+	//	m_commandQueue->ExecuteCommandLists(_countof(commandLists), commandLists);
+	//}
+	//else {
+	ID3D12CommandList* commandLists[] = { m_frameResources[m_frameIndex]->CmdList() };
+	m_commandQueue->ExecuteCommandLists(_countof(commandLists), commandLists);
+	//}
 
 
 	CHECK_HR(m_commandQueue->Signal(m_fence.Get(), m_fenceValue));
