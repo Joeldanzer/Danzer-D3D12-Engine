@@ -9,15 +9,29 @@ void Transform::DisplayInEditor(Entity entity)
 
 	float position[3] = {transform.m_position.x, transform.m_position.y, transform.m_position.z };
 	float scale[3]	  = {transform.m_scale.x,    transform.m_scale.y,    transform.m_scale.z	};
-	
-	Vect3f euler = transform.m_rotation.ToEuler();
-	float rotation[3] = { ToDegrees(euler.x), ToDegrees(euler.y), ToDegrees(euler.z) };
-	
+
 	ImGui::DragFloat3("Position", position, 0.01f, -FLT_MAX, FLT_MAX);
-	ImGui::DragFloat3("Rotation", rotation, 0.1f,  -360.f, 360.f);
-	ImGui::DragFloat3("Scale",    scale,    0.01f, -FLT_MAX, FLT_MAX);
+	ImGui::DragFloat3("Rotation", &transform.m_editorRotation.x, 0.1f, -180.1, 180.1f);
+	float* rot = &transform.m_editorRotation.x;
+	for (uint16_t i = 0; i < 3; i++) {
+		if (rot[i] > 180.0f)
+			rot[i] = -179.999f;
+
+		if (rot[i] < -180.0f)
+			rot[i] = 179.999f;
+	}
 	
-	transform.m_rotation = Quat4f::CreateFromYawPitchRoll({ToRadians(rotation[0]), ToRadians(rotation[1]), ToRadians(rotation[2])}); // * (qZ));
+	//transform.m_editorRotation.y = transform.m_editorRotation.y > 180.01f ? -180.0f : transform.m_editorRotation.y < -180.01f ? 180.0f : transform.m_editorRotation.y;
+	//transform.m_editorRotation.z = transform.m_editorRotation.z > 180.01f ? -180.0f : transform.m_editorRotation.z < -180.01f ? 180.0f : transform.m_editorRotation.z;
+	//
+	//if (transform.m_editorRotation.x < -180.0f)
+	//	int s = 1;
+
+	transform.m_rotation = EditorQuatRotate(transform.m_rotation, transform.m_editorRotation, transform.m_lastEditorRotation);
+
+	transform.m_lastEditorRotation = transform.m_editorRotation;
+
+	ImGui::DragFloat3("Scale", scale, 0.01f, -FLT_MAX, FLT_MAX);
 	
 	transform.m_position = { position[0], position[1], position[2], 1.f };
 	transform.m_scale	 = { scale[0], scale[1], scale[2], 1.f};

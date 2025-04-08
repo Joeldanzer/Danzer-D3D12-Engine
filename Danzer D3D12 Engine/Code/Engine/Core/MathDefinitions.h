@@ -88,3 +88,17 @@ inline const Mat4f Matrix4Abs(const Mat4f& mat) {
 		
 	return absMat;
 }
+
+// Quaternion function for rotating euler angles values correctly in editor.
+inline const Quat4f EditorQuatRotate(const Quat4f& currentQuat, const Vect3f& newRotation, const Vect3f& lastRotation) {
+	Vect3f deltaRot = newRotation - lastRotation;
+
+	Quat4f deltaQuat = DirectX::XMQuaternionRotationRollPitchYaw(ToRadians(deltaRot.x), ToRadians(deltaRot.y), ToRadians(deltaRot.z));
+	Quat4f newQuat   = DirectX::XMQuaternionMultiply(currentQuat, deltaQuat);
+
+	return newQuat;
+}
+
+inline const Vect3f RadiansVectorToDegrees(const Vect3f& radiansVec) {	
+	return { ToDegrees(radiansVec.x), ToDegrees(radiansVec.y), ToDegrees(radiansVec.z) };
+}

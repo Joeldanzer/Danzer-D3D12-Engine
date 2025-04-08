@@ -27,7 +27,6 @@ public:
 	};
 	
 	Camera();
-
 	~Camera();
 	
 	const Mat4f& GetProjection() { return m_projection[m_currentProj]; }
@@ -49,7 +48,6 @@ public:
 	uint32_t& RenderTarget() {
 		return m_renderTarget;
 	}
-
 	const Planef GetFrustrumFace(Faces face) const {
 		return m_frustrum[face];
 	}

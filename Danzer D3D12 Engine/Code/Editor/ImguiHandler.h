@@ -12,6 +12,8 @@
 
 class Engine;
 class Camera;
+
+struct Transform;
 struct GameEntity;
 struct Object2D;
 
@@ -28,27 +30,20 @@ public:
 private:
 	void SetUpDockingWindows();
 	void DrawSceneToWindow(Camera& viewPortCam);
+	
+	void DisplayViewport();
+	void ManipulateGameEntity();
+	Vect3f m_selectedRotation;
+
 	Vect2f m_lastSceneToWindowSize;
+	Vect2f m_sceneViewSize;
+	Vect2f m_sceneViewPosition;
 	bool m_sceneViewOpen = true;
 
 	Vect3f m_dirLightRot     =  {0.0f, 0.0f, 0.0f};
 	Vect3f m_dirLightLastRot =  {0.0f, 0.0f, 0.0f};
 
-	Vect3f m_kuwaharaOffset = { 0.0f, 0.0f, 0.0f };
-	int m_kuwaharaRadius = 1;
-	int m_kuwaharaScale =  1;
-
-	struct ImguiTexture {
-		unsigned int m_descriptorIndex;
-		std::wstring m_imagePath;
-		ID3D12Resource* m_texture;
-
-		CD3DX12_GPU_DESCRIPTOR_HANDLE m_srvGpuHandle;
-	};
-
 	bool m_itemsHasBeenSelected = false;
-
-	CD3DX12_GPU_DESCRIPTOR_HANDLE AddImguiImage(std::wstring path);
 
 	Engine& m_engine;
 	int m_currentMesh = 0;
@@ -60,19 +55,12 @@ private:
 	char* m_tag;
 	char* m_name;
 
-	bool m_renderOnlyMesh = false;
-
-	std::vector<ImguiTexture> m_imguiTextures;
-
 	void StaticWindows();
-
 	void SaveScene();
 	void SaveSceneAs();
 
 	std::array<std::string, 3> m_stateNames = { "ACTIVE", "NOT_ACTIVE", "DESTROY" };
-
 	std::vector<std::string> m_componentList;
-
 	std::string m_baseEntityName = "Empty Entity";
 
 	EditorLoadAndSave m_sceneLoader;

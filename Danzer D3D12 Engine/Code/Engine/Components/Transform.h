@@ -55,8 +55,13 @@ public:
 private:
 	friend class SceneManager;
 	friend class RenderManager;
-	friend class ImguiComponentMenus;
+	friend class ImguiHandler;
 
+#ifdef EDITOR_DEBUG_VIEW
+	Vect3f m_editorRotation;
+	Vect3f m_lastEditorRotation;
+#endif
+	
 	Mat4f m_last;
 	Mat4f m_world;
 	Mat4f m_local; 

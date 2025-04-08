@@ -83,7 +83,6 @@ Game::Impl::Impl(Engine& engine) :
 	collider.m_extents   = { 5.0f, 1.0f, 5.0f };
 	collider.m_gravity   = false;
 	collider.m_kinematic = true;
-
 	//for (int32_t x = -5; x < 5 + 1; x++)
 	//{
 	//	for (int32_t z = -5; z < 5 + 1; z++)
@@ -146,7 +145,6 @@ Game::Impl::Impl(Engine& engine) :
 	//Transform& waterTransform = reg.get<Transform>(waterPlane);
 	//waterTransform.m_position = { 0.0f, 2.0f, 0.0f };
 	//waterTransform.m_scale	  = { 1.0f, 1.0f, 1.5f };
-
 }	
 
 Game::Impl::~Impl(){}

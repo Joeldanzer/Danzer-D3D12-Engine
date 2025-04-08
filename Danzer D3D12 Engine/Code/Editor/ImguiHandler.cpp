@@ -2,6 +2,7 @@
 
 #include "imgui/imgui.h"
 #include "imgui/imgui_internal.h"
+#include "ImGuizmo/ImGuizmo.h"
 
 #include "Core/Engine.h"
 #include "Core/WindowHandler.h"
@@ -78,11 +79,12 @@ void ImguiHandler::Init()
 
 void ImguiHandler::Update(const float dt)
 {
+	ImGui::ShowDemoWindow();
+
+#if defined(_DEBUG) || defined(EDITOR_DEBUG_VIEW) // General Menu bar for DEBUG Game & Editor view.
 	D3D12Framework& framework     = m_engine.GetFramework();
 	RenderManager&  renderManager = m_engine.GetRenderManager();
 	SceneManager&   scene		  = m_engine.GetSceneManager();
-
-#if defined(_DEBUG) || defined(EDITOR_DEBUG_VIEW) // General Menu bar for DEBUG Game & Editor view.
 	if (ImGui::BeginMainMenuBar()) {
 		if (ImGui::BeginMenu("Scene Lighting")) {	
 			ImGui::Text("Directional Lighting");
@@ -91,22 +93,9 @@ void ImguiHandler::Update(const float dt)
 			for (auto entity : dirLightList)
 				ent = entity;
 
-			DirectionalLight& light     = REGISTRY->Get<DirectionalLight>(ent);
+			DirectionalLight& light = REGISTRY->Get<DirectionalLight>(ent);
 			light.DisplayInEditor(ent);
 			
-			//ImGui::Text("Volumetric Lighting");
-			//VolumetricLight& vl = renderManager.GetVolumetricLight();
-			//int steps = vl.GetVolumetricData().m_numberOfSteps;
-			//ImGui::DragInt("Number Of Steps", &steps, 5.0f, 10, 1000);
-			//
-			//float gScattering = vl.GetVolumetricData().m_gScattering;
-			//ImGui::DragFloat("G Scattering", &gScattering, 0.01f, -1.0f, 1.0f);
-			//
-			//float scatteringStr = vl.GetVolumetricData().m_scatteringStrength;
-			//ImGui::DragFloat("Scattering Strength", &scatteringStr, 0.01f, 1.5f, 10.0f);
-			//
-			//vl.SetVolumetricData(steps, gScattering, scatteringStr);
-
 			ImGui::EndMenu();
 		}
 	}
@@ -115,7 +104,7 @@ void ImguiHandler::Update(const float dt)
 
 #if EDITOR_DEBUG_VIEW // Still want to keep some functions available
 	SetUpDockingWindows();
-	DrawSceneToWindow(Reg::Instance()->Get<Camera>(scene.GetMainCamera()));
+	DisplayViewport();
 
 	StaticWindows();
 #endif
@@ -187,11 +176,9 @@ void ImguiHandler::DrawSceneToWindow(Camera& viewPortCam)
 
 	// We skip the first frame since this texture hasn't been rendered yet.
 	if (sceneView != nullptr) {
-		ImVec2 viewPortHalf = { WindowHandler::WindowData().m_w / 2.0f, WindowHandler::WindowData().m_h / 2.0f };
-		ImGui::SetNextWindowSize(viewPortHalf);
-		ImGui::Begin("Viewport", nullptr);
-
-		Vect2f windowSize = { ImGui::GetWindowSize().x, ImGui::GetWindowSize().y };
+		Vect2f windowSize   = { ImGui::GetWindowSize().x, ImGui::GetWindowSize().y };
+		m_sceneViewSize		= windowSize;
+		m_sceneViewPosition = { ImGui::GetWindowPos().x,  ImGui::GetWindowPos().y };
 
 		if (m_lastSceneToWindowSize != windowSize) {
 			m_lastSceneToWindowSize = windowSize;
@@ -202,20 +189,69 @@ void ImguiHandler::DrawSceneToWindow(Camera& viewPortCam)
 		CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle = m_engine.GetFramework().CbvSrvHeap().GET_GPU_DESCRIPTOR(sceneView->SRVOffsetID() + frameIndex);
 		ImGui::Image(ImTextureID(srvHandle.ptr), {windowSize.x, windowSize.y});
 	
-		ImGui::End();
+	}
+}
+
+void ImguiHandler::DisplayViewport()
+{
+	ImVec2 viewPortHalf = { WindowHandler::WindowData().m_w / 2.0f, WindowHandler::WindowData().m_h / 2.0f };
+	ImGui::SetNextWindowSize(viewPortHalf);
+	ImGui::Begin("Viewport", nullptr, ImGuiWindowFlags_MenuBar);
+
+	DrawSceneToWindow(REGISTRY->Get<Camera>(Engine::GetInstance().GetSceneManager().GetMainCamera()));
+	ManipulateGameEntity();
+	
+	ImGui::End();
+}
+
+void ImguiHandler::ManipulateGameEntity()
+{
+	static ImGuizmo::OPERATION guizmoOperation = ImGuizmo::TRANSLATE;
+	static ImGuizmo::MODE	   guizmoMode	   = ImGuizmo::WORLD;
+
+	if (ImGui::BeginMenuBar()) {		
+		if (ImGui::RadioButton("Tr", guizmoOperation == ImGuizmo::TRANSLATE))
+			guizmoOperation = ImGuizmo::TRANSLATE;
+		ImGui::SameLine();
+		if (ImGui::RadioButton("Rt", guizmoOperation == ImGuizmo::ROTATE))
+			guizmoOperation = ImGuizmo::ROTATE;
+		ImGui::SameLine();
+		if (ImGui::RadioButton("Sc", guizmoOperation == ImGuizmo::SCALE))
+			guizmoOperation = ImGuizmo::SCALE;
+	
+		ImGui::EndMenuBar();
+	}
+
+	if (m_itemsHasBeenSelected) {
+		Transform& transform = REGISTRY->Get<Transform>(m_currentEntity);
+
+		static Vect3f lastRotation = Vect3f::Zero;
+
+		ImGuizmo::SetDrawlist(ImGui::GetCurrentWindow()->DrawList);
+		
+		float newMatrix[4][4];
+		ImGuizmo::RecomposeMatrixFromComponents(&transform.m_position.x, &transform.m_editorRotation.x, &transform.m_scale.x, &newMatrix[0][0]);
+		Camera&    cam			= REGISTRY->Get<Camera>(Engine::GetInstance().GetSceneManager().GetMainCamera());
+		Transform& camTransform = REGISTRY->Get<Transform>(Engine::GetInstance().GetSceneManager().GetMainCamera());
+
+		ImGuizmo::SetRect(m_sceneViewPosition.x, m_sceneViewPosition.y, m_sceneViewSize.x, m_sceneViewSize.y);
+		ImGuizmo::Manipulate(
+			&camTransform.GetWorld().Invert().m[0][0],
+			&cam.GetProjection().m[0][0],
+			guizmoOperation, ImGuizmo::MODE::WORLD,
+			&newMatrix[0][0]
+		);
+		
+		ImGuizmo::DecomposeMatrixToComponents(&newMatrix[0][0], &transform.m_position.x, &transform.m_editorRotation.x, &transform.m_scale.x);
+  		transform.m_rotation = EditorQuatRotate(transform.m_rotation, transform.m_editorRotation, transform.m_lastEditorRotation);
+		
+		transform.m_lastEditorRotation = transform.m_editorRotation;
 	}
 }
 
 
 void ImguiHandler::StaticWindows()
 {
-	//ImGuiWindowFlags staticWindowFlags =
-	//	ImGuiWindowFlags_M |
-	//	ImGuiWindowFlags_NoResize |
-	//	ImGuiWindowFlags_NoCollapse;
-
-	//ImVec2 windowSize = { (float)WindowHandler::WindowData().m_w, (float)WindowHandler::WindowData().m_h };
-
 	//* Left Side window Begin
 	{
 		bool isOpen = true;
@@ -240,7 +276,6 @@ void ImguiHandler::StaticWindows()
 			if (ImGui::Button("Destry Selected Entity")) {
 				REGISTRY->DestroyEntity(m_currentEntity);
 				m_itemsHasBeenSelected = false;
-				//m_currentEntity = m_previousEntity;
 			}
 
 			ImGui::Separator();
@@ -255,14 +290,16 @@ void ImguiHandler::StaticWindows()
 					if (ImGui::Selectable(obj.m_name.empty() ? "##" : obj.m_name.c_str(), isSelected)) {
 						m_currentEntity  = entity;
 			
-						if (!m_itemsHasBeenSelected)
+						if (!m_itemsHasBeenSelected) {
 							m_itemsHasBeenSelected = true;
+							Transform transform = REGISTRY->Get<Transform>(m_currentEntity);
+							transform.m_editorRotation = RadiansVectorToDegrees(transform.m_rotation.ToEuler());
+						}
 					}				
 				}
 				ImGui::EndListBox();
 
 			}
-
 		}
 	}
 	ImGui::End();
@@ -276,7 +313,7 @@ void ImguiHandler::StaticWindows()
 		if (ImGui::Begin("Component Window", &isOpen)) {
 			if (m_itemsHasBeenSelected) {
 				GameEntity& gameEntity = REGISTRY->Get<GameEntity>(m_currentEntity);
-				
+
 				for (uint32_t i = 0; i < gameEntity.m_emplacedComponents.size(); i++) {
 					if(ImGui::CollapsingHeader(gameEntity.m_emplacedComponents[i].c_str(), ImGuiTreeNodeFlags_DefaultOpen))
 						COMPONENT_ENTRY_REGISTER.DisplayComponent(m_currentEntity, gameEntity.m_emplacedComponents[i]);
@@ -304,8 +341,7 @@ void ImguiHandler::StaticWindows()
 				
 					ImGui::EndPopup();
 				}
-			}
-		
+			}		
 		}
 		ImGui::End();
 	}
@@ -313,161 +349,7 @@ void ImguiHandler::StaticWindows()
 }
 void ImguiHandler::SaveScene()
 {
-	//if (!m_sceneLoader.CurrentScene().empty()) {
-	//	m_sceneLoader.SaveScene(m_sceneLoader.CurrentScene(), reg);
-	//}
-	//else {
-	//	std::wstring scene = m_fileExplorer.OpenFileExplorer(FILE_EXPLORER_SAVE, m_fileExtensions["Scenes"]);
-	//	m_sceneLoader.SaveScene({ scene.begin(), scene.end() }, reg);
-	//}
 }
 void ImguiHandler::SaveSceneAs()
 {
-	//std::wstring scene = m_fileExplorer.OpenFileExplorer(FILE_EXPLORER_SAVE, m_fileExtensions["Scenes"]);
-	//m_sceneLoader.SaveScene({ scene.begin(), scene.end() }, reg);
 }
-
-	//Model* model = reg.try_get<Model>(m_currentEntity);
-	//if (model) {
-	//	if (ImGui::CollapsingHeader("ModelData")) {
-	//		if (ImGui::Button("Set Model")) {
-	//			std::wstring newModel = m_fileExplorer.OpenFileExplorer(FILE_EXPLORER_GET, m_fileExtensions["Model"]);
-	//			if (!newModel.empty()) {
-	//				UINT newModelID = m_engine.GetModelHandler().LoadModel(newModel, "").m_modelID;
-	//				if (newModelID != 0) {
-	//					model->m_modelID = newModelID;
-	//				}
-	//			}
-	//		}
-	//		ImGui::Separator();
-	//
-	//		if(model->m_modelID != 0) {
-	//			ModelData& data = m_engine.GetModelHandler().GetLoadedModelInformation(model->m_modelID);
-	//			
-	//			ImGui::Text("Model Name: ");
-	//			ImGui::SameLine();
-	//			ImGui::Text(data.Name().c_str());
-	//
-	//			if (m_currentMesh > data.GetMeshes().size() - 1)
-	//				m_currentMesh = 0;
-	//			
-	//			int lastMesh = m_currentMesh;
-	//			ImGui::SliderInt("Mesh", &m_currentMesh, 0, (UINT)data.GetMeshes().size() - 1);
-	//			ModelData::Mesh& currentMesh = data.GetMeshes()[m_currentMesh];
-	//
-	//			bool renderOnlyMesh = m_renderOnlyMesh;
-	//			ImGui::Checkbox("Render Only Mesh", &renderOnlyMesh);
-	//			if (renderOnlyMesh != m_renderOnlyMesh || m_currentMesh != lastMesh) {
-	//				for (int i = 0; i < data.GetMeshes().size(); i++)
-	//				{
-	//					if (i == m_currentMesh) {
-	//						data.GetMeshes()[i].m_renderMesh = true;
-	//						continue;
-	//					}
-	//
-	//					data.GetMeshes()[i].m_renderMesh = !renderOnlyMesh;
-	//				}
-	//
-	//				lastMesh		 = m_currentMesh;
-	//				m_renderOnlyMesh = renderOnlyMesh;
-	//			}
-	//
-	//			Material& material = currentMesh.m_material;
-	//			float roughness = material.m_roughness;
-	//			float metallic = material.m_shininess;
-	//			float emissive = material.m_emissvie;
-	//			float color[3] = { material.m_color[0], material.m_color[1], material.m_color[2] };
-
-				//ImGui::ColorEdit3("Albedo Color", color);
-				//{
-				//	std::wstring albedo;
-				//	if (ImGui::Button("Albedo")) {
-				//		albedo = SelectTexture(material.m_albedo);
-				//	}
-				//	else
-				//		albedo = m_engine.GetTextureHandler().GetTextureData(material.m_albedo).m_texturePath;
-				//
-				//	ImGui::SameLine();
-				//	CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle = AddImguiImage(albedo);
-				//	ImGui::Image((ImTextureID)srvHandle.ptr, { 50.f, 50.f });
-				//}
-				//
-				//{
-				//	std::wstring metallicMap;
-				//	if (ImGui::Button("Metallic Map")) {
-				//		metallicMap = SelectTexture(material.m_metallicMap);
-				//	}
-				//	else
-				//		metallicMap = m_engine.GetTextureHandler().GetTextureData(material.m_metallicMap).m_texturePath;
-				//
-				//	ImGui::SameLine();
-				//	CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle = AddImguiImage(metallicMap);
-				//	ImGui::Image((ImTextureID)srvHandle.ptr, { 50.f, 50.f });
-				//}
-				//ImGui::SameLine();
-				//ImGui::DragFloat("Metallic",  &metallic, 0.01f, 0.0f,  2.f);
-				//
-				//{
-				//	std::wstring roughnessMap;
-				//	if (ImGui::Button("Roughness Map")) {
-				//		roughnessMap = SelectTexture(material.m_roughnessMap);
-				//	}
-				//	else
-				//		roughnessMap = m_engine.GetTextureHandler().GetTextureData(material.m_roughnessMap).m_texturePath;
-				//
-				//	ImGui::SameLine();
-				//	CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle = AddImguiImage(roughnessMap);
-				//	ImGui::Image((ImTextureID)srvHandle.ptr, { 50.f, 50.f });
-				//}
-				//ImGui::SameLine();
-				//ImGui::DragFloat("Roughness", &roughness, 0.01f, 0.1f,  2.f);
-				//ImGui::DragFloat("Metallic",  &metallic,  0.01f, 0.0f,  2.f);
-				//ImGui::DragFloat("Emissive",  &emissive,  0.01f, 0.0f,  1.f);
-				
-				//{
-				//	std::wstring normmal;
-				//	if (ImGui::Button("Normal Map")) {
-				//		normmal = SelectTexture(material.m_normal);
-				//	}
-				//	else
-				//		normmal = m_engine.GetTextureHandler().GetTextureData(material.m_normal).m_texturePath;
-				//
-				//	ImGui::SameLine();
-				//	CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle = AddImguiImage(normmal);
-				//	ImGui::Image((ImTextureID)srvHandle.ptr, { 50.f, 50.f });
-				//}
-				//{
-				//	std::wstring height;
-				//	if (ImGui::Button("Height Map")) {
-				//		height = SelectTexture(material.m_heightMap);
-				//	}
-				//	else
-				//		height = m_engine.GetTextureHandler().GetTextureData(material.m_heightMap).m_texturePath;
-				//
-				//	ImGui::SameLine();
-				//	CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle = AddImguiImage(height);
-				//	ImGui::Image((ImTextureID)srvHandle.ptr, { 50.f, 50.f });
-				//}
-				//{
-				//	std::wstring ao;
-				//	if (ImGui::Button("AO Map")) {
-				//		ao = SelectTexture(material.m_aoMap);
-				//	}
-				//	else
-				//		ao = m_engine.GetTextureHandler().GetTextureData(material.m_aoMap).m_texturePath;
-				//
-				//	ImGui::SameLine();
-				//	CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle = AddImguiImage(ao);
-				//	ImGui::Image((ImTextureID)srvHandle.ptr, { 50.f, 50.f });
-				//}
-
-				//material.m_roughness = roughness;
-				//material.m_shininess = metallic;
-				//material.m_emissvie  = emissive;
-				//memcpy(material.m_color, color, sizeof(float) * 3);
-	//		}
-	//	}
-	//		return true;
-	//}
-	//
-

@@ -184,6 +184,12 @@
     <ClInclude Include="EditorPCH.h" />
     <ClInclude Include="FileExplorer.h" />
     <ClInclude Include="ImguiHandler.h" />
+    <ClInclude Include="ImGuizmo\GraphEditor.h" />
+    <ClInclude Include="ImGuizmo\ImCurveEdit.h" />
+    <ClInclude Include="ImGuizmo\ImGradient.h" />
+    <ClInclude Include="ImGuizmo\ImGuizmo.h" />
+    <ClInclude Include="ImGuizmo\ImSequencer.h" />
+    <ClInclude Include="ImGuizmo\ImZoomSlider.h" />
     <ClInclude Include="imgui\backends\imgui_impl_dx12.h" />
     <ClInclude Include="imgui\backends\imgui_impl_win32.h" />
     <ClInclude Include="imgui\imconfig.h" />
@@ -200,6 +206,11 @@
     <ClCompile Include="EditorPCH.cpp" />
     <ClCompile Include="FileExplorer.cpp" />
     <ClCompile Include="ImguiHandler.cpp" />
+    <ClCompile Include="ImGuizmo\GraphEditor.cpp" />
+    <ClCompile Include="ImGuizmo\ImCurveEdit.cpp" />
+    <ClCompile Include="ImGuizmo\ImGradient.cpp" />
+    <ClCompile Include="ImGuizmo\ImGuizmo.cpp" />
+    <ClCompile Include="ImGuizmo\ImSequencer.cpp" />
     <ClCompile Include="imgui\backends\imgui_impl_dx12.cpp" />
     <ClCompile Include="imgui\backends\imgui_impl_win32.cpp" />
     <ClCompile Include="imgui\imgui.cpp" />

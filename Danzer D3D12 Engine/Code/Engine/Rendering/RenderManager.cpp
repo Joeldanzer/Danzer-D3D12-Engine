@@ -5,6 +5,7 @@
 
 #include "imgui/backends/imgui_impl_dx12.h"
 #include "imgui/backends/imgui_impl_win32.h"
+#include "ImGuizmo/ImGuizmo.h"
 
 #include "PSOHandler.h"
 #include "RenderManager.h"
@@ -425,6 +426,7 @@ void RenderManager::Impl::BeginFrame()
 	ImGui::NewFrame();
 	ImGui_ImplDX12_NewFrame();
 	ImGui_ImplWin32_NewFrame();
+	ImGuizmo::BeginFrame();
 
 	m_framework.InitiateCommandList(nullptr, L"RenderManager Line " + std::to_wstring(__LINE__) + L"\n");
 	ID3D12GraphicsCommandList* cmdList = m_framework.CurrentFrameResource()->CmdList();
