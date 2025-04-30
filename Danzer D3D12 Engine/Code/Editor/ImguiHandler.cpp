@@ -4,6 +4,8 @@
 #include "imgui/imgui_internal.h"
 #include "ImGuizmo/ImGuizmo.h"
 
+#include "Editor.h"
+
 #include "Core/Engine.h"
 #include "Core/WindowHandler.h"
 #include "Rendering/RenderManager.h"
@@ -23,47 +25,28 @@
 #include "Components/2D/Sprite.h"
 #include "Components/Transform.h"
 
+#include "Scene Loading/SceneLoader.h"
+
 #include "Rendering/Screen Rendering/Textures/TextureRenderingHandler.h"
 #include "Rendering/Screen Rendering/Textures/FullscreenTexture.h"
 
 #include "Core/input.hpp"
 
+#include <filesystem>
 #include <tchar.h>
 
-ImguiHandler::ImguiHandler(Engine& engine) :
-	m_engine(engine),
+ImguiHandler::ImguiHandler() :
 	m_currentEntity(),
-	m_entitySelected(false),
-	m_name(nullptr),
-	m_tag(nullptr),
-	m_sceneLoader(engine)
+	m_entitySelected(false)
 {
-	//FileExplorer::FileType textures = { L".dds", L"Sprites\\" };
-	//m_fileExtensions.emplace("Texture", textures);
-	//
-	//FileExplorer::FileType models = { L".fbx", L"Models\\" };
-	//m_fileExtensions.emplace("Model", models); 	
-	//
-	//FileExplorer::FileType  scenes = { L".json", L"Scenes\\" };
-	//m_fileExtensions.emplace("Scenes", scenes);
-
-	m_componentList = {
-		"Model",
-		"DirectionalLight"
-	};
 }
 ImguiHandler::~ImguiHandler()
 {
-    m_name = nullptr;
-    m_tag  = nullptr;
 }
 
 void ImguiHandler::Init()
 {
-	m_tag  = new char;
-	m_name = new char;
-
-	SceneManager& scene = m_engine.GetSceneManager();
+	SceneManager& scene = Engine::Instance().GetSceneManager();
 
 	auto dirLightList = Reg::Instance()->GetRegistry().view<DirectionalLight, Transform>();
 
@@ -82,10 +65,31 @@ void ImguiHandler::Update(const float dt)
 	ImGui::ShowDemoWindow();
 
 #if defined(_DEBUG) || defined(EDITOR_DEBUG_VIEW) // General Menu bar for DEBUG Game & Editor view.
-	D3D12Framework& framework     = m_engine.GetFramework();
-	RenderManager&  renderManager = m_engine.GetRenderManager();
-	SceneManager&   scene		  = m_engine.GetSceneManager();
+	D3D12Framework& framework     = Engine::Instance().GetFramework();
+	RenderManager&  renderManager = Engine::Instance().GetRenderManager();
+	SceneManager&   scene		  = Engine::Instance().GetSceneManager();
 	if (ImGui::BeginMainMenuBar()) {
+		if (ImGui::BeginMenu("File")) {
+
+			if (ImGui::MenuItem("Save Scene", "Ctrl-S")) {
+				if (!m_currentSaveTarget.empty() && std::filesystem::exists(m_currentSaveTarget)) {
+					Engine::Instance().GetSceneLoader().SaveScene(m_currentSaveTarget);
+				}
+				else {
+					std::wstring fileLocation = FileExplorer::FetchFileLocation();
+					if(fileLocation != INVALID_FILE_FECTHED)
+						Engine::Instance().GetSceneLoader().SaveScene(fileLocation, L"testScene");
+				}
+			}
+
+			if (ImGui::MenuItem("Load Scene", "Ctrl-L")) {
+				std::wstring fileLocation = FileExplorer::FetchFileFromExplorer(L"", SceneLoader::SceneFileType);
+				Engine::Instance().GetSceneLoader().LoadScene(fileLocation);
+			}
+
+			ImGui::EndMenu();
+		}
+
 		if (ImGui::BeginMenu("Scene Lighting")) {	
 			ImGui::Text("Directional Lighting");
 			auto dirLightList = Reg::Instance()->GetRegistry().view<DirectionalLight, Transform, GameEntity>();
@@ -171,24 +175,22 @@ void ImguiHandler::SetUpDockingWindows()
 
 void ImguiHandler::DrawSceneToWindow(Camera& viewPortCam)
 {
-	uint32_t frameIndex = m_engine.GetFramework().GetFrameIndex();
-	const FullscreenTexture* sceneView = m_engine.GetRenderManager().GetTextureRendering().GetLastRenderedTexture();
+	uint32_t frameIndex = Engine::Instance().GetFramework().GetFrameIndex();
+	const FullscreenTexture* sceneView = Engine::Instance().GetRenderManager().GetTextureRendering().GetLastRenderedTexture();
 
 	// We skip the first frame since this texture hasn't been rendered yet.
 	if (sceneView != nullptr) {
-		Vect2f windowSize   = { ImGui::GetWindowSize().x, ImGui::GetWindowSize().y };
-		m_sceneViewSize		= windowSize;
+		m_sceneViewSize     = { ImGui::GetWindowSize().x, ImGui::GetWindowSize().y };
 		m_sceneViewPosition = { ImGui::GetWindowPos().x,  ImGui::GetWindowPos().y };
 
-		if (m_lastSceneToWindowSize != windowSize) {
-			m_lastSceneToWindowSize = windowSize;
+		if (m_lastSceneToWindowSize != m_sceneViewSize) {
+			m_lastSceneToWindowSize = m_sceneViewSize;
 
-			viewPortCam.SetAspectRatio(windowSize.x / windowSize.y); // Only reconstruct cam when window has changed size
+			viewPortCam.SetAspectRatio(m_sceneViewSize.x / m_sceneViewSize.y); // Only reconstruct cam when window has changed size
 		}
 			
-		CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle = m_engine.GetFramework().CbvSrvHeap().GET_GPU_DESCRIPTOR(sceneView->SRVOffsetID() + frameIndex);
-		ImGui::Image(ImTextureID(srvHandle.ptr), {windowSize.x, windowSize.y});
-	
+		CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle = Engine::Instance().GetFramework().CbvSrvHeap().GET_GPU_DESCRIPTOR(sceneView->SRVOffsetID() + frameIndex);
+		ImGui::Image(ImTextureID(srvHandle.ptr), { m_sceneViewSize.x, m_sceneViewSize.y});
 	}
 }
 
@@ -198,7 +200,7 @@ void ImguiHandler::DisplayViewport()
 	ImGui::SetNextWindowSize(viewPortHalf);
 	ImGui::Begin("Viewport", nullptr, ImGuiWindowFlags_MenuBar);
 
-	DrawSceneToWindow(REGISTRY->Get<Camera>(Engine::GetInstance().GetSceneManager().GetMainCamera()));
+	DrawSceneToWindow(Editor::Instance().EditorCam());
 	ManipulateGameEntity();
 	
 	ImGui::End();
@@ -231,8 +233,8 @@ void ImguiHandler::ManipulateGameEntity()
 		
 		float newMatrix[4][4];
 		ImGuizmo::RecomposeMatrixFromComponents(&transform.m_position.x, &transform.m_editorRotation.x, &transform.m_scale.x, &newMatrix[0][0]);
-		Camera&    cam			= REGISTRY->Get<Camera>(Engine::GetInstance().GetSceneManager().GetMainCamera());
-		Transform& camTransform = REGISTRY->Get<Transform>(Engine::GetInstance().GetSceneManager().GetMainCamera());
+		Camera&    cam			= Editor::Instance().EditorCam();
+		Transform& camTransform = Editor::Instance().EditorCamTransform();
 
 		ImGuizmo::SetRect(m_sceneViewPosition.x, m_sceneViewPosition.y, m_sceneViewSize.x, m_sceneViewSize.y);
 		ImGuizmo::Manipulate(
@@ -263,7 +265,6 @@ void ImguiHandler::StaticWindows()
 					if (it != m_baseEntityName.end()) {
 						int value = std::atoi(std::string(1, *it).c_str());
 						value++;
-						
 						m_baseEntityName.replace(it, it + 1, std::to_string(value));
 					}
 					else {
@@ -280,11 +281,16 @@ void ImguiHandler::StaticWindows()
 
 			ImGui::Separator();
 
+
 			if (ImGui::BeginListBox("##", ImGui::GetWindowSize())) {
 				auto scene = Reg::Instance()->GetRegistry().view<Transform, GameEntity>();
 
 				for (auto entity : scene) {
 					GameEntity& obj = REGISTRY->Get<GameEntity>(entity);
+
+					if (obj.m_parent)
+						continue;
+
 					bool isSelected = (entity == m_currentEntity);
 
 					if (ImGui::Selectable(obj.m_name.empty() ? "##" : obj.m_name.c_str(), isSelected)) {
@@ -292,7 +298,7 @@ void ImguiHandler::StaticWindows()
 			
 						if (!m_itemsHasBeenSelected) {
 							m_itemsHasBeenSelected = true;
-							Transform transform = REGISTRY->Get<Transform>(m_currentEntity);
+							Transform& transform       = REGISTRY->Get<Transform>(m_currentEntity);
 							transform.m_editorRotation = RadiansVectorToDegrees(transform.m_rotation.ToEuler());
 						}
 					}				

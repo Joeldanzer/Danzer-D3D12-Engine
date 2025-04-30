@@ -3,7 +3,7 @@
 #include "Core/WindowHandler.h"
 
 Camera::Camera() :
-	m_fov(65.0f), m_nearPlane(0.01f), m_farPlane(1000.f), m_aspectRatio(16.0f / 9.0f), m_renderTarget(0),
+	m_fov(65.0f), m_nearPlane(0.1f), m_farPlane(500.f), m_aspectRatio(16.0f / 9.0f), m_renderTarget(0),
 	m_viewWidth(10.0f), m_viewHeight(10.0f), m_nearZ(-10.0f), m_farZ(10.0f),
 	m_currentProj(PERSPECTIVE)
 {
@@ -26,7 +26,7 @@ void Camera::SetFov(float fov)
 void Camera::SetNearPlane(float nearPlane)
 {
 	if (m_nearPlane != nearPlane) {
-		m_nearPlane = nearPlane;
+		m_nearPlane =  nearPlane;
 		ConstructPerspective();
 	}
 }
@@ -34,7 +34,7 @@ void Camera::SetNearPlane(float nearPlane)
 void Camera::SetFarPlane(float farPlane)
 {
 	if (m_farPlane != farPlane) {
-		m_farPlane = farPlane;
+		m_farPlane =  farPlane;
 		ConstructPerspective();
 	}
 }
@@ -42,7 +42,7 @@ void Camera::SetFarPlane(float farPlane)
 void Camera::SetAspectRatio(float aspectRatio)
 {
 	if (m_aspectRatio != aspectRatio) {
-		m_aspectRatio = aspectRatio;
+		m_aspectRatio =  aspectRatio;
 		ConstructPerspective();
 	}
 }
@@ -50,7 +50,7 @@ void Camera::SetAspectRatio(float aspectRatio)
 void Camera::SetViewWidth(float width)
 {
 	if (m_viewWidth != width) {
-		m_viewWidth = width;
+		m_viewWidth =  width;
 		ConstructOrthographic();
 	}
 }
@@ -58,7 +58,7 @@ void Camera::SetViewWidth(float width)
 void Camera::SetViewHeight(float height)
 {
 	if (m_viewHeight != height) {
-		m_viewHeight = height;
+		m_viewHeight =  height;
 		ConstructOrthographic();
 	}
 }
@@ -66,7 +66,7 @@ void Camera::SetViewHeight(float height)
 void Camera::SetNearZ(float nearZ)
 {
 	if (m_nearZ != nearZ) {
-		m_nearZ = nearZ;
+		m_nearZ =  nearZ;
 		ConstructOrthographic();
 	}
 }
@@ -74,7 +74,7 @@ void Camera::SetNearZ(float nearZ)
 void Camera::SetFarZ(float farZ)
 {
 	if (m_farZ != farZ) {
-		m_farZ = farZ;
+		m_farZ =  farZ;
 		ConstructOrthographic();
 	}
 }
@@ -98,7 +98,7 @@ void Camera::ConstructFrustrum(const Mat4f& transform, const Vect3f& position)
 	const float  fovY		  = tanf(ToRadians(m_fov) * 0.5f);
 	const float  halfVSide    = m_farPlane * fovY;
 	const float  halfHSide    = halfVSide  * m_aspectRatio;
-	const Vect3f frontMultFar = m_nearPlane * m.Forward();
+	const Vect3f frontMultFar = m_farPlane * m.Forward();
 	
 	m_frustrum[NEAR_FACE] = Planef(pos + m_nearPlane * m.Forward(), -m.Forward());
 	m_frustrum[FAR_FACE]  = Planef(pos + frontMultFar,			     m.Forward());
@@ -126,6 +126,9 @@ void Camera::ConstructFrustrum(const Mat4f& transform, const Vect3f& position)
 
 #ifdef EDITOR_DEBUG_VIEW
 #include "imgui/imgui.h"
+#include "Core/Engine.h"
+#include "RenderManager.h"
+#include "Rendering/Data/DebugRenderingData.h"
 void Camera::DisplayInEditor(const Entity entity){
 	Camera& cam = REGISTRY->Get<Camera>(entity);
 
@@ -145,12 +148,15 @@ void Camera::DisplayInEditor(const Entity entity){
 	if (cam.m_currentProj == PERSPECTIVE) {
 		float fov = cam.m_fov;
 		ImGui::DragFloat("Field Of View", &fov, 1.0f, 1.0f, 180.0f);
+		fov = fov <= 0.9f ? 1.0f : fov;
 
 		float nearPlane = cam.m_nearPlane;
 		ImGui::DragFloat("Near Plane", &nearPlane, 0.001f, 0.001f, 10.0f);
-		
+		nearPlane = nearPlane <= 0.0f ? 0.001f : nearPlane;
+
 		float farPlane = cam.m_farPlane;
 		ImGui::DragFloat("Far Plane", &farPlane, 1.0f, 1.0f, 50000.0f);
+		farPlane = farPlane <= 0.0f ? 0.001f : farPlane;
 
 		cam.SetFov(fov);
 		cam.SetNearPlane(nearPlane);
@@ -174,6 +180,81 @@ void Camera::DisplayInEditor(const Entity entity){
 		cam.SetViewHeight(height);
 		cam.SetNearZ(nearZ);
 		cam.SetFarZ(farZ);
+	}
+
+	// Show debug lines for camera...
+	// Near
+	Vect3f ltn = PlaneIntersecting(
+		cam.GetFrustrumFace(Camera::LEFT_FACE),
+		cam.GetFrustrumFace(Camera::TOP_FACE),
+		cam.GetFrustrumFace(Camera::NEAR_FACE)
+	);
+	
+	Vect3f rtn = PlaneIntersecting(
+		cam.GetFrustrumFace(Camera::RIGHT_FACE),
+		cam.GetFrustrumFace(Camera::TOP_FACE),
+		cam.GetFrustrumFace(Camera::NEAR_FACE)
+	);
+	
+	Vect3f lbn = PlaneIntersecting(
+		cam.GetFrustrumFace(Camera::LEFT_FACE),
+		cam.GetFrustrumFace(Camera::BOTTOM_FACE),
+		cam.GetFrustrumFace(Camera::NEAR_FACE)
+	);
+	
+	Vect3f rbn = PlaneIntersecting(
+		cam.GetFrustrumFace(Camera::RIGHT_FACE),
+		cam.GetFrustrumFace(Camera::BOTTOM_FACE),
+		cam.GetFrustrumFace(Camera::NEAR_FACE)
+	);
+	
+	// Far
+	Vect3f ltf = PlaneIntersecting(
+		cam.GetFrustrumFace(Camera::LEFT_FACE),
+		cam.GetFrustrumFace(Camera::TOP_FACE),
+		cam.GetFrustrumFace(Camera::FAR_FACE)
+	);
+	
+	Vect3f rtf = PlaneIntersecting(
+		cam.GetFrustrumFace(Camera::RIGHT_FACE),
+		cam.GetFrustrumFace(Camera::TOP_FACE),
+		cam.GetFrustrumFace(Camera::FAR_FACE)
+	);
+	
+	Vect3f lbf = PlaneIntersecting(
+		cam.GetFrustrumFace(Camera::LEFT_FACE),
+		cam.GetFrustrumFace(Camera::BOTTOM_FACE),
+		cam.GetFrustrumFace(Camera::FAR_FACE)
+	);
+	
+	Vect3f rbf = PlaneIntersecting(
+		cam.GetFrustrumFace(Camera::RIGHT_FACE),
+		cam.GetFrustrumFace(Camera::BOTTOM_FACE),
+		cam.GetFrustrumFace(Camera::FAR_FACE)
+	);
+	
+	// Near 
+	{
+		Engine::Instance().GetRenderManager().GetDebugRender().RenderLine(rtn, ltn);
+		Engine::Instance().GetRenderManager().GetDebugRender().RenderLine(rbn, lbn);
+		Engine::Instance().GetRenderManager().GetDebugRender().RenderLine(rtn, rbn);
+		Engine::Instance().GetRenderManager().GetDebugRender().RenderLine(ltn, lbn);
+	}
+	
+	// Sides
+	{
+		Engine::Instance().GetRenderManager().GetDebugRender().RenderLine(ltf, ltn);
+		Engine::Instance().GetRenderManager().GetDebugRender().RenderLine(lbf, lbn);
+		Engine::Instance().GetRenderManager().GetDebugRender().RenderLine(rtf, rtn);
+		Engine::Instance().GetRenderManager().GetDebugRender().RenderLine(rbf, rbn);
+	}
+	
+	// Far
+	{
+		Engine::Instance().GetRenderManager().GetDebugRender().RenderLine(rtf, ltf);
+		Engine::Instance().GetRenderManager().GetDebugRender().RenderLine(rbf, lbf);
+		Engine::Instance().GetRenderManager().GetDebugRender().RenderLine(rtf, rbf);
+		Engine::Instance().GetRenderManager().GetDebugRender().RenderLine(ltf, lbf);
 	}
 }
 #else

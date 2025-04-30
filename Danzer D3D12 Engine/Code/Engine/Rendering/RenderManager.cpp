@@ -13,6 +13,7 @@
 #include "2D/SpriteHandler.h"
 #include "Core/FrameResource.h"
 #include "Models/ModelEffectHandler.h"
+#include "Scene Loading/SceneLoader.h"
 
 #include "Components/AllComponents.h"
 
@@ -34,6 +35,10 @@
 #include "Camera.h"
 #include "SkyBox.h"
 #include "SceneManager.h"
+
+#ifdef EDITOR_DEBUG_VIEW
+#include "Editor.h"
+#endif
 
 #include <queue>
 #include <algorithm>
@@ -62,6 +67,10 @@ public:
 
 	void SetKuwaharaRadius(UINT radius, UINT scale, Vect3f offset) {
 		m_kuwaharaFilter.SetFilterRadius(radius, scale, offset);
+	}
+
+	DebugRenderingData& DebugRender() {
+		return m_debugRenderingData;
 	}
 
 private:
@@ -213,7 +222,7 @@ void RenderManager::Impl::InitializeRenderTextures(TextureHandler& textureHandle
 	ssaoRenderer->SetRenderTargetAtSlot(ssaoTexture, 0);
 	ssaoRenderer->SetTextureAtSlot(m_gBuffer.GetSRVOffset(GBUFFER_WORLD_POSITION), 0, false);
 	ssaoRenderer->SetTextureAtSlot(m_gBuffer.GetSRVOffset(GBUFFER_NORMAL), 1, false);
-	ssaoRenderer->SetTextureAtSlot(m_ssaoData.GetTextureOffset(), 2, false);
+	ssaoRenderer->SetTextureAtSlot(textureHandler.GetTextureData(m_ssaoData.NoiseTextureID()).m_offsetID, 2, false);
 	ssaoRenderer->SetBufferAtSlot(m_cameraBuffer->OffsetID(),   0);
 	ssaoRenderer->SetBufferAtSlot(m_ssaoData.GetBufferOffset(), 1);
 	ssaoRenderer->SetBufferAtSlot(m_ssaoData.GetCountOffset(),  2);
@@ -428,6 +437,8 @@ void RenderManager::Impl::BeginFrame()
 	ImGui_ImplWin32_NewFrame();
 	ImGuizmo::BeginFrame();
 
+	while(Engine::Instance().GetSceneLoader().SceneIsLoading()) {}
+
 	m_framework.InitiateCommandList(nullptr, L"RenderManager Line " + std::to_wstring(__LINE__) + L"\n");
 	ID3D12GraphicsCommandList* cmdList = m_framework.CurrentFrameResource()->CmdList();
 
@@ -508,20 +519,30 @@ void RenderManager::Impl::RenderScene(TextureHandler& textureHandler, SpriteHand
 	UpdatePrimaryConstantBuffers(scene);
     m_bufferHandler.UpdateBufferDataForRendering();
 
-	Camera&             cam = Reg::Instance()->Get<Camera>(scene.GetMainCamera());
-	Transform& camTransform = Reg::Instance()->Get<Transform>(scene.GetMainCamera());
-
-	m_skyboxRenderer->FetchCameraPositionAndSkyboxModel(camTransform.m_position, modelHandler);
+#ifdef EDITOR_DEBUG_VIEW
+	Camera&          editorCam = Editor::Instance().EditorCam();
+	Transform& editorTransform = Editor::Instance().EditorCamTransform();
+	
+	m_skyboxRenderer->FetchCameraPositionAndSkyboxModel(editorTransform.m_position, modelHandler);
 	ID3D12DescriptorHeap* descHeaps[] = {
 		m_framework.CbvSrvHeap().GetDescriptorHeap(),
 	};
 
 	cmdList->SetDescriptorHeaps(_countof(descHeaps), &descHeaps[0]);
+	editorCam.ConstructFrustrum(editorTransform.World(), editorTransform.m_position); // Construct this frames Frustrum
+	
+	Update3DInstances(editorCam, scene, modelHandler, effectHandler);
+
+	Transform& gameCamTransform = REGISTRY->Get<Transform>(scene.GetMainCamera());
+	REGISTRY->Get<Camera>(scene.GetMainCamera()).ConstructFrustrum(gameCamTransform.GetWorld(), gameCamTransform.m_position);
+	
+	CD3DX12_GPU_DESCRIPTOR_HANDLE defaultHandle = m_mainRenderer.UpdateDefaultBuffers(editorCam, editorTransform, m_framework.GetFrameIndex());
+#else
+	Camera&             cam = Reg::Instance()->Get<Camera>(scene.GetMainCamera());
+	Transform& camTransform = Reg::Instance()->Get<Transform>(scene.GetMainCamera());
+#endif // EDITOR_DEBUG_VIEW
 	
 	{ //* Scene to Gbuffer start
-		cam.ConstructFrustrum(camTransform.World(), camTransform.m_position); // Construct this frames Frustrum
-		Update3DInstances(cam, scene, modelHandler, effectHandler);
-
 		CD3DX12_CPU_DESCRIPTOR_HANDLE dsvHandle(m_framework.DSVHeap().GET_CPU_DESCRIPTOR(0));
 		std::array<CD3DX12_CPU_DESCRIPTOR_HANDLE, GBUFFER_COUNT> rtvHandle = m_gBuffer.GetRTVDescriptorHandles(m_framework.RTVHeap());
 		cmdList->OMSetRenderTargets(GBUFFER_COUNT, &rtvHandle[0], false, &dsvHandle);
@@ -531,7 +552,6 @@ void RenderManager::Impl::RenderScene(TextureHandler& textureHandler, SpriteHand
 
 		UINT startLocation = 0;
 
-		CD3DX12_GPU_DESCRIPTOR_HANDLE defaultHandle = m_mainRenderer.UpdateDefaultBuffers(cam, camTransform, m_framework.GetFrameIndex());
 		cmdList->SetGraphicsRootDescriptorTable(startLocation, defaultHandle);
 		startLocation++;
 
@@ -540,7 +560,6 @@ void RenderManager::Impl::RenderScene(TextureHandler& textureHandler, SpriteHand
 			cmdList,
 			modelHandler.GetAllModels(),
 			m_framework.m_frameIndex,
-			textureHandler.GetTextures(),
 			false,
 			startLocation
 		);
@@ -567,8 +586,6 @@ void RenderManager::Impl::RenderScene(TextureHandler& textureHandler, SpriteHand
 			effectHandler.GetAllEffects(), 
 			modelHandler, textureHandler.GetTextures(), 
 			frameIndex, 
-			cam,
-			camTransform,
 			0
 		);
 
@@ -629,15 +646,9 @@ void RenderManager::Impl::Update3DInstances(const Camera& cam, SceneManager& sce
 			const Vector3& pos   = transform.m_position;
 			const Vector3& scale = transform.m_scale;
 
-			Mat4f mat;
-			DirectX::XMVECTOR quatv = DirectX::XMLoadFloat4(&transform.m_rotation);
-			mat *= DirectX::XMMatrixScaling(transform.m_scale.x, transform.m_scale.y, transform.m_scale.z);
-			mat *= DirectX::XMMatrixRotationQuaternion(quatv);
-			mat *= DirectX::XMMatrixTranslation(pos.x, pos.y, pos.z);
-
-			transform.m_local = mat;
-			transform.m_world = !transform.Parent() ? transform.m_world = transform.m_local : transform.m_local * transform.Parent()->m_world;
-
+			transform.m_local = ConstructMatrix(transform.m_position, transform.m_scale, transform.m_rotation);
+			transform.m_world = transform.m_local;
+			
 			Model* model = Reg::Instance()->TryGet<Model>(entity);
 			if (model) {
 				if (model->m_modelID != UINT32_MAX) {
@@ -680,100 +691,6 @@ void RenderManager::Impl::Update3DInstances(const Camera& cam, SceneManager& sce
 
 		m_lightHandler.AddLightInstanceForRendering(spotLight, transform);
 	}
-
-	// Show debug lines for camera...
-	// Near
-	//Vect3f ltn = PlaneIntersecting(
-	//	cam.GetFrustrumFace(Camera::LEFT_FACE),
-	//	cam.GetFrustrumFace(Camera::TOP_FACE),
-	//	cam.GetFrustrumFace(Camera::NEAR_FACE)
-	//);
-	//
-	//Vect3f rtn = PlaneIntersecting(
-	//	cam.GetFrustrumFace(Camera::RIGHT_FACE),
-	//	cam.GetFrustrumFace(Camera::TOP_FACE),
-	//	cam.GetFrustrumFace(Camera::NEAR_FACE)
-	//);
-	//
-	//Vect3f lbn = PlaneIntersecting(
-	//	cam.GetFrustrumFace(Camera::LEFT_FACE),
-	//	cam.GetFrustrumFace(Camera::BOTTOM_FACE),
-	//	cam.GetFrustrumFace(Camera::NEAR_FACE)
-	//);
-	//
-	//Vect3f rbn = PlaneIntersecting(
-	//	cam.GetFrustrumFace(Camera::RIGHT_FACE),
-	//	cam.GetFrustrumFace(Camera::BOTTOM_FACE),
-	//	cam.GetFrustrumFace(Camera::NEAR_FACE)
-	//);
-	//
-	//// Far
-	//Vect3f ltf = PlaneIntersecting(
-	//	cam.GetFrustrumFace(Camera::LEFT_FACE),
-	//	cam.GetFrustrumFace(Camera::TOP_FACE),
-	//	cam.GetFrustrumFace(Camera::FAR_FACE)
-	//);
-	//
-	//Vect3f rtf = PlaneIntersecting(
-	//	cam.GetFrustrumFace(Camera::RIGHT_FACE),
-	//	cam.GetFrustrumFace(Camera::TOP_FACE),
-	//	cam.GetFrustrumFace(Camera::FAR_FACE)
-	//);
-	//
-	//Vect3f lbf = PlaneIntersecting(
-	//	cam.GetFrustrumFace(Camera::LEFT_FACE),
-	//	cam.GetFrustrumFace(Camera::BOTTOM_FACE),
-	//	cam.GetFrustrumFace(Camera::FAR_FACE)
-	//);
-	//
-	//Vect3f rbf = PlaneIntersecting(
-	//	cam.GetFrustrumFace(Camera::RIGHT_FACE),
-	//	cam.GetFrustrumFace(Camera::BOTTOM_FACE),
-	//	cam.GetFrustrumFace(Camera::FAR_FACE)
-	//);
-	//
-	//// Near 
-	//{
-	//	m_debugRenderingData.RenderLine(rtn, ltn);
-	//	m_debugRenderingData.RenderLine(rbn, lbn);
-	//	m_debugRenderingData.RenderLine(rtn, rbn);
-	//	m_debugRenderingData.RenderLine(ltn, lbn);
-	//}
-	//
-	//// Sides
-	//{
-	//	m_debugRenderingData.RenderLine(ltf, ltn);
-	//	m_debugRenderingData.RenderLine(lbf, lbn);
-	//	m_debugRenderingData.RenderLine(rtf, rtn);
-	//	m_debugRenderingData.RenderLine(rbf, rbn);
-	//}
-	//
-	//// Far
-	//{
-	//	m_debugRenderingData.RenderLine(rtf, ltf);
-	//	m_debugRenderingData.RenderLine(rbf, lbf);
-	//	m_debugRenderingData.RenderLine(rtf, rbf);
-	//	m_debugRenderingData.RenderLine(ltf, lbf);
-	//}
-	
-	//// Normals of planes
-	//{
-	//	Vect3f normal = cam.GetFrustrumFace(Camera::RIGHT_FACE).Normal();
-	//	m_debugRenderingData.RenderLine(Vect3f::Zero, normal * 10.0f, { 0.0f, 0.0f, 1.0f, 1.0f });
-	//
-	//	normal = cam.GetFrustrumFace(Camera::LEFT_FACE).Normal();
-	//	m_debugRenderingData.RenderLine(Vect3f::Zero , normal * 10.0f, { 0.0f, 1.0f, 1.0f, 1.0f });
-	//	
-	//	normal = cam.GetFrustrumFace(Camera::BOTTOM_FACE).Normal();
-	//	m_debugRenderingData.RenderLine(Vect3f::Zero, normal * 10.0f, { 1.0f, 1.0f, 1.0f, 1.0f });
-	//
-	//	normal = cam.GetFrustrumFace(Camera::NEAR_FACE).Normal();
-	//	m_debugRenderingData.RenderLine(Vect3f::Zero, normal * 10.0f, { 1.0f, 0.0f, 1.0f, 1.0f });
-	//
-	//	//normal = cam.GetFrustrumFace(Camera::FAR_FACE).Normal();
-	//	//m_debugRenderingData.RenderLine(Vect3f::Zero, normal * 10.0f, { 0.8f, 0.2f, 1.0f, 1.0f });
-	//}
-
 }
 void RenderManager::Impl::Update2DInstances(SceneManager& scene, SpriteHandler& spriteHandler)
 {
@@ -848,17 +765,18 @@ void RenderManager::Impl::AddFontInstance(TextOLD& data, Transform2D& transform,
 
 void RenderManager::Impl::UpdatePrimaryConstantBuffers(SceneManager& scene)
 {
-	Camera&    cam          = Reg::Instance()->Get<Camera>(scene.GetMainCamera());
-	Transform& camTransform = Reg::Instance()->Get<Transform>(scene.GetMainCamera());
-
-	auto list = Reg::Instance()->GetRegistry().view<DirectionalLight, Transform, GameEntity>();
-	DirectionalLight directionalLight;
-	Vect4f dirLightPos = { 0.0f, 0.0f, 0.0f, 1.0f };
-	Vect4f directionaLightdir = { 0.f, 0.f, 0.f, 1.f };
-
 	LightDefaultBuffer lightData;
 	DefaultBuffer      camData;
 	DefaultBuffer      shadowData;
+#ifdef EDITOR_DEBUG_VIEW
+	Camera&    cam          = Editor::Instance().EditorCam();
+	Transform& camTransform = Editor::Instance().EditorCamTransform();
+
+	camTransform.m_world = ConstructMatrix(camTransform.m_position, camTransform.m_scale, camTransform.m_rotation);
+#else
+	Camera&    cam          = Reg::Instance()->Get<Camera>(scene.GetMainCamera());
+	Transform& camTransform = Reg::Instance()->Get<Transform>(scene.GetMainCamera());
+#endif
 
 	camData.m_transformTwo = DirectX::XMMatrixTranspose(camTransform.m_world.Invert());
 	camData.m_transformOne = DirectX::XMMatrixTranspose(cam.GetProjection());
@@ -871,21 +789,26 @@ void RenderManager::Impl::UpdatePrimaryConstantBuffers(SceneManager& scene)
 		static_cast<float>(WindowHandler::WindowData().m_h)
 	};
 
+	Vect4f dirLightPos = { 0.0f, 0.0f, 0.0f, 1.0f };
+	Vect4f directionaLightdir = { 0.f, 0.f, 0.f, 1.f };
+	auto list = Reg::Instance()->GetRegistry().view<DirectionalLight, Transform, GameEntity>();
 	for (auto entity : list) {
-		directionalLight				  = Reg::Instance()->Get<DirectionalLight>(entity);
-		directionalLight.m_lightTransform = Reg::Instance()->Get<Transform>(entity).m_local;
-		dirLightPos						  = Reg::Instance()->Get<Transform>(entity).m_position;
+		DirectionalLight& dirLight     = REGISTRY->Get<DirectionalLight>(entity);
+		const Transform&  dirTransform = REGISTRY->Get<Transform>(entity); 
 
-		lightData.m_lightTransform = DirectX::XMMatrixTranspose(directionalLight.m_lightTransform.Invert());
-		lightData.m_lightColor     = directionalLight.m_lightColor;
-		lightData.m_ambientColor   = directionalLight.m_ambientColor;
+		dirLight.m_lightTransform = dirTransform.m_world;
+		dirLightPos						  = dirTransform.m_position;
+
+		lightData.m_lightTransform = DirectX::XMMatrixTranspose(dirLight.m_lightTransform.Invert());
+		lightData.m_lightColor     = dirLight.m_lightColor;
+		lightData.m_ambientColor   = dirLight.m_ambientColor;
 		lightData.m_direction      = lightData.m_lightTransform.Forward();
 	}
 	lightData.m_lightProjection = DirectX::XMMatrixTranspose(m_shadowMap->GetProjectionMatrix());
 
 	shadowData.m_transformTwo = lightData.m_lightTransform;
 	shadowData.m_transformOne = lightData.m_lightProjection;
-	shadowData.m_vectorOne = dirLightPos;
+	shadowData.m_vectorOne    = dirLightPos;
 
 	m_cameraBuffer->UpdateBufferData(reinterpret_cast<uint16_t*>(&camData));
 	m_lightBuffer->UpdateBufferData(reinterpret_cast<uint16_t*>(&lightData));
@@ -942,6 +865,11 @@ BufferHandler& RenderManager::GetConstantHandler() const noexcept
 TextureRenderingHandler& RenderManager::GetTextureRendering() const noexcept
 {
 	return m_Impl->GetTextureRendering();
+}
+
+DebugRenderingData& RenderManager::GetDebugRender() const noexcept
+{
+	return m_Impl->DebugRender();
 }
 
 void RenderManager::SetKuwaharaRadius(UINT radius, UINT scale, Vect3f offset) {

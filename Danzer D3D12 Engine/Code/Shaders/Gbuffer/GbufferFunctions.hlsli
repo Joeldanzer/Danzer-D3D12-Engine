@@ -30,7 +30,7 @@ float GetHeight(VertexToPixel input)
 
 float4 GetNormal(VertexToPixel input)
 {
-    float3 normal = normalize(input.m_normal.xyz);
+    float3 normal  = normalize(input.m_normal.xyz);
     float3 tangent = normalize(input.m_tangent.xyz);
     tangent = normalize(tangent - dot(tangent, normal) * normal);
     

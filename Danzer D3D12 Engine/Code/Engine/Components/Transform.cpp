@@ -20,15 +20,7 @@ void Transform::DisplayInEditor(Entity entity)
 		if (rot[i] < -180.0f)
 			rot[i] = 179.999f;
 	}
-	
-	//transform.m_editorRotation.y = transform.m_editorRotation.y > 180.01f ? -180.0f : transform.m_editorRotation.y < -180.01f ? 180.0f : transform.m_editorRotation.y;
-	//transform.m_editorRotation.z = transform.m_editorRotation.z > 180.01f ? -180.0f : transform.m_editorRotation.z < -180.01f ? 180.0f : transform.m_editorRotation.z;
-	//
-	//if (transform.m_editorRotation.x < -180.0f)
-	//	int s = 1;
-
 	transform.m_rotation = EditorQuatRotate(transform.m_rotation, transform.m_editorRotation, transform.m_lastEditorRotation);
-
 	transform.m_lastEditorRotation = transform.m_editorRotation;
 
 	ImGui::DragFloat3("Scale", scale, 0.01f, -FLT_MAX, FLT_MAX);

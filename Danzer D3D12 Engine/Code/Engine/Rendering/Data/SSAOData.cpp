@@ -30,8 +30,7 @@ void SSAOData::GenerateRandomTexture(TextureHandler& textureHandler, BufferHandl
 		m_kernelSamples.emplace_back(sample);
 	}
 
-	std::vector<Vect4f> ssaoNoise;
-	ssaoNoise.reserve(noiseSize);
+	m_ssaoNoise.reserve(noiseSize);
 	for (UINT i = 0; i < noiseSize; i++)
 	{
 		Vect4f noise = {
@@ -40,13 +39,11 @@ void SSAOData::GenerateRandomTexture(TextureHandler& textureHandler, BufferHandl
 			randomFloats(rng),
 			1.0f
 		};
-		ssaoNoise.emplace_back(noise);
+		m_ssaoNoise.emplace_back(noise);
 	}
 
 	// Generate a custom texture and fetch the offsetID for texture slotting.
-	const uint32_t id = textureHandler.CreateCustomTexture(&ssaoNoise[0], static_cast<UINT>(sqrt(ssaoNoise.size())), L"ssaoNoise");
-	textureHandler.LoadAllCreatedTexuresToGPU();
-	m_textureOffset = textureHandler.GetTextureData(id).m_offsetID;
+	m_textureID = textureHandler.CreateCustomTexture(m_ssaoNoise.data(), noiseSize * sizeof(Vect4f), sqrtf(noiseSize), sqrtf(noiseSize), L"ssaoNoise");
 
 	// Samples is not gonna update so we only need to set the buffer data once.
 	ConstantBufferData* sampleBuffer = bufferHandler.CreateBufferData(sizeof(Vect4f) * m_kernelSamples.size());

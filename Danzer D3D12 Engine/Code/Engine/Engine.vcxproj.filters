@@ -40,8 +40,6 @@
     <ClCompile Include="Rendering\Buffers\SpriteSheetBuffer.cpp" />
     <ClCompile Include="Rendering\Buffers\WindowSizeBuffer.cpp" />
     <ClCompile Include="Rendering\Buffers\VertexBuffer.cpp" />
-    <ClCompile Include="Level Loader\LevelLoaderCustom.cpp" />
-    <ClCompile Include="Level Loader\LevelLoader.cpp" />
     <ClCompile Include="Rendering\TextureHandler.cpp" />
     <ClCompile Include="Rendering\SkyBox.cpp" />
     <ClCompile Include="SceneOLD.cpp" />
@@ -94,6 +92,7 @@
     <ClCompile Include="Physics\Assignment\Components\SphereCollider.cpp" />
     <ClCompile Include="Core\ResourceLoadingHandler.cpp" />
     <ClCompile Include="Physics\RayCaster.cpp" />
+    <ClCompile Include="Scene Loading\SceneLoader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Core\WindowHandler.h">
@@ -143,8 +142,6 @@
     <ClInclude Include="Rendering\Buffers\VertexBuffer.h" />
     <ClInclude Include="Components\2D\Text.h" />
     <ClInclude Include="Components\2D\Sprite.h" />
-    <ClInclude Include="Level Loader\LevelLoaderCustom.h" />
-    <ClInclude Include="Level Loader\LevelLoader.h" />
     <ClInclude Include="Rendering\TextureHandler.h" />
     <ClInclude Include="Rendering\SkyBox.h" />
     <ClInclude Include="SceneOLD.h" />
@@ -211,6 +208,7 @@
     <ClInclude Include="Physics\Assignment\Components\SphereCollider.h" />
     <ClInclude Include="Core\ResourceLoadingHandler.h" />
     <ClInclude Include="Physics\RayCaster.h" />
+    <ClInclude Include="Scene Loading\SceneLoader.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

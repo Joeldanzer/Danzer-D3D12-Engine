@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Core/Engine.h"
+
 #include "Core/RegistryWrapper.h"
 
 // General Engine includes 

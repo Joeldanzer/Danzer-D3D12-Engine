@@ -14,60 +14,66 @@
 #include "Components/Model.h"
 #include "Rendering/Models/ModelHandler.h"
 
-Editor::Editor(Engine& engine) :
-	m_engine(engine),
-	m_turnSpeed(50.f),
-	m_moveSpeed(10.f),
-	m_imguiHandler(engine)
+Editor* Editor::s_instance = nullptr;
+
+Editor::Editor() :
+	m_turnSpeed(3.f),
+	m_moveSpeed(8.f),
+	m_imguiHandler()
 {
+	m_editorCam			 = new Camera();
+	m_editorCamTransform = new Transform(); 
+
+	m_editorCam->SetFov(75.0f);
+	m_editorCam->SetAspectRatio(WindowHandler::GetViewPort().Width / WindowHandler::GetViewPort().Height);
+	m_editorCam->SetFarZ(10000.0f);
+	m_editorCam->SetNearZ(0.01f);
+
+	m_editorCamTransform->m_position = { 0.0f, 2.0f, 10.0f };
+
 	m_imguiHandler.Init();
 }
-Editor::~Editor(){}
+Editor::~Editor(){
+	delete m_editorCam;
+	delete m_editorCamTransform;
+}
 
 void Editor::Update(const float deltaTime)
 {
+	CameraControlls(deltaTime);
 	m_imguiHandler.Update(deltaTime);
 }
 
 void Editor::CameraControlls(const float dt)
 {
-	//entt::registry& reg = m_engine.GetSceneManager().GetCurrentScene().Registry();
-	//Transform& transform = reg.get<Transform>(m_engine.GetSceneManager().GetCurrentScene().GetMainCamera());
-	//Camera& camera = reg.get<Camera>(m_engine.GetSceneManager().GetCurrentScene().GetMainCamera());
-	//
-	//Vect3f euler = transform.m_rotation.ToEuler();
-	//
-	//euler = { ToDegrees(euler.x), ToDegrees(euler.y), ToDegrees(euler.z) };
-	//
-	//if (Input::GetInstance().IsKeyDown(VK_SHIFT)) {
-	//	if (Input::GetInstance().IsMouseDown(Input::MouseButton::Left) && Input::GetInstance().MouseDeltaX() > 0 ||
-	//		Input::GetInstance().IsMouseDown(Input::MouseButton::Left) && Input::GetInstance().MouseDeltaX() < 0) {
-	//		euler.y += Input::GetInstance().MouseDeltaX() * m_turnSpeed * dt; 
-	//	}
-	//
-	//	if (Input::GetInstance().IsMouseDown(Input::MouseButton::Left) && Input::GetInstance().MouseDeltaY() > 0 ||
-	//		Input::GetInstance().IsMouseDown(Input::MouseButton::Left) && Input::GetInstance().MouseDeltaY() < 0) {
-	//		euler.x += Input::GetInstance().MouseDeltaY() * m_turnSpeed * dt;
-	//	}
-	//}
-	//
-	//transform.m_rotation = Quat4f::CreateFromYawPitchRoll({ToRadians(euler.x), ToRadians(euler.y), ToRadians(euler.z)});
-	//
-	//Vect3f forward = transform.World().Forward();
-	//if (Input::GetInstance().MouseWheel() < 0){
-	//	transform.m_position += (forward * m_moveSpeed) * dt;
-	//}
-	//else if(Input::GetInstance().MouseWheel() > 0)
-	//{
-	//	transform.m_position -= (forward * m_moveSpeed) * dt;
-	//}
-	//
-	//if (Input::GetInstance().IsKeyPressed('Z')) {
-	//	camera.m_renderTarget++;
-	//	
-	//	if (camera.m_renderTarget > 5) {
-	//		camera.m_renderTarget = 0;
-	//	}
-	//}
+	if (Input::GetInstance().IsKeyDown(VK_LEFT))
+		m_editorCamTransform->m_rotation *= DirectX::XMQuaternionRotationAxis(Vect3f::Up, dt * m_turnSpeed);
+	if (Input::GetInstance().IsKeyDown(VK_RIGHT))
+		m_editorCamTransform->m_rotation *= DirectX::XMQuaternionRotationAxis(Vect3f::Up, -(dt * m_turnSpeed));
 
+	if (Input::GetInstance().IsKeyDown(VK_DOWN))
+		m_editorCamTransform->m_rotation *= DirectX::XMQuaternionRotationAxis(m_editorCamTransform->World().Right(), -(dt * m_turnSpeed));
+	if (Input::GetInstance().IsKeyDown(VK_UP))
+		m_editorCamTransform->m_rotation *= DirectX::XMQuaternionRotationAxis(m_editorCamTransform->World().Right(), dt * m_turnSpeed);
+
+	Vector3 forward = m_editorCamTransform->World().Forward();
+
+	if (Input::GetInstance().IsKeyDown('W'))
+		m_editorCamTransform->m_position += (m_editorCamTransform->World().Forward() * m_moveSpeed) * dt;
+	if (Input::GetInstance().IsKeyDown('S'))
+		m_editorCamTransform->m_position -= (m_editorCamTransform->World().Forward() * m_moveSpeed) * dt;
+
+	if (Input::GetInstance().IsKeyDown('A'))
+		m_editorCamTransform->m_position -= (m_editorCamTransform->World().Right() * m_moveSpeed) * dt;
+	if (Input::GetInstance().IsKeyDown('D'))
+		m_editorCamTransform->m_position += (m_editorCamTransform->World().Right() * m_moveSpeed) * dt;
+
+	if (Input::GetInstance().IsKeyDown(VK_SPACE))
+		m_editorCamTransform->m_position.y += dt * m_moveSpeed;
+	if (Input::GetInstance().IsKeyDown(VK_SHIFT))
+		m_editorCamTransform->m_position.y -= dt * m_moveSpeed;
+
+	if (Input::GetInstance().IsKeyPressed('Z')) {
+			m_editorCam->RenderTarget() = m_editorCam->RenderTarget() < 9 ? m_editorCam->RenderTarget() + 1 : 0;	
+	}
 }

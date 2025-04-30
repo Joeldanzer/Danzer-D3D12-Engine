@@ -17,6 +17,9 @@ struct Model : public BaseComponent {
 
 	void DisplayInEditor(const Entity entity) override;
 
+	void WriteComponentToFile(const Entity entity, std::fstream& file) override;
+	void LoadFileToComponent(const Entity entity, std::fstream& file) override;
+
 	uint32_t m_modelID;
 };
 REGISTER_COMPONENT(Model)

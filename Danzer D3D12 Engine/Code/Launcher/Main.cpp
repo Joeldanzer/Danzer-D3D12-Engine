@@ -40,16 +40,16 @@ public:
 		windowData.m_w = desktop.right;
 		windowData.m_h = desktop.left;
 		
-		// Initialise engine through ::GetInstance
-		Engine& engine = Engine::GetInstance();
+		// Initialise engine through ::Instance
+		Engine& engine = Engine::Instance();
 
-		Editor		  editor(Engine::GetInstance());
-		Game		  game(Engine::GetInstance());
+#ifdef EDITOR_DEBUG_VIEW
+		Editor& editor = Editor::Instance();
+#endif
+		Game		  game;
 		SimplePhysics physics;
 
-		Engine::GetInstance().EndInitFrame();
-		//RLH& rlh = RLH::Instance();
-
+		Engine::Instance().EndInitFrame();
 
 		while (true) {
 
@@ -71,9 +71,11 @@ public:
 			}
 
 			engine.BeginFrame();
-
 			game.Update(engine.GetDeltaTime());
+
+#ifdef EDITOR_DEBUG_VIEW
 			editor.Update(engine.GetDeltaTime());
+#endif
 
 			physics.SimulatePhysics(engine.GetDeltaTime());
 

@@ -44,6 +44,7 @@ public:
 	const std::string FetchComponentName();
 
 	void DestroyEntity(const Entity entity);
+	void ClearWholeScene();
 
 	entt::registry& GetRegistry() {
 		return m_registry;

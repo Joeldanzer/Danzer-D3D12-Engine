@@ -10,7 +10,7 @@
 #include "Rendering/TextureHandler.h"
 #include "FileExplorer.h"
 void DisplayModelTexture(uint32_t& texture, const std::string textureType) {
-	Engine& eng = Engine::GetInstance();
+	Engine& eng = Engine::Instance();
 	CD3DX12_GPU_DESCRIPTOR_HANDLE textureHandle(
 		eng.GetFramework().CbvSrvHeap().GET_GPU_DESCRIPTOR(
 			eng.GetTextureHandler().GetTextureData(texture).m_offsetID
@@ -20,7 +20,7 @@ void DisplayModelTexture(uint32_t& texture, const std::string textureType) {
 	if (ImGui::ImageButton(textureType.c_str(), ImTextureID(textureHandle.ptr), { 50.0f, 50.0f })) {
 		const std::wstring texturePath = FileExplorer::FetchFileFromExplorer(L"Sprites\\", L".dds");
 		if (texturePath != INVALID_FILE_FECTHED && texturePath != L"") {
-			texture = eng.GetTextureHandler().GetTexture(texturePath);
+			texture = eng.GetTextureHandler().CreateTexture(texturePath);
 		}
 	}
 	ImGui::SameLine();
@@ -30,7 +30,7 @@ void DisplayModelTexture(uint32_t& texture, const std::string textureType) {
 void Model::DisplayInEditor(const Entity entity)
 {
 	Model&     model = REGISTRY->Get<Model>(entity);
-	Engine&    eng   = Engine::GetInstance();
+	Engine&    eng   = Engine::Instance();
 	
 	if (ImGui::Button("Select New Model")) {
 		const std::wstring modelPath = FileExplorer::FetchFileFromExplorer(L"Models\\", L".fbx");
@@ -43,7 +43,7 @@ void Model::DisplayInEditor(const Entity entity)
 	if (model.m_modelID == UINT32_MAX)
 		return;
 
-	ModelData& modelData  = Engine::GetInstance().GetModelHandler().GetLoadedModelInformation(model.m_modelID);
+	ModelData& modelData  = Engine::Instance().GetModelHandler().GetLoadedModelInformation(model.m_modelID);
 	ImGui::Text(std::string(modelData.GetModelPath().begin(), modelData.GetModelPath().end()).c_str());
 
 	if (!modelData.ModelFinished())
@@ -89,3 +89,34 @@ void Model::DisplayInEditor(const Entity entity)
 #else
 void Model::DisplayInEditor(const Entity entity){}
 #endif
+
+#include <fstream>
+void Model::WriteComponentToFile(const Entity entity, std::fstream& file)
+{
+	ModelData& modelData = Engine::Instance().GetModelHandler().GetLoadedModelInformation(REGISTRY->Get<Model>(entity).m_modelID);
+	
+	file.write((char*)&modelData.m_transparent, sizeof(bool));
+
+	const uint32_t pathSize = modelData.GetModelPath().size();
+	file.write((char*)&pathSize, sizeof(uint32_t));
+	
+	const std::string pathInString(modelData.GetModelPath().begin(), modelData.GetModelPath().end());
+	file.write(pathInString.c_str(), pathSize);
+}
+void Model::LoadFileToComponent(const Entity entity, std::fstream& file)
+{	
+	Model& model = REGISTRY->Get<Model>(entity);
+
+	bool isTransparent = false;
+	file.read((char*)&isTransparent, sizeof(bool));                                                         
+
+	uint32_t sizeOfStr = UINT32_MAX;
+	file.read((char*)&sizeOfStr, sizeof(uint32_t));
+
+	std::string outPath("", sizeOfStr);
+	file.read(&outPath[0], sizeOfStr);
+
+	// Need to handle how I store textures differently, idea is that Materials are saved to different file that references what model used it.
+	std::wstring wstrPath(outPath.begin(), outPath.end());
+	model = Engine::Instance().GetModelHandler().LoadModel(wstrPath, 0, isTransparent);
+}

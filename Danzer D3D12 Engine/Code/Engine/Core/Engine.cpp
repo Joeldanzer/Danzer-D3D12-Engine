@@ -1,7 +1,6 @@
 #include "stdafx.h"
 #include "Engine.h"
 
-#include "Level Loader/LevelLoaderCustom.h"
 #include "Components/Transform.h"
 #include "Core/input.hpp"
 #include "Rendering/TextureHandler.h"
@@ -13,6 +12,7 @@
 #include "Rendering/Buffers/BufferHandler.h"
 #include "Rendering/Screen Rendering/Textures/TextureRenderingHandler.h"
 #include "Rendering/2D/SpriteHandler.h"
+#include "Scene Loading/SceneLoader.h"
 #include "FrameTimer.h"
 #include "Rendering/Camera.h"
 #include "D3D12Framework.h"
@@ -48,9 +48,11 @@ public:
 	SoundEngine&			 GetSoundEngine()			  noexcept;
 	BufferHandler&			 GetBufferHandler()			  noexcept;
 	TextureRenderingHandler& GetTextureRenderingHandler() noexcept;
+	SceneLoader&			 GetSceneLoader()			  noexcept;
 
 
 private:
+	SceneLoader				m_sceneLoader;
 	SoundEngine				m_soundEngine;
 	WindowHandler			m_windowHandler;
 	D3D12Framework			m_framework;
@@ -64,7 +66,6 @@ private:
 	PhysicsHandler			m_physicsHandler;
 	ModelEffectHandler		m_modelEffectHandler;
 	FrameTimer				m_frameTimer;
-	Camera					m_camera;
 
 	float m_deltaTime;
 };
@@ -72,13 +73,14 @@ private:
 Engine::Impl::Impl(const uint16_t width, const uint16_t height) :
 	m_windowHandler({ 0, 0, width, height }), 
 	m_framework(),
+	m_sceneLoader(),
 	m_textureHandler(m_framework),
 	m_renderManager(m_framework, m_textureHandler),
 	m_modelHandler(m_framework, m_textureHandler),
 	m_modelEffectHandler(m_framework, m_renderManager.GetPSOHandler()),
 	m_spriteHandler(m_framework, m_textureHandler),
 	m_bufferHandler(m_framework),
-	m_sceneManager(m_camera),
+	m_sceneManager(),
 	m_physicsEngine(
 		10240, // Max number of bodies
 		0,     // Max body mutexes
@@ -130,7 +132,7 @@ void Engine::Impl::UpdateFrame() {
 	const float deltaTime = m_frameTimer.GetRealDeltaTime();
 	m_sceneManager.UpdateTransformsForRendering();
 
-	// Might move to main.cpp
+	// Will move to main.cpp instead, easier to thread from there
 	m_physicsHandler.SetPhysicsPositionAndRotation();
 	m_physicsEngine.Update(1.0f / 60.0f, 0);
 	m_physicsHandler.UpdatePhysicsEntities();
@@ -217,6 +219,10 @@ TextureRenderingHandler& Engine::GetTextureRenderingHandler() const noexcept
 {
 	return m_Impl->GetTextureRenderingHandler();
 }
+SceneLoader& Engine::GetSceneLoader() const noexcept
+{
+	return m_Impl->GetSceneLoader();
+}
 const float Engine::Impl::GetFPS() noexcept
 {
 	return m_frameTimer.GetRealFrameRate();
@@ -274,4 +280,9 @@ BufferHandler& Engine::Impl::GetBufferHandler() noexcept
 TextureRenderingHandler& Engine::Impl::GetTextureRenderingHandler() noexcept
 {
 	return m_renderManager.GetTextureRendering();
+}
+
+SceneLoader& Engine::Impl::GetSceneLoader() noexcept
+{
+	return m_sceneLoader;
 }

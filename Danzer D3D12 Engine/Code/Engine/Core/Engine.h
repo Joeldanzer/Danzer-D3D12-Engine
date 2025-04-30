@@ -16,6 +16,7 @@ class LightHandler;
 class SoundEngine;
 class TextureRenderingHandler;
 class BufferHandler;
+class SceneLoader;
 
 class Engine
 {
@@ -23,7 +24,7 @@ public:
 	Engine() = delete;
 	~Engine();
 
-	static Engine& GetInstance() {
+	static Engine& Instance() {
 		if (s_engineSingleton == nullptr)
 			s_engineSingleton = new Engine(WindowHandler::WindowData().m_w, WindowHandler::WindowData().m_h);
 		
@@ -46,7 +47,7 @@ public:
 	SoundEngine&			 GetSoundEngine()		      const noexcept;
 	BufferHandler&		     GetBufferHandler()		      const noexcept;
 	TextureRenderingHandler& GetTextureRenderingHandler() const noexcept;
-	
+	SceneLoader&			 GetSceneLoader()			  const noexcept;
 
 private:
 	explicit Engine(unsigned int width, unsigned int height);

@@ -2,6 +2,7 @@
 #include "Components/AllComponents.h"
 
 #include "RegistryWrapper.h"
+#include "Engine.h"
 
 #include <algorithm>
 
@@ -60,6 +61,15 @@ void RegistryWrapper::DestroyEntity(const Entity entity) {
 	m_registry.destroy(entity);
 }
 
+void RegistryWrapper::ClearWholeScene()
+{
+	// Make sure we arent in the process of rendering when clearing the scene...
+	while(Engine::Instance().GetFramework().RenderingFrame()){
+		int s = 1;
+	}
+	m_registry.clear();
+}
+
 bool RegistryWrapper::ComponentExists(const std::string componentName, const GameEntity& gameEntity)
 {
 	const std::vector<std::string>& vec = gameEntity.m_emplacedComponents;
@@ -72,7 +82,10 @@ bool RegistryWrapper::ComponentExists(const std::string componentName, const Gam
 bool RegistryWrapper::RegisterComponentToEntity(const Entity entity, std::string componentName)
 {
 	GameEntity* gameEntity = m_registry.try_get<GameEntity>(entity);
-	assert(gameEntity, "WARNING! GameEntity component has not been emplaced on Entity...");
+	if (!gameEntity) {
+		std::cout << "WARNING! No GameEntity is Attached" << std::endl;
+		return false;
+	}
 
 	std::vector<std::string>& vec = gameEntity->m_emplacedComponents;
 

@@ -25,8 +25,9 @@ void Skybox::Initialize(PSOHandler& psoHandler, TextureHandler& textureHandler, 
 	DXGI_FORMAT format[] = { DXGI_FORMAT_R8G8B8A8_UNORM };
 	CD3DX12_DEPTH_STENCIL_DESC depth(D3D12_DEFAULT);
 	depth.DepthEnable = false;
-	auto flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
-		D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
+	auto flags = 
+		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
+		D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS     |
 		D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS;
 
 	InitializeRenderer(
@@ -63,7 +64,7 @@ bool Skybox::RenderToTexture(ID3D12GraphicsCommandList* cmdList, DescriptorHeapW
 	if (!m_modelData->GetSingleMesh(0).m_instanceTransforms.empty())
 		m_modelData->GetSingleMesh(0).m_instanceTransforms.clear();
 	
-	Texture& texture = Engine::GetInstance().GetTextureHandler().GetTextureData(m_textureID);
+	Texture& texture = Engine::Instance().GetTextureHandler().GetTextureData(m_textureID);
 	SetTextureAtSlot(texture.m_offsetID, 0, false);
 
 	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle = heap.GET_CPU_DESCRIPTOR(m_rtvSlots[0].first + frameIndex);
@@ -74,8 +75,8 @@ bool Skybox::RenderToTexture(ID3D12GraphicsCommandList* cmdList, DescriptorHeapW
 	//* Add the rotation from the skybox and always place it a the cameras position
 	DirectX::XMVECTOR quatv = DirectX::XMLoadFloat4(&m_rotation);
 	Mat4f transform = DirectX::XMMatrixRotationQuaternion(quatv);
-	transform *= DirectX::XMMatrixScaling(5.0f, 5.0f, 5.0f);
-	transform *= DirectX::XMMatrixTranslation(m_camPosition.x, m_camPosition.y, m_camPosition.z);
+	transform	   *= DirectX::XMMatrixScaling(5.0f, 5.0f, 5.0f);
+	transform	   *= DirectX::XMMatrixTranslation(m_camPosition.x, m_camPosition.y, m_camPosition.z);
 
 	ModelData::Mesh& mesh = m_modelData->GetSingleMesh(0);
 

@@ -180,7 +180,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Editor.h" />
-    <ClInclude Include="EditorLoadAndSave.h" />
     <ClInclude Include="EditorPCH.h" />
     <ClInclude Include="FileExplorer.h" />
     <ClInclude Include="ImguiHandler.h" />
@@ -202,7 +201,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Editor.cpp" />
-    <ClCompile Include="EditorLoadAndSave.cpp" />
     <ClCompile Include="EditorPCH.cpp" />
     <ClCompile Include="FileExplorer.cpp" />
     <ClCompile Include="ImguiHandler.cpp" />

@@ -3,6 +3,7 @@
 
 #include "Components/AllComponents.h"
 
+#include "Core/Engine.h"
 #include "Camera.h"
 #include "SkyBox.h"
 #include "PSOHandler.h"
@@ -27,9 +28,9 @@ void Renderer::Init(D3D12Framework& framework)
 	m_framework = &framework;
 	
 	//m_shadowBuffer.Init(framework.GetDevice(),	   &framework.CbvSrvHeap(),	sizeof(CameraBuffer::Data));
-	m_cameraBuffer.Init(framework.GetDevice(),	   &framework.CbvSrvHeap(),	sizeof(CameraBuffer::Data));
-	m_lightBuffer.Init(framework.GetDevice(),	   &framework.CbvSrvHeap(),	sizeof(LightBuffer::Data));
-	m_materialBuffer.Init(framework.GetDevice(),   &framework.CbvSrvHeap(),	sizeof(MaterialBuffer::Data));
+	m_cameraBuffer.Init(framework.GetDevice(),	 &framework.CbvSrvHeap(), sizeof(CameraBuffer::Data));
+	m_lightBuffer.Init(framework.GetDevice(),	 &framework.CbvSrvHeap(), sizeof(LightBuffer::Data));
+	m_materialBuffer.Init(framework.GetDevice(), &framework.CbvSrvHeap(), sizeof(MaterialBuffer::Data));
 	//m_pointLightBuffer.Init(framework.GetDevice(), &framework.CbvSrvHeap(), sizeof(PointLightBuffer::Data));
 }
 
@@ -93,7 +94,7 @@ CD3DX12_GPU_DESCRIPTOR_HANDLE Renderer::UpdateLightBuffer(Mat4f& projection, Tra
 	CD3DX12_GPU_DESCRIPTOR_HANDLE cbvHandle(cbvSrvHeapStart, m_lightBuffer.OffsetID() + frameIndex, cbvSrvDescSize);
 	return cbvHandle;
 }
-void Renderer::RenderForwardModelEffects(ID3D12GraphicsCommandList* cmdList, PSOHandler& psoHandler, const UINT depthOffset, std::vector<ModelEffectData>& modelEffects, ModelHandler& modelHandler, std::vector<Texture>& textures, const UINT frameIndex, Camera& cam, Transform& camTransform, UINT startLocation)
+void Renderer::RenderForwardModelEffects(ID3D12GraphicsCommandList* cmdList, PSOHandler& psoHandler, const UINT depthOffset, std::vector<ModelEffectData>& modelEffects, ModelHandler& modelHandler, std::vector<Texture>& textures, const UINT frameIndex, UINT startLocation)
 {
 	D3D12_GPU_DESCRIPTOR_HANDLE cbvSrvHeapStart = m_framework->CbvSrvHeap().GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
 	const UINT cbvSrvDescSize = m_framework->CbvSrvHeap().DESCRIPTOR_SIZE();
@@ -106,8 +107,8 @@ void Renderer::RenderForwardModelEffects(ID3D12GraphicsCommandList* cmdList, PSO
 		cmdList->SetGraphicsRootSignature(psoHandler.GetRootSignature(effectData.GetRootsSignature()));
 		cmdList->SetPipelineState(psoHandler.GetPipelineState(effectData.GetPSO()));
 
-		CD3DX12_GPU_DESCRIPTOR_HANDLE cbvHandle = UpdateDefaultBuffers(cam, camTransform, frameIndex);
-		cmdList->SetGraphicsRootDescriptorTable(0, cbvHandle);
+		//CD3DX12_GPU_DESCRIPTOR_HANDLE cbvHandle = UpdateDefaultBuffers(cam, camTransform, frameIndex);
+		//cmdList->SetGraphicsRootDescriptorTable(0, cbvHandle);
 
 		CD3DX12_GPU_DESCRIPTOR_HANDLE depthHandle(cbvSrvHeapStart, depthOffset, cbvSrvDescSize);
 
@@ -152,10 +153,12 @@ void Renderer::RenderForwardModelEffects(ID3D12GraphicsCommandList* cmdList, PSO
 		effectData.GetTransforms().clear();
 	}
 }
-void Renderer::RenderToGbuffer(ID3D12GraphicsCommandList* cmdList, std::vector<ModelData>& models, UINT frameIndex, std::vector<Texture>& textures, bool renderTransparency, UINT startLocation)
+void Renderer::RenderToGbuffer(ID3D12GraphicsCommandList* cmdList, std::vector<ModelData>& models, UINT frameIndex, bool renderTransparency, UINT startLocation)
 {
 	D3D12_GPU_DESCRIPTOR_HANDLE cbvSrvHeapStart = m_framework->CbvSrvHeap().GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
 	const uint32_t cbvSrvDescSize			    = m_framework->CbvSrvHeap().DESCRIPTOR_SIZE();
+
+	TextureHandler& textures = Engine::Instance().GetTextureHandler();
 
 	for (uint32_t i = 0; i < models.size(); i++)
 	{
@@ -196,12 +199,12 @@ void Renderer::RenderToGbuffer(ID3D12GraphicsCommandList* cmdList, std::vector<M
 
 						// Handle for each texture that will be used
 						CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandles[6] = {
-							CD3DX12_GPU_DESCRIPTOR_HANDLE(cbvSrvHeapStart, textures[realMesh.m_material.m_albedo].m_offsetID,       cbvSrvDescSize), // Albedo
-							CD3DX12_GPU_DESCRIPTOR_HANDLE(cbvSrvHeapStart, textures[realMesh.m_material.m_normal].m_offsetID,	    cbvSrvDescSize), // Normal
-							CD3DX12_GPU_DESCRIPTOR_HANDLE(cbvSrvHeapStart, textures[realMesh.m_material.m_metallicMap].m_offsetID,  cbvSrvDescSize), // Metallic
-							CD3DX12_GPU_DESCRIPTOR_HANDLE(cbvSrvHeapStart, textures[realMesh.m_material.m_roughnessMap].m_offsetID, cbvSrvDescSize), // Roughness/Smoothness
-							CD3DX12_GPU_DESCRIPTOR_HANDLE(cbvSrvHeapStart, textures[realMesh.m_material.m_heightMap].m_offsetID,    cbvSrvDescSize), // Height 
-							CD3DX12_GPU_DESCRIPTOR_HANDLE(cbvSrvHeapStart, textures[realMesh.m_material.m_aoMap].m_offsetID,	    cbvSrvDescSize)  // AO
+							CD3DX12_GPU_DESCRIPTOR_HANDLE(cbvSrvHeapStart, textures.GetTextureData(realMesh.m_material.m_albedo).m_offsetID,       cbvSrvDescSize), // Albedo
+							CD3DX12_GPU_DESCRIPTOR_HANDLE(cbvSrvHeapStart, textures.GetTextureData(realMesh.m_material.m_normal).m_offsetID,	   cbvSrvDescSize), // Normal
+							CD3DX12_GPU_DESCRIPTOR_HANDLE(cbvSrvHeapStart, textures.GetTextureData(realMesh.m_material.m_metallicMap).m_offsetID,  cbvSrvDescSize), // Metallic
+							CD3DX12_GPU_DESCRIPTOR_HANDLE(cbvSrvHeapStart, textures.GetTextureData(realMesh.m_material.m_roughnessMap).m_offsetID, cbvSrvDescSize), // Roughness/Smoothness
+							CD3DX12_GPU_DESCRIPTOR_HANDLE(cbvSrvHeapStart, textures.GetTextureData(realMesh.m_material.m_heightMap).m_offsetID,    cbvSrvDescSize), // Height 
+							CD3DX12_GPU_DESCRIPTOR_HANDLE(cbvSrvHeapStart, textures.GetTextureData(realMesh.m_material.m_aoMap).m_offsetID,	       cbvSrvDescSize)  // AO
 						};
 
 						for (UINT i = 0; i < _countof(srvHandles); i++)

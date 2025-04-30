@@ -48,8 +48,8 @@ public:
 	CD3DX12_GPU_DESCRIPTOR_HANDLE UpdateShadowMapBuffer(const Mat4f& projection, const Mat4f& transform, const Vect4f& position, UINT frameIndex);
 	CD3DX12_GPU_DESCRIPTOR_HANDLE UpdateLightBuffer(Mat4f& projection, Transform& transform, const DirectionalLight& light, const Vect4f& direction, UINT frameIndex);
 	
-	void RenderToGbuffer(ID3D12GraphicsCommandList* cmdList, std::vector<ModelData>& models, UINT frameIndex, std::vector<Texture>& textures, bool renderTransparency, UINT startLocation);
-	void RenderForwardModelEffects(ID3D12GraphicsCommandList* cmdList, PSOHandler& psoHandler, const UINT depthOffset, std::vector<ModelEffectData>& modelEffects, ModelHandler& modelHandler, std::vector<Texture>& textures, const UINT frameIndex, Camera& cam, Transform& camTransform, UINT startLocation);
+	void RenderToGbuffer(ID3D12GraphicsCommandList* cmdList, std::vector<ModelData>& models, UINT frameIndex, bool renderTransparency, UINT startLocation);
+	void RenderForwardModelEffects(ID3D12GraphicsCommandList* cmdList, PSOHandler& psoHandler, const UINT depthOffset, std::vector<ModelEffectData>& modelEffects, ModelHandler& modelHandler, std::vector<Texture>& textures, const UINT frameIndex, UINT startLocation);
 private:
 	
 

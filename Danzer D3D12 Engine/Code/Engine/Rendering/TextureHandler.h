@@ -40,17 +40,19 @@ public:
 
 	Material CreateMaterial(std::string textures[3], float metallic, float m_roughness, float m_emissive, float color[4]);
 	uint32_t CreateTexture(std::wstring file, bool isCubeMap = false);
-	uint32_t CreateCustomTexture(void* data, const UINT sizeOfData, std::wstring name);
+	uint32_t CreateCustomTexture(void* data, const UINT sizeOfData, const uint32_t width, const uint32_t height, std::wstring name);
+	
 	uint32_t GetTexture(std::wstring texturePath);
+	uint32_t UnboundTexture() {
+		return m_unboundTexture == UINT32_MAX ? 0 : m_unboundTexture;
+	}
 
 	std::vector<Texture>& GetTextures() { return m_textures; }
-	Texture& GetTextureData(UINT texture) {
-		texture = texture > 0 && texture < m_textures.size() ? texture : 0;
+	Texture& GetTextureData(uint32_t texture) {
+		texture = texture != UINT32_MAX && texture < m_textures.size() ? texture : UnboundTexture();
 		return m_textures[texture];
 	}
-	//ID3D12DescriptorHeap* GetDescriptorHeap(UINT id) { return m_textures[id].m_textureDescriptorHeap.Get(); }
 	std::wstring GetCorrectPathAndName(std::wstring path);
-
 
 private:
 	friend struct TextureLoadRequest;
@@ -61,16 +63,19 @@ private:
 			m_id(id),
 			m_data(nullptr), m_sizeOfData(0)
 		{}
-		TextureLoadRequest(TextureHandler* textureHandler, const uint32_t id, void* data, const uint32_t size) :
+		TextureLoadRequest(TextureHandler* textureHandler, const uint32_t id, void* data, const uint32_t size, const uint32_t width, const uint32_t height) :
 			m_textureHandler(textureHandler),
 			m_id(id),
-			m_data(data), m_sizeOfData(size),
+			m_data(data),
+			m_width(width),
+			m_height(height),
+			m_sizeOfData(size),
 			m_customTexture(true)
-		{
-		}
+		{}
 		void LoadData() override;
 
-		void*			m_data;
+		void*	        m_data;
+		uint32_t		m_width = 0, m_height = 0;
 		uint32_t        m_sizeOfData;
 		TextureHandler* m_textureHandler;
 		const uint32_t  m_id;
@@ -79,12 +84,12 @@ private:
 	};
 	//UINT TextureExists(std::wstring file);
 
-	CD3DX12_RESOURCE_BARRIER LoadTextures(std::wstring file, ID3D12Resource** textureBuffer, bool isCubeMap);
-	CD3DX12_RESOURCE_BARRIER LoadTextures(void* data, const UINT sizeOfData, ID3D12Resource** textureBuffer);
+	//CD3DX12_RESOURCE_BARRIER LoadTextures(std::wstring file, ID3D12Resource** textureBuffer, bool isCubeMap);
+	//CD3DX12_RESOURCE_BARRIER LoadTextures(void* data, const UINT sizeOfData, const uint32_t width, const uint32_t height, ID3D12Resource** textureBuffer);
 	void LoadTexture(std::wstring file, ID3D12Resource** textureBuffer, bool isCubeMap);
-	void LoadTexture(void* data, const UINT sizeOfData, ID3D12Resource** textureBuffer);
+	void LoadTexture(void* data, const UINT sizeOfData, const uint32_t width, const uint32_t height, ID3D12Resource** textureBuffer);
 
-
+	uint32_t m_unboundTexture = UINT32_MAX;
 	std::unordered_map<uint32_t, std::wstring> m_textureMap;
 	std::vector<Texture> m_textures;
 	std::vector<Texture> m_tempTextures;

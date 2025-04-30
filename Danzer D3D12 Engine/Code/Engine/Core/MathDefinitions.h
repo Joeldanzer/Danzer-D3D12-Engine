@@ -102,3 +102,12 @@ inline const Quat4f EditorQuatRotate(const Quat4f& currentQuat, const Vect3f& ne
 inline const Vect3f RadiansVectorToDegrees(const Vect3f& radiansVec) {	
 	return { ToDegrees(radiansVec.x), ToDegrees(radiansVec.y), ToDegrees(radiansVec.z) };
 }
+
+inline const Mat4f ConstructMatrix(const Vect3f& pos, const Vect3f& scale, const Quat4f& quat) {
+	Mat4f output;
+	DirectX::XMVECTOR quatv = DirectX::XMLoadFloat4(&quat);
+	output *= DirectX::XMMatrixScaling(scale.x, scale.y, scale.z);
+	output *= DirectX::XMMatrixRotationQuaternion(quatv);
+	output *= DirectX::XMMatrixTranslation(pos.x, pos.y, pos.z);
+	return output;
+}

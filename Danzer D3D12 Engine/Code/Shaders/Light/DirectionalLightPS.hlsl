@@ -91,7 +91,7 @@ LightOutput main(VertexToPixel input) : SV_TARGET
             color.rgb = normal.xyz;
             break;
         case 3:
-            color.rgb = ssao.rrr;
+            color.rgb = vertexNormal.xyz;
             break;
         case 4:
             color.rgb = float3(roughness, roughness, roughness);
@@ -118,7 +118,7 @@ LightOutput main(VertexToPixel input) : SV_TARGET
     output.m_sceneColor = color;
     
     float brightness = dot(radiance.rgb, float3(0.2126f, 0.7152f, 0.0722f));
-    if(brightness > 1.0f)
+    if(brightness > 1.0f && CameraPosition.w == 0)
         output.m_brightColor = float4(radiance.rgb, 1.0f);
     else
         output.m_brightColor = float4(0.0f, 0.0f, 0.0f, 0.0f);

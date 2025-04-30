@@ -11,6 +11,7 @@ class PSOHandler;
 class TextureRenderingHandler;
 class BufferHandler;
 class Skybox;
+class DebugRenderingData;
 
 struct GameEntity;
 struct Sprite;
@@ -33,6 +34,8 @@ public:
 	PSOHandler&				 GetPSOHandler()	   const noexcept;
 	BufferHandler&		     GetConstantHandler()  const noexcept;
 	TextureRenderingHandler& GetTextureRendering() const noexcept;
+	DebugRenderingData&      GetDebugRender() const noexcept;
+ 
 
 	void SetKuwaharaRadius(UINT radius, UINT scale, Vect3f offset);
 	

@@ -10,25 +10,23 @@
 #include <iostream>
 #include <filesystem>
 
-SceneManager::SceneManager(Camera& cam)
+SceneManager::SceneManager()
 {
-	cam = Camera();
+	Entity entity = REGISTRY->Create3DEntity("MainCamera");
+	Camera& cam = REGISTRY->Emplace<Camera>(entity);
+
 	cam.SetCameraProjection(Camera::PERSPECTIVE);
 	cam.SetFov(65.0f);
 	cam.SetAspectRatio(WindowHandler::WindowData().AspectRatio());
 	cam.SetNearPlane(0.01f);
-	cam.SetFarPlane(10000.0f);
+	cam.SetFarPlane(1000.0f);
 
-	// Look up a scene in our bin folder, if it can't find any we create a new one.
-
-	Entity entity = REGISTRY->Create3DEntity("MainCamera");
-	REGISTRY->Emplace<Camera>(entity, cam);
-	Transform& transform = Reg::Instance()->Get<Transform>(entity);
+	Transform& transform = REGISTRY->Get<Transform>(entity);
 	transform.m_position = { 0.f, 10.0f, 0.f };
 	m_mainCamera = entity;
 
 	Entity dirLight = Reg::Instance()->Create3DEntity("DirectionalLight");
-	Reg::Instance()->Emplace<DirectionalLight>(dirLight, DirectionalLight(
+	REGISTRY->Emplace<DirectionalLight>(dirLight, DirectionalLight(
 		{ 255.0f / 255.0f, 214.0f / 255.f, 165.f / 255.f, 4.0f },
 		{ 1.0f, 1.0f, 1.0f, 0.25f }));
 	Transform& lightTransform  = Reg::Instance()->Get<Transform>(dirLight);

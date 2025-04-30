@@ -234,8 +234,6 @@
     <ClInclude Include="Rendering\Buffers\MaterialBuffer.h" />
     <ClInclude Include="Rendering\Buffers\LightBuffer.h" />
     <ClInclude Include="Rendering\Screen Rendering\GBuffer.h" />
-    <ClInclude Include="Level Loader\LevelLoaderCustom.h" />
-    <ClInclude Include="Level Loader\LevelLoader.h" />
     <ClInclude Include="Core\FrameTimer.h" />
     <ClInclude Include="Rendering\2D\Fonts\Font.h" />
     <ClInclude Include="Components\2D\Text.h" />
@@ -258,6 +256,7 @@
     <ClInclude Include="Rendering\Buffers\SpriteSheetBuffer.h" />
     <ClInclude Include="Rendering\SkyBox.h" />
     <ClInclude Include="Core\ResourceLoadingHandler.h" />
+    <ClInclude Include="Scene Loading\SceneLoader.h" />
     <ClInclude Include="SceneOLD.h" />
     <ClInclude Include="SceneManager.h" />
     <ClInclude Include="Rendering\Screen Rendering\ScreenTexture.h" />
@@ -316,8 +315,6 @@
     <ClCompile Include="Rendering\Buffers\MaterialBuffer.cpp" />
     <ClCompile Include="Rendering\Buffers\LightBuffer.cpp" />
     <ClCompile Include="Rendering\Screen Rendering\GBuffer.cpp" />
-    <ClCompile Include="Level Loader\LevelLoaderCustom.cpp" />
-    <ClCompile Include="Level Loader\LevelLoader.cpp" />
     <ClCompile Include="Core\FrameTimer.cpp" />
     <ClCompile Include="Rendering\Models\ModelLoaderCustom.cpp" />
     <ClCompile Include="Rendering\Camera.cpp" />
@@ -331,6 +328,7 @@
     <ClCompile Include="Rendering\Buffers\SpriteSheetBuffer.cpp" />
     <ClCompile Include="Rendering\SkyBox.cpp" />
     <ClCompile Include="Core\ResourceLoadingHandler.cpp" />
+    <ClCompile Include="Scene Loading\SceneLoader.cpp" />
     <ClCompile Include="SceneOLD.cpp" />
     <ClCompile Include="SceneManager.cpp" />
     <ClCompile Include="Rendering\Screen Rendering\ScreenTexture.cpp" />

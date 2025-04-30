@@ -5,7 +5,7 @@ class Engine;
 class Game
 {
 public:
-	Game(Engine& engine);
+	Game();
 	~Game();
 
 	//Main update loop for game

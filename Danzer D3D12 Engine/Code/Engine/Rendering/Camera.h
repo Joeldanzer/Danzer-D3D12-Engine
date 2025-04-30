@@ -8,8 +8,7 @@
 
 struct Camera : public BaseComponent
 {
-	COMP_FUNC(Camera)
-public:
+COMP_FUNC(Camera)
 	enum Projection : uint8_t{
 		PERSPECTIVE,
 		ORTHOGRAPHIC,
@@ -30,10 +29,6 @@ public:
 	~Camera();
 	
 	const Mat4f& GetProjection() { return m_projection[m_currentProj]; }
-
-	void SetFrustrumTest(Transform* transform) {
-		m_editorFrustrum = transform;
-	}
 
 	void SetFov(float fov);
 	void SetNearPlane(float nearPlane);
@@ -86,8 +81,6 @@ private:
 	float m_nearZ;
 	float m_farZ;
 
-	Transform* m_editorFrustrum = nullptr;
-	
 	Projection m_currentProj;
 	Mat4f      m_projection[Projection::COUNT];
 };

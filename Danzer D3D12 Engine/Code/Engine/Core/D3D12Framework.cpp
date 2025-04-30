@@ -91,8 +91,6 @@ D3D12Framework::D3D12Framework() :
 		// CBV, SRV and UAV heap. Used for almost everything. 
 		m_cbvSrvHeap.CreateDescriptorHeap(m_device.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, MAX_NUMBER_OF_DESCTRIPTORS, true);
 	}
-
-	//CHECK_HR(m_device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&m_commandAllocator)));
 	
 	InitImgui();
 	LoadAssets();
@@ -106,10 +104,8 @@ D3D12Framework::~D3D12Framework()
 
 	m_swapChain.~ComPtr();
 	m_device.~ComPtr();
-	
-	//m_commandAllocator.~ComPtr();
+
 	m_commandQueue.~ComPtr();
-	//m_initCmdList.~ComPtr();
 
 	m_depthStencil.~ComPtr();
 	m_fence.~ComPtr();
@@ -156,14 +152,14 @@ void D3D12Framework::InitiateCommandList(ID3D12PipelineState* pso, std::wstring 
 {
 	while(m_resourceUploadActive){}
 
-	OutputDebugString(message.c_str());
+	//OutputDebugString(message.c_str());
 	m_frameResources[m_frameIndex]->Initiate(pso);
 	m_renderFrameActive = true;
 }
 
 void D3D12Framework::ExecuteCommandList()
 {
-	OutputDebugString(L"Executed Command List \n");
+	//OutputDebugString(L"Executed Command List \n");
 
 	m_frameResources[m_frameIndex]->Close();
 	
@@ -415,7 +411,6 @@ void D3D12Framework::InitImgui()
 
 	ImGuiIO& io = ImGui::GetIO();
 	io.ConfigFlags  |= ImGuiConfigFlags_DockingEnable;
-	//io.BackendFlags |= ImGuiBackendFlags_PlatformHasViewports;
 
 	ImGui_ImplDX12_InitInfo initInfo;
 	initInfo.Device            = m_device.Get();

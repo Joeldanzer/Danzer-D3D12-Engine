@@ -57,6 +57,9 @@ void ResourceLoadingHandler::UploadSubResource(ID3D12Resource* destBuffer, ID3D1
 
 void ResourceLoadingHandler::UploadSubResource(CD3DX12_RESOURCE_BARRIER subResource)
 {
+	if (!m_resourceUploader->CmdListIsOpen())
+		m_resourceUploader->Initiate();
+
 	m_resourceQueue.emplace_back(subResource);
 }
 

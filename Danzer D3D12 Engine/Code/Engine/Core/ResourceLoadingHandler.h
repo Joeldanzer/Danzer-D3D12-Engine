@@ -5,6 +5,7 @@ class  FrameResource;
 class  D3D12Framework;
 struct ID3D12Resource;
 
+// Abstract class for requesting to load data for that class. 
 struct LoadRequest {
 	 virtual void LoadData() = 0;
 };
@@ -16,7 +17,7 @@ public:
 	~ResourceLoadingHandler();
 
 	static ResourceLoadingHandler& Instance();
-
+	
 	FrameResource* ResourceUploader() {
 		return m_resourceUploader;
 	}
@@ -44,10 +45,10 @@ private:
 	FrameResource*						  m_resourceUploader;
 	// Uploading data to the gpu, only used for resources that are used for rendering.
 	std::vector<CD3DX12_RESOURCE_BARRIER> m_resourceQueue;
-
-	// Loading data to the cpu, this can be anything from models to sound. 
+	// Loading data to the cpu, this can be anything from models, sound and levels. 
 	std::queue<LoadRequest*>			  m_loadingQueue;
-	static ResourceLoadingHandler* s_instance;
+
+	static ResourceLoadingHandler*		  s_instance;
 };
 
 typedef ResourceLoadingHandler RLH;

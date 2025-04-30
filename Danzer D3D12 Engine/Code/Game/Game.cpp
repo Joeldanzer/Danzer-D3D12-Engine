@@ -35,67 +35,17 @@
 
 class Game::Impl {
 public:
-	Impl(Engine& engine);
+	Impl();
 	~Impl();
 
 	void Update(const float dt);
 
 private:
-	//void OnSphere(GameEntity& collidedEntity);
 	void OnSphereContact(GameEntity& collidedEntity);
-
-	Engine& m_engine;
-
-	PhysicsBody* m_sphere = nullptr;
-	GameEntity* enttTest;
-
-	SOUND_ID pipeSound;
-
-	//FMOD::Sound* m_pipeSound = nullptr;
-
-	float m_currentTime;
-	float m_time = 0.2f;
-	entt::entity m_entity;
-
-	entt::entity m_frustrumTest;
 };
 
-Game::Impl::Impl(Engine& engine) :
-	m_engine(engine)
+Game::Impl::Impl()
 {
-	m_currentTime = m_time;
-	
-	Entity entity = REGISTRY->Create3DEntity("Sponzra Atrium");
-
-	Transform& modelTransform = REGISTRY->Get<Transform>(entity);
-	//modelTransform.m_scale	  = { 10.0f, 1.0f, 10.0f };
-	modelTransform.m_position = { 0.0f, 8.0f, 0.0f };
-	modelTransform.m_rotation = Quat4f::CreateFromAxisAngle(Vect3f::Up, ToRadians(180.0f));
-	
-    //REGISTRY->Emplace<Model>(entity, engine.GetModelHandler().LoadModel(L"Models/BlenderSponzaAtriumNew.fbx"));
-    REGISTRY->Emplace<Model>(entity, engine.GetModelHandler().LoadModel(L"Models/sphere.fbx", 4));
-	SphereCollider& sphereCol = REGISTRY->Emplace<SphereCollider>(entity);
-	
-	Entity boxEntity = REGISTRY->Create3DEntity("Floor Test");
-    REGISTRY->Emplace<Model>(boxEntity, engine.GetModelHandler().LoadModel(L"Models/cube.fbx"));
-	REGISTRY->Get<Transform>(boxEntity).m_scale = { 5.0f, 1.0f, 5.0f };
-	BoxCollider& collider = REGISTRY->Emplace<BoxCollider>(boxEntity, modelTransform.m_scale);
-	collider.m_extents   = { 5.0f, 1.0f, 5.0f };
-	collider.m_gravity   = false;
-	collider.m_kinematic = true;
-	//for (int32_t x = -5; x < 5 + 1; x++)
-	//{
-	//	for (int32_t z = -5; z < 5 + 1; z++)
-	//	{	
-	//		GameEntity& entity = engine.GetSceneManager().CreateBasicEntity("FrustrumTest", false);
-	//		reg.emplace<Model>(entity.m_entity, engine.GetModelHandler().LoadModel(L"Models/Particle_Chest.fbx", "ParticleChest"));
-	//
-	//		Transform& transform = reg.get<Transform>(entity.m_entity);
-	//		transform.m_position = { (float)x * 5, 0.0f, (float)z* 5};
-	//		transform.m_scale = { 1.0f, 1.0f, 1.0f };
-	//		
-	//	}
-	//}
 	//m_frustrumTest = engine.GetSceneManager().CreateBasicEntity("FrustrumTest", false).m_entity;
 	//Camera& cam = reg.get<Camera>(engine.GetSceneManager().GetMainCamera());
 	//cam.SetFrustrumTest(&reg.get<Transform>(m_frustrumTest));
@@ -151,49 +101,6 @@ Game::Impl::~Impl(){}
 
 void Game::Impl::Update(const float dt)
 {
-	Transform& transform = Reg::Instance()->Get<Transform>(m_engine.GetSceneManager().GetMainCamera());
-
-	float speed = 5.0f;
-
-	if (Input::GetInstance().IsKeyDown(VK_LEFT))
-		transform.m_rotation *= DirectX::XMQuaternionRotationAxis(Vect3f::Up,  dt * 2.f);
-	if (Input::GetInstance().IsKeyDown(VK_RIGHT))
-		transform.m_rotation *= DirectX::XMQuaternionRotationAxis(Vect3f::Up, -(dt * 2.f));
-	
-	if (Input::GetInstance().IsKeyDown(VK_DOWN))
-		transform.m_rotation *= DirectX::XMQuaternionRotationAxis(transform.World().Right(), -(dt * 2.f));
-	if (Input::GetInstance().IsKeyDown(VK_UP))
-		transform.m_rotation *= DirectX::XMQuaternionRotationAxis(transform.World().Right(), dt * 2.f);
-
-	Vector3 forward = transform.World().Forward();
-
-	if (Input::GetInstance().IsKeyDown('W'))
-		transform.m_position += (transform.World().Forward() * speed) * dt;
-	if (Input::GetInstance().IsKeyDown('S'))
-		transform.m_position -= (transform.World().Forward() * speed) * dt;
-
-	if (Input::GetInstance().IsKeyDown('A'))
-		transform.m_position -= (transform.World().Right() * speed) * dt;
-	if (Input::GetInstance().IsKeyDown('D'))
-		transform.m_position += (transform.World().Right() * speed) * dt;
-
-	if (Input::GetInstance().IsKeyDown(VK_SPACE))
-		transform.m_position.y += dt * speed;
-	if (Input::GetInstance().IsKeyDown(VK_SHIFT))
-		transform.m_position.y -= dt * speed;
-
-	if (Input::GetInstance().IsKeyPressed('Z')) {
-		auto cameraList = Reg::Instance()->GetRegistry().view<Camera>();
-		for (auto ent : cameraList)
-		{
-			Camera& cam = Reg::Instance()->Get<Camera>(ent);
-			cam.RenderTarget() = cam.RenderTarget() < 9 ? cam.RenderTarget() + 1 : 0;
-		}
-	}
-
-	if (Input::GetInstance().IsMousePressed(Input::MouseButton::Middle)) {
-		RayCaster::GetInstance().CastRay(transform.m_position, transform.World().Forward());
-	}
 }
 
 // Testing for custom functions for Collision Detection.
@@ -206,8 +113,8 @@ void Game::Impl::OnSphereContact(GameEntity& collidedEntity)
 	//m_engine.GetSoundEngine().PlaySoundAtEntt(enttTest->m_entity, pipeSound);
 }
 
-Game::Game(Engine& engine) :
-	m_impl(new Impl(engine)){}
+Game::Game() :
+	m_impl(new Impl()){}
 Game::~Game(){
 	m_impl->~Impl();
 	delete m_impl;

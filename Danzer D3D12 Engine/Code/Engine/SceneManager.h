@@ -11,32 +11,19 @@ struct Camera;
 class SceneManager
 {
 public: 
-	SceneManager(Camera& cam);
+	SceneManager();
 	~SceneManager(){
-		//m_scenes.clear();
 	}
-
-	//Scene& CreateEmptyScene(std::string sceneName);
-
-	//void AddScene(std::string name, const Scene& scene);
-	//void LoadScene(std::string sceneName);
-
-	//entt::registry& Registry() {
-	//	return m_registry;
-	//}
 
 	entt::entity GetMainCamera() {
 		return m_mainCamera;
 	}
+	void SetMainCamera(const entt::entity cameraEntity) {
+		m_mainCamera = cameraEntity;
+	}
 
-	//Scene& GetSpecificScene(std::string sceneName) { return m_scenes[sceneName]; }
 	bool SetScene(std::string name, entt::entity camera, bool resetScene = false);
 
-	//Scene& GetCurrentScene() { 
-	//	return m_scenes[m_currentScene]; 
-	//}	
-
-	//GameEntity& CreateBasicEntity(std::string name, bool isStatic);
 
 private:
 	friend class Engine;

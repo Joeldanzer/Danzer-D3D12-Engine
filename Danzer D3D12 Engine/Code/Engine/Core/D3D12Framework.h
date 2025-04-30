@@ -84,6 +84,11 @@ public:
         return m_swapChain.Get();
     }
 
+    // Check for if we are currently rendering current back buffer.
+    const bool RenderingFrame() {
+        return m_renderFrameActive;
+    }
+
 private:
     friend class RenderManager;
 

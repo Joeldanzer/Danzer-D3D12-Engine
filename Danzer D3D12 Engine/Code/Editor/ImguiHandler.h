@@ -4,15 +4,13 @@
 
 #include "Core/MathDefinitions.h"
 
-#include "EditorLoadAndSave.h"
 #include "FileExplorer.h"
+#include "entt/entt.hpp"
 
 #include <string>
 #include <vector>
 
-class Engine;
-class Camera;
-
+struct Camera;
 struct Transform;
 struct GameEntity;
 struct Object2D;
@@ -20,7 +18,8 @@ struct Object2D;
 class ImguiHandler
 {
 public:
-	ImguiHandler(Engine& engine);
+	
+	ImguiHandler();
 	~ImguiHandler();
 
 	void Init();
@@ -33,38 +32,29 @@ private:
 	
 	void DisplayViewport();
 	void ManipulateGameEntity();
-	Vect3f m_selectedRotation;
-
-	Vect2f m_lastSceneToWindowSize;
-	Vect2f m_sceneViewSize;
-	Vect2f m_sceneViewPosition;
-	bool m_sceneViewOpen = true;
 
 	Vect3f m_dirLightRot     =  {0.0f, 0.0f, 0.0f};
 	Vect3f m_dirLightLastRot =  {0.0f, 0.0f, 0.0f};
-
+	Vect3f m_selectedRotation;
+	
+	Vect2f m_lastSceneToWindowSize;
+	Vect2f m_sceneViewSize;
+	Vect2f m_sceneViewPosition;
+	
+	bool m_sceneViewOpen = true;
 	bool m_itemsHasBeenSelected = false;
-
-	Engine& m_engine;
-	int m_currentMesh = 0;
 
 	entt::entity m_currentEntity;
 	entt::entity m_previousEntity;
 	
-	bool m_entitySelected;
-	char* m_tag;
-	char* m_name;
+	bool  m_entitySelected;
 
 	void StaticWindows();
 	void SaveScene();
 	void SaveSceneAs();
 
-	std::array<std::string, 3> m_stateNames = { "ACTIVE", "NOT_ACTIVE", "DESTROY" };
-	std::vector<std::string> m_componentList;
-	std::string m_baseEntityName = "Empty Entity";
-
-	EditorLoadAndSave m_sceneLoader;
-	FileExplorer m_fileExplorer;
+	std::string  m_baseEntityName    = "Empty Entity";
+	std::wstring m_currentSaveTarget = L"";
 
 	bool m_removeEntity;
 };
