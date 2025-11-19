@@ -59,7 +59,6 @@ private:
 	
 	void WriteComponentToFile(const Entity entity, std::fstream& file) override;
 	void LoadFileToComponent(const Entity entity, std::fstream& file) override;
-
 	bool RemoveChildFromEntity(GameEntity* child) {
 		for (uint32_t i = 0; i < m_children.size(); i++)
 		{

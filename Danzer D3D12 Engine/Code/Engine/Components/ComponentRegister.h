@@ -7,8 +7,6 @@
 #include <string>
 #include <iostream>
 
-#define CVARIABLE(name, min, max)
-
 // The base of a component, each new component needs to be registered through BaseComponent . 
 struct BaseComponent {   
     BaseComponent() {}
@@ -94,6 +92,10 @@ private:
     }
 };
 
+#undef  COMPONENT_ENTRY_REGISTER
+#define COMPONENT_ENTRY_REGISTER \
+    EntryRegister::GetInstance()
+
 template<class T>                              
 class ComponentAdder {                                
 public:
@@ -102,10 +104,6 @@ public:
             std::cout << name << " Component Registered..." << std::endl;
     }
 };       
-
-#undef  COMPONENT_ENTRY_REGISTER
-#define COMPONENT_ENTRY_REGISTER \
-    EntryRegister::GetInstance()
 
 // Registers component to EntryRegister 
 #define REGISTER_COMPONENT(NewComponent) \

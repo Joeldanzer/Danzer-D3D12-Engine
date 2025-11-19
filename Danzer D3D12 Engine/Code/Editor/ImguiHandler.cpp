@@ -48,16 +48,16 @@ void ImguiHandler::Init()
 {
 	SceneManager& scene = Engine::Instance().GetSceneManager();
 
-	auto dirLightList = Reg::Instance()->GetRegistry().view<DirectionalLight, Transform>();
+	auto dirLightList = REGISTRY->GetRegistry().view<DirectionalLight, Transform>();
 
 	entt::entity ent;
 	for (entt::entity entity : dirLightList)
 		ent = entity;
 	
-	Transform& transform = Reg::Instance()->Get<Transform>(ent);
-	m_dirLightRot	   = transform.m_rotation.ToEuler();
-	m_dirLightRot	   = { ToDegrees(m_dirLightRot.x), ToDegrees(m_dirLightRot.y), ToDegrees(m_dirLightRot.z) };
-	m_dirLightLastRot  = m_dirLightRot;
+	Transform& transform = REGISTRY->Get<Transform>(ent);
+	m_dirLightRot	     = transform.m_rotation.ToEuler();
+	m_dirLightRot	     = { ToDegrees(m_dirLightRot.x), ToDegrees(m_dirLightRot.y), ToDegrees(m_dirLightRot.z) };
+	m_dirLightLastRot    = m_dirLightRot;
 }
 
 void ImguiHandler::Update(const float dt)
@@ -90,18 +90,18 @@ void ImguiHandler::Update(const float dt)
 			ImGui::EndMenu();
 		}
 
-		if (ImGui::BeginMenu("Scene Lighting")) {	
-			ImGui::Text("Directional Lighting");
-			auto dirLightList = Reg::Instance()->GetRegistry().view<DirectionalLight, Transform, GameEntity>();
-			entt::entity ent;
-			for (auto entity : dirLightList)
-				ent = entity;
-
-			DirectionalLight& light = REGISTRY->Get<DirectionalLight>(ent);
-			light.DisplayInEditor(ent);
-			
-			ImGui::EndMenu();
-		}
+		//if (ImGui::BeginMenu("Scene Lighting")) {	
+		//	ImGui::Text("Directional Lighting");
+		//	auto dirLightList = Reg::Instance()->GetRegistry().view<DirectionalLight, Transform, GameEntity>();
+		//	entt::entity ent;
+		//	for (auto entity : dirLightList)
+		//		ent = entity;
+		//
+		//	DirectionalLight& light = REGISTRY->Get<DirectionalLight>(ent);
+		//	light.DisplayInEditor(ent);
+		//	
+		//	ImGui::EndMenu();
+		//}
 	}
 	ImGui::EndMainMenuBar();	
 #endif
@@ -126,7 +126,7 @@ void ImguiHandler::SetUpDockingWindows()
 	ImGui::SetNextWindowViewport(viewport->ID);
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding,   0.0f);
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1.0f);
-	windowFlags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove;
+	windowFlags |= ImGuiWindowFlags_NoTitleBar			  | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove;
 	windowFlags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
 
 	if (dockSpaceFlags & ImGuiDockNodeFlags_PassthruCentralNode) {
@@ -141,7 +141,6 @@ void ImguiHandler::SetUpDockingWindows()
 		if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable) {
 			ImGuiID dockSpaceID = ImGui::GetID("MyDockSpace");
 			ImGui::DockSpace(dockSpaceID, {0.0f, 0.0f}, dockSpaceFlags);
-
 
 			static bool setTopDocks = false;
 			if (!setTopDocks) {
@@ -163,6 +162,7 @@ void ImguiHandler::SetUpDockingWindows()
 		}		
 		ImGui::End();	
 
+		//ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0.0f, 0.0f });
 		//ImGui::Begin("BottomDockSpace", nullptr, windowFlags);
 		//ImGui::SetNextWindowPos(viewport->Pos);
 		//ImGui::SetNextWindowSize({ viewport->Size.x, viewport->Size.y / (3.0f / 4.0f) });
@@ -175,7 +175,7 @@ void ImguiHandler::SetUpDockingWindows()
 
 void ImguiHandler::DrawSceneToWindow(Camera& viewPortCam)
 {
-	uint32_t frameIndex = Engine::Instance().GetFramework().GetFrameIndex();
+	uint32_t frameIndex				   = Engine::Instance().GetFramework().GetFrameIndex();
 	const FullscreenTexture* sceneView = Engine::Instance().GetRenderManager().GetTextureRendering().GetLastRenderedTexture();
 
 	// We skip the first frame since this texture hasn't been rendered yet.
@@ -283,7 +283,7 @@ void ImguiHandler::StaticWindows()
 
 
 			if (ImGui::BeginListBox("##", ImGui::GetWindowSize())) {
-				auto scene = Reg::Instance()->GetRegistry().view<Transform, GameEntity>();
+				auto scene = REGISTRY->GetRegistry().view<Transform, GameEntity>();
 
 				for (auto entity : scene) {
 					GameEntity& obj = REGISTRY->Get<GameEntity>(entity);

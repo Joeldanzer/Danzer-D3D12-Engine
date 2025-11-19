@@ -5,7 +5,7 @@ class  FrameResource;
 class  D3D12Framework;
 struct ID3D12Resource;
 
-// Abstract class for requesting to load data for that class. 
+// Abstract class for requesting the loading of data to the cpu & gpu. 
 struct LoadRequest {
 	 virtual void LoadData() = 0;
 };
@@ -23,7 +23,7 @@ public:
 	}
 
 	void QueueLoadRequest(LoadRequest* loader);
-	// Queues subresource data to be uploaded to the gpu, this always happens after loading of 
+
 	void UploadSubResource(
 		ID3D12Resource* destBuffer,
 		ID3D12Resource* fromBuffer,

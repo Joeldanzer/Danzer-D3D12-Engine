@@ -2,7 +2,7 @@
 #include "entt/entt.hpp"
 
 #define COMPONENT_NAME(ComponentName) \
-    const std::string(#ComponentName)
+    std::string(#ComponentName)
 
 struct GameEntity;
 
@@ -63,7 +63,6 @@ private:
 };
 
 typedef RegistryWrapper Reg;
-
 // Macro for fetching Singleton of RegsitryWrapper.
 #define REGISTRY RegistryWrapper::Instance()
 

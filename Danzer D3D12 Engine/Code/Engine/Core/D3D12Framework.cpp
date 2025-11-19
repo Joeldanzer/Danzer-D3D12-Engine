@@ -126,13 +126,10 @@ D3D12Framework::~D3D12Framework()
 
 void D3D12Framework::UploadResourcesToGPU(FrameResource* frameResource)
 {
-	//if (!m_firstRscUpload) {
 		m_firstRscUpload = true;
 		frameResource->Close();
 		ID3D12CommandList* cmdList[] = { frameResource->CmdList() };
 		m_commandQueue->ExecuteCommandLists(1, cmdList);
-
-		//CHECK_HR(m_device->CreateFence(m_fenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence)));
 		m_fenceValue++;
 
 		m_fenceEvent = CreateEvent(nullptr, false, false, nullptr);
@@ -145,7 +142,6 @@ void D3D12Framework::UploadResourcesToGPU(FrameResource* frameResource)
 		 
 #pragma warning( suppress: 6387) 
 		WaitForSingleObject(m_fenceEvent, INFINITE);
-	//}
 }
 
 void D3D12Framework::InitiateCommandList(ID3D12PipelineState* pso, std::wstring message)

@@ -2,8 +2,8 @@
 #include "ImguiHandler.h"
 #include "entt/entt.hpp"
 
-class Camera;
-class Transform;
+struct Camera;
+struct Transform;
 
 class Editor
 {

@@ -181,16 +181,6 @@ void ModelHandler::SetMaterialForModel(UINT model, Material material, UINT meshI
 	mesh.m_material = material;
 }
 
-// Loads all the requested models to the gpu during the frame rendering. Not the most ideal but it will do for now.
-void ModelHandler::LoadRequestedModels()
-{
-	//for (uint32_t i = 0; i < m_loadRequests.size(); i++)
-	//	CreateModelFromLoadedData(m_loadRequests[i].m_model.get(), m_loadRequests[i].m_modelName, m_loadRequests[i].m_fileName, m_loadRequests[i].m_transparent);
-	//
-	//m_loadRequests.clear();
-	//m_modelRequestCounter = 1;
-}
-
 Material ModelHandler::GetNewMaterialFromLoadedModel(const std::string& materialName)
 {
 	Material material;
@@ -647,10 +637,7 @@ const uint32_t ModelHandler::ModelExists(std::string name)
 void ModelHandler::ModelLoadRequest::LoadData()
 {
 	std::unique_ptr<LoaderModel> loadedModel = m_modelHandler->FetchLoaderModel(m_fileName, m_uvFlipped);
-	if(m_lodCount > 0)
-		m_modelHandler->CreateModelFromLoadedData(loadedModel.get(), m_fileName, m_modelName, m_lodCount, m_transparent);
-	else
-		m_modelHandler->CreateModelFromLoadedData(loadedModel.get(), m_modelName, m_transparent);
+	m_modelHandler->CreateModelFromLoadedData(loadedModel.get(), m_modelName, m_transparent);
 }
 
 

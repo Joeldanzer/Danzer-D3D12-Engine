@@ -8,15 +8,14 @@
 
 RegistryWrapper* RegistryWrapper::m_singleton = nullptr;
 
-Entity RegistryWrapper::CreateEmptyEntity()
-{
+Entity RegistryWrapper::CreateEmptyEntity() {
 	return m_registry.create();
 }
 
 // Creates entity with GameEntity and Transform automatically emplaced. For everything that will be active in the 3D World. 
 Entity RegistryWrapper::Create3DEntity(std::string name, bool setStatic)
 {
-	Entity	    entity   = m_registry.create();
+	Entity	    entity   = CreateEmptyEntity();
 	GameEntity& gameEntt = Emplace<GameEntity>(entity, entity);
 	gameEntt.m_state     = GameEntity::STATE::ACTIVE;
 	gameEntt.m_static    = setStatic;
@@ -88,7 +87,6 @@ bool RegistryWrapper::RegisterComponentToEntity(const Entity entity, std::string
 	}
 
 	std::vector<std::string>& vec = gameEntity->m_emplacedComponents;
-
 	componentName.erase(componentName.begin(), componentName.begin() + componentName.find_first_of(" ") + 1);
 
 	// Check first so that this entity does not already have this component.

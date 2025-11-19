@@ -15,7 +15,7 @@ public:
 		bool m_windowed = true;
 
 		const float AspectRatio() {
-			return m_w / m_h;
+			return static_cast<float>(m_w) / static_cast<float>(m_h);
 		}
 	};
 

@@ -412,7 +412,7 @@ void RenderManager::Impl::InitializeRenderTextures(TextureHandler& textureHandle
 	m_debugRenderer->SetRenderingData(&m_debugRenderingData);
 	m_debugRenderer->SetRenderTargetAtSlot(bloomTexture->RTVOffsetID(), 0);
 	m_debugRenderer->SetBufferAtSlot(m_cameraBuffer->OffsetID(), 0);
-	m_textureRendering.AddTextureRendererToPipeline(m_debugRenderer, POST_PROCESS_1);
+	m_textureRendering.AddTextureRendererToPipeline(m_debugRenderer, POST_PROCESS_2);
 #endif
 }
 
@@ -635,11 +635,12 @@ void RenderManager::Impl::FrustrumCulling(const Camera& camera, Transform& trans
 
 void RenderManager::Impl::Update3DInstances(const Camera& cam, SceneManager& scene, ModelHandler& modelHandler, ModelEffectHandler& effectHandler)
 {	
-	auto view = Reg::Instance()->GetRegistry().view<Transform, GameEntity>();
+	
+	auto view = REGISTRY->GetRegistry().view<Transform, GameEntity>();
 
 	for (auto entity : view)
 	{
-		GameEntity& obj = Reg::Instance()->Get<GameEntity>(entity);
+		GameEntity& obj = REGISTRY->Get<GameEntity>(entity);
 
 		if (obj.m_state == GameEntity::STATE::ACTIVE) {
 			Transform& transform = view.get<Transform>(entity);
@@ -649,12 +650,12 @@ void RenderManager::Impl::Update3DInstances(const Camera& cam, SceneManager& sce
 			transform.m_local = ConstructMatrix(transform.m_position, transform.m_scale, transform.m_rotation);
 			transform.m_world = transform.m_local;
 			
-			Model* model = Reg::Instance()->TryGet<Model>(entity);
+			Model* model = REGISTRY->TryGet<Model>(entity);
 			if (model) {
 				if (model->m_modelID != UINT32_MAX) {
 					//Transform& transform = reg.get<Transform>(entity);
 						
-					if (!Reg::Instance()->TryGet<ModelEffect>(entity)) {
+					if (!REGISTRY->TryGet<ModelEffect>(entity)) {
 
 						ModelData& modelData = modelHandler.GetLoadedModelInformation(model->m_modelID);
 						
@@ -665,7 +666,7 @@ void RenderManager::Impl::Update3DInstances(const Camera& cam, SceneManager& sce
 						}
 					}
 					else {
-						ModelEffect&     effect     = Reg::Instance()->Get<ModelEffect>(entity);
+						ModelEffect&     effect     = REGISTRY->Get<ModelEffect>(entity);
 						ModelEffectData& effectData = effectHandler.GetModelEffectData(effect.m_effectID);
 						effectData.GetTransforms().emplace_back(DirectX::XMMatrixTranspose(transform.m_world));
 					}
@@ -791,7 +792,7 @@ void RenderManager::Impl::UpdatePrimaryConstantBuffers(SceneManager& scene)
 
 	Vect4f dirLightPos = { 0.0f, 0.0f, 0.0f, 1.0f };
 	Vect4f directionaLightdir = { 0.f, 0.f, 0.f, 1.f };
-	auto list = Reg::Instance()->GetRegistry().view<DirectionalLight, Transform, GameEntity>();
+	auto list = REGISTRY->GetRegistry().view<DirectionalLight, Transform, GameEntity>();
 	for (auto entity : list) {
 		DirectionalLight& dirLight     = REGISTRY->Get<DirectionalLight>(entity);
 		const Transform&  dirTransform = REGISTRY->Get<Transform>(entity); 

@@ -34,16 +34,16 @@ PhysicsBody PhysicsHandler::CreatePhysicsBox(const GameEntity& gameEntity, Vect3
 
 void PhysicsHandler::SetPhysicsPositionAndRotation()
 {
-	auto view = Reg::Instance()->GetRegistry().view<PhysicsBody, GameEntity, Transform>();
+	auto view = REGISTRY->GetRegistry().view<PhysicsBody, GameEntity, Transform>();
 	for (entt::entity entity : view) {
-		PhysicsBody& body   =  Reg::Instance()->Get<PhysicsBody>(entity);	
-		GameEntity& gameEntt = Reg::Instance()->Get<GameEntity>(entity);
+		PhysicsBody& body   =  REGISTRY->Get<PhysicsBody>(entity);	
+		GameEntity& gameEntt = REGISTRY->Get<GameEntity>(entity);
 		
 		if (m_bodyInterface.GetInterface()->GetMotionType(body.m_id) == EMotionType::Static ||
 			gameEntt.m_state == GameEntity::STATE::DEACTIVE)
 			continue;
 		
-		Transform& transform = Reg::Instance()->Get<Transform>(entity);
+		Transform& transform = REGISTRY->Get<Transform>(entity);
 		if (m_bodyInterface.GetInterface()->IsActive(body.m_id)) {
 			Vect3f pos = transform.m_position;
 			Quat4f rot = transform.m_rotation;
@@ -55,16 +55,16 @@ void PhysicsHandler::SetPhysicsPositionAndRotation()
 // Only called once and thats at the end of the Initilize frame
 void PhysicsHandler::UpdateStaticColliders()
 {
-	auto view = Reg::Instance()->GetRegistry().view<PhysicsBody, GameEntity, Transform>();
+	auto view = REGISTRY->GetRegistry().view<PhysicsBody, GameEntity, Transform>();
 	for (entt::entity entity : view) {
-		PhysicsBody& body    = Reg::Instance()->Get<PhysicsBody>(entity);
-		GameEntity& gameEntt = Reg::Instance()->Get<GameEntity>(entity);
+		PhysicsBody& body    = REGISTRY->Get<PhysicsBody>(entity);
+		GameEntity& gameEntt = REGISTRY->Get<GameEntity>(entity);
 
 		if (m_bodyInterface.GetInterface()->GetMotionType(body.m_id) != EMotionType::Static ||
 			gameEntt.m_state == GameEntity::STATE::DEACTIVE)
 			continue;
 
-		Transform& transform = Reg::Instance()->Get<Transform>(entity);
+		Transform& transform = REGISTRY->Get<Transform>(entity);
 
 		Vect3f pos = transform.m_position;
 		Quat4f rot = transform.m_rotation;
@@ -75,15 +75,15 @@ void PhysicsHandler::UpdateStaticColliders()
 
 void PhysicsHandler::UpdatePhysicsEntities()
 {
-	auto view = Reg::Instance()->GetRegistry().view<PhysicsBody, Transform, GameEntity>();
+	auto view = REGISTRY->GetRegistry().view<PhysicsBody, Transform, GameEntity>();
 	for (entt::entity entity : view) {
-		PhysicsBody& body    = Reg::Instance()->Get<PhysicsBody>(entity);
-		GameEntity& gameEntt = Reg::Instance()->Get<GameEntity>(entity);
+		PhysicsBody& body    = REGISTRY->Get<PhysicsBody>(entity);
+		GameEntity& gameEntt = REGISTRY->Get<GameEntity>(entity);
 		if (m_bodyInterface.GetInterface()->GetMotionType(body.m_id) == EMotionType::Static ||
 			gameEntt.m_state == GameEntity::STATE::DEACTIVE)
 			continue;
 		
-		Transform& transform = Reg::Instance()->Get<Transform>(entity);
+		Transform& transform = REGISTRY->Get<Transform>(entity);
 
 		if (m_bodyInterface.GetInterface()->IsActive(body.m_id)) {
 			RVec3 pos = m_bodyInterface.GetInterface()->GetPosition(body.m_id);

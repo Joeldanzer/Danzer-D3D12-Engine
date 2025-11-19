@@ -88,8 +88,8 @@ void SoundEngine::PlaySoundAtEntt(entt::entity entity, SOUND_ID sound, const flo
 		return;
 	}
 
-	Transform&   transform   = Reg::Instance()->Get<Transform>(entity);
-	SoundSource& soundSource = Reg::Instance()->Get<SoundSource>(entity);
+	Transform&   transform   = REGISTRY->Get<Transform>(entity);
+	SoundSource& soundSource = REGISTRY->Get<SoundSource>(entity);
 
 	Channel* newChannel = nullptr;
 	FmodResultCheck(m_soundSystem->playSound(m_sounds[sound], nullptr, true, &newChannel));

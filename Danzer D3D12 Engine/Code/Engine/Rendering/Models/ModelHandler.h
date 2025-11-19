@@ -44,10 +44,10 @@ public:
 		return m_models;
 	}
 
-	void LoadRequestedModels();
+	void LoadRequestedModels() {}
 
-	const uint32_t ModelExists(const std::wstring modelPath);
-	const uint32_t ModelExists(const std::string  name);
+	const ModelID ModelExists(const std::wstring modelPath);
+	const ModelID ModelExists(const std::string  name);
 
 private:	
 	friend struct ModelLoadRequest;
@@ -80,10 +80,10 @@ private:
 	};
 
 	Material GetNewMaterialFromLoadedModel(const std::string& material);
-	UINT GetNewlyCreatedModelID(ModelData model);
+	ModelID GetNewlyCreatedModelID(ModelData model);
 
-	uint32_t CreateModelFromLoadedData(LoaderModel* loadedModel, const std::string name, bool transparent);
-	uint32_t CreateModelFromLoadedData(LoaderModel* loadedModel, const std::wstring fileName, const std::string name, const uint16_t lodCount, bool transparent);
+	ModelID CreateModelFromLoadedData(LoaderModel* loadedModel, const std::string name, bool transparent);
+	ModelID CreateModelFromLoadedData(LoaderModel* loadedModel, const std::wstring fileName, const std::string name, const uint16_t lodCount, bool transparent);
 	std::vector<ModelData::Mesh> CreateLODFromModel(std::wstring fileName, const uint16_t currentCount);
 
 	std::vector<ModelData::Mesh> LoadMeshFromLoaderModel(LoaderModel* loadedModel, std::string name);

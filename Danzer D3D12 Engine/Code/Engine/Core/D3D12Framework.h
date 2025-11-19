@@ -4,7 +4,6 @@
 #include <dxgi1_4.h>
 #include <thread>
 
-
 class FrameResource;
 class PSOHandler;
 

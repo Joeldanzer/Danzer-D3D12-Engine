@@ -38,6 +38,7 @@ void SceneLoader::WriteSceneToFile(const std::wstring fileName)
 	// Wrtie number of entities in the scene.
 	uint32_t entityCount = (uint32_t)entities.size();
 	sceneFile.write((char*)&entityCount, sizeof(uint32_t));
+
 	for (uint32_t i = 0; i < entities.size(); i++)
 	{
 		GameEntity& gameEntity = REGISTRY->Get<GameEntity>(entities[i]);
